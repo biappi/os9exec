@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2003/04/20 22:56:37  bfo
+ *    'MyInetAddr" supports now 2 DNS addresses
+ *
  *
  */
 
@@ -105,8 +108,10 @@ os9err usrpath_setstat   ( ushort pid, ushort  up, ushort func, ulong *a0,ulong 
                                                                 ulong *d0,ulong *d1,ulong *d2,ulong *d3 );
 
 
-os9err get_locations     ( ushort pid, ptype_typ type, const char* pathname, Boolean doCreate, Boolean *asDir, 
-                                                                        ulong *fdP, ulong *dfdP, ulong *dcpP );
+os9err get_locations     ( ushort pid, ptype_typ type, const char* pathname, 
+                                                       Boolean doCreate, Boolean *asDir, 
+                                                       ulong *fdP, ulong *dfdP, ulong *dcpP, ulong *sSct );
+                                                       
 os9err change_dir        ( ushort pid, ptype_typ type, const char* pathname, ushort mode );
 os9err delete_file       ( ushort pid, ptype_typ type, const char* pathname, ushort mode );
 os9err make_dir          ( ushort pid, ptype_typ type, const char* pathname, ushort mode );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2003/04/20 22:52:01  bfo
+ *    GNam with additional param <d1>
+ *
  *    Revision 1.13  2003/04/12 21:50:33  bfo
  *    New functions _SS_Send, _SS_Recv, ... included
  *
@@ -1833,8 +1836,7 @@ os9err usrpath_setstat(ushort pid,ushort up, ushort func,
 
 
 os9err get_locations( ushort pid, ptype_typ type, const char* pathname,
-                      Boolean doCreate, Boolean *asDir, ulong *fdP,
-                                         ulong  *dfdP,  ulong *dcpP )
+                      Boolean doCreate, Boolean *asDir, ulong *fdP, ulong *dfdP, ulong *dcpP, ulong *sSct )
 {   /* try as file first, then as dir */
     os9err err;
     ulong  a0, *l;
@@ -1850,18 +1852,19 @@ os9err get_locations( ushort pid, ptype_typ type, const char* pathname,
         procs[pid].fileAtt     = 0x03; /* avoid wrong attributes at "move" */
         procs[pid].cre_initsize= 0;
     }
-                     err= usrpath_open( pid,&path, type,pathname,modeF ); *asDir= false;
-    if (err==E_FNA) {err= usrpath_open( pid,&path, type,pathname,modeD ); *asDir= true;}
-    if (err) return  err;
+                      err= usrpath_open( pid,&path, type,pathname,modeF ); *asDir= false;
+    if (err==E_FNA) { err= usrpath_open( pid,&path, type,pathname,modeD ); *asDir= true; }
+    if (err) return   err;
         
     /* do it the same way as the OS-9 rename */
     a0 = (ulong) opt_buff;
     err= usrpath_getstat( pid,path, SS_Opt, &a0, NULL,NULL,NULL,NULL ); if (err) return err;
                           
-    l  = (ulong*)&opt_buff[ PD_FD  ];  *fdP= os9_long( *l ); /* LSN of file    */
-    l  = (ulong*)&opt_buff[ PD_DFD ]; *dfdP= os9_long( *l ); /* LSN of its dir */
-    l  = (ulong*)&opt_buff[ PD_DCP ]; *dcpP= os9_long( *l ); /* dir entry pointer */
-    err= usrpath_close  ( pid,path );                      return err;
+    l  = (ulong*)&opt_buff[ PD_FD     ];  *fdP= os9_long( *l ); /* position of file    (not LSN) */
+    l  = (ulong*)&opt_buff[ PD_DFD    ]; *dfdP= os9_long( *l ); /* position of its dir (not LSN) */
+    l  = (ulong*)&opt_buff[ PD_DCP    ]; *dcpP= os9_long( *l ); /* dir entry pointer */
+    l  = (ulong*)&opt_buff[ PD_SctSiz ]; *sSct= os9_long( *l ); /* dir entry pointer */
+    err= usrpath_close( pid,path ); return err;
 } /* get_locations */
 
 
