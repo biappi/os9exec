@@ -22,11 +22,16 @@
 
    #define TERMINAL_CONSOLE // can do single char I/O
    #define USE_UAEMU        // use UAE-68k emulator
+
+#ifdef macintosh
+   #define REUSE_MEM        // do not deallocate memory after use
+#endif
   
    #define INT_CMD          // internal commands       supported
    #define CON_SUPPORT      // conole and TTYs         supported
    #define TFS_SUPPORT      // transparent file system supported
    #define PIP_SUPPORT      // pipes and PTYs          supported
+
 
 
 #ifdef USE_CARBON
