@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2004/10/22 22:51:12  bfo
+ *    Most of the "pragma unused" eliminated
+ *
  *    Revision 1.22  2004/09/15 19:51:58  bfo
  *    Newer socket library types introduced
  *
@@ -516,6 +519,32 @@ static os9err NetInstall(void)
 
 
 
+static os9err GetBuffers( net_typ* net )
+/* Get the transfer buffers for the net devices */
+{
+    #ifdef powerc
+      /* First allocate a buffer for storing the data as we read it. */
+      #ifdef USE_CARBON
+          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, nil );
+      #else
+          net->transferBuffer= OTAllocMem         ( kTransferBufferSize );
+      #endif    
+      if (net->transferBuffer==nil)  return E_NORAM;
+
+    #elif defined win_linux
+          net->transferBuffer= get_mem( kTransferBufferSize );
+      if (net->transferBuffer==NULL) return E_NORAM;
+    #endif
+    
+    /* common for all operating systems */  
+        net->b_local= get_mem( kTransferBufferSize );
+    if (net->b_local==NULL) return E_NORAM;
+    
+    return 0;
+} /* GetBuffers */
+
+
+
 os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pathname)
 {
     OSStatus err;
@@ -529,7 +558,6 @@ os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pa
     err= NetInstall(); if (err) return err;
     
     /* not yet bound, install the struct */
-    net->ls       = nil;
     net->ep       = nil;
     net->bound    = false;
     net->accepted = false;
@@ -537,27 +565,9 @@ os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pa
     net->listen   = true;
     net->check    = false;
     net->closeIt  = false;
+    net->bsize    = 0;
     
-    #ifdef powerc
-      /* First allocate a buffer for storing the data as we read it. */
-      #ifdef USE_CARBON
-          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, nil );
-      #else
-          net->transferBuffer= OTAllocMem         ( kTransferBufferSize );
-      #endif    
-          
-      if (net->transferBuffer==nil)  return E_NORAM;
-
-    #elif defined win_linux
-          net->transferBuffer= get_mem( kTransferBufferSize );
-      if (net->transferBuffer==NULL) return E_NORAM;
-    #endif
-      
-        net->b_local= get_mem( kTransferBufferSize );
-    if (net->b_local==NULL) return E_NORAM;
-      
-    net->bsize= 0;
-    return 0;
+    return GetBuffers( net );
 } /* pNopen */
 
 
@@ -566,41 +576,114 @@ os9err pNclose( ushort /* pid */, syspath_typ* spP )
 {
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
-    
-    #ifdef powerc
-      OSStatus junk;
-    #endif
-
 
     #ifndef WITH_NETWORK
       return E_UNKSVC;
     #endif
-            
+   
+ // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound, 
+ //                                            net->accepted, net->ep );       
     if (net->bound && net->ep!=nil) {
         #ifdef powerc
                     err= OTSndOrderlyDisconnect(net->ep);
           if (!err) err= OTRcvOrderlyDisconnect(net->ep);
         
-          junk= OTUnbind       ( net->ep );
-          junk= OTCloseProvider( net->ep );
-          if (!net->accepted) OTFreeMem( net->transferBuffer );
+          OTUnbind       ( net->ep );
+          OTCloseProvider( net->ep );
+          OTFreeMem      ( net->transferBuffer );
        
-        #elif defined(windows32)
-          err= closesocket( net->ep );
-          if (!net->accepted) ( net->transferBuffer );
-        
+       #elif defined windows32
+       // err= shutdown   ( net->ep, SD_SEND );
+          err= closesocket( net->ep ); 
+          release_mem     ( net->transferBuffer );
+         
         #elif defined linux
-          net->closeIt= true;
-      //  err= shutdown( net->ep, SHUT_RDWR );
+       // err= shutdown( net->ep, SHUT_RDWR );
           err= close   ( net->ep );
+          release_mem  ( net->transferBuffer );
+          
+        #else
+          #error Unknown platform
         #endif
         
-        if (!net->accepted) release_mem( net->b_local );
-        net->bound= false;
+        release_mem( net->b_local );     
+        net->closeIt= true;
+        net->bound  = false;
     } /* if */
 
     return 0;
 } /* pNclose */
+
+
+/* ---- OPERATING SYSTEM DEPENDENT PART OF netRead ---------------- */
+/* get the next block of data at <net->transferBuffer> of <net->ep> */
+/* Result is <err> >0 -> number of bytes read                       */
+/*                 =0 -> no data                                    */
+/*                 <0 -> error (OS dependent)                       */
+/* <net->closeit> will be set to true in case of EOF                */
+
+#ifdef powerc
+  static OSStatus netReadBlock( net_typ* net )
+  {
+    OSStatus err;
+    OTFlags  junkFlags;
+    OTResult lookResult;
+
+    /* keep interface fast for at least one minute */
+    gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
+    HandleEvent(); /* allow cooperative multitasking */
+        
+    /* read not more than the transfer buffer size */
+    err= OTRcv( net->ep, (void *)net->transferBuffer, 
+                                     kTransferBufferSize, &junkFlags );
+                                           
+            /* <err> is the number of bytes read, if positive */                     
+    if     (err<=0) {      /* and error status, if negative */
+        if (err==kOTNoDataErr) err= 0;
+        if (err==kOTLookErr) {
+                lookResult= OTLook(net->ep);
+            if (lookResult==T_ORDREL) net->closeIt= true;
+        } /* if */
+    } /* if */
+      
+    return err;
+  } /* netReadBlock */
+#endif
+
+
+#ifdef windows32
+  static OSStatus netReadBlock( net_typ* net )
+  {
+    OSStatus err;
+    ulong    arg;
+    int      flags= 0;
+    WSANETWORKEVENTS ev;
+
+           err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
+    if   (!err && (ev.lNetworkEvents & FD_CLOSE)!=0)
+           net->closeIt= true; /* close event: close after last read */
+                
+           err= ioctl( net->ep, FIONREAD, &arg );
+    if    (err>=0 && arg>0) 
+           err= recv ( net->ep, net->transferBuffer, kTransferBufferSize, flags );
+    return err;
+  } /* netReadBlock */
+#endif
+
+
+#ifdef linux
+  static OSStatus netReadBlock( net_typ* net )
+  {
+    OSStatus err;
+    int      flags= 0;
+      
+           err= recv( net->ep, net->transferBuffer, kTransferBufferSize, flags );
+    if    (err==0)    net->closeIt= true;
+    return err;
+  } /* netReadBlock */
+#endif
+/* ---- OPERATING SYSTEM DEPENDENT PART OF netRead ---------------- */
+
 
 
 
@@ -611,98 +694,60 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
     net_typ*     net= &spP->u.net;
     process_typ* cp = &procs[pid];
     int          ii;
-
-    #ifdef powerc
-      OTFlags  junkFlags;
-      OTResult lookResult;
-    #endif
+    ulong        askBytes= *lenP, mx;
+    Boolean      CR_found= false; /* CR found for <lnmode> */
     
-    #ifdef win_linux
-      #ifdef windows32
-        WSANETWORKEVENTS ev;
-        ulong arg;
-      #endif
-      
-      int flags= 0;
-    #endif
-
-
     #ifndef WITH_NETWORK
       return E_UNKSVC;
     #endif
     
-    if (net->bsize==0) {
-        if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
+    *lenP= 0; /* how many bytes read ? 0 at the beginning */
+    do {
+        if (net->bsize==0) { /* buffer is currently empty */
+            if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
         
-        #ifdef powerc
-          /* keep interface fast for at least one minute */
-          gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
-          HandleEvent(); /* allow cooperative multitasking */
-        
-          /* read not more than the transfer buffer size */
-          err= OTRcv( net->ep, (void *)net->transferBuffer, 
-                                           kTransferBufferSize, &junkFlags );
+                err= netReadBlock( net );
+            if (err<=0) {        /* <err> is the number of bytes read, if positive */                     
+                if (net->closeIt) return E_EOF;   /* and error status, if negative */
+            
+                cp->saved_state= cp->state;
+                set_os9_state( pid, pWaitRead );
+                return E_NOTRDY;
+            } /* if */
+                
+            net->bsize= (ulong) err; /* bytesReceived */
+                    net->bpos=  net->b_local;
+            memcpy( net->bpos,  net->transferBuffer, net->bsize );
+        } /* if */
 
-        #elif defined win_linux
-          #ifdef windows32
-                 err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
-            if (!err && (ev.lNetworkEvents & FD_CLOSE)!=0)
-                 net->closeIt= true; /* close event: close after last read */
-                
-                 err= ioctl( net->ep, FIONREAD, &arg );
-            if  (err>=0 && arg>0) 
-          #endif
-                 err= recv( net->ep, net->transferBuffer, 
-                                         kTransferBufferSize, flags );
-              
-          #ifdef linux
-            if (!err) net->closeIt= true;
-          #endif
-        #endif
-                             
-        if (err<=0) { /* error status */
-            #ifdef powerc
-              if (err==kOTNoDataErr) err= 0;
-              if (err==kOTLookErr) {
-                      lookResult= OTLook(net->ep);
-                  if (lookResult==T_ORDREL) net->closeIt= true;
-              }
-            #endif
-            
-            if (net->closeIt) return E_EOF;
-            
-            cp->saved_state= cp->state;
-            set_os9_state( pid, pWaitRead );
-            return E_NOTRDY;
-        }
-                
-        net->bsize= (ulong) err; /* bytesReceived */
-                net->bpos= net->b_local;
-        memcpy( net->bpos, net->transferBuffer, net->bsize );
-    }
+        /* larger ? If no, the rest of the buffer can be taken in one "schlonz" */
+                                   mx= net->bsize;   
+        if (*lenP + mx > askBytes) mx= askBytes - *lenP;
         
-    if (*lenP>net->bsize) *lenP= net->bsize;
-        
-    if (lnmode) {
-        for (ii=0; ii<*lenP; ii++) {
-            if (net->bpos[ii]==CR) { *lenP= ii+1; break; }
-        }
-    }
-    memcpy( buffer, net->bpos, *lenP );
+        if (lnmode) {
+            for (ii=0; ii<mx; ii++) {
+                if (net->bpos[ ii ]==CR) { CR_found= true; mx= ii+1; break; }
+            }
+        } /* if */
+        memcpy( buffer, net->bpos, mx );
     
-    net->bpos += *lenP;
-    net->bsize-= *lenP;
+        net->bpos += mx; /* calculate remaining */
+        net->bsize-= mx;
+        *lenP     += mx;
+    } while ( lnmode && !CR_found && *lenP<askBytes);
+    
     return 0;
 } /* netRead */
 
 
+
 os9err pNread( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netRead( pid,spP, lenP,buffer, false );
-}
+} /* pNread */
 
 os9err pNreadln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netRead( pid,spP, lenP,buffer, true  );
-}
+} /* pNreadln */
 
 
 
@@ -817,11 +862,11 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
 
 os9err pNwrite( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netWrite( pid,spP, lenP,buffer, false );
-}
+} /* pNwrite */
 
 os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netWrite( pid,spP, lenP,buffer, true  );
-}
+} /* pNwriteln */
 
 
 
@@ -850,7 +895,7 @@ static os9err reUse( ushort /* pid */, syspath_typ *spP )
     opt->status = 0;
     *(UInt32*)opt->value = true; // set the desired option level, true or false
 
-    err= OTOptionManagement(net->ls, &req, &ret);
+    err= OTOptionManagement( net->ep, &req, &ret );
 
     // if no error then return the option status value
     if    (err==kOTNoError && opt->status!=T_SUCCESS) err= opt->status;
@@ -1041,9 +1086,9 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
       else             kN=  kTCPName;
 
       #ifdef USE_CARBON
-        net->ls= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, nil );                           
+        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, nil );                           
       #else
-        net->ls= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0, &info, &err );
+        net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0, &info, &err );
       #endif
                                
       if (err) return E_FNA;
@@ -1052,13 +1097,14 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
 //      junk= DoNegotiateIPReuseAddrOption( net->ls, true );
 //    #endif    
     #elif defined win_linux
-          net->ls= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-      if (net->ls==INVALID_SOCKET) return E_FNA;
+          net->ep= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+      if (net->ep==INVALID_SOCKET) return E_FNA;
     #endif
 
-    SetDefaultEndpointModes( net->ls );
+    SetDefaultEndpointModes( net->ep );
     
     /* do it the same way as OS-9: first free port is 1025 */
+    debugprintf(dbgSpecialIO,dbgNorm, ( "bind fAddressType=%d\n", net->ipAddress.fAddressType ));
     if (net->ipAddress.fAddressType==0) fPort= ALLOC_PORT;
     
     #ifdef powerc
@@ -1071,10 +1117,10 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
         #ifdef powerc
           net->ipAddress.fPort= os9_word(fPort); /* don't forget to save it back */
                          
-               err= OTBind( net->ls, &bindReq,nil );
+               err= OTBind( net->ep, &bindReq,nil );
           if (!err ||
-		       err==kEACCESErr) break;         
-		  if  (err==kEADDRINUSEErr  ||
+		           err==kEACCESErr) break;         
+		      if  (err==kEADDRINUSEErr  ||
                err==kOTNoAddressErr ||
                net->ipAddress.fAddressType==0) ; /* do nothing */
           else break;
@@ -1089,7 +1135,7 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
           name.sin_port       = os9_word(fPort);
           name.sin_addr.s_addr=          net->ipAddress.fHost;  /* my own address */
         
-          err= bind( net->ls, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
+          err= bind( net->ep, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
           #ifdef windows32
             if     (err) {
                     err= WSAGetLastError();
@@ -1110,9 +1156,7 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
             else fPort++;
         }
         else {
-            if  (fPort< ALLOC_PORT 
-          // || (fPort> 9900 && fPort<10000)
-                )
+            if  (fPort< ALLOC_PORT)
                 switch (fPort) { /* start it in parallel to existing ones */
                     case 20: fPort= ALLOC_PORT; break;
                     case 21: fPort= 9921;       break;
@@ -1123,8 +1167,8 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
         }
 
         #ifdef windows32
-        if (fPort>=ALLOC_PORT &&
-            fPort< 9900) net->ipAddress.fAddressType= 0;
+          if (fPort>=ALLOC_PORT &&
+              fPort< 9900) net->ipAddress.fAddressType= 0;
         #endif
     } /* loop */
     
@@ -1132,14 +1176,15 @@ os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
       if (err==kEADDRNOTAVAILErr) return OS9_ENETUNREACH;
       if (err==kEACCESErr)        return E_PERMIT;
       if (err)                    return OS9_EADDRINUSE;
-    #elif defined(windows32)
-      SetDefaultEndpointModes(net->ls);
+    #elif defined windows32
+      SetDefaultEndpointModes(net->ep);
     #endif
     
     net->bound= true;
     net->fAddT=    net->ipAddress.fAddressType;
                    net->ipAddress.fPort= os9_word(fPort);
     memcpy( ispP, &net->ipAddress, sizeof(net->ipAddress) );
+    debugprintf(dbgSpecialIO,dbgNorm, ( "bind fAddT=%d fPort=%d\n", net->fAddT, fPort ));
     return 0;
 } /* pNbind */
 
@@ -1167,11 +1212,19 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
       net->call.addr.buf = (UInt8 *) &ipRemote;
       net->call.addr.maxlen =  sizeof(ipRemote);
     
-          err= OTListen( net->ls, &net->call );
+          err= OTListen( net->ep, &net->call );
       if (err==kOTNoDataErr) err= 0; /* this is not an error */
 
     #elif defined win_linux
-      err= listen( net->ls, SOMAXCONN );
+      err= listen( net->ep, SOMAXCONN );
+      
+      #ifdef windows32
+        if (!err) {
+             net->hEventObj= WSACreateEvent();
+             err= WSAEventSelect( net->ep, net->hEventObj, 
+                             FD_ACCEPT|FD_READ|FD_WRITE|FD_CLOSE );
+        }
+      #endif
     #endif
 
     if (err) {
@@ -1198,6 +1251,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
     #ifdef powerc
       TCall sndCall;
       char* kN;
+      OTResult lookResult;
     #endif
     
     #ifdef win_linux
@@ -1225,7 +1279,6 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
     isRaw= (fPort==0);
     
     if (net->bound) {
-        net->ep= net->ls;
         net->ipRemote.fAddressType= net->fAddT;
     }
     else {
@@ -1288,15 +1341,21 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
 //  /* the domain service is now implemented */
 //  if (fPort==53) return OS9_ENETUNREACH;
     
-    #ifdef powerc   
+    #ifdef powerc
+      debugprintf(dbgSpecialIO,dbgNorm, ( "connect fAddT=%d fPort=%d\n", net->fAddT,fPort ));
       sndCall.addr.buf = (UInt8*) &net->ipRemote;
       sndCall.addr.len =    sizeof(net->ipRemote);
-      sndCall.opt.buf  = nil;       // no connection options
+      sndCall.opt.buf  = nil; // no connection options
       sndCall.opt.len  = 0;
-      sndCall.udata.buf= nil;       // no connection data
+      sndCall.udata.buf= nil; // no connection data
       sndCall.udata.len= 0;
-      sndCall.sequence = 0;     // ignored by OTConnect
+      sndCall.sequence = 0;   // ignored by OTConnect
       err= OTConnect( net->ep, &sndCall, nil ); 
+ 
+      if (err==kOTLookErr) {
+        lookResult= OTLook(net->ep);
+        debugprintf(dbgSpecialIO,dbgNorm, ( "connect look=%d\n", lookResult ));
+      }
 
     #elif defined win_linux
       name.sin_family     = os9_word(net->ipRemote.fAddressType);
@@ -1304,38 +1363,34 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
       name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
 
       err= connect( net->ep, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
-    #endif
 
-    debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d: %d %d %x\n", err, net->ep, 
-                                         os9_word(net->ipRemote.fAddressType),
-                                         os9_word(net->ipRemote.fPort),
-                                         os9_long(net->ipRemote.fHost) ));
 
-    #ifdef win_linux
       #ifdef windows32
-        if     (err) {
+        if  (err) {
                 err= WSAGetLastError();
             if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
-        }
-      #endif
+        } /* if */
 
-      #ifdef linux      
-        if (err && cp->wTimeOut>0) {
-        //  pNclose( pid, spP );
+        if (!err) {
+            net->hEventObj= WSACreateEvent(); // create it only once
+            err= WSAEventSelect( net->ep, net->hEventObj, 
+                                 FD_CONNECT|FD_READ|FD_WRITE|FD_CLOSE );
+        } /* if */
+        
+      #else // linux
+        if  (err && cp->wTimeOut>0) {
             cp->saved_state= cp->state;
             cp->state=       pWaitRead;
             return E_NOTRDY;
-      } /* if */
-      #endif
-      
-      #ifdef windows32
-        if (!err) {
-            net->hEventObj= WSACreateEvent();
-            err= WSAEventSelect( net->ep, net->hEventObj, 
-                                 FD_CONNECT|FD_READ|FD_WRITE|FD_CLOSE );
-        }
+         } /* if */
       #endif
     #endif
+
+    debugprintf(dbgSpecialIO,dbgNorm, ( "connect err=%d %d: %d %d %x\n", 
+                                         err, net->ep, 
+                                         os9_word(net->ipRemote.fAddressType),
+                                         os9_word(net->ipRemote.fPort),
+                                         os9_long(net->ipRemote.fHost) ));
 
     if (err) return OS9_ECONNREFUSED;
     
@@ -1352,15 +1407,18 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     process_typ* cp = &procs[pid];
     syspath_typ* spN;
     ushort       up, path;
+    byte         c[ 4 ];
+    ulong*       cpt;
+    SOCKET       epNew;
     
     #ifdef powerc
-      OSStatus       state;
-      OTResult       lookResult;
+      OSStatus state;
+      OTResult lookResult;
     #endif
         
     #ifdef win_linux
-      SOCKADDR_IN    name;
-      int            len;
+      SOCKADDR_IN name;
+      int         len;
     #endif
 
     #ifndef WITH_NETWORK
@@ -1371,81 +1429,89 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
     #ifdef powerc
-              state= OTGetEndpointState( net->ls );
+              state= OTGetEndpointState( net->ep );
       switch (state) {
           case T_IDLE:      err= pNlisten( pid, spP ); 
                         if (err) return err;
                         break;
           case T_INCON: break;
           default:      return OS9_ECONNREFUSED;
-      }
+      } /* switch */
 
       if (state!=T_INCON) {
           cp->saved_state= cp->state;
           set_os9_state( pid, pWaitRead );
           return E_NOTRDY;
-      }
+      } /* if */
     
     
       #ifdef USE_CARBON
-        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 0, nil, &err, nil );
+        epNew= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 
+                                        0, nil, &err, nil );
       #else
-        net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kTCPName), 0, nil, &err );
+        epNew= OTOpenEndpoint         ( OTCreateConfiguration(kTCPName),
+                                        0, nil, &err );
       #endif
       
       if (err) return E_FNA;
     
-      SetDefaultEndpointModes( net->ep );
-          err= OTAccept( net->ls, net->ep, &net->call);
+      SetDefaultEndpointModes   ( epNew );
+          err= OTAccept( net->ep, epNew, &net->call);
       if (err==kOTLookErr) {
-              lookResult= OTLook(net->ls);
+              lookResult= OTLook(net->ep);
           if (lookResult==T_LISTEN) {
               OTMemzero( &net->call,sizeof(TCall) );
               net->call.addr.buf = (UInt8 *) &net->ipRemote;
               net->call.addr.maxlen =  sizeof(net->ipRemote);
-              err= OTListen( net->ls, &net->call );
+              err= OTListen( net->ep, &net->call );
 
-              SetDefaultEndpointModes( net->ep );
-                  err= OTAccept( net->ls, net->ep, &net->call);
+              SetDefaultEndpointModes   ( epNew );
+                  err= OTAccept( net->ep, epNew, &net->call);
               if (err) return OS9_ECONNREFUSED;
-          }
-      }
+          } /* if */
+      } /* if */
     
     #elif defined win_linux
-      #ifdef windows32
-        net->hEventObj= WSACreateEvent();
-        err= WSAEventSelect( net->ls, net->hEventObj, 
-                             FD_ACCEPT|FD_READ|FD_WRITE|FD_CLOSE );
-      #endif
-          len= sizeof(name);
-          net->ep= accept( net->ls, (__SOCKADDR_ARG)&name, &len );
-      if (net->ep==INVALID_SOCKET) {
+      len= sizeof(name);
+          epNew= accept( net->ep, (__SOCKADDR_ARG)&name, &len );
+      if (epNew==INVALID_SOCKET) {
           cp->saved_state= cp->state;
           set_os9_state( pid, pWaitRead );
           return E_NOTRDY;
-      }
+      } /* if */
           
       net->ipRemote.fAddressType= os9_word(name.sin_family);
-      net->ipRemote.fPort       =          name.sin_port;        /* no big/little endian change */
-      net->ipRemote.fHost       =          name.sin_addr.s_addr; /* no big/little endian change */
+      net->ipRemote.fPort       = name.sin_port;        /* no big/little endian change */
+      net->ipRemote.fHost       = name.sin_addr.s_addr; /* no big/little endian change */
 
-      SetDefaultEndpointModes( net->ep );   
+      SetDefaultEndpointModes( epNew );   
     #endif
 
-    
     if (err) return E_FNA;
     net->bound   = true;
     net->accepted= true;
 
-    /* "accept" returns a new path */
-    err = usrpath_new( pid, &up, fNET );
-    path= procs[pid].usrpaths[up]; /* this is the new syspath var */
+    /* "accept" returns a new path in <d1> */
+    err = usrpath_new( pid, &up, fNET ); if (err) return err;
+    path= procs[ pid ].usrpaths[ up ]; /* this is the new syspath var */
     spN = get_syspath( pid,path );
 
-    strncpy( spN->name,spP->name, OS9NAMELEN );  /* assign the name */
-    memcpy( &spN->u.net, net, sizeof(net_typ) ); /* don't forget to inherit */
-    net->bound= false;                           /* don't disconnect in close */
-    *d1= up; 
+    #ifdef windows32
+      WSACloseEvent( net->hEventObj );
+      net->hEventObj= nil;
+    #endif
+    
+    memcpy( &spN->u.net, net, sizeof(net_typ) );            /* don't forget to inherit */
+    net=    &spN->u.net;                            /* take the new struct from now on */
+    net->ep= epNew;
+    net->closeIt= false;
+    
+     cpt= (ulong*)&c;           
+    *cpt=    net->ipRemote.fHost;                            /* get ip address as name */
+    sprintf( spN->name, "%d.%d.%d.%d", c[ 0 ], c[ 1 ], c[ 2 ], c[ 3 ] );
+
+    err= GetBuffers( net );                   /* the new path needs his own buffers !! */
+    *d1= up;                                        /* here we get the new path number */
 
     return err;
 } /* pNaccept */
@@ -1498,7 +1564,7 @@ os9err pNGNam( ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2, byte* i
 //  upe_printf( "accepted connected %d %d %8X %8X\n", net->accepted, net->connected, ispP, *d2 );
     
     if (net->accepted) {
-        *d1= 16; /* std */
+        *d1=                           sizeof(net->ipAddress);
         memcpy( ispP, &net->ipAddress, sizeof(net->ipAddress) );
         return 0;
     } /* if */
@@ -1536,59 +1602,6 @@ os9err pNSOpt(ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2)
     *d1=   0;
     return 0;
 } /* pNSOpt */
-
-
-
-//  #ifdef macintosh
-//  /* checksum calculator for "ping" */
-//  static UInt16 ChecksumBuffer( UInt16* buf, size_t len )
-//  {
-//      // This checksum implementation requires the buffer to be an even number of bytes long.
-//      UInt32 sum;
-//      size_t nwords;
-//      
-//      nwords = len / 2;
-//      sum = 0;
-//      while (nwords > 0) {
-//          sum+= *buf;
-//          buf++;
-//          nwords-= 1;
-//      } /* while */
-//      
-//      sum =  (sum>>16) + (sum & 0xffff);
-//      sum+=  (sum>>16);
-//      return ~sum;
-//  } /* ChecksumBuffer */
-//  #endif
-//  
-//  
-//  
-//  #ifdef win_linux
-// 
-// Function: FillICMPData
-//
-// Description:
-//    Helper function to fill in various fields for our ICMP request
-//
-//  void FillICMPData(char *icmp_data, int datasize)
-//  {
-//      IcmpHeader *icmp_hdr = NULL;
-//      char       *datapart = NULL;
-//  
-//      icmp_hdr = (IcmpHeader*)icmp_data;
-//      icmp_hdr->i_type = ICMP_ECHO;        // Request an ICMP echo
-//      icmp_hdr->i_code = 0;
-//  //  icmp_hdr->i_id   = (USHORT)GetCurrentProcessId();
-//      icmp_hdr->i_cksum= 0;
-//  //  icmp_hdr->i_seq  = 0;
-//    
-//      datapart= icmp_data + sizeof(IcmpHeader);
-//  
-//      // Place some junk in the buffer
-//      memset( datapart,'E', datasize - sizeof(IcmpHeader));
-//  } /* FillICMPData */
-//  #endif
-//  
 
 
 
@@ -1770,7 +1783,6 @@ os9err pNgPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
                   iphdrlen= iphdr->h_len * 4;
                   icmp    = (IcmpHeader*)(icmp_data + iphdrlen);
              
-
                // upe_printf( "err=%d i_type=%d i_seq=%08X i_id=%08X\n", err,
                //                                               icmp->i_type,
                //                                               icmp->i_seq,
@@ -1897,7 +1909,7 @@ os9err pNask( ushort pid, syspath_typ* spP )
 
     if (net->check) {
         #ifdef powerc
-               state= OTGetEndpointState( net->ls );
+               state= OTGetEndpointState( net->ep );
           ok= (state==T_INCON);
 
         #else
