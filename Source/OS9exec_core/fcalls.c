@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/09/01 17:57:40  bfo
+ *    some more variables of the real "procid" record used now
+ *
  *    Revision 1.11  2002/08/13 21:55:47  bfo
  *    grp,usr and prior at the real prdsc now
  *
@@ -720,15 +723,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
     memcpy( &pd,&cp->pd, sizeof(procid) );
     
-//  pd._pid   = os9_word(cp->parentid);
-//  pd._sid   = os9_word(cp->siblingid);
-//  pd._cid   = os9_word(cp->childid);
-    
-    pd._usp   = (byte*) os9_long( rp->a[7] );
-    
-//  pd._group = os9_word(cp->_group);
-//  pd._user  = os9_word(cp->_user );
-//  pd._prior = os9_word(cp->_prior);
+    pd._usp= (byte*) os9_long( rp->a[7] );
     
     /* <_state> and <queueid> will be assigned directly */
     if (id==cpid) pd._queueid = '*';
@@ -818,33 +813,6 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
 
 
 
-static ulong GetScreen( char mode )
-/* Get screen dimensions */
-{
-    int r= 0; // no information, return zero (full screen)
-    
-    #ifdef windows32
-      HWND dwh = GetDesktopWindow();
-      RECT screenrec;
-
-      if (GetWindowRect(dwh,&screenrec)) {
-    	  switch (mode) {
-    		  case 'w': r= screenrec.right -screenrec.left; break; /* return width  */ 
-    		  case 'h': r= screenrec.bottom-screenrec.top;  break; /* return height */
-    	  } 
-      }
-    #else
-	  switch (mode) {
-		  case 'w': r= 1600; break; /* return width  */ 
-		  case 'h': r= 1200; break; /* return height */
-	  } 
-    #endif
-    
-    return (ulong)r;
-} /* GetScreen */
-
-
-
 os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 /* F$SetSys:
  * Input:   d0.w=offset
@@ -857,6 +825,10 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
  * Restrictions: This is a half-dummy, nearly always returns 0 
  */
 {
+    #ifndef linux
+    #pragma unused(cpid)
+    #endif
+    
 	#define D_ID       0x0000   /* set to modsync code after coldboot has finished */
 	#define D_Init     0x0020   /* pointer to 'init' module */
 	#define D_TckSec   0x0028   /* ticks per second */
@@ -880,22 +852,16 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 	#define D_ScreenW1 0x1008   /* Width in pixels from OS9exec's option -x */
 	#define D_ScreenH1 0x100C   /* Hight  "   "    from OS9exec's option -y */
 	#define D_UserOpt  0x1010   /* User defined option -u                   */
-
-	#define MDirEntry  16
 	
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
     
+    ulong  offs= loword(rp->d[0]);
+    int    size= (int)  rp->d[1];
+    ulong  b   = (ulong) &mdirField;
+
     ulong  v;
-    ulong  offs, b;
     ulong* ptr;
-    int    size, k;
-    
-    offs=loword(rp->d[0]);
-    size=(int)  rp->d[1];
-    b   = (ulong) &os9modules[0]; /* just any ptr for test */
-    
+    int    k;
+        
     switch (offs) {
       case D_ID      : v=                   MODSYNC; break;
       case D_Init    : v=       (ulong) init_module; break;
@@ -917,8 +883,8 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         #endif
         break;
          
-      case D_ModDir  : v=  b;                        break;
-      case D_ModDir_L: v=  b + MAXMODULES*MDirEntry; break;
+      case D_ModDir  : v=  b;                     Update_MDir(); break;
+      case D_ModDir_L: v=  b + sizeof(mdirField); Update_MDir(); break;
       case D_PrcDBT  : v= (ulong)prDBT;
       
                        ptr= &prDBT[1];                           /* start with process nr 1 */
@@ -1008,43 +974,16 @@ os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
     #pragma unused(cpid)
     #endif
     
-    #define ENTRYSIZE 16
-    
-    module_typ* modK;
-    mod_exec*   mod;
-    Boolean     ok;
-    ulong*      b;
-    int         cnt, j, k;
-       
-    b  =(ulong *)rp->a[0];
-    cnt=(int)    rp->d[1];
-    j  = 0;
-    
-    for (k=0; k<MAXMODULES && j+ENTRYSIZE<=cnt; k++) {
-                 mod= os9mod(k);
-            ok= (mod!=NULL);
-        if (ok) {
-            *b= os9_long((ulong)mod);      b++;
-            *b= os9_long((ulong)mod);      b++; /* %%% not yet module groups */
-            *b= os9_long(mod->_mh._msize); b++;
+    byte* b  = (byte*)rp->a[0];
+    ulong cnt=        rp->d[1];
+    ulong mx = sizeof(mdirField); if (cnt>mx) cnt= mx;
 
-                                  modK= &os9modules[k];
-            hiword( *b )= (ushort)modK->linkcount;
-            *b= os9_long( *b );            b++;
-        }
-        else {
-            *b= 0; b++; /* empty entry */
-            *b= 0; b++;
-            *b= 0; b++;
-            *b= 0; b++;
-        }
-         
-        j=j+ENTRYSIZE;
-    } /* for */
-    
+    Update_MDir();
+    MoveBlk( b, &mdirField, cnt );
+        
     debugprintf(dbgProcess,dbgNorm,("# F$GModDr: get module directory\n"));
-    rp->d[1]= j; /* return parameter */
     
+    rp->d[1]= cnt; /* return parameter */
     return 0;
 } /* OS9_F_GModDr */
 
