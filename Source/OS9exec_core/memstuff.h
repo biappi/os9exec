@@ -33,7 +33,11 @@
 
 
 /* Memory management for OS9 processes */
+void init_all_mem(void);
+
 void show_mem(ushort pid);
+void show_unused   (void);
+
 void init_mem(ushort pid);
 void free_mem(ushort pid);
 
@@ -41,8 +45,8 @@ ushort install_memblock(ushort pid, void *base, ulong size);
 void   release_memblock(ushort pid, ushort memblocknum);
 
 ulong    max_mem( void );
-void    *get_mem( ulong memsz,   Boolean mac_asHandle );
-void release_mem( void* membase, Boolean mac_asHandle );
+void    *get_mem( ulong memsz   );
+void release_mem( void* membase );
 
 void *os9malloc(ushort pid, ulong memsz);
 os9err  os9free(ushort pid, void* membase, ulong memsz);
