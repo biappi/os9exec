@@ -774,12 +774,12 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         /* existing relative path ? */
         if (!abs && cdv!=0 && mnt_scsi==NO_SCSI) break;
 
-        err= 0;
+        err  =     0;
+        isRAM= false; /* do it for all conditions */
+        
         if (!fu) {
             #ifdef RAM_SUPPORT
               isRAM= RAM_Device( pathname );
-            #else
-              isRAM= false;
             #endif
                  
             if (!isRAM) {
