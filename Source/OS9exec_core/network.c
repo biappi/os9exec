@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2004/12/04 00:15:37  bfo
+ *    a lot of adaptions for MACH kernel
+ *
  *    Revision 1.27  2004/11/28 13:54:46  bfo
  *    up to date
  *
@@ -587,8 +590,8 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
             HandleEvent(); /* allow cooperative multitasking */
        
                 err= netReadBlock( pid,net, &nBytes );
-            if (err) {           /* <err> is the number of bytes read, if positive */                     
-                if (net->closeIt) return E_EOF;   /* and error status, if negative */
+            if (err || nBytes==0) {                      
+                if (net->closeIt) return E_EOF;
             
                 cp->saved_state= cp->state;
                 set_os9_state( pid, pWaitRead );
@@ -600,6 +603,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
             memcpy( net->bpos,  net->transferBuffer, net->bsize );
         } /* if */
 
+     // upe_printf( "netread: nBytes=%d *lenP=%d bsize=%d\n", nBytes, *lenP, net->bsize );
         /* larger ? If no, the rest of the buffer can be taken in one "schlonz" */
                                    mx= net->bsize;   
         if (*lenP + mx > askBytes) mx= askBytes - *lenP;
