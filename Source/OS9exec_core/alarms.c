@@ -195,12 +195,12 @@ static os9err Alarm_AtDate( ushort pid, ulong *aId, ushort aCode, ulong aTime, u
 /* A$AtDate call: 3 */
 {
 	ulong  iTime,iDate, aTicks;
-	int    dayOfWk;
+	int    dayOfWk, currentTick;
 	int    mx= (0xffffffff-GetSystemTick())/SecsPerDay/TICKS_PER_SEC;
     byte   tc[4];
     ulong* tcp= (ulong*)&tc[0];
 
-	Get_Time( &iTime,&iDate, &dayOfWk, false );
+	Get_Time( &iTime,&iDate, &dayOfWk,&currentTick, false,false );
 
     *tcp = os9_long( aTime );         /* get time */
     aTime= tc[1]*3600+tc[2]*60+tc[3]; /* seconds since midnight */
@@ -225,10 +225,10 @@ static os9err Alarm_AtJul( ushort pid, ulong *aId, ushort aCode, ulong aTime, ul
 /* A$AtJul call: 4 */
 {
 	ulong  iTime,iDate, aTicks;
-	int    dayOfWk;
+	int    dayOfWk, currentTick;
 	int    mx= (0xffffffff-GetSystemTick())/SecsPerDay/TICKS_PER_SEC;
 
-	Get_Time( &iTime,&iDate, &dayOfWk, false );
+	Get_Time( &iTime,&iDate, &dayOfWk,&currentTick, false,false );
 	
 	/* alarms in the past are not allowed */
 	if (aDate <iDate)       return E_PARAM; 

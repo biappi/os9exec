@@ -327,18 +327,18 @@ os9err OS9_F_Time(regs_type *rp, ushort cpid)
     Boolean asGregorian= (mode & 0x1)==0;
     Boolean withTicks  = (mode & 0x2);
     ulong   aTime, aDate;
-    int     dayOfWk;
+    int     dayOfWk, currentTick;
     
-    Get_Time( &aTime,&aDate, &dayOfWk, asGregorian ); 
+    Get_Time( &aTime,&aDate, &dayOfWk,&currentTick, asGregorian,withTicks );
 
-               rp->d[0]= aTime;
-               rp->d[1]= aDate; 
-    retword (  rp->d[2] )=dayOfWk; /* day of week, 0=sunday, 1=monday... */
+             rp->d[0]= aTime;
+             rp->d[1]= aDate; 
+    retword( rp->d[2] )=dayOfWk; /* day of week, 0=sunday, 1=monday... */
 
     if (withTicks) {
-      /* we need some ticks, too */
-      hiword(rp->d[3])=                   TICKS_PER_SEC;
-      loword(rp->d[3])= GetSystemTick() % TICKS_PER_SEC;
+        /* we need some ticks, too */
+        hiword( rp->d[3] )= TICKS_PER_SEC;
+        loword( rp->d[3] )= currentTick;
     }
      
     return 0;

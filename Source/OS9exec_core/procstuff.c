@@ -108,7 +108,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
     os9err      err;
     ushort      npid, k;
     process_typ *cp,*pap;
-	int			dayOfWk;
+	int			dayOfWk, currentTick;
     
     /* --- find empty process descriptor */
     debugprintf(dbgProcess,dbgNorm,("# new_process: parent=%d wants to create child\n",parentid));
@@ -144,7 +144,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->_uticks= 0;
             cp->_fticks= 0;
             cp->_iticks= 0;             /* julian time and date */
-			Get_Time( (ulong*)&cp->_timbeg, (ulong*)&cp->_datbeg, &dayOfWk, false );
+			Get_Time( (ulong*)&cp->_timbeg, (ulong*)&cp->_datbeg, &dayOfWk,&currentTick, false,false );
 			
             cp->_fcalls= 0;  /* reset counters */
             cp->_icalls= 0;

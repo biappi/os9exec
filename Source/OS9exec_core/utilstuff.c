@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/07/07 22:08:21  bfo
+ *    take the RAM disk size from the descriptor (if available)
+ *
  *    Revision 1.12  2002/07/06 15:56:42  bfo
  *    ram disks (also other names than /r0) can be mounted/unmounted with "mount"
  *    the size -r=<size> is prepared, but not yet active
@@ -457,17 +460,24 @@ void GetTim( struct tm* tim )
 
 
 
-void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, Boolean asGregorian )
+void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
+               Boolean asGregorian, Boolean withTicks )
 {
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
     byte      tc[4];
     ulong*    tcp= (ulong*)&tc[0];
-    int       y, m, d;
+    int       y, m, d, ct0;
     
-    GetTim( &tim );
-    y=       tim.tm_year+1900;
-    m=       tim.tm_mon +   1;
-    d=       tim.tm_mday;
+    do {
+        if  (withTicks)            ct0= GetSystemTick() % TICKS_PER_SEC;
+        
+        GetTim( &tim );
+        y=       tim.tm_year+1900;
+        m=       tim.tm_mon +   1;
+        d=       tim.tm_mday;
+        
+        if  (withTicks)   *currentTick= GetSystemTick() % TICKS_PER_SEC;
+    } while (withTicks && *currentTick<ct0);
    
     if (asGregorian) {
 		/* gregorian format */
