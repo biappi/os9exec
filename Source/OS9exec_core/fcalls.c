@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.7  2002/08/08 21:53:57  bfo
  *    F$SetSys extended with D_PrcDBT support
  *
@@ -722,23 +725,12 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     pd._age   = os9_word(128); /* as in real OS-9 */
     pd._task  = 0;
     
-//  /* convert the state into OS-9 notation */
-//  switch (cp->state) {
-//      case pUnused   : pd._state = os9_word(0);      pd._queueid = '-'; break;
-//      case pActive   : pd._state = os9_word(0x8800); pd._queueid = 'a'; break;
-//      case pDead     : pd._state = os9_word(0x9000); pd._queueid = 'd'; break;
-//      case pSleeping : pd._state = os9_word(0xA000); pd._queueid = 's'; break;
-//      case pWaiting  : pd._state = os9_word(0x8000); pd._queueid = 'w'; break;
-//      case pIntUtil  : pd._state = os9_word(0);      pd._queueid = 'i'; break;
-//      case pSysTask  : pd._state = os9_word(0);      pd._queueid = 't'; break;
-//      case pWaitRead : pd._state = os9_word(0xA000); pd._queueid = 'r'; break;
-//      default        : pd._state = os9_word(0);      pd._queueid = '?';
-//  }
+    /* <_state> and <queueid> will be assigned directly */
     if (id==cpid) pd._queueid = '*';
     
     pd._scall = os9_byte(cp->lastsyscall);
-    pd._resvd1= 0xBD00; /* as in OS-9 */
-    pd._deadlk= 0;      /* as in OS-9 */
+    pd._resvd1= os9_word(0xBD00); /* as in OS-9 */
+    pd._deadlk= 0;                /* as in OS-9 */
     pd._signal= os9_word(cp->lastsignal );
     pd._sigvec= (char *)   os9_long(cp->icptroutine);
     pd._sigdat= (char *)   os9_long((ulong)&cp->sigdat);
@@ -799,7 +791,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     for (k=0; k<   7; k++) pd.FPExStk [k]= NULL;
     for (k=0; k<1168; k++) pd._procstk[k]= NUL; /* no system stack used */
     
-    memcpy((byte *)rp->a[0],&pd,loword(rp->d[1]));
+    memcpy( (byte*)rp->a[0], &pd, loword(rp->d[1]) );
     return 0;
 } /* OS9_F_GPrDsc */
 
@@ -1069,10 +1061,10 @@ os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
 
 os9err OS9_F_CpyMem( regs_type *rp, ushort cpid )
 /* F$CpyMem:
- * Input:   d0.w = process ID of external memoy's owner
+ * Input:   d0.w = process ID of external memory's owner
             d1.l = number of bytes to copy
-                (a0) = address of memory in external process to copy
-                (a1) = caller's destination buffer pointer
+            (a0) = address of memory in external process to copy
+            (a1) = caller's destination buffer pointer
  * Output:  none
  *                   
  */
@@ -1081,16 +1073,12 @@ os9err OS9_F_CpyMem( regs_type *rp, ushort cpid )
     #pragma unused(cpid)
     #endif
     
-    byte *src;
-    byte *dst;
-    ulong cnt;
-    
-    src=(byte *)rp->a[0];
-    dst=(byte *)rp->a[1];
-    cnt=(ulong) rp->d[1];
+    byte* src= (byte*)rp->a[0];
+    byte* dst= (byte*)rp->a[1];
+    ulong cnt= (ulong)rp->d[1];
     
     MoveBlk( dst,src, cnt );
-    debugprintf(dbgMemory,dbgDeep,("# F$CpyMem: copied %ld bytes from $%lX to %$lX\n",cnt,src,dst));
+    debugprintf(dbgMemory,dbgDeep,("# F$CpyMem: copied %ld bytes from $%lX to %$lX\n", cnt,src,dst ));
     return 0;
 } /* OS9_F_CpyMem */
 

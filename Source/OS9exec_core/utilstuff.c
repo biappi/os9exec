@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.19  2002/08/06 07:59:45  luz
  *    Fixed "Retry/Abort" pop-up dialog
  *
@@ -198,7 +201,7 @@ void set_os9_state( ushort cpid, pstate_typ state )
     switch (cp->state) {
         case pUnused   : pd->_state = os9_word(0);      pd->_queueid = '-'; break;
         case pActive   : pd->_state = os9_word(0x8800); pd->_queueid = 'a'; break;
-        case pDead     : pd->_state = os9_word(0x9000); pd->_queueid = 'd'; break;
+        case pDead     : pd->_state = os9_word(0x9100); pd->_queueid = '-'; break;
         case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
         case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
         case pIntUtil  : pd->_state = os9_word(0);      pd->_queueid = 'i'; break;

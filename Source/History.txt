@@ -1067,6 +1067,7 @@
           02-08-08  Bfo     F$SetSys extended with D_PrcDBT support.
           02-08-09  Bfo     The "real" process descriptor prepared due to problems with "time" and "ps"
           02-08-09  Bfo     New procedure set_os9_state introduced and adapted everywhere.
+          02-08-13  Bfo     The state <dead> will be handled correctly now (state=0x9100)
     3.16  02-08-??  Bfo     ...
     -------------------
 */
