@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2002/10/02 18:45:34  bfo
+ *    OS9exec version changed to V3.19 / <mdirField> variable included
+ *
  *    Revision 1.23  2002/09/14 23:11:39  bfo
  *    Adapted for V3.18
  *
@@ -175,6 +178,9 @@ byte		devs[0x0900];
 
 /* the OS-9 statistics table */
 st_typ		statistics[MAX_OS9PROGS];
+
+/* the mem alloc table */
+ptrsize_typ memtable[MAX_MEMALLOC];
 
 
 /* the file file mgrs routine table */
