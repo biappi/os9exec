@@ -1223,7 +1223,11 @@
 
           04-01-04  Bfo     Changed to new version
           04-02-19  Bfo     Network IP address bugfix for Windows XP (seems to be the only problem with XP :-))
-    3.23  04-??-??  Bfo
+    3.23  04-03-13  Bfo     Last valid V3.23
+          04-03-13  Bfo     "network.c" adapted for new socket library and gcc 3.3.1 (__CONST_SOCKADDR_ARG)
+          04-09-12  Bfo     "Flush68kCodeRange" now activated for ALL memory block allocations.
+          04-09-12  Bfo     "Flush68kCodeRange" now activated for ALL module loads.
+    3.24  04-03-??  Bfo     ...
     -------------------    
 */
 

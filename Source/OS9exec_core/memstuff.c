@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2003/05/25 10:35:20  bfo
+ *    <totalMem> can't be any more smaller than <memsz>
+ *
  *    Revision 1.12  2003/05/21 20:32:01  bfo
  *    Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
  *
@@ -556,7 +559,7 @@ void *get_mem( ulong memsz )
                 memtable[k].base= pp;
                 memtable[k].size= memsz;
                 LockMemRange( pp, memsz ); /* keep always paged in !! */ 
-                
+               
                 debugprintf(dbgMemory,dbgNorm,("# get_mem:    allocate block     at $%08X (size=%5u) %8d\n",
                                                   (ulong) pp,memsz, totalMem ));
                 return pp;

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2004/01/04 02:07:52  bfo
+ *    F$UnLink returns ok, as long as module found
+ *
  *    Revision 1.23  2003/05/25 10:35:04  bfo
  *    <totalMem> can't be any more smaller than <memsz>
  *
@@ -1179,6 +1182,7 @@ os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
         pp= get_mem( msz );
     if (pp==NULL) return os9error(E_NORAM); /* not enough memory */
 
+
 //  #ifdef macintosh
 //    theModuleH= pp;
 //    
@@ -1197,7 +1201,6 @@ os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
 //    
 //  #else
       theModule= pp;
-
       os9modules[mid].modulebase= theModule;  /* enter pointer in free table entry */   
       os9modules[mid].isBuiltIn = false;
 //  #endif
