@@ -1,0 +1,12 @@
+-t
+*
+load   r68 l68
+unload r68 l68
+(chd ../CMDS; load -d r68 l68)
+*
+make -u
+cmp -s OS9exec OS9exec_orig
+*
+unload r68 l68
+*
+
