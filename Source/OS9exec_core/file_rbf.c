@@ -1,7 +1,7 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
-//	  Available under http://www.synthesis.ch/os9exec
+//    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
 //    modify it under the terms of the GNU General Public License as 
@@ -411,34 +411,40 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
     ulong*  l;
     ushort* w;
     ushort  sctSize;
+    Boolean cruz;
     
     while (true) { /* loop */
+        debugprintf(dbgFiles,dbgNorm,("# RootLSN: sectorsize %d\n", dev->sctSize ));
+        
         // get size of device 
         if (dev->totScts==0) { err= DevSize( dev ); if (err) return err; }
         err= ReadSector( dev, 0,1,  dev->tmp_sct ); if (err) return err;
 
         /* get the sector size of the device */
-        if (strcmp( &dev->tmp_sct[CRUZ_POS],Cruz_Str )==0) {
+        cruz= (strcmp( &dev->tmp_sct[CRUZ_POS],Cruz_Str )==0);
+        debugprintf(dbgFiles,dbgNorm,("# RootLSN: sectorsize %d %s\n", dev->sctSize, cruz?"(cruz)":"" ));
+        
+        if (cruz) {
             w= (ushort*)&dev->tmp_sct[104]; sctSize= os9_word(*w);
-            if (sctSize==0)                 sctSize= STD_SECTSIZE;
         }
         else {
-            if (dev->sctSize==0)   sctSize= STD_SECTSIZE;
-            else sctSize=dev->sctSize; // use existing (luz 2002-02-12)
+            if (dev->sctSize==0) sctSize= STD_SECTSIZE;
+            else                 sctSize= dev->sctSize; // use existing (luz 2002-02-12)
         }   
-            
-        if (dev->sctSize==sctSize) break; /* it is ok already */
-
-        debugprintf(dbgFiles,dbgNorm,("# RootLSN: adapt sector size %d => %d\n",
-                                         dev->sctSize,sctSize));
-        dev->sctSize= sctSize; /* this is the correct sector size */
+        if          (sctSize==0) sctSize= STD_SECTSIZE; // but avoid 0  (bfo 2002-06-06)
+           
+        debugprintf(dbgFiles,dbgNorm,("# RootLSN: adapt sectorsize %d => %d\n",
+                                         dev->sctSize, sctSize));
+        if (dev->sctSize==sctSize) break; /* it is ok already ? */
+        	dev->sctSize= sctSize;        /* this is the correct sector size */
     
         /* release buffers of old size */
         release_mem   ( dev->tmp_sct, false );
         ReleaseBuffers( spP );
         
         /* and get the new buffers with the new sector size */
-        dev->tmp_sct= get_mem( dev->sctSize, false );
+     // dev->tmp_sct= get_mem( dev->sctSize, false );
+        dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE, false );
         GetBuffers( dev,spP );
 
         dev->totScts   = 0; /* must be set to correct value */
@@ -821,7 +827,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     }
 
     // make sure we get a buffer that is big enough for reading any sector 0 (will be adjusted later)
-    dev->tmp_sct= get_mem( dev->sctSize > MIN_TMP_SCT_SIZE ?  dev->sctSize : MIN_TMP_SCT_SIZE ,false );
+    dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE, false );
     
     debugprintf(dbgFiles,dbgNorm,("# RBF open: trying to open %s \"%s\"\n",
                                      IsSCSI(dev) ? "SCSI":"RBF Image", q));
