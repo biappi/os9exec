@@ -603,10 +603,11 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
         if (err!=E_UNIT) break;     
         
         #ifdef windows32
-          Sleep( 1 );
+          Sleep( 100 );
         #endif
     } /* for */
 
+    if    (err==E_UNIT) err= E_READ;
     return err;
 } /* ReadFromSCSI */
 
@@ -632,10 +633,11 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
         if (err!=E_UNIT) break;     
         
         #ifdef windows32
-          Sleep( 1 );
+          Sleep( 100 );
         #endif
     } /* for */
 
+    if    (err==E_UNIT) err= E_WRITE;
     return err;
 } /* WriteToSCSI */
 
