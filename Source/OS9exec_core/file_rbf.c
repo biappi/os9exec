@@ -30,6 +30,21 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 
 /* This file contains the RBF Emulator */
 #include "os9exec_incl.h"
@@ -2002,7 +2017,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                     if (mlt) {
                         err= WriteSector( dev, sect,n, b ); if (err) break;
                                 spP->rw_nr= sect + n0;
-                        memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+                    //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
                     }
                     else {
                         err= WriteSector( dev, sect,1, spP->rw_sct ); if (err) break;
@@ -2019,7 +2034,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 if (mlt) {
                     err= WriteSector( dev, sect,n, b ); if (err) break;
                             spP->rw_nr= sect + n0;
-                    memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+                //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
                     *mw= 0; /* already written */
                 }
             }
