@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2003/01/03 14:57:02  bfo
+ *    Store the signals during read the same way as in real OS-9, add pwr_brk flag
+ *
  *    Revision 1.23  2003/01/02 12:16:41  bfo
  *    "MAXEVENTS" changed from 100 to 512
  *
@@ -166,7 +169,7 @@
 #define MAXEVENTS       512
 
 /* max length of signal queue */
-#define MAXSIGNALS       50
+#define MAXSIGNALS      200
 
 /* max length of signal queue */
 #define MAXALARMS       512
