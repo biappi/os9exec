@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2003/01/10 21:37:00  bfo
+ *    Changed to new version
+ *
  *    Revision 1.31  2003/01/02 14:34:37  bfo
  *    Some type castinmg things fixed
  *
@@ -290,7 +293,7 @@ Boolean async_pending = false;
 short   defSCSIAdaptNo= -1; // unknown
 short   defSCSIBusNo  =  0; // first
 l2_typ  l2;
-ulong   my_inetaddr   = os9_long(0x7F000001); /* loopback by default: 127.0.0.1 */
+ulong   my_inetaddr   = 0x7F000001; /* loopback by default: 127.0.0.1 */
 
 
 /* tickCount at start of the program */
