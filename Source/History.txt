@@ -1115,6 +1115,9 @@
           02-10-02  Bfo     OS9_I_OpenCreate Bugfix for poCreateMask problem: consider only byte (d0.b).
           02-10-02  Bfo     Create the real mdir structure for OS9_F_SetSys D_ModDir.
           02-10-02  Bfo     Correct handling for "mount" without parameters.
+          02-10-06  Bfo     "show_timing" call with additional parameter <ticksLim>
+          02-10-06  Bfo     uphe_printf => upe_printf
+          02-10-09  Bfo     move paths for RBF under Windows corrected
     3.19  02-10-??  Bfo     ...
     -------------------
 */
