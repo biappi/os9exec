@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2003/05/17 10:22:59  bfo
+ *    Clean Carbon import
+ *
  *    Revision 1.7  2002/07/30 16:46:14  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -66,9 +69,20 @@
 #ifndef OS9MAIN_INCL_PRECOMP_H
 #define OS9MAIN_INCL_PRECOMP_H
 
-// Identifier for CW Pro 7 identification
+// Identifier for CW Pro identification
 // 0xXXYY meaning Compiler Version X.X, rev YY
+// Use the predefined __MWERKS__ macro.
+// It has the form (major version <<12)|(minor version<<8)|patch revision.
+// The "version" here is based on our internal versioning scheme (reflected in
+// plugins' "version" resource).  
+//  2.3   (0x2300) = Pro5
+//  2.4   (0x2400) = Pro6
+//  2.4.5 (0x2405) = Pro7
+//  2.4.7 (0x2407) = Pro7.2
+//  3.0   (0x3000) = Pro8
+
 #define CW7_MWERKS 0x2405 // V 2.4.5 = CW Pro 7
+#define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
 
 
 /* make sure that this can also be compiled for MPW */
@@ -182,6 +196,10 @@
       #include <ws2spi.h>
       // We need printing support
       #include <winspool.h>
+      
+      #if __MWERKS__ >= CW8_MWERKS
+        #include <dirent.h>
+      #endif
     #endif
 
   #else
@@ -197,10 +215,16 @@ typedef struct dirent dirent_typ;
 
 #ifndef linux
   /* C library include files */
-  #include <CType.h>
+  #ifndef __MACH__
+    #include <CType.h>
+  #endif
   
   #ifdef USE_CARBON
-  	#include <Carbon.h>
+	#ifdef __MACH__
+	  #include <MacHeadersMach-O.h>
+	#else
+	  #include <Carbon.h>
+	#endif
   #else
     #include <Types.h>
     #include <stdarg.h>
@@ -214,7 +238,11 @@ typedef struct dirent dirent_typ;
     #ifdef macintosh
       #include <Strings.h>
       #include "FCntl.h"
-      #include "IntEnv.h"
+      
+      #ifdef MPW
+        #include "IntEnv.h"
+      #endif
+      
       #include <OpenTransport.h>
       #include <OpenTptInternet.h>
     #endif
@@ -267,7 +295,7 @@ typedef struct dirent dirent_typ;
 #endif
 
 #if !defined(windows32) || __MWERKS__ >= CW7_MWERKS
-  typedef unsigned char     byte;
+  typedef unsigned char byte;
 #endif
 
 
