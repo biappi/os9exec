@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/10/15 18:24:19  bfo
+ *    memtable handling prepared
+ *
  *    Revision 1.7  2002/09/01 20:15:07  bfo
  *    some debug messages reduced
  *
@@ -58,6 +61,31 @@
 /* Memory management for OS9 processes */
 /* =================================== */
 
+
+/* prepare the memory handling for use */
+void init_all_mem(void)
+{
+    int k;
+    
+    totalMem= 0; /* initialize startup memory */
+    
+    #ifdef REUSE_MEM
+       freeinfo.freeN  = 0;
+       freeinfo.freeMem= 0;
+    #endif
+     
+    for (k=0;k<MAX_MEMALLOC;k++) {
+        memtable[k].base= NULL;
+        memtable[k].size= 0;
+        
+        #ifdef REUSE_MEM
+          freeinfo.f[k].base= NULL;
+          freeinfo.f[k].size= 0;
+        #endif
+    } /* for */
+} /* init_all_mem */
+
+    
 
 /* show memory blocks */
 void show_mem(ushort npid)
@@ -78,9 +106,9 @@ void show_mem(ushort npid)
                 for (k=0; k<MAXMEMBLOCKS; k++) {
                         m= &procs[pid].os9memblocks[k];
                     if (m->base!=NULL) {
-                        upo_printf("%c%02d  %05d  $%08lX  $%08lX  $%08lX\n",
-                                    pid==currentpid ? '*' : ' ',
+                        upo_printf("%2d%c  %5d  $%08lX  $%08lX  $%08lX\n",
                                     pid,
+                                    pid==currentpid ? '*' : ' ',
                                     k,      m->base,
                                                       m->size,
                                     (ulong) m->base + m->size);
@@ -90,13 +118,42 @@ void show_mem(ushort npid)
         }
     }
 } /* show_mem */
+
+
+
+void show_unused(void)
+{
+    #ifdef REUSE_MEM
+      int   k, n= 0;
+      memblock_typ* f;
+      char s[10];
     
+      upo_printf("Block   Start      Size          Size\n");
+      upo_printf("-----  ---------  --------- ---------\n");
+    
+      for (k=0;k<MAX_MEMALLOC;k++) {
+              f= &freeinfo.f[k];      
+          if (f->base!=NULL)    { upo_printf("%5d  $%08lX  $%08lX  %8d\n",
+                                              k, f->base, f->size, f->size ); n++;
+          }
+          else {
+//          if (n<freeinfo.freeN) upo_printf("%5d   %8s   %8s  %8s\n",
+//                                            k, "-",     "-",     "" );
+          }
+      } /* for */
+ 
+      sprintf( s, "(%d)", freeinfo.freeN );
+      upo_printf("\nTOTAL %6s      $%08lX  %8d\n", s, freeinfo.freeMem,freeinfo.freeMem );
+    #endif
+} /* show_unused */
+
+
 
 /* initialize process' memory block list */
 void init_mem(ushort pid)
 {
-   int k;
-   for(k=0; k<MAXMEMBLOCKS; k++) procs[pid].os9memblocks[k].base=NULL; /* no memory yet */
+   int  k;
+   for (k=0; k<MAXMEMBLOCKS; k++) procs[pid].os9memblocks[k].base=NULL; /* no memory yet */
 } /* init_mem */
 
 
@@ -104,14 +161,13 @@ void init_mem(ushort pid)
 ushort install_memblock(ushort pid, void *base, ulong size)
 {
     memblock_typ *m;
-    int k;
-    
-    for(k=0;k<MAXMEMBLOCKS;k++) {
-        m= &procs[pid].os9memblocks[k];
+    int  k;
+    for (k=0;k<MAXMEMBLOCKS;k++) {
+            m= &procs[pid].os9memblocks[k];
         if (m->base==NULL) {
-            m->base=base;            /* save pointer */
-            m->size=size;            /* save block size */
-            LockMemRange(base,size); /* keep always paged in !! */ 
+            m->base= base;             /* save pointer */
+            m->size= size;             /* save block size */
+            LockMemRange( base,size ); /* keep always paged in !! */ 
             return k;
         }
     }
@@ -120,22 +176,72 @@ ushort install_memblock(ushort pid, void *base, ulong size)
 } /* install_memblock */
 
 
-void release_mem( void* membase, Boolean mac_asHandle )
+void release_mem( void* membase )
 /* process independent part of memory deallocation */
 {
-    #ifdef MACMEM
-      if (mac_asHandle) DisposeHandle( membase );
-      else              DisposePtr   ( membase );
+    ulong memsz= 0;
+    int  k;
+    memblock_typ* m;
+    
+    #ifdef REUSE_MEM
+      memblock_typ* f;
+    #endif
+
+    for (k=0;k<MAX_MEMALLOC;k++) {
+            m= &memtable[k];
+        if (m->base==membase) { /* search for a segment to be released */
+            memsz= m->size;
+       
+            #ifdef win_linux
+              totalMem-= memsz;
+            #endif
+            
+            m->base= NULL; /* and release the segment */
+            m->size= 0;
+            break;
+        } /* if */
+    } /* for */
+    
+    #ifdef REUSE_MEM
+      if (memsz==0) printf( "STRANGE BLOCK at %08X\n", membase );
+      else {
+          for (k=0;k<MAX_MEMALLOC;k++) { /* do not really release the memory on Mac */
+                  f= &freeinfo.f[k];
+              if (f->base==NULL || f->size<memsz) {
+                  MoveBlk( &freeinfo.f[k+1],f, (freeinfo.freeN-k)*sizeof(memblock_typ) );
+           // }    
+                     
+           // if (f->base==NULL) {
+                  f->base= membase;
+                  f->size= memsz;
+
+                  #ifdef win_linux
+                    totalMem+= memsz; /* free memory is not really released */
+                  #endif
+                  freeinfo.freeN++;
+                  freeinfo.freeMem+= memsz;
+                  
+                  debugprintf(dbgMemory,dbgNorm,("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
+                                      membase,memsz, totalMem ));
+                  return;
+              } /* if */
+          } /* for */
+      } /* if */
+    #endif  
+            
+    debugprintf(dbgMemory,dbgNorm,("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
+                                      membase,memsz, totalMem ));
+      
+    #ifdef MACMEM    
+//    if (mac_asHandle) DisposeHandle( membase );
+//    else              
+          DisposePtr( membase );
 
       if (MemError()!=noErr) {
           debugprintf(dbgMemory+dbgAnomaly,dbgDeep,
-                     ("# release_memblock: DisposePtr returned Mac OS9 MemError=%d\n",MemError()));
+                 ("# release_memblock: DisposePtr returned Mac OS9 MemError=%d\n",MemError()));
       }
     #else
-      #ifndef linux
-      #pragma unused(mac_asHandle)
-      #endif
-      
       free( membase );
     #endif
 } /* release_mem */
@@ -150,14 +256,14 @@ void release_memblock( ushort pid, ushort memblocknum )
         m= &procs[pid].os9memblocks[memblocknum];
     if (m->base==NULL) return;
     
-    debugprintf(dbgMemory,dbgNorm, ("# release_memblock: block %3d @ $%lX (size=%lu)\n",
-         memblocknum, m->base, m->size ) );
-    UnlockMemRange  ( m->base, m->size );
-    release_mem(      m->base, false );
+    debugprintf(dbgMemory,dbgNorm,("# release_memblock:    block #%-2d at $%08lX (size=%5u) %8d pid=%d\n",
+                                      memblocknum, m->base, m->size, totalMem, pid ));
     
-    #ifdef win_linux
-      totalMem-= m->size;
+    #ifndef MACMEM     
+      UnlockMemRange( m->base, m->size );
     #endif
+
+    release_mem( m->base );
     
     m->base=NULL; /* free block */
     m->size=   0;
@@ -165,15 +271,14 @@ void release_memblock( ushort pid, ushort memblocknum )
 
 
 
+
 /* free process' allocated memory blocks */
 void free_mem(ushort pid)
 {
    int  k;
-   
-   debugprintf(dbgMemory,dbgNorm,( "start 'free_mem'\n" ));
-   for( k=0; k<MAXMEMBLOCKS; k++ ) release_memblock( pid,k );   
-   debugprintf(dbgMemory,dbgNorm,( "end   'free_mem'\n" ));
+   for (k=0; k<MAXMEMBLOCKS; k++) release_memblock( pid,k );   
 } /* free_mem */
+
 
 
 ulong max_mem()
@@ -191,96 +296,147 @@ ulong max_mem()
       #error MaxBlock size must be defined here
     #endif
     
+    #ifdef REUSE_MEM
+      memsz+= freeinfo.freeMem;
+    #endif
+    
     return memsz;
 } /* max_mem */
 
 
 
-void *get_mem( ulong memsz, Boolean mac_asHandle )
+void *get_mem( ulong memsz )
 /* process independent part of memory allocation */
 {
-    void *pp;
+    void* pp= NULL;
+    int   k;
     
     #ifdef MACMEM
       char *n;
-      
-      if (mac_asHandle) { pp= NewHandle  (memsz); n= "NewHandle";   }
-      else              { pp= NewPtrClear(memsz); n= "NewPtrClear"; }
-      
-      if (pp==NULL) {
-        debugprintf(dbgMemory,dbgNorm,("# get_mem: %s returned MacOS MemError=%d\n",
-                                        n, MemError()));
-        upe_printf( "No more memory !!!\n" );
-      }
-    #else
-      #ifndef linux
-      #pragma unused(mac_asHandle)
-      #endif
-      
-          pp= calloc(  (size_t)memsz, (size_t)1 ); /* get memory block, cleared to 0 */
-      if (pp!=NULL) totalMem+= memsz;
     #endif
     
-//  upe_printf( "getmem %08X %d\n", pp,memsz );
-    return pp;
+    #ifdef REUSE_MEM
+      memblock_typ* f;
+    #endif
+    
+    
+    memsz= (memsz+63) & 0xFFFFFFC0; /* round up to next boundary */
+    
+    #ifdef REUSE_MEM
+      for (k=0;k<MAX_MEMALLOC;k++) { /* try to get it from the free list */
+              f= &freeinfo.f[k];      
+          if (f->base!=NULL  &&
+              f->size==memsz) {
+
+                      pp= f->base;
+              memset( pp, 0, memsz ); /* some programs need a clean block !!! */
+
+          //  f->base= NULL; /* no longer a free element */
+          //  f->size= 0;
+              
+//            printf( "- %d %d %d %d\n", freeinfo.freeN, k, (freeinfo.freeN-k)*sizeof(memblock_typ), memsz );
+//            show_unused();
+                          
+              MoveBlk( f,&freeinfo.f[k+1], (freeinfo.freeN-k)*sizeof(memblock_typ) );
+                  
+              #ifdef win_linux
+                totalMem-= memsz; /* memory was not really free */
+              #endif
+
+              freeinfo.freeN--;
+              freeinfo.freeMem-= memsz;                                    
+//            freeinfo.f[freeinfo.freeN].base= NULL; /* no longer a free element */
+//            freeinfo.f[freeinfo.freeN].size= 0;
+
+//            printf( "+ %d %d %d %d\n", freeinfo.freeN, k, (freeinfo.freeN-k)*sizeof(memblock_typ), memsz );
+//            show_unused();
+              break;
+          } /* if */
+      } /* for */
+    #endif
+    
+//  if (pp==NULL) printf( "%8X\n", memsz );
+    
+    if (pp==NULL) { /* not yet found */
+      #ifdef MACMEM
+//      if (mac_asHandle) { pp= NewHandle  (memsz); n= "NewHandle";   }
+//      else { 
+          pp= NewPtrClear(memsz); n= "NewPtrClear"; 
+//      }
+      
+        if (pp==NULL) {
+          debugprintf(dbgMemory,dbgNorm,("# get_mem: %s returned MacOS MemError=%d\n",
+                                        n, MemError()));
+        }
+      #else
+        pp= calloc( (size_t)memsz, (size_t)1 ); /* get memory block, cleared to 0 */
+      #endif
+    }
+    
+    if   (pp!=NULL) {
+        for (k=0;k<MAX_MEMALLOC;k++) {
+            if (memtable[k].base==NULL) { /* search for a free segment */
+                #ifdef win_linux
+                  totalMem+= memsz;
+                #endif
+            
+                memtable[k].base= pp;
+                memtable[k].size= memsz;
+                LockMemRange( pp, memsz ); /* keep always paged in !! */ 
+                
+                debugprintf(dbgMemory,dbgNorm,("# get_mem:    allocate block     at $%08X (size=%5u) %8d\n",
+                                                  (ulong) pp,memsz, totalMem ));
+                return pp;
+            } /* if */
+        } /* for */
+    } /* if */
+    
+    upe_printf( "No more memory !!!\n" );
+    return NULL;
 } /* get_mem */
 
 
 
 /* memory allocation for OS-9 */
-void *os9malloc(ushort pid, ulong memsz)
+void *os9malloc( ushort pid, ulong memsz )
 {
     void *pp;
     int   k;
 
-        pp= get_mem( memsz,false );
+        pp= get_mem( memsz );
     if (pp==NULL) return NULL; /* no memory */
      
         k= install_memblock( pid,pp,memsz );
     if (k>=MAXMEMBLOCKS) {
-    /* memory block list is full */
-        #ifdef MACMEM
-          DisposePtr(pp);
-          if (MemError()!=noErr) {
-            debugprintf(dbgMemory+dbgAnomaly,dbgDeep,
-               ("# os9malloc: DisposePtr returned Mac OS9 MemError=%d\n",MemError()));
-          }
-        #else
-          free(pp);
-        #endif
-        
-        pp=NULL; /* bfo */
+        /* memory block list is full */
+        release_mem( pp ); pp= NULL;
         upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
+        exit(1);
     }
    
-    debugprintf(dbgMemory,dbgNorm,("# os9malloc: Allocated block #%d at $%lX (size=%lu)\n",
-                                      k,(ulong) pp,memsz));
+    debugprintf(dbgMemory,dbgNorm,("# os9malloc:  allocate block #%-2d at $%08X (size=%5u) %8d pid=%d\n",
+                                      k,(ulong) pp,memsz, totalMem, pid ));
     return pp;
 } /* os9malloc */
 
 
 /* memory deallocation for OS-9 */
-os9err os9free(ushort pid, void* membase, ulong memsz)
+os9err os9free( ushort pid, void* membase, ulong memsz )
 {
     memblock_typ *m;
     int k;
 
-    debugprintf(dbgMemory,dbgNorm,("# os9free: Free request of pid=%d, at $%08lX (size=%lu)\n",
-                                    pid,(ulong) membase,memsz));
+    debugprintf(dbgMemory,dbgDetail,("# os9free:      free request   at $%08lX (size=%lu) pid=%d\n",
+                                      (ulong) membase,memsz, pid ));
     if (membase==NULL) return os9error(E_BPADDR); /* no memory was allocated here */
 
     for (k=0; k<MAXMEMBLOCKS; k++) {
-        m= &procs[pid].os9memblocks[k];
-    
+                m= &procs[pid].os9memblocks[k];
         if     (m->base==membase) {
-            if (m->size==memsz  ) {
-                release_memblock( pid,k );
-                debugprintf(dbgMemory,dbgNorm,("# os9free: Found block #%d to free at $%08lX (size=%lu)\n",
-                                                k,membase,m->size));
-            }
+            if (m->size==memsz  ) release_memblock( pid,k );
             else {
-                debugprintf(dbgMemory,dbgNorm,("# os9free: Found block #%d at $%08lX, but wrong size=%lu (specified=%lu)\n",
-                                                k,membase,m->size,memsz));
+                debugprintf(dbgMemory,dbgNorm,("# os9free:     release block #%-2d at $%08lX, but wrong size=%lu (specified=%4u) %8d\n",
+                                                  k, membase,m->size, memsz, totalMem ));
                 return os9error(E_BPADDR);
             }
             
@@ -288,7 +444,8 @@ os9err os9free(ushort pid, void* membase, ulong memsz)
         }
     } /* for */
     
-    debugprintf(dbgMemory+dbgAnomaly,dbgDeep,("# os9free: Block at $%08lX (size=%lu) not found in pid=%d's memory list\n",membase,memsz,pid));
+    debugprintf(dbgMemory+dbgAnomaly,dbgNorm,("# os9free: Block at $%08lX (size=%lu) not found in pid=%d's memory list\n",
+                                                     membase,memsz, pid));
     return os9error(E_BPADDR); /* no memory was allocated here */
 } /* os9free */
 
