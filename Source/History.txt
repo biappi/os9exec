@@ -1105,7 +1105,17 @@
           02-09-22  Bfo     Min nr of dir entries is 2 ( ".." and "." )
           02-09-22  Bfo     Some bugs (at least 5 !!) at getFD fixed: The access to the top directory (Windows32) was 
                             seriously wrong. Now it seems to work fine with "mdt".
-    3.18  02-09-??  Bfo     ...
+    3.18  02-09-22  Bfo     V3.18 released and sent to customer
+    -------------------
+
+          02-09-30  Bfo     "systime -s?" bug fixed (no stop after -? text)
+          02-10-02  Bfo     <mdir_entry>,<mdirField> structures included.
+          02-10-02  Bfo     GetScreen function is now defined at "utilstuff".
+          02-10-02  Bfo     Update_MDir implementation at "modstuff" (taken partly from OS9_F_GModDr).
+          02-10-02  Bfo     OS9_I_OpenCreate Bugfix for poCreateMask problem: consider only byte (d0.b).
+          02-10-02  Bfo     Create the real mdir structure for OS9_F_SetSys D_ModDir.
+          02-10-02  Bfo     Correct handling for "mount" without parameters.
+    3.19  02-10-??  Bfo     ...
     -------------------
 */
 
