@@ -1,21 +1,21 @@
 // 
-// Ê ÊOS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
-// Ê ÊCopyright (C) 2002 Ê[ Lukas Zeller / Beat Forster ]
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
 // 
-// Ê ÊThis program is free software; you can redistribute it and/or 
-// Ê Êmodify it under the terms of the GNU General Public License as 
-// Ê Êpublished by the Free Software Foundation; either version 2 of 
-// Ê Êthe License, or (at your option) any later version. 
+//    This program is free software; you can redistribute it and/or 
+//    modify it under the terms of the GNU General Public License as 
+//    published by the Free Software Foundation; either version 2 of 
+//    the License, or (at your option) any later version. 
 // 
-// Ê ÊThis program is distributed in the hope that it will be useful, 
-// Ê Êbut WITHOUT ANY WARRANTY; without even the implied warranty of 
-// Ê ÊMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-// Ê ÊSee the GNU General Public License for more details. 
+//    This program is distributed in the hope that it will be useful, 
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+//    See the GNU General Public License for more details. 
 // 
-// Ê ÊYou should have received a copy of the GNU General Public License 
-// Ê Êalong with this program; if not, write to the Free Software 
-// Ê ÊFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//    You should have received a copy of the GNU General Public License 
+//    along with this program; if not, write to the Free Software 
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
 /**********************************************/
@@ -1838,6 +1838,7 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
     FSSpec* spc= &spP->u.disk.spec;
     short   volid;
     long    dirid, objid;
+    char*   q;
 
     union {
         CInfoPBRec cipb;
@@ -1897,6 +1898,13 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
                 /* there is an entry for this index */
                 n=fName[0]>DIRNAMSZ ? DIRNAMSZ : fName[0];
                 strncpy(deP->name,&fName[1], n); /* copy the name */
+                
+                q= deP->name;
+                while (true) { /* convert the spaces in the file names to underlines */
+  	  	            q= strstr( q," " ); if (q==NULL) break;
+                    q[ 0 ]= '_';
+                } /* loop */
+                
                 if (fetchnames) {
                     /* show slashes at filename beginnings as periods (that's what Fetch FTP does on OS9->mac */
                     if (deP->name[0]=='/') deP->name[0]='.';
@@ -2387,3 +2395,4 @@ os9err pDeof( ushort pid, syspath_typ* spP )
 
 
 /* eof */
+

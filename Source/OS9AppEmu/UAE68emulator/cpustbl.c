@@ -8420,3 +8420,4 @@ struct cputbl op_smalltbl_4[] = {
 { op_e7f8_4, 0, 59384 }, /* ROLW */
 { op_e7f9_4, 0, 59385 }, /* ROLW */
 { 0, 0, 0 }};
+

@@ -282,3 +282,4 @@ extern struct cputbl op_smalltbl_4[];
 
 extern cpuop_func *cpufunctbl[65536] ASM_SYM_FOR_FUNC ("cpufunctbl");
 
+

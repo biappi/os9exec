@@ -146,3 +146,4 @@ static __inline__ int cctrue(int cc)
 			"popl %0\n\t" \
 			: "=r" (regflags.cznv) : "rmi" (s), "r" (d) : "cc")
 #endif
+

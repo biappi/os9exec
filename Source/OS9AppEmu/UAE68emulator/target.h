@@ -19,3 +19,4 @@
 #ifndef _MSC_VER
 #define BSDSOCKET_SUPPORTED
 #endif
+

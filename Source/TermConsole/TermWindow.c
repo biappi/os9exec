@@ -1421,3 +1421,4 @@ pascal  OSErr       PStringToTermWindow(TermWindowPtr termPtr, unsigned char *ps
     WriteToTermWindow( termPtr, (Ptr)(&pstr[1]), &numChars );
     return 0;
 }
+

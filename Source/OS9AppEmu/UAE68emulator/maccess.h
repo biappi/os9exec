@@ -282,3 +282,4 @@ static __inline__ void do_put_mem_byte(uae_u8 *a, uae_u8 v)
 // %%% LuZ
 #endif // macintosh
 
+

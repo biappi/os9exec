@@ -332,3 +332,4 @@ static int init_DIR( DIR *dirp)
 
 #endif /*USE_DIRENT_PORT*/
 
+

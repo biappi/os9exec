@@ -3703,3 +3703,4 @@ extern cpuop_func op_e7e8_4;
 extern cpuop_func op_e7f0_4;
 extern cpuop_func op_e7f8_4;
 extern cpuop_func op_e7f9_4;
+

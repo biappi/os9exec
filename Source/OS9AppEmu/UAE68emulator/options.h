@@ -292,3 +292,4 @@ static __inline__ void fuzzy_memset_le32_1 (void *p, uae_u32 c, int offset, int 
 #endif
 
 #endif // %%%
+

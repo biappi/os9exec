@@ -289,3 +289,4 @@ void rewinddir( DIR *dirp);
 
 #endif /*USE_DIRENT_PORT*/
 #endif /*MSDIR_H*/
+

@@ -109,3 +109,4 @@ static __inline__ void m68k_do_jsr(uaecptr oldpc, uaecptr dest)
 }
 
 #endif
+

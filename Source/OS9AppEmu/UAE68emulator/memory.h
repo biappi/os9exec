@@ -202,3 +202,4 @@ static __inline__ int valid_address(uaecptr addr, uae_u32 size)
  /* return get_mem_bank(addr).check(addr, size); */
     return 1; /* all addresses can be translated (as there is no translation! %%% */
 }
+
