@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2003/01/09 21:58:28  bfo
+ *    Max number of signals increased
+ *
  *    Revision 1.24  2003/01/03 14:57:02  bfo
  *    Store the signals during read the same way as in real OS-9, add pwr_brk flag
  *
@@ -643,8 +646,11 @@ typedef struct {
                            _SS_Listen,
                            _SS_Connect,
                            _SS_Accept,
+                           _SS_Recv,
+                           _SS_Send,
                            _SS_GNam,
                            _SS_SOpt,
+                           _SS_SendTo,
                            _SS_PCmd,
                            
                            _SS_LBlink,                /* L2 support */
