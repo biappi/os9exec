@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2003/07/08 15:41:05  bfo
+ *    Print hw name additionally
+ *
  *    Revision 1.10  2003/05/17 10:27:14  bfo
  *    (remove some old unused comments)
  *
@@ -508,7 +511,7 @@ static void update_L2( ulong t )
      		ll            = l2.col1;
     	}
     		
-    	if (ll>L2_Off) ll= L2_Off;
+    //	if (ll>L2_Off) ll= L2_Off;    /* allow blue also !! */
     	l2.hw_location= os9_word(ll); 
     } /* if */
 } /* update_L2 */
