@@ -19,6 +19,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/10/27 23:08:08  bfo
+ *    get_mem/release_mem no longer with param "mac_asHandle"
+ *
  *
  */
 
@@ -28,10 +31,14 @@
 #include <console.h>
 #endif
 
-#include "TermWindow.h"
-#include <Events.h>
-#include <Scrap.h>
-#include <ToolUtils.h>
+
+#ifndef USE_CARBON
+  #include "TermWindow.h"
+  #include <Events.h>
+  #include <Scrap.h>
+  #include <ToolUtils.h>
+#endif
+
 #include "os9exec_incl.h"
 #include "serialaccess.h"
 
@@ -206,6 +213,8 @@ void AdjustMenus()
     itself is very time-consuming. */
 
 
+
+#ifndef USE_CARBON
 #pragma segment Main
 static int FrontConsole( ttydev_typ **mcp )
 /* returns true, if current console is in front */
@@ -620,7 +629,7 @@ static void HandleVModUpdate( TermWindowPtr tw, ttydev_typ* mco )
                     
     SetPort( my_port ); /* and restore previous window */
 } /* HandleVModUpdate */
-
+#endif
 
 
 /* Define an event loop, so the user doesn't have to
@@ -630,8 +639,6 @@ void HandleOneEvent(EventRecord* pEvent)
 //  RgnHandle      cursorRgn;
     Boolean        gotEvent;
     EventRecord    event, *eventPtr;
-    ttydev_typ*    mco;
-    TermWindowPtr  tw;
     WindowPtr      window= NULL;
     int            k;
     short          part = 0;
@@ -640,6 +647,12 @@ void HandleOneEvent(EventRecord* pEvent)
     static int     hov  = STARTVAL;
     static Boolean first= true;
 
+    #ifndef USE_CARBON
+      ttydev_typ*    mco;
+      TermWindowPtr  tw;
+    #endif
+    
+    
     if     (gNetActive>ctick) {
         if (gNetLast>0 &&
             gNetLast+TICKS_PER_SEC>ctick &&
@@ -668,10 +681,10 @@ void HandleOneEvent(EventRecord* pEvent)
     //
     if (gDocDone) { /* if already initialized */
         for (k=0; k<MAX_CONSOLE; k++) {
+            #ifndef USE_CARBON
                                mco= &mac_console[k];
             tw= (TermWindowPtr)mco->consoleTermPtr;
             
-            #ifndef USE_CARBON
             if (mco->installed &&
                 IsTermWindowEvent    (tw, eventPtr)) {
                 part = FindWindow( eventPtr->where, &window );
@@ -1038,14 +1051,18 @@ Boolean DevReady( long *count )
     ttydev_typ* mco;
     
     HandleNthEvent();
-    if                                   (gConsoleID<0) 
-             ok= DevReadySerial  (count, -gConsoleID);
+    if (gConsoleID<0)
+    	#ifdef USE_CARBON
+    	     ok= false;
+    	#else
+             ok= DevReadySerial  ( count, -gConsoleID );
+        #endif
         
     else if (gConsoleID>=TTY_Base)
-             ok= DevReadyTTY     (count,  gConsoleID);
+             ok= DevReadyTTY     ( count,  gConsoleID );
 
     else {  mco= &mac_console[ gConsoleID ];
-             ok= DevReadyTerminal(count, mco );
+             ok= DevReadyTerminal( count,  mco );
     }
 
     arbitrate= true;
@@ -1076,6 +1093,7 @@ ulong CurrentWindow( void )
 } /* CurrentWindow */
 
 
+#ifndef USE_CARBON
 void UpdatePrms( ulong  wPtr,   ulong  wStore, ulong wSize, 
                  ushort wIndex, ushort wTot )
 {
@@ -1107,7 +1125,7 @@ void UpdatePrms( ulong  wPtr,   ulong  wStore, ulong wSize,
         }
     }
 } /* UpdatePrms */
-
+#endif
 
 
 /*

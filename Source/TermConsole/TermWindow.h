@@ -28,11 +28,16 @@
 
 
 #ifndef __TERMWINDOW__
-    #define __TERMWINDOW__
+#define __TERMWINDOW__
 
-#include <Controls.h>
-#include <Windows.h>
+
+
 #include <Terminals.h>
+
+#ifndef USE_CARBON
+  #include <Windows.h>
+  #include <Controls.h>
+#endif
 
 extern short TermWinScrolls;
 extern short TermExpandNewline;
