@@ -1100,6 +1100,11 @@
           02-09-19  Bfo     Disabling "r0" more specific now
           02-09-19  Bfo     "/h0" can be mounted again
           02-09-21  Bfo     E_DIDC problem fixed.
+          02-09-21  Bfo     SS_206 (unused setstat call) included.
+          02-09-21  Bfo     CutUp handling corrected /
+          02-09-22  Bfo     Min nr of dir entries is 2 ( ".." and "." )
+          02-09-22  Bfo     Some bugs (at least 5 !!) at getFD fixed: The access to the top directory (Windows32) was 
+                            seriously wrong. Now it seems to work fine with "mdt".
     3.18  02-09-??  Bfo     ...
     -------------------
 */
