@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2002/10/16 17:50:36  bfo
+ *    DevPak 68K OS-9 V1.2 _resvd1, _procstk conflict resolved
+ *
  *    Revision 1.15  2002/09/11 17:25:53  bfo
  *     Definition is correct now: pd= &procs[k].pd
  *
@@ -82,8 +85,8 @@ void show_processes(void)
     char*        mName;
     process_typ* cp;
     
-    upo_printf(" Id S PId MId  Module   Prior  MemStart  MemEnd   Last Syscall Name\n");
-    upo_printf("--- - --- --- --------- ----- --------- --------- ------------ ----------------\n");     
+    upo_printf(" Id S PId SId CId MId  Module   Prior  MemStart  MemEnd   Last Syscall Name\n");
+    upo_printf("--- - --- --- --- --- --------- ----- --------- --------- ------------ ----------------\n");     
     for (k=0; k<MAXPROCESSES; k++) {
             cp= &procs[k];
         if (cp->state!=pUnused) {
@@ -108,10 +111,12 @@ void show_processes(void)
             if (cp->mid==MAXMODULES) strcpy( mIDs,"-" );
             else                    sprintf( mIDs, "%d", cp->mid );
             
-            upo_printf("%3s %c %3d %3s $%08lX %5d $%08lX $%08lX %-12s %s\n",
+            upo_printf("%3s %c %3d %3d %3d %3s $%08lX %5d $%08lX $%08lX %-12s %s\n",
                         idstr,
                         sta,
                os9_word(cp->pd._pid),
+               os9_word(cp->pd._sid),
+               os9_word(cp->pd._cid),
                         mIDs,
                         (ulong) mod,
                os9_word(cp->pd._prior),
@@ -903,17 +908,20 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
           /* prepare args */
           prepArgs( paramptr, &argc,&arguments );
           arguments[0]= (char*)mpath;  /* set module name */
-          
-          if (pp->pd._cid!=0) pp->pd._sid= pp->pd._cid;
+                    
+          if (pp->pd._cid!=0)       /* already children available */
+              cp->pd._sid= pp->pd._cid;  /* take child as sibling */
           
           pp->pd._cid= os9_word(newpid); /* this is the child */
-          currentpid =          newpid; /* use the correct identification */
+          currentpid =          newpid;  /* use the correct identification */
           
           /* execute command */
           err= callcommand( mpath,newpid, argc,arguments );
             
           /* simulate successful F$Exit of dummy process */
-          release_mem( arguments,false );
+          release_mem( arguments );
+          
+          pp->pd._cid= cp->pd._sid; /* restore former child id */
           
           cp->exiterr= err;
           kill_process( newpid );
