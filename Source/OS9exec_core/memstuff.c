@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/09/01 20:15:07  bfo
+ *    some debug messages reduced
+ *
  *    Revision 1.6  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -148,10 +151,16 @@ void release_memblock( ushort pid, ushort memblocknum )
     if (m->base==NULL) return;
     
     debugprintf(dbgMemory,dbgNorm, ("# release_memblock: block %3d @ $%lX (size=%lu)\n",
-         memblocknum, m->base, m->size ));
+         memblocknum, m->base, m->size ) );
     UnlockMemRange  ( m->base, m->size );
     release_mem(      m->base, false );
-                      m->base=NULL; /* free block */
+    
+    #ifdef win_linux
+      totalMem-= m->size;
+    #endif
+    
+    m->base=NULL; /* free block */
+    m->size=   0;
 } /* release_memblock */
 
 
@@ -208,7 +217,8 @@ void *get_mem( ulong memsz, Boolean mac_asHandle )
       #pragma unused(mac_asHandle)
       #endif
       
-      pp= calloc((size_t)memsz, (size_t)1); /* get memory block, cleared to 0 */
+          pp= calloc(  (size_t)memsz, (size_t)1 ); /* get memory block, cleared to 0 */
+      if (pp!=NULL) totalMem+= memsz;
     #endif
     
 //  upe_printf( "getmem %08X %d\n", pp,memsz );
@@ -223,7 +233,7 @@ void *os9malloc(ushort pid, ulong memsz)
     void *pp;
     int   k;
 
-        pp= get_mem(memsz,false);
+        pp= get_mem( memsz,false );
     if (pp==NULL) return NULL; /* no memory */
      
         k= install_memblock( pid,pp,memsz );
