@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2002/11/06 20:12:26  bfo
+ *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+ *
  *    Revision 1.27  2002/10/27 23:41:51  bfo
  *    memory and module structure definitions adapted
  *
@@ -596,7 +599,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x20;
+	exec_revision= 0x21;
 	#endif
 } /* getversions */
 
