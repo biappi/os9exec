@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/10/15 18:40:05  bfo
+ *    Consider only loword at OS9_F_CmpNam / type casting fixed
+ *
  *    Revision 1.13  2002/10/02 19:19:48  bfo
  *    Create the real mdir structure for OS9_F_SetSys D_ModDir
  *
@@ -101,8 +104,8 @@ os9err OS9_F_Load( regs_type *rp, ushort cpid )
     ushort   mode  = loword(rp->d[0]); /* attributes */
     Boolean  exedir= IsExec(mode) || mode==0;  /* mode=0 is a strange default, */
                     /* but seems to be correct as default for exedir in 'load' */
-       
-    p=nullterm(mpath,(char *)rp->a[0],OS9PATHLEN);
+           
+    p= nullterm(mpath,(char*)rp->a[0],OS9PATHLEN);
     debugprintf(dbgModules,dbgNorm,
       ("# F$Load: requested link to '%s', mode=$%04X\n", mpath,mode ));
 
@@ -233,22 +236,22 @@ os9err OS9_F_SRqMem( regs_type *rp, ushort cpid )
  *             E$NORAM: no memory free
  */
 {
-    void  *bp;
-    ulong memsz;
-    ulong mx= max_mem();
-    if   (mx==0) mx= 0xFFFFFFFF;
+    #define MxV 0xFFFFFFF0 
+    void    *bp;
+    ulong   memsz= rp->d[0];
+    ulong   mx   = max_mem();
     
-        memsz= rp->d[0];
-    if (memsz==0xFFFFFFFF) {
-        memsz= mx-15; /* prevent rounding up over available blocksize */
-        
+    if (memsz==0xFFFFFFFF) { /* get max mem */
+      #ifdef win_linux
+        memsz= 0x00800000; /* %%% a large portion */
+      #else
+        memsz= mx-15;  
         debugprintf(dbgMemory,dbgNorm,
-                   ("# F$SRqMem : requested max blocksize : MaxBlock()-16=%ld\n",memsz));
+               ("# F$SRqMem : requested max blocksize : max_mem()=%ld\n",memsz));
+      #endif
     }
-
-    if (memsz>mx) return os9error(E_NORAM);
-    
-    memsz= (memsz+15) & 0xFFFFFFF0; /* round up to next 16-byte boundary */
+            
+    memsz= (memsz+15) & MxV; /* round up to next 16-byte boundary */
     bp   = os9malloc(cpid,memsz);
     
     /* %%% E_MEMFUL is never returned, even if only pointer list is full */
@@ -1099,10 +1102,11 @@ os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
     #pragma unused(cpid)
     #endif
     
-    #ifdef macintosh
-    Handle    theModuleH;
-    ulong     hsize;
-    #endif
+//  #ifdef macintosh
+//    Handle    theModuleH;
+//    ulong     hsize;
+//  #endif
+    
     mod_exec *theModule; /* OS-9 module header */
 
     char   mpath[OS9PATHLEN],*p;
@@ -1126,31 +1130,31 @@ os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
     namsize= strlen(mpath)+1; if (namsize & 1) namsize++;        /* align needed */
     msz    = DatMod_Size        ( namsize, size );
     
-        pp= get_mem( msz, true );
+        pp= get_mem( msz );
     if (pp==NULL) return os9error(E_NORAM); /* not enough memory */
 
-    #ifdef macintosh
-      theModuleH= pp;
-      
-      MoveHHi (theModuleH); /* move at highest possible location */
-      HNoPurge(theModuleH); /* prevent purging */
-      HLock   (theModuleH); /* prevent moving around */
-        
-      os9modules[mid].modulehandle= theModuleH; /* enter handle in free table entry */
-      os9modules[mid].isBuiltIn   = false;
-        
-      /* now make sure it stays swapped in */
-      hsize=(ulong) GetHandleSize(theModuleH);
-      LockMemRange              (*theModuleH,hsize);
-      Flush68kCodeRange         (*theModuleH,hsize);
-      theModule=    (mod_exec *) *theModuleH;
-      
-    #else
+//  #ifdef macintosh
+//    theModuleH= pp;
+//    
+//    MoveHHi (theModuleH); /* move at highest possible location */
+//    HNoPurge(theModuleH); /* prevent purging */
+//    HLock   (theModuleH); /* prevent moving around */
+//      
+//    os9modules[mid].modulehandle= theModuleH; /* enter handle in free table entry */
+//    os9modules[mid].isBuiltIn   = false;
+//      
+//    /* now make sure it stays swapped in */
+//    hsize=(ulong) GetHandleSize(theModuleH);
+//    LockMemRange              (*theModuleH,hsize);
+//    Flush68kCodeRange         (*theModuleH,hsize);
+//    theModule=    (mod_exec *) *theModuleH;
+//    
+//  #else
       theModule= pp;
 
       os9modules[mid].modulebase= theModule;  /* enter pointer in free table entry */   
       os9modules[mid].isBuiltIn = false;
-    #endif
+//  #endif
     
     access= loword(rp->d[2]);    
     tylan = 0x0400;                                /*this is the data module type */  
@@ -1327,7 +1331,7 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
     numpaths= loword(rp->d[3]);
 
     paramsiz= rp->d[2];
-    paramptr= get_mem(paramsiz,false);
+    paramptr= get_mem( paramsiz );
     
     if (paramptr==NULL) err= os9error(E_NORAM);
     if (!err) {
@@ -1366,7 +1370,7 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
     cp->pd._sid= os9_word(sib); /* restore it */
 
     /* return the parameter memory block, it is now allocated at the process */
-    if (paramptr!=NULL) release_mem( paramptr,false );
+    if (paramptr!=NULL) release_mem( paramptr );
         
     if  (err) {
         /* -- save exit code */
