@@ -987,9 +987,10 @@
     3.12  02-06-06  Bfo     The descriptors' PD_TYP flag will be copied into the opt section of RBF devices.
     -------------------
 
-	      02-06-10  Bfo     File size of raw device correctly returned.
-	      02-06-10  Bfo     I$Create on Raw devices return now E$EOF, as in OS-9.
-    3.13  02-06-??  Bfo     ...
+          02-06-10  Bfo     File size of raw device correctly returned.
+          02-06-10  Bfo     I$Create on Raw devices return now E$EOF, as in OS-9.
+          02-06-12  Bfo     dev->totScts will be recalculated at disk ID change
+    3.13  02-06-12  Bfo     Return E_NOTRDY (instead E_EOF), if RBF device is not inserted.
     -------------------
 */
 
