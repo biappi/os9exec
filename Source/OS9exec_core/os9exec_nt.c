@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2002/10/15 18:23:43  bfo
+ *    memtable included
+ *
  *    Revision 1.24  2002/10/02 18:45:34  bfo
  *    OS9exec version changed to V3.19 / <mdirField> variable included
  *
@@ -581,7 +584,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x19;
+	exec_revision= 0x20;
 	#endif
 } /* getversions */
 
