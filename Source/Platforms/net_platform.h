@@ -41,8 +41,16 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2004/11/27 12:19:42  bfo
+ *    "net_platform" introduced
+ *
  *
  */
+
+
+// common ".h" file for platform specific network operations
+// for Mac, Windows and Linux
+//
 
 #ifndef __net_platform_h
 #define __net_platform_h
