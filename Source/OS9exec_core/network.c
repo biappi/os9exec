@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2004/11/28 13:54:46  bfo
+ *    up to date
+ *
  *    Revision 1.26  2004/11/27 12:16:15  bfo
  *    "net_platform" used / _XXX_ introduced
  *
@@ -120,7 +123,7 @@
 
 
 /* specific network definitions */
-#ifdef macintosh
+#ifdef MAC_NOTX
   #ifdef USE_CARBON
     OTNotifyUPP gYieldingNotifierUPP= NULL;
   #else
@@ -134,12 +137,16 @@
   #define WSA_ASYNC WM_USER+1
 #endif
 
-#ifdef linux
+#if defined linux || defined __MACH__
   #include <sys/utsname.h>
   #include <netdb.h>
   #include <netinet/in.h>
   #include <sys/socket.h>
-  #include <asm/ioctls.h>
+  
+  #ifdef linux
+    #include <asm/ioctls.h>
+  #endif
+  
   #define INVALID_SOCKET (-1)
   #define SOCKET_ERROR   (-1)
   
@@ -286,10 +293,9 @@ void init_Net( fmgr_typ* f )
 #define ICMP_ECHOREPLY     0
 #define ICMP_ECHO          8
 
-#ifdef win_linux
+#if defined win_linux || defined __MACH__
   #define MAX_PACKET 1024 // Max ICMP packet size
 #endif
-
 
 typedef struct _icmphdr 
 {
@@ -302,7 +308,7 @@ typedef struct _icmphdr
 
 
 
-#ifdef win_linux
+#if defined win_linux || defined __MACH__
 /* IP header structure */
 typedef struct _iphdr 
 {
@@ -323,7 +329,7 @@ typedef struct _iphdr
 
 
 
-#if defined powerc && __MWERKS__ >= CW7_MWERKS
+#if defined powerc && !defined __MACH__ && __MWERKS__ >= CW7_MWERKS
 static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 /* Input: ep - endpointref on which to negotiate the option
    enableReuseIPMode - desired option setting - true/false
@@ -382,7 +388,7 @@ static void OTAssert( _txt_, Boolean cond )
 #endif
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
 static pascal void YieldingNotifier( void* /* contextPtr */, OTEventCode code, 
                                      OTResult /* result */, void* /* cookie */ )
 // This simple notifier checks for kOTSyncIdleEvent and
@@ -423,7 +429,7 @@ static void SetDefaultEndpointModes( SOCKET s )
 // blocking, synchronous, and using synch idle events with
 // the standard YieldingNotifier.
 {
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       OSStatus junk;
       
       /* %%% workaround for the moment */
@@ -465,7 +471,7 @@ static void SetDefaultEndpointModes( SOCKET s )
 static os9err GetBuffers( net_typ* net )
 /* Get the transfer buffers for the net devices */
 {
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       /* First allocate a buffer for storing the data as we read it. */
       #ifdef USE_CARBON
           net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, nil );
@@ -580,7 +586,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
             if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
             HandleEvent(); /* allow cooperative multitasking */
        
-                err= netReadBlock( pid, net, &nBytes );
+                err= netReadBlock( pid,net, &nBytes );
             if (err) {           /* <err> is the number of bytes read, if positive */                     
                 if (net->closeIt) return E_EOF;   /* and error status, if negative */
             
@@ -631,6 +637,7 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
     net_typ*  net= &spP->u.net;
     ulong     remain, nBytes;
     int       ii;
+    char*     pp;
 
     if (lnmode) {
         for (ii=0; ii<*lenP; ii++) {
@@ -638,23 +645,24 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
         } /* for */
     } /* if */
     
-    remain= *lenP;
-    *lenP =     0;
+    pp    = buffer; /* don't change buffer pos, make a copy */
+    remain=  *lenP;
+    *lenP =      0; /* start counting written bytes */
     
     while (remain>0) {
             nBytes= remain;
-        if (nBytes>kTransferBufferSize) nBytes= kTransferBufferSize;
-        memcpy( net->transferBuffer,buffer, nBytes );
+        if (nBytes>kTransferBufferSize) nBytes= kTransferBufferSize; /* not more than buffer */
+        memcpy( net->transferBuffer,pp, nBytes );
     
         HandleEvent(); /* allow cooperative multitasking */
         if (net->closeIt) return 0;
-            
-            err= netWriteBlock( pid, net, &nBytes );
+        
+            err= netWriteBlock( pid,net, &nBytes );
         if (err) return err;
                     
-        *lenP += nBytes;
-        buffer+= nBytes; /* bytesSent */
+        pp    += nBytes; /* bytesSent */
         remain-= nBytes;
+        *lenP += nBytes;
     } /* while */
                           
     return 0;
@@ -671,7 +679,7 @@ os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
 static os9err reUse( _pid_, syspath_typ *spP )
 {
     net_typ* net= &spP->u.net;
@@ -713,7 +721,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
     ushort   fPort;
     #define  ALLOC_PORT 1025
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       TEndpointInfo info;
       TBind         bindReq;
       char*         kN;
@@ -736,7 +744,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
                      net->ipAddress.fHost= os9_long( my_inetaddr );
     fPort= os9_word( net->ipAddress.fPort ); /* little/big endian change */
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       if (net->listen) kN= "tilisten,tcp";
       else             kN=  kTCPName;
 
@@ -762,14 +770,14 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
     debugprintf(dbgSpecialIO,dbgNorm, ( "bind fAddressType=%d\n", net->ipAddress.fAddressType ));
     if (net->ipAddress.fAddressType==0) fPort= ALLOC_PORT;
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       bindReq.addr.buf= (UInt8 *) &net->ipAddress;
       bindReq.addr.len=     sizeof(net->ipAddress);
       bindReq.qlen= 1;
     #endif
 
     while (true) {
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
           net->ipAddress.fPort= os9_word(fPort); /* don't forget to save it back */
                          
                err= OTBind( net->ep, &bindReq,nil );
@@ -827,7 +835,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
         #endif
     } /* loop */
     
-    #ifdef powerc   
+    #if defined powerc && !defined __MACH__   
       if (err==kEADDRNOTAVAILErr) return OS9_ENETUNREACH;
       if (err==kEACCESErr)        return E_PERMIT;
       if (err)                    return OS9_EADDRINUSE;
@@ -851,7 +859,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
     net_typ* net= &spP->u.net;
     process_typ*  cp= &procs[pid];
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       InetAddress ipRemote;
     #endif
 
@@ -862,7 +870,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
     
     if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       OTMemzero( &net->call,   sizeof(TCall) );
       net->call.addr.buf = (UInt8 *) &ipRemote;
       net->call.addr.maxlen =  sizeof(ipRemote);
@@ -870,7 +878,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
           err= OTListen( net->ep, &net->call );
       if (err==kOTNoDataErr) err= 0; /* this is not an error */
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       err= listen( net->ep, SOMAXCONN );
       
       #ifdef windows32
@@ -903,7 +911,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
     ushort        fPort;
     Boolean       isRaw;
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       TCall sndCall;
       char* kN;
       OTResult lookResult;
@@ -937,7 +945,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
         net->ipRemote.fAddressType= net->fAddT;
     }
     else {
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
           if (isRaw) kN= kRawIPName;
           else       kN= kTCPName;
         
@@ -996,7 +1004,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
 //  /* the domain service is now implemented */
 //  if (fPort==53) return OS9_ENETUNREACH;
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       debugprintf(dbgSpecialIO,dbgNorm, ( "connect fAddT=%d fPort=%d\n", net->fAddT,fPort ));
       sndCall.addr.buf = (UInt8*) &net->ipRemote;
       sndCall.addr.len =    sizeof(net->ipRemote);
@@ -1066,12 +1074,12 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     ulong*       cpt;
     SOCKET       epNew;
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       OSStatus state;
       OTResult lookResult;
     #endif
         
-    #ifdef win_linux
+    #if defined win_linux || defined __MACH__
       SOCKADDR_IN name;
       int         len;
     #endif
@@ -1083,7 +1091,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
     if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
               state= OTGetEndpointState( net->ep );
       switch (state) {
           case T_IDLE:      err= pNlisten( pid, spP ); 
@@ -1126,7 +1134,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           } /* if */
       } /* if */
     
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       len= sizeof(name);
           epNew= accept( net->ep, (__SOCKADDR_ARG)&name, &len );
       if (epNew==INVALID_SOCKET) {
@@ -1288,7 +1296,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     byte*      h;
     IcmpHeader icmp;
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       TUnitData udata;
       
     #elif defined win_linux
@@ -1316,7 +1324,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     icmp.i_magic= kOurMagic;
     icmp.i_cksum= checksum( (ushort*)&icmp, sizeof(icmp));
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       udata.addr.buf = (byte*)&net->ipRemote;
       udata.addr.len =  sizeof(net->ipRemote);
       udata.opt.buf  = nil;
@@ -1364,7 +1372,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
       IcmpHeader  *icmp;
     #endif
     
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       TUnitData   udata;
       InetAddress src_addr;
       OTResult    lookResult;
@@ -1372,7 +1380,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
       // we use this buffer to hold incoming ICMP packets
       UInt8 icmp_data[5000];
       
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       char icmp_data[ MAX_PACKET ];
       struct sockaddr_in   from;
       int fromlen = sizeof(from);
@@ -1390,7 +1398,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     
     start_time= GetSystemTick();
     do {
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
           // Set up the received...
           udata.addr.buf    = (UInt8*) &src_addr;
           udata.addr.maxlen =   sizeof( src_addr);
@@ -1418,10 +1426,14 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
               }
           }
           
-        #elif defined win_linux
+        #elif defined win_linux || defined __MACH__
           do {   
-              err= ioctl( net->ep, FIONREAD, &n );
-          
+              #ifdef __MACH__
+                err= 0; n= 0;
+              #else
+                err= ioctl( net->ep, FIONREAD, &n );
+              #endif
+              
               debugprintf(dbgSpecialIO,dbgDetail, ( "NgPCmd err=%d n=%d\n", err,n ));
 
               if (n>sizeof(IpHeader)+sizeof(IcmpHeader)) {
@@ -1503,7 +1515,7 @@ os9err pNpos( _pid_, _spP_, ulong *posP )
 
 os9err pNready( _pid_, syspath_typ* spP, ulong *n )
 {
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       OTResult lookResult;
     #endif
     
@@ -1514,7 +1526,7 @@ os9err pNready( _pid_, syspath_typ* spP, ulong *n )
 //    WSANETWORKEVENTS ev;
 //  #endif
 
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
           err= OTCountDataBytes( net->ep, n );
       if (err==kOTLookErr) {
               lookResult= OTLook(net->ep);
@@ -1549,7 +1561,7 @@ os9err pNready( _pid_, syspath_typ* spP, ulong *n )
 
 os9err pNask( ushort pid, syspath_typ* spP )
 {
-    #ifdef powerc
+    #if defined powerc && !defined __MACH__
       OSStatus state;
     #endif
 
@@ -1563,7 +1575,7 @@ os9err pNask( ushort pid, syspath_typ* spP )
     #endif
 
     if (net->check) {
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
                state= OTGetEndpointState( net->ep );
           ok= (state==T_INCON);
 
