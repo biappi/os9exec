@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/10/27 23:44:19  bfo
+ *    idbg -o has only influence on StdErr
+ *
  *    Revision 1.11  2002/10/09 20:39:37  bfo
  *    uphe_printf => upe_printf
  *
@@ -160,8 +163,11 @@ void init_None( fmgr_typ* f )
     ss->_SS_Listen = (pathopfunc_typ)pUnimp;
     ss->_SS_Connect= (pathopfunc_typ)pUnimp;
     ss->_SS_Accept = (pathopfunc_typ)pUnimp;
+    ss->_SS_Recv   = (pathopfunc_typ)pUnimp;
+    ss->_SS_Send   = (pathopfunc_typ)pUnimp;
     ss->_SS_GNam   = (pathopfunc_typ)pUnimp;
     ss->_SS_SOpt   = (pathopfunc_typ)pUnimp;
+    ss->_SS_SendTo = (pathopfunc_typ)pUnimp;
     ss->_SS_PCmd   = (pathopfunc_typ)pUnimp;
 
     ss->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
@@ -1775,8 +1781,11 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
         case SS_Connect: err= (s->_SS_Connect)( pid,spP,    d2,*a ); break; /* $6E */
         case SS_Resv   : err=  0;    /* do nothing at the moment */  break; /* $6F */
         case SS_Accept : err= (s->_SS_Accept )( pid,spP, d1,   *a ); break; /* $70 */
+        case SS_Recv   : err= (s->_SS_Recv   )( pid,spP, d1,d2,*a ); break; /* $71 */
+        case SS_Send   : err= (s->_SS_Send   )( pid,spP, d1,d2,*a ); break; /* $72 */
         case SS_GNam   : err= (s->_SS_GNam   )( pid,spP,    d2,*a ); break; /* $73 */
         case SS_SOpt   : err= (s->_SS_SOpt   )( pid,spP, d1,d2    ); break; /* $74 set socket option   */
+        case SS_SendTo : err= (s->_SS_SendTo )( pid,spP, d1,d2,*a ); break; /* $77 */
         case SS_PCmd   : err= (s->_SS_PCmd   )( pid,spP,       *a ); break; /* $7A protocol direct cmd */
 
         /* general block read */
