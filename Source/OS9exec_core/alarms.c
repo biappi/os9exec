@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.6  2004/10/22 22:51:11  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -173,7 +176,7 @@ void A_Kill( ushort pid )
 
 /* ------------------------------------------------------------------ */
 
-static os9err Alarm_Delete( ushort /* pid */, ulong aId )
+static os9err Alarm_Delete( _pid_, ulong aId )
 /* A$Delete call: 0 */
 {
 	alarm_typ* aa;
@@ -269,7 +272,7 @@ os9err Alarm( ushort pid, ulong *aId, short aFunc, ushort sig, ulong aTime, ulon
 	os9err err;
 	
     switch (aFunc) {
-        case A_Delete: err= Alarm_Delete( pid, *aId                   ); break;
+      case A_Delete: err= Alarm_Delete( pid, *aId                   ); break;
     	case A_Set   : err= Alarm_Set   ( pid,  aId, sig, aTime       ); break;
      	case A_Cycle : err= Alarm_Cycle ( pid,  aId, sig, aTime       ); break;
     	case A_AtDate: err= Alarm_AtDate( pid,  aId, sig, aTime,aDate ); break;
