@@ -1079,7 +1079,18 @@
                             and _sg_alf is not 0, a extra 0x0A is appended after the _sg_eorch).
                             Tested with "list errmsg.short >/lp", ok. Postscript output also ok.
           02-09-04  Bfo     "init" module is built-in now and will be used if no external module available.
-    3.16  02-09-??  Bfo     ...
+    3.16  02-09-04  Bfo     Official release at Sourceforge.net (for the EFFO community).
+    -------------------
+
+          02-09-05  Bfo     "module_adapted.h" used (because ushort is already defined in Linux)
+          02-09-05  Bfo     HANDLE definition excluded for Linux
+          02-09-05  Bfo     Some type casting things at Linux fixed (filescsi,os9_long_inc, procs[k].pd)
+          02-09-05  Bfo     Printer correctly disabled for Linux version.
+          02-09-05  Bfo     Some type casting things fixed at the Linux version.
+          02-09-05  Bfo     Make an internal copy of the built-in "init" module.
+          02-09-09  Bfo     Bug at writing of remaining buffer multisector RBF fixed.
+          02-09-10  Bfo     The original "module.h" and nearly original "errno.h" can be used now.
+    3.17  02-09-??  Bfo     ...
     -------------------
 */
 
