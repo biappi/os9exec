@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/09/03 18:39:38  bfo
+ *    include "errno_adapted.h"
+ *
  *    Revision 1.4  2002/07/30 16:46:14  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -63,30 +66,46 @@
 // things more clear to look at, specific for each target)
 #include "target_options.h"
 
+
 // Note: Inclusion of all non-OS9exec includes has been moved
 //       into separate _precomp file to make them precompilable
-
-// include precompilables
 #include "os9main_incl_precomp.h"
 
-/* low_level magic */
-/* one single lowlevel include file for all types */
-/* use either UAE emulator */
-/* or  built-in interface to Mac 68k emulator */
-#include "os9_ll.h"
 
-/*
-// Note: These have been renamed to OS9_Exxx to avoid potential clashes
-//       with host (MSL) codes.
 
-// error variables shouldn't be declared twice
+// don't define this twice
+#undef E_ABORT
+
+/* OS-9 include files */
+/* errno_adapted.h: errno -> errno2 */
+#ifdef MPW
+/* search path for MPW is different */
+  #include ":os9defs:module.h"
+  #include ":os9defs:procid.h"
+  #include ":os9defs:sgstat.h"
+  #include ":os9defs:errno_adapted.h"
+#else  
+  #include "module.h"
+  #include "procid.h"
+  #include "sgstat.h"
+  #include "errno_adapted.h"
+#endif
+
+
+// these should definitely not be defined here, as MSL
+// will definitely use other intergers for the same
+// errors, causing probably all error checks failing
+// miserably. However, we let it as it is for older
+// pre-CW7 versions for now....
 #undef EWOULDBLOCK
-#undef ENOTSOCK
+#undef EINPROGRESS
+#undef EALREADY
 #undef EDESTADDRREQ
 #undef EMSGSIZE
 #undef EPROTOTYPE
 #undef ENOPROTOOPT
 #undef EPROTONOSUPPORT
+#undef ESOCKNOSUPPORT
 #undef EOPNOTSUPP
 #undef EPFNOSUPPORT
 #undef EAFNOSUPPORT
@@ -104,21 +123,57 @@
 #undef ETOOMANYREFS
 #undef ETIMEDOUT
 #undef ECONNREFUSED
-#undef EALREADY
-#undef EINPROGRESS
-*/
+#undef EBUFTOOSMALL
+#undef ESMODEXISTS
+#undef ENOTSOCK
 
-/* original OS-9 include files */
-#ifdef MPW
-/* search path for MPW is different */
-  #include ":os9defs:procid.h"
-  #include ":os9defs:sgstat.h"
-  #include ":os9defs:errno_adapted.h"
-#else  
-  #include "procid.h"
-  #include "sgstat.h"
-  #include "errno_adapted.h"
+#undef E_ABORT
+
+
+// Note: These have been renamed to OS9_Exxx to avoid potential clashes
+//       with host (MSL) codes.
+#define OS9_EWOULDBLOCK		0x701	/* I/O operation would block */
+#define OS9_EINPROGRESS		0x702	/* I/O operation now in progress */
+#define OS9_EALREADY		0x703	/* operation already in progress */
+#define OS9_EDESTADDRREQ	0x704	/* destination address required */
+#define OS9_EMSGSIZE		0x705	/* message too long */
+#define OS9_EPROTOTYPE		0x706	/* protocol wrong type for socket */
+#define OS9_ENOPROTOOPT		0x707	/* bad protocol option */
+#define OS9_EPROTONOSUPPORT 0x708	/* protocol not supported */
+#define OS9_ESOCKNOSUPPORT	0x709	/* socket type not supported */
+#define OS9_EOPNOTSUPP		0x70a	/* operation not supported on socket */
+#define OS9_EPFNOSUPPORT	0x70b	/* protocol family not supported */
+#define OS9_EAFNOSUPPORT	0x70c	/* address family not supported by protocol */
+#define OS9_EADDRINUSE		0x70d	/* address already in use */
+#define OS9_EADDRNOTAVAIL	0x70e	/* can't assign requested address */
+#define OS9_ENETDOWN		0x70f	/* network is down */
+#define OS9_ENETUNREACH		0x710	/* network is unreachable */
+#define OS9_ENETRESET		0x711	/* network dropped connection on reset */
+#define OS9_ECONNABORTED	0x712	/* software caused connection abort */
+#define OS9_ECONNRESET		0x713	/* connection reset by peer */
+#define OS9_ENOBUFS			0x714	/* no buffer space available */
+#define OS9_EISCONN			0x715	/* socket is already connected */
+#define OS9_ENOTCONN		0x716	/* socket is not connected */
+#define OS9_ESHUTDOWN		0x717	/* can't send after socket shutdown */
+#define OS9_ETOOMANYREFS	0x718	/* too many references */
+#define OS9_ETIMEDOUT		0x719	/* connection timed out */
+#define OS9_ECONNREFUSED	0x71a	/* connection refused by target */
+#define OS9_EBUFTOOSMALL	0x71b	/* mbuf too small for mbuf operation */
+#define OS9_ESMODEXISTS		0x71c	/* socket module already attached */
+#define OS9_ENOTSOCK		0x71d	/* path is not a socket	*/
+
+// this is a badie, but seemed to work for earlier CWs. For CW7 and
+// up we don't want it here any more!
+#if !defined errno
+  extern int errno;
 #endif
+
+
+/* low_level magic */
+/* one single lowlevel include file for all types */
+/* use either UAE emulator */
+/* or  built-in interface to Mac 68k emulator */
+#include "os9_ll.h"
 
 
 
