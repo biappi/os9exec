@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2004/12/04 00:05:08  bfo
+ *    MacOSX MACH adaptions / small transferBuffer for Linux
+ *
  *    Revision 1.33  2004/11/27 12:02:21  bfo
  *    _XXX_ introduced
  *
@@ -541,7 +544,7 @@ typedef struct {
 
 /* variant for disk objects */
 typedef struct {
-            #ifdef MAC_NOTX
+            #ifdef MACOS9
               FSSpec spec;              /* the HFS object's FSSpec */
             #endif
 
@@ -567,7 +570,7 @@ typedef struct {
 
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
 #else
   #if defined linux || defined __MACH__
@@ -592,7 +595,8 @@ typedef struct {
 #ifdef linux
   #define kTransferBufferSize 256
 #else
-  enum { kTransferBufferSize = 4096 };
+  #define kTransferBufferSize 4096
+// enum { kTransferBufferSize = 4096 };
 #endif
 
 
@@ -608,7 +612,7 @@ typedef struct {
             InetAddress ipRemote;       /* the remote host's address */
             ushort      fAddT;
                 
-            #ifdef MAC_NOTX
+            #ifdef MACOS9
               TCall     call;
             #endif
             
@@ -843,7 +847,7 @@ typedef struct {
             ushort       pid;
             syspath_typ* spP;
         
-            #ifdef MAC_NOTX
+            #ifdef MACOS9
               char       pict_title[OS9NAMELEN]; /* vmod window stores this info */
               PicHandle  pict_hdl   [MAX_PICTS];
               ushort     pict_tot;
@@ -1030,7 +1034,7 @@ extern  ushort interactivepid; /* process that will get keyboard abort signals *
 extern  char   startPath[OS9PATHLEN];   /* start path */
 extern  char   strtUPath[OS9PATHLEN];   /* next higher than start path */
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   /* the MPW-level default directory */
   extern    short startVolID;            /* startup dir's volume id */
   extern    long  startDirID;            /* startup dir's directory id */

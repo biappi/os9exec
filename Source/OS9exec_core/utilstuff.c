@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2004/12/04 00:07:26  bfo
+ *    MacOSX MACH adaptions / small transferBuffer for Linux
+ *
  *    Revision 1.34  2004/11/27 12:08:58  bfo
  *    _XXX_ introduced
  *
@@ -297,7 +300,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
    
     known=true;
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       if (hosterr==noErr) return 0;
     
       switch (hosterr) {
@@ -1003,7 +1006,7 @@ Boolean VolInfo( const char* pathname, char* volname )
 Boolean OpenTDir( const char* pathname, DIR** d )
 /* Open Directory with special treatment of empty root dir on windows */
 {
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       struct stat info;
 
       *d= NULL; /* not used */
@@ -1734,7 +1737,7 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   os9err RBF_Rsc( FSSpec *fs )
   {
       os9err     err;
@@ -1893,7 +1896,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     ushort sas,ssize;
     byte   pdtyp;
     
-    #if defined MAC_NOTX
+    #if defined MACOS9
       Boolean isFolder;
       FSSpec  fs,afs;
 
@@ -1916,7 +1919,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
       #endif
     #endif
     
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
                         err= GetRBFName(  os9path,   mode, &isFolder, &fs,&afs );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, &fs,&afs );
       

@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2004/12/04 00:02:42  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.8  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -221,7 +224,7 @@
 #include "vmod.h"
 #include "utilstuff.h"
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   #include "macfiles.h"
 #elif defined linux
   #include "linuxfiles.h"

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2004/12/04 00:00:16  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.9  2004/11/27 12:07:42  bfo
  *    _XXX_ introduced
  *
@@ -84,7 +87,7 @@ static void usage( char* name, _pid_ )
 /* internal "rename" command for OS9exec/nt */
 os9err int_rename(ushort cpid, int argc, char **argv)
 {
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
     /* special mac includes */
     #include <Finder.h>
     FSSpec     theFSSpec;
@@ -191,7 +194,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         err= usrpath_close  ( cpid, path );                       if (err) return err;
     }
     else {
-        #ifdef MAC_NOTX
+        #ifdef MACOS9
           /* now do the real stuff */
           /* first make FSSpec for file/dir to be renamed */
               err= getFSSpec( cpid,oldPath, exedir ?_exe:_data, &theFSSpec ); 

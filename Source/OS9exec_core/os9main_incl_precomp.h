@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2004/12/04 00:11:43  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.12  2004/11/20 13:31:00  bfo
  *    Compileable for Mac Classic again
  *
@@ -106,7 +109,7 @@
 /* define a special label for 68k/MacOS9/Carbon software */
 /* which is not compiled for the MACH kernel */
 #if defined macintosh && !defined __MACH__
-  #define MAC_NOTX
+  #define MACOS9
 #endif
 
 #ifndef TERMINAL_CONSOLE
@@ -114,7 +117,7 @@
 #endif
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   /* global feature switches */
   // #define PARTIALRETURNREGS /* returning 16/8-bit values only affects loword/lobyte of register */
   // #define NODEBUG /* cause all debug statements to be omitted (but debugwait() still exists) */
@@ -285,7 +288,7 @@ typedef struct dirent dirent_typ;
   #endif
 #endif
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   #ifdef MPW
         /* MPW include files */
     #pragma push

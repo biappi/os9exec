@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/12/03 23:59:19  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.7  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -67,7 +70,7 @@
 
 
 /* special mac includes */
-#ifdef MAC_NOTX
+#ifdef MACOS9
 #include <Finder.h>
 #endif
 
@@ -203,7 +206,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     char    pD [OS9PATHLEN];
     char    *destname;
     
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       OSErr      oserr;
       FSSpec     sourceSpec;
       FSSpec     destSpec;
@@ -262,7 +265,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         if (err) return _errmsg( err, "can't find \"%s\". ", nmS );
     }
     else {
-        #ifdef MAC_NOTX
+        #ifdef MACOS9
           /* make FSSpec for source */
               err= getFSSpec( cpid,pS, exe_dir ?_exe:_data, &sourceSpec); /* find source */
           if (err) return _errmsg(err, "can't find \"%s\". ",pS);
@@ -315,7 +318,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         }
     }
     else {
-        #ifdef MAC_NOTX
+        #ifdef MACOS9
           /* make FSSpec for destination */
           err= getFSSpec( cpid,pD, exe_dir ?_exe:_data, &destSpec ); /* find destination */
           debugprintf(dbgUtils,dbgNorm,("# int_move: destination err=%d vol=%d, dir=%d, name=%#s\n",
@@ -419,7 +422,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         err= delete_file      ( cpid, fRBF, nmS, 0x01 );            if (err) return err;
     }
     else {
-        #ifdef MAC_NOTX
+        #ifdef MACOS9
           /* for FSpCatMove, we need the destination directory's FSSpec */
           FSMakeFSSpec(destSpec.vRefNum,destSpec.parID,"\p",&destDirSpec);
           debugprintf(dbgUtils,dbgNorm,("# int_move: dest vol=%d, dir=%d, name=%#s\n",
