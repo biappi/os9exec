@@ -1904,6 +1904,7 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
   	  	            q= strstr( q," " ); if (q==NULL) break;
                     q[ 0 ]= '_';
                 } /* loop */
+
                 
                 if (fetchnames) {
                     /* show slashes at filename beginnings as periods (that's what Fetch FTP does on OS9->mac */
