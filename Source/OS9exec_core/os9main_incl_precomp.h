@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/07/30 16:46:14  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.6  2002/07/23 19:37:15  bfo
  *    go back to the 1/60th second system
  *
@@ -194,26 +197,27 @@ typedef struct dirent dirent_typ;
 
 #ifndef linux
   /* C library include files */
-  #include <Types.h>
-  #include <stdarg.h>
-  #include <stddef.h> // %%% added luz 2002-02-04
-  #include <errno.h>  // %%% added luz 2002-02-04
-  #include <StdIO.h>
-  #include <StdLib.h>
-  #include <Time.h>
-  #include <String.h>
-
-  #ifdef macintosh
-    #include <Strings.h>
-  #endif
-
   #include <CType.h>
+  
+  #ifdef USE_CARBON
+  	#include <Carbon.h>
+  #else
+    #include <Types.h>
+    #include <stdarg.h>
+    #include <stddef.h> // %%% added luz 2002-02-04
+    #include <errno.h>  // %%% added luz 2002-02-04
+    #include <StdIO.h>
+    #include <StdLib.h>
+    #include <Time.h>
+    #include <String.h>
 
-  #ifdef macintosh
-    #include "FCntl.h"
-    #include "IntEnv.h"
-    #include <OpenTransport.h>
-    #include <OpenTptInternet.h>
+    #ifdef macintosh
+      #include <Strings.h>
+      #include "FCntl.h"
+      #include "IntEnv.h"
+      #include <OpenTransport.h>
+      #include <OpenTptInternet.h>
+    #endif
   #endif
 
   #include <Signal.h>
