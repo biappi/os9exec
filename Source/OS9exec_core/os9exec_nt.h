@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/07/23 19:39:07  bfo
+ *    introduce <syCorr> variable
+ *
  *    Revision 1.8  2002/07/07 22:09:25  bfo
  *    take the RAM disk size from the descriptor (if available): define PD_SCT
  *
@@ -923,7 +926,7 @@ extern ulong   my_inetaddr;
 /* tickCount at start of the program */
 extern ulong   startTick;
 extern ulong    lastTick;
-extern ulong      syCorr;
+extern int        syCorr;
 
 #ifdef linux
   ulong sec0;

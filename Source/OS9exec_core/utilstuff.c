@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2002/07/23 19:40:33  bfo
+ *    go back to the 1/60th seconds system, synchronise with <sycorr>
+ *
  *    Revision 1.15  2002/07/21 15:11:13  bfo
  *    Up to date again
  *
@@ -472,8 +475,8 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
     byte      tc[4];
     ulong*    tcp= (ulong*)&tc[0];
-    ulong     tsm, ssm, ct0, syTick;
-    int       y, m, d;
+    ulong     ct0;
+    int       y, m, d, tsm, ssm, syTick;
     
     /* Get consistent time/date and ticks */
     if      (withTicks) { syTick= GetSystemTick(); *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
@@ -495,15 +498,20 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     if (withTicks) {
             tsm= (syTick+syCorr)/TICKS_PER_SEC;
         if (tsm>ssm) { 
+        //  upe_printf( "> %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
             syCorr= (ssm+1)*TICKS_PER_SEC - syTick-1;
             *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        //  upe_printf( "  %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
         }
           
         if (tsm<ssm) {   
+        //  upe_printf( "< %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
             syCorr=  ssm*   TICKS_PER_SEC - syTick;
             *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        //  upe_printf( "  %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
         }
-    }
+        
+    } /* if */
    
     if (asGregorian) {
 		/* gregorian format */
