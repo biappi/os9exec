@@ -65,6 +65,9 @@
     #include "TermWindow.h"
 #endif
 
+#include "Resource Constants.h"
+
+
 short TermWinScrolls = 0;
 
 ControlActionUPP TermWinHorUPP = NULL;
@@ -180,6 +183,7 @@ pascal  OSErr   InitTermMgr(void)
                     //finally!
                 if (noErr == (result = InitTM())) {
                 } else {
+                    result= 0; /* will be caught later on */
                     //OSErr at InitTM/InitTermMgr
                 }
             } else {
@@ -1209,16 +1213,26 @@ pascal  OSErr       NewTermWindow(TermWindowPtr *termPtr,
         }
         
         BlockMove(toolName, realToolName, toolName[0] + 1);
-        //strncpy(realToolName, toolName, toolName[0] + 1);
         if (toolName[0] == 0) {
-            BlockMove("\pVT102 Tool", realToolName, 10);
-            //strcpy(realToolName, "\pTTY Tool");
+            BlockMove( "\pVT102 Modul",    realToolName, 20);
         }
 
-        procID = TMGetProcID(realToolName);
-        if (-1 == procID) {
-            CRMGetIndToolName(classTM, 1, realToolName);
+            procID= TMGetProcID          ( realToolName );
+        if (procID==-1) {
+            BlockMove( "\pVT102 Tool",     realToolName, 20);
+            procID= TMGetProcID          ( realToolName );
         }
+        
+        if (procID==-1) {
+            CRMGetIndToolName( classTM, 1, realToolName );
+            procID= TMGetProcID          ( realToolName ); /* assign procid !! */
+        }
+        
+        if (procID==-1) {
+            StopAlert( rVT102Alert, NULL );
+            ExitToShell();
+        }
+        
         
         termRect = ((WindowPtr)*termPtr)->portRect;
         AdjustTermRect(&termRect);
@@ -1256,7 +1270,7 @@ pascal  OSErr       NewTermWindow(TermWindowPtr *termPtr,
         result = tmGenericError;
     }
     
-    return (result);
+    return result;
 } /*NewTermWindow*/
 
 
