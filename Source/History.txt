@@ -1180,6 +1180,9 @@
           03-04-26  Bfo     Activate inactive "netatalk" nodes automatically in Mac file system
           03-04-26  Bfo     Activate most of the ramDisk things even without RAM_SUPPORT
           03-05-05  Bfo     Error 000:164 for raw socket open w/o permission
+          
+          03-05-08  Bfo     MacOSX: "carbon.r" added => os9app is running natively under MacOSX !!
+          03-05-08  Bfo     MacOSX: RBF and network support added ( xxxInContext functions )
     3.22  03-??-??  Bfo
     -------------------
 */
