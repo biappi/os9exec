@@ -967,11 +967,11 @@
                     luz     checkout tests with WinCVS and MacCVS successful!
 
           02-04-30  Bfo     Bring the update to sourceforge:
-		  02-04-12	Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
-		  02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
-		  02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
-		  02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
-	3.11  02-04-??  Bfo
+          02-04-12	Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
+          02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
+          02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
+          02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
+    3.11  02-04-??  Bfo
 	-------------------		
 */
 
