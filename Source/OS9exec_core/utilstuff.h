@@ -72,6 +72,7 @@ char*   OS9exec_Name( void );
 
 
 Boolean AbsPath      ( const char* pathname );
+void    GetOS9Dev    ( const char* pathname, char* cmp_entry );
 Boolean IsWhat       ( const char* pathname, Boolean isRoot );
 Boolean IsRoot       ( const char* pathname );
 Boolean IsRaw        ( const char* pathname );
@@ -104,6 +105,7 @@ Boolean InstalledDev ( const char* os9path,
 Boolean SCSI_Device  ( const char* os9path,
                        short  *scsiAdapt, short  *scsiBus, int  *scsiId,    short   *scsiLUN,
                        ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp, ptype_typ *typeP );
+Boolean  RAM_Device  ( const char* os9path );
 
 #ifdef windows32
   os9err AdjustPath ( const char* pathname, char* adname, Boolean creFile );

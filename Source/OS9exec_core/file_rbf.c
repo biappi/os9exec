@@ -66,6 +66,7 @@ typedef struct {
 			Boolean wProtected;			  /* true, if write  protected */
 			Boolean fProtected;			  /* true, if format protected */
 			Boolean multiSct;             /* true, if multi sector support */
+			Boolean isRAM;                /* true, if RAM disk */
 			int	    scsiID;               /* SCSI ID, -1 if NO_SCSI */
 			short   scsiAdapt;            /* SCSI Adaptor, -1 if none */
 			short   scsiBus;              /* SCSI Bus, normally 0 */
@@ -202,6 +203,11 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
     }
    
     do {    
+        if (dev->isRAM) {
+            err= E_NOTRDY;
+            break;
+        }
+        
         if (IsSCSI(dev)) {
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
             if (err) {
@@ -255,6 +261,11 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
     }
         
     do {
+        if (dev->isRAM) {
+            err= E_NOTRDY;
+            break;
+        }
+        
         if (IsSCSI(dev))
             err= WriteToSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
         else {
@@ -310,24 +321,6 @@ static os9err CutOS9Path( char** p, char* cmp_entry )
 
 
 
-static void GetOS9Dev( char* p, char* cmp_entry )
-/* gets the next subpath of <p> into <cmp_entry> */
-{
-    char* c= cmp_entry;
-
-    if (AbsPath( p )) { /* only searching absolute paths */
-        p++;
-        while  (*p!=NUL && *p!=PSEP && *p!='@') {
-            *c= *p; 
-            c++; p++;
-        } /* while */
-    }
-    
-    *c= NUL;
-} /* GetOS9Dev */
-
-
-
 static void GetBuffers( rbfdev_typ* dev, syspath_typ* spP )
 {
     #ifndef linux
@@ -368,6 +361,11 @@ static os9err DevSize( rbfdev_typ* dev )
 {
     os9err err;
     ulong  size,ssize;
+    
+    if (dev->isRAM) {
+        dev->totScts= 4096;
+        return 0;
+    }
 
     if (IsSCSI(dev)) {  /* try to switch to correct sector size first */
         err= Set_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize );
@@ -612,7 +610,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     rbfdev_typ*  dev;
     ptype_typ    type;
     int          ii, n;
-    Boolean      abs, isSCSI, isFolder, wProtect;
+    Boolean      abs, isSCSI, isRAM, isFolder, wProtect;
     
     process_typ* cp    = &procs[pid];
     
@@ -670,62 +668,68 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
         err= 0;
         if (!fu) {
-            #ifdef MACFILES
-              err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
-            #elif defined win_linux
-              err= GetRBFName( pathname,mode, &isFolder, (char*)&rbfname );
-            #endif
-            /* must open it in the right mode */
-            if (err==E_FNA && !IsDir(mode)) return err;
+                 isRAM= RAM_Device( pathname );
+            if (!isRAM) {
+                #ifdef MACFILES
+                  err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
+                #elif defined win_linux
+                  err= GetRBFName( pathname,mode, &isFolder, (char*)&rbfname );
+                #endif
+                
+                /* must open it in the right mode */
+                if (err==E_FNA && !IsDir(mode)) return err;
+            }
         }
 
-             isSCSI= (err && mnt_scsi!=NO_SCSI);
-        if  (isSCSI) {
-            scsiID   = mnt_scsi;
-            scsiAdapt= mnt_scsiAdapt>=0 ? mnt_scsiAdapt : defSCSIAdaptNo;
-            scsiBus  = mnt_scsiBus  >=0 ? mnt_scsiBus   : defSCSIBusNo;    
-            scsiLUN  = mnt_scsiLUN  >=0 ? mnt_scsiLUN   : 0;    
-        }
-        else isSCSI= (err && SCSI_Device( pathname, &scsiAdapt, &scsiBus, &scsiID, &scsiLUN, 
-                                                    &scsiSsize, &scsiSas, &scsiPDTyp, &type ));
-        if  (isSCSI)           GetOS9Dev( pathname, (char*)&cmp );
-        else {
-            if (fu) CutPath( cmp );
-            else {
-                #ifdef MACFILES
-                  /* this is the correct way to get pascal strings back */
-                  if (!err) { /* GetRBFName called earlier already */
-                  memcpy( &ali, &afs.name, sizeof(ali) );
-                  p2cstr ( ali );
-              }
-              else {
-                      GetOS9Dev( pathname, (char*)&cmp );
-                        err= getFSSpec( 0,cmp, _start, &fs );
-                    if (err) return err;
-                  }
-                  
-              memcpy   ( &cmp, &fs.name, sizeof(cmp) );
-              p2cstr    ( cmp );
-              if (strcmp( cmp,ali )==0) strcpy( ali,"" );
-            
-            #elif defined win_linux
-                  if (err) return E_UNIT; /* GetRBFName called earlier */
-              strcpy( cmp,rbfname );
-              
-            #else
-              /* %%% some fixed devices defined currently */
-              GetOS9Dev( pathname, (char*)&cmp );
-              if      (ustrcmp( cmp,"mt")==0) cdv= 1; 
-              else if (ustrcmp( cmp,"c1")==0) cdv= 2;
-              else if (ustrcmp( cmp,"c2")==0) cdv= 3;
-              else if (ustrcmp( cmp,"c3")==0) cdv= 4;
-              else if (ustrcmp( cmp,"dd")==0) cdv= 5;
-              else return E_UNIT;
-            
-              break;
-            #endif
+        if (!isRAM) {
+                 isSCSI= (err && mnt_scsi!=NO_SCSI);
+            if  (isSCSI) {
+                scsiID   = mnt_scsi;
+                scsiAdapt= mnt_scsiAdapt>=0 ? mnt_scsiAdapt : defSCSIAdaptNo;
+                scsiBus  = mnt_scsiBus  >=0 ? mnt_scsiBus   : defSCSIBusNo;    
+                scsiLUN  = mnt_scsiLUN  >=0 ? mnt_scsiLUN   : 0;    
             }
-        } /* if */
+            else isSCSI= (err && SCSI_Device( pathname, &scsiAdapt, &scsiBus, &scsiID, &scsiLUN, 
+                                                        &scsiSsize, &scsiSas, &scsiPDTyp, &type ));
+            if  (isSCSI)           GetOS9Dev( pathname, (char*)&cmp );
+            else {
+                if (fu) CutPath( cmp );
+                else {
+                    #ifdef MACFILES
+                      /* this is the correct way to get pascal strings back */
+                      if (!err) { /* GetRBFName called earlier already */
+                          memcpy( &ali, &afs.name, sizeof(ali) );
+                          p2cstr ( ali );
+                      }
+                      else {
+                          GetOS9Dev( pathname, (char*)&cmp );
+                              err= getFSSpec( 0,cmp, _start, &fs );
+                          if (err) return err;
+                      }
+                  
+                      memcpy   ( &cmp, &fs.name, sizeof(cmp) );
+                      p2cstr    ( cmp );
+                      if (strcmp( cmp,ali )==0) strcpy( ali,"" );
+            
+                    #elif defined win_linux
+                      if (err) return E_UNIT; /* GetRBFName called earlier */
+                      strcpy( cmp,rbfname );
+              
+                    #else
+                      /* %%% some fixed devices defined currently */
+                      GetOS9Dev( pathname, (char*)&cmp );
+                      if      (ustrcmp( cmp,"mt")==0) cdv= 1; 
+                      else if (ustrcmp( cmp,"c1")==0) cdv= 2;
+                      else if (ustrcmp( cmp,"c2")==0) cdv= 3;
+                      else if (ustrcmp( cmp,"c3")==0) cdv= 4;
+                      else if (ustrcmp( cmp,"dd")==0) cdv= 5;
+                      else return E_UNIT;
+            
+                      break;
+                    #endif
+                }
+            } /* if isSCSI */
+        } /* if !isRAM */
 
         if (!AbsPath(pathname)) {
             if (IsExec(mode)) strcpy( tmp, cp->x.path );
@@ -813,7 +817,8 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
     dev->last_alloc= 0;            /* initialize allocater pointer */
     dev->sp_img    = 0;            /* the image syspath will be connected here later */
-
+    dev->isRAM     = isRAM;        /* RAM disk flag */
+    
     strcpy( dev->img_name,"" );    /* no  image name by default */
     strcpy( dev->name2,   "" );    /* no  2nd   name by default */
     strcpy( dev->name3,   "" );    /* no  3rd   name by default */
@@ -865,11 +870,13 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
         /* try to open in read/write mode first (if not asking for wProtection */
         /* if not possible, open it readonly */
-        if (!wProtect) {
-             err= Open_Image( pid,dev, type,pathname, poUpdate ); if (!err) break;
+        if (!isRAM) {
+            if (!wProtect) {
+                 err= Open_Image( pid,dev, type,pathname, poUpdate ); if (!err) break;
+            }
+                 err= Open_Image( pid,dev, type,pathname, poRead );
+            if (!err)                 dev->wProtected= true;
         }
-             err= Open_Image( pid,dev, type,pathname, poRead );
-        if (!err)                 dev->wProtected= true;
     } while (false);
 
     do {                               if (err) break;

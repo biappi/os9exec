@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/07/01 21:28:11  bfo
+ *    p2cstr and c2pstr implemented correctly for Carbon version
+ *
  *    Revision 1.7  2002/06/30 10:41:56  bfo
  *    check, if KeyToBuffer might cause an overflow -> seems not to be the case
  *
@@ -757,6 +760,26 @@ Boolean AbsPath( const char* pathname )
 /* returns true if <pathname> is an absolute path */
 {   return *pathname==PSEP;
 } /* AbsPath */
+
+
+
+void GetOS9Dev( const char* pathname, char* cmp_entry )
+/* gets the next subpath of <p> into <cmp_entry> */
+{
+    char*       c= cmp_entry;
+    const char* p= pathname;
+    
+    if (AbsPath( p )) { /* only searching absolute paths */
+        p++;
+        while  (*p!=NUL && *p!=PSEP && *p!='@') {
+            *c= *p; 
+            c++; p++;
+        } /* while */
+    }
+    
+    *c= NUL;
+} /* GetOS9Dev */
+
 
 
 Boolean IsWhat( const char* pathname, Boolean isRoot )
@@ -1622,6 +1645,16 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
+Boolean RAM_Device( const char* os9path )
+/* check, if it is a RAM device */
+{
+    char cmp[OS9PATHLEN];
+    
+    GetOS9Dev( os9path, (char*)&cmp );
+    return( ustrcmp( cmp,"r0" )==0 );
+} /* RAM_Device */
+
+
 
 static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
 /* Returns true, if <os9path> is an RBF device */
@@ -1651,6 +1684,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     *typeP= fRBF; /* default value */
     #ifdef RBF_SUPPORT
       if (InstalledDev( os9path,"",false, &cdv )) return true; /* already ? */
+      if (RAM_Device  ( os9path ))                return true;
     #endif
     
     #ifdef macintosh
