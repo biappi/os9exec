@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2003/04/12 21:52:26  bfo
+ *    "inetdb" will be adapted automatically now
+ *
  *    Revision 1.9  2002/11/06 19:59:48  bfo
  *    zero is zero for os9_word/os9_long
  *
@@ -143,6 +146,12 @@ const byte Init_mod[] = {
 };
 mod_exec* Init_ptr= (mod_exec*)Init_mod;   /* ptr to Init module */
 #define sizeof_Init_mod 366
+
+
+/* offset definitions for module "inetdb" */
+#define OFFS_HOSTS 0x34 /* "hosts" location */
+#define OFFS_DNS   0x4c /*  DNS    location */
+         
 
 
 
@@ -447,7 +456,7 @@ int get_mid( void *modptr )
 {
     int k;
     for(k=0; k<MAXMODULES; k++) {
-        if ((void *)get_module_ptr(k)==modptr) return k;
+        if ((void*)get_module_ptr(k)==modptr) return k;
     }
     
     return MAXMODULES;
@@ -505,6 +514,48 @@ int NextFreeModuleId( char* name )
 
 
 
+static void adapt_init( mod_exec* mh )
+/* special treatment for the "init" module: set version+revision */
+/* and connect it to the globals */
+{
+    char*   bp;
+    char*   nm;
+    ushort* sp;
+    
+    bp= (byte*)  mh + 0x57; *bp= exec_version;
+    bp= (byte*)  mh + 0x58; *bp= exec_revision;
+    bp= (byte*)  mh + 0x59; *bp= 0;
+
+    nm= (char*)  mh + 0x4c;          strcpy( nm,hw_site );
+    bp= (byte*)  mh + 0x50;     sp= (ushort*)bp;
+    nm= (char*)  mh + os9_word(*sp); strcpy( nm,hw_name );
+    bp= (byte*)  mh + 0x5A;     sp= (ushort*)bp;
+    nm= (char*)  mh + os9_word(*sp); strcpy( nm,sw_name );
+    init_module= mh;
+    mod_crc    ( mh );
+} /* adapt_init */
+
+
+
+static void adapt_le0( mod_exec* mh, ulong inetAddr )
+{
+    char*  bp;
+    ulong* lp;
+    
+    bp= (byte*) mh + 0x7a;        /* broadcast address position */
+    lp= (ulong*)bp;
+   *lp= os9_long(inetAddr);
+    bp= (byte*) mh + 0x7d; *bp= 0xff; /* specific for broadcast */
+
+    bp= (byte*) mh + 0x8a;      /* my internet address position */
+    lp= (ulong*)bp;
+   *lp= os9_long(inetAddr);
+            
+    mod_crc( mh );
+} /* adapt_le0 */
+
+
+
 static void fill_s( char** b, char* s )
 {
     sprintf( *b, "%s", s );
@@ -512,40 +563,140 @@ static void fill_s( char** b, char* s )
 } /* fill_s */
 
 
-static void adapt_inetdb( mod_exec* theModuleP, ulong inetAddr, ulong dns_Addr, char* domainName )
+
+static void go_thru_list( char* v0, char* b0, ulong inetAddr )
+/* adapt "localhost" at the "inetdb" module */
 {
-    #define OFFS_HOSTS 0x34 /* "hosts" location */
-    #define OFFS_DNS   0x4c /* DNS location */
-     
-    ulong*  up;
-    short*  hp;
-    char*   bp;
-    ulong   d;
-    byte*   h;
+    char    *v, *b, *blk, *bBlk;
+    ulong   *ipa;
+    short   i, jump;
     
-    up= (byte*) theModuleP + OFFS_HOSTS;
-    bp= (byte*) theModuleP +    os9_long( *up );
-    up=  bp + 4;
-    *up= inetAddr;
+    short   n     = os9_word( *(short*)v0 );
+    Boolean lFound= false;
     
-    up= (byte*) theModuleP + OFFS_DNS;
-    bp= (byte*) theModuleP +    os9_long( *up );
-    hp=  bp + 2;
-    bp=  bp + 4; memset( bp, 0, os9_word( *hp )-2 ); /* clear the original area */
+    *(short*)b0= *(short*)v0;
     
-    if  (strcmp( domainName,"" )==0) domainName= "local";
-    fill_s( &bp, domainName );
+    v0+= sizeof(short); /* skip the number of entries entry */
+    b0+= sizeof(short);
     
-                                  d= os9_long( dns_Addr );
+    v= v0;
+    for (i=0; i<n; i++) {
+        blk= v;         v+= sizeof(short); jump= os9_word( *(short*)blk );
+        ipa= (ulong*)v; v+= sizeof(ulong); /* get the inetaddr */
+
+        while (true) {
+            if (ustrcmp( v,"localhost" )==0) {
+                lFound= true;
+                if (*ipa==inetAddr) return; /* everything is perfect already */
+            }
+
+            v= v+strlen(v)+1;
+            if (*v==NUL) break;
+        } /* while */
+        if (lFound) break;
+        
+        blk+= jump;
+        v   = blk; 
+    } /* for */
+    if (!lFound) return; /* probably not enough room to put "localhost" in */
+    
+    v= v0;
+    b= b0;
+    for (i=0; i<n; i++) {
+        blk =         v;  v+= sizeof(short); jump= os9_word( *(short*)blk );
+        ipa = (ulong*)v;  v+= sizeof(ulong); /* get the inetaddr */
+
+        bBlk=    b;       b+= sizeof(short);
+        *(ulong*)b= *ipa; b+= sizeof(ulong); /* get the inetaddr */
+
+    //  printf( "%3d %3d %08X '%s'\n", i, jump, os9_long( *ipa ), v );
+
+        fill_s( &b, v );
+        if (*ipa==os9_long( inetAddr )) fill_s( &b, "localhost" );
+        fill_s( &b, ""         ); /* one additional NUL char */
+        
+        if ((ulong)b%2==1) b++; /* make address even */
+        *(short*)bBlk= os9_word( (short)(b-bBlk) );
+
+        blk+= jump;
+        v   = blk; 
+    } /* for */
+} /* go_thru_list */
+
+
+
+static void adapt_inetdb( mod_exec* mh, ulong inetAddr, ulong dns1, ulong dns2, char* domainName )
+/* the module "inetdb" (part of Internet Support Package ISP) will be adapted according */
+/* to the OS9exec's host machine settings: <inetAddr> <dns1> <dns2> and <domainName>    */
+{
+    short   *hp;
+    char    *bp, *b0, *bL, *v0;
+    ulong   d, size;
+    byte    *h;
+    char    sv[ OS9NAMELEN ];
+
+    
+ /* ------- hosts field adaption --------- */    
+    b0= (char* ) mh + OFFS_HOSTS;
+    b0= (char* ) mh + os9_long( *(ulong*)b0 ); /* get start position of "hosts" field */
+    
+    bL= (char* ) mh + OFFS_HOSTS + sizeof(ulong);
+    bL= (char* ) mh + os9_long( *(ulong*)bL ); /* get end   position of "hosts" field */
+  
+                      size= bL-b0;
+    v0=      get_mem( size );
+    memcpy( v0,b0,    size );
+    memset(    b0, 0, size ); /* clear the whole original field */
+
+    go_thru_list( v0,b0, inetAddr );     /* rearrange the field */
+
+    release_mem( v0 );
+
+    
+        
+ /* ------- DNS field adaption --------- */    
+    bp = (char* ) mh + OFFS_DNS;                  
+    bp = (char* ) mh + os9_long( *(ulong*)bp ); /* get start position of "resolv.conf" field */
+    bp+= 2;       hp= (short*)bp;
+    bp+= 2;
+
+    strcpy( sv, bp );                   /* make a copy of the existing domain name */
+    memset( bp, 0, os9_word( *hp )-2 );                 /* clear the original area */
+    
+    if  (strcmp( domainName,"" )==0) domainName= sv;
+    fill_s( &bp, domainName );                       /* fill in the domain name */
+    
+                                  d= os9_long( dns1 );
                                   h= (byte*) &d;
-    sprintf( bp, "%d.%d.%d.%d\0", h[0],h[1],h[2],h[3] );
+    sprintf( bp, "%d.%d.%d.%d\0", h[0],h[1],h[2],h[3] ); /* fill in DNS IP address */
     bp=  bp + strlen( bp )+1;
+
+    if (dns2!=0) {                d= os9_long( dns2);
+                                  h= (byte*) &d;
+        sprintf( bp, "%d.%d.%d.%d\0", h[0],h[1],h[2],h[3] ); /* fill in DNS IP address */
+        bp=  bp + strlen( bp )+1;
+    }
                         
-    fill_s( &bp, ""         );
-    fill_s( &bp, domainName );
-           
-    mod_crc( theModuleP );
+    fill_s( &bp, ""         ); /* one additional NUL char */
+    fill_s( &bp, domainName ); /* fill in the domain name */
+    
+    
+ /* --- update module CRC --- */          
+    mod_crc( mh );
 } /* adapt_inetdb */
+
+
+
+static void adapt_L2( mod_exec* mh )
+/* special treatment for the "L2" module: set port address */
+{
+    mod_dev* dsc;
+    
+    dsc= (mod_dev*)mh;
+    dsc->_mport= (char*) os9_long( (ulong)&l2.hw_location );
+    
+    mod_crc( mh );
+} /* adapt_L2 */
 
 
 
@@ -559,7 +710,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     ushort  mid, mid0, oldmid;
     ushort  linkmid;
     Boolean isBuiltIn;
-    ulong   my_dnsaddr= 0;
+    ulong   dns1= 0, dns2= 0;
 
     #ifdef macintosh
       Handle hh;
@@ -567,7 +718,6 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
 
     mod_exec* theRemainP;    
     mod_exec* theModuleP;
-    mod_dev*  dsc;
     
     char    datapath  [OS9PATHLEN];
     char    domainName[OS9PATHLEN];
@@ -590,10 +740,6 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     
     #define MODNLEN 33
     char realmodname[MODNLEN];
-    byte   *bp; /* to patch 'init' revision */
-    char   *nm;
-    ushort *sp;
-    ulong  *lp;
     
     ulong modSize;    /* OS-9 module size */
     ushort path, mode, sync;
@@ -665,14 +811,8 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
             if (ustrcmp(name,OS9exec_name)==0) {
             	OS9exec_ptr= (mod_exec*)OS9exec_mod;
                 dsize      =     sizeof_OS9exec_mod;
-           	
-//            	#ifdef macintosh
-//          	  theModuleH= &OS9exec_ptr;
-//              #else
-                  theModuleP=  OS9exec_ptr;
-//              #endif
-             
-                isBuiltIn = true;
+                theModuleP =            OS9exec_ptr;
+                isBuiltIn  = true;
                 break; /* found */
             } /* if built-in OS9exec module */
                         
@@ -684,17 +824,13 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
                 /* it can't be const def, because it wil be changed afterwards */
                 pp= get_mem( dsize );
            	
-//            	#ifdef macintosh
-//           	           theModuleH= pp;
-//                memcpy( *theModuleH, Init_ptr, dsize );
-//              #else
-                           theModuleP= pp;
-                  memcpy(  theModuleP, Init_ptr, dsize );
-//              #endif
+                        theModuleP= pp;
+                memcpy( theModuleP, Init_ptr, dsize );
              
-                isBuiltIn = true;
+                isBuiltIn= true;
                 break; /* found */
             } /* if built-in Init module */
+
             
             /* 2: Assume loading from the {OS9MDIR} directory */
             /* %%% this part is not yet adapted for access through filestuff interface */
@@ -748,12 +884,16 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
         }
 
 
+        /* no more trials for linking */
+        if (linkstyle) return E_MNF;
+        
+
         /* 4: Assume it to be a path relative to the execution or data directory (dep. on exedir) */
         debugprintf(dbgModules,dbgNorm,( "# load_module: load path (%s) = %s\n",
                                             exedir ? "exec":"data", datapath ));
 
         /* try to open a file */
-openit: 
+// openit: 
 //      mode= exedir ? 0x05 : 0x01;
 //      type= IO_Type( pid,name, mode );
         if (type==fFile || type==fDir) name= datapath;
@@ -785,29 +925,15 @@ openit:
             return os9error(E_NORAM); /* not enough memory */
         }
             
-        loadbytes= dsize;
-            
-//      #ifdef macintosh
-//        theModuleH= pp;
-//        debugprintf(dbgModules,dbgNorm,
-//          ("# load_module: allocated memory @ $%08lX\n", *theModuleH));
-//          
-//        HLock  (theModuleH); /* prevent moving around */
-//        err= usrpath_read( pid,path, &loadbytes, *theModuleH, false ); 
-//
-//      #else
-          theModuleP= pp;
-          err= usrpath_read( pid,path, &loadbytes,  theModuleP, false ); 
-//      #endif
-
+        loadbytes = dsize;
+        theModuleP= pp;
+        
+            err= usrpath_read( pid,path, &loadbytes, theModuleP, false ); 
         if (err || loadbytes<dsize) {
             err= usrpath_close(pid, path); return E_READ;
-        }             
+        } /* if */         
               
-//      #ifdef macintosh
-//        HUnlock(theModuleH); /* now move is allowed again */
-          isBuiltIn= false;        /* is no resource-based module */
-//      #endif
+        isBuiltIn= false; /* is no resource-based module */
                         
         debugprintf(dbgModules,dbgNorm,
           ("# load_module: loaded %ld bytes from module's file\n", loadbytes));
@@ -854,50 +980,24 @@ openit:
                 return os9error(E_NORAM); /* not enough memory */
             }
             
-//          #ifdef macintosh
-//            theModuleH= pp;
-//            debugprintf(dbgModules,dbgNorm,
-//              ("# load_module: allocated memory %ld @ $%08lX\n", dsize, *theModuleH));
-//
-//            HLock(theModuleH); /* prevent moving around */
-//            #ifdef MACFILES
-//              loadbytes= dsize; /* now read module */
-//                  oserr= FSRead(refNum, &loadbytes, (void*) *theModuleH);
-//              if (oserr) {
-//                  FSClose(refNum);
-//                  return host2os9err(oserr,E_READ);
-//              }
-//            #else
-//                  loadbytes= fread( *theModuleH, 1,dsize, stream );
-//              if (loadbytes==0) {
-//                  fclose(stream);
-//                  return c2os9err(errno,E_READ);
-//              }
-//            #endif
-//            
-//            HUnlock(theModuleH); /* now move is allowed again */
-//            isBuiltIn= false;    /* is no resource-based module */
-//          
-//          #else /* NOT macintosh */
-              theModuleP= pp;
-              debugprintf(dbgModules,dbgNorm,
-                ("# load_module: allocated memory %ld @ $%08lX\n", dsize, theModuleP));
+            theModuleP= pp;
+            debugprintf(dbgModules,dbgNorm,
+              ("# load_module: allocated memory %ld @ $%08lX\n", dsize, theModuleP));
                 
-              #ifdef MACFILES
-                loadbytes= dsize; /* now read module */
-                    oserr= FSRead( refNum, &loadbytes, theModuleP );
-                if (oserr) {
-                    FSClose(refNum);
-                    return host2os9err(oserr,E_READ);
-                }
-              #else
-                    loadbytes= fread( theModuleP, 1,dsize, stream );
-                if (loadbytes==0) {
-                    fclose(stream);
-                    return c2os9err(errno,E_READ);
-                }
-              #endif
-//          #endif /* NOT macintosh */
+            #ifdef MACFILES
+              loadbytes= dsize; /* now read module */
+                  oserr= FSRead( refNum, &loadbytes, theModuleP );
+              if (oserr) {
+                  FSClose(refNum);
+                  return host2os9err(oserr,E_READ);
+              }
+            #else
+                  loadbytes= fread( theModuleP, 1,dsize, stream );
+              if (loadbytes==0) {
+                  fclose(stream);
+                  return c2os9err(errno,E_READ);
+              }
+            #endif
 
             
             debugprintf(dbgModules,dbgNorm,
@@ -924,33 +1024,11 @@ openit:
 modulefound:
     mid0= mid;     /* take the first one if using module groups */
     while (true) {
-//      #ifdef macintosh
-//        MoveHHi (theModuleH); /* move at highest possible location */
-//        HNoPurge(theModuleH); /* prevent purging */
-//        HLock   (theModuleH); /* prevent moving around */
-// 
-//        os9modules[mid].modulehandle= theModuleH; /* enter handle in free table entry */
-//        os9modules[mid].isBuiltIn   = isBuiltIn;
-//        
-//        if (!isBuiltIn) { /* now make sure it stays swapped in */
-//            dsize=(ulong) GetHandleSize(theModuleH);
-//            LockMemRange              (*theModuleH,dsize);
-//            Flush68kCodeRange         (*theModuleH,dsize);
-//        }
-//        theModuleP= (mod_exec*)*theModuleH;
-//  
-//        /* get module pointer */
-//        debugprintf(dbgModules,dbgNorm,
-//          ("# load_module: found: mid=%d, theModuleP=%08lX, [theModule]=%08lX\n", 
-//              mid, (ulong) theModuleP,*((ulong *) theModuleP)));
-//
-//      #else
-          os9modules[mid].modulebase= theModuleP; /* enter pointer in free table entry */   
-          os9modules[mid].isBuiltIn = isBuiltIn;
-          debugprintf(dbgModules,dbgNorm,
-            ("# load_module: (found) mid=%d, theModuleP=%08lX, ^theModuleP=%08lX\n",
-                mid, (ulong) theModuleP, os9_long(*((ulong *) theModuleP))));
-//      #endif
+        os9modules[mid].modulebase= theModuleP; /* enter pointer in free table entry */   
+        os9modules[mid].isBuiltIn = isBuiltIn;
+        debugprintf(dbgModules,dbgNorm,
+          ("# load_module: (found) mid=%d, theModuleP=%08lX, ^theModuleP=%08lX\n",
+              mid, (ulong) theModuleP, os9_long( *(ulong*)theModuleP )));
    
         os9modules[mid].linkcount= 1; /* module is loaded and linked */
    
@@ -963,21 +1041,22 @@ modulefound:
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: bad modsync: %04x, E_BMID\n", sync ));
             err= E_BMID;  break;
-        }
+        } /* if */
          
-        if ((par=calc_parity((ushort*)theModuleP,24))!=0) {
+            par= calc_parity( (ushort*)theModuleP, 24 );
+        if (par!=0) {
             /* bad header parity */
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: bad parity, check result=$%04X (should be 0)\n",par));
             err= E_BMHP;  break;
-        }
+        } /* if */
         
             modSize= os9_long(theModuleP->_mh._msize);
         if (modSize>dsize) {
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: bad size: %d>%d, E_BMID\n", modSize,dsize ));
             err= E_BMID;  break; /* as a native OS-9 system (bfo) */
-        }
+        } /* if */
         
         	crc= calc_crc( (byte*)theModuleP, modSize, 0xFFFFFFFF );
         if (crc!=0xFF800FE3) {
@@ -985,7 +1064,7 @@ modulefound:
               ("# load_module: bad crc, crc result=$%08lX (should be $FF800FE3)\n",crc));
             /* bad CRC */
             err= E_BMCRC; break;
-        }
+        } /* if */
         
         
         /* --- module loaded is ok */
@@ -995,78 +1074,33 @@ modulefound:
           ("# load_module: Name of module loaded='%s'\n",realmodname));
 
         /* %%% replacement with higher revision number is not yet implemented */
-//      #ifdef macintosh
-//        os9modules[mid].modulehandle= 0; /* temporarily disable entry */
-//        if ((oldmid= find_mod_id(realmodname))<MAXMODULES) {
-//            /* there is already another module with the same name */
-//            os9modules[oldmid].linkcount++; /* link the old one */
-//            os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
-//            release_module(mid, false); /* forget it again */
-//            *midP=oldmid;
-//            return 0; /* ... and throw away just loaded module */
-//        }
-//
-//        os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
-//
-//      #else
-          os9modules[mid].modulebase=0; /* temporarily disable entry */
-          if ((oldmid= find_mod_id(realmodname))<MAXMODULES) {
-              /* there is already another module with the same name */
-              os9modules[oldmid].linkcount++; /* link the old one */
-              os9modules[mid].modulebase=theModuleP; /* re-enable entry */
-              release_module(mid, false); /* forget it again */
-              *midP= oldmid;
-              return 0; /* ... and throw away just loaded module */
-          }
-          
-          os9modules[mid].modulebase= theModuleP; /* re-enable entry */
-//      #endif
+        os9modules[mid].modulebase=0; /* temporarily disable entry */
         
-        /* special treatment for the "init" module: set version+revision 
-           and connect it to the globals */
-        if (ustrcmp(realmodname,"init")==0) {
-            bp= (byte*)  theModuleP + 0x57; *bp= exec_version;
-            bp= (byte*)  theModuleP + 0x58; *bp= exec_revision;
-            bp= (byte*)  theModuleP + 0x59; *bp= 0;
+            oldmid= find_mod_id( realmodname );
+        if (oldmid<MAXMODULES) {
+            /* there is already another module with the same name */
+            os9modules[oldmid].linkcount++; /* link the old one */
+            os9modules[mid].modulebase=theModuleP; /* re-enable entry */
+            release_module(mid, false); /* forget it again */
+            *midP= oldmid;
+            return 0; /* ... and throw away just loaded module */
+        }
+          
+        os9modules[mid].modulebase= theModuleP; /* re-enable entry */
 
-            nm= (char*)  theModuleP + 0x4c;          strcpy( nm,hw_site );
-            bp= (byte*)  theModuleP + 0x50;     sp= (ushort*)bp;
-            nm= (char*)  theModuleP + os9_word(*sp); strcpy( nm,hw_name );
-            bp= (byte*)  theModuleP + 0x5A;     sp= (ushort*)bp;
-            nm= (char*)  theModuleP + os9_word(*sp); strcpy( nm,sw_name );
-            init_module= theModuleP;
-        	mod_crc    ( theModuleP );
-        } /* if */
- 
-        /* special treatment for the "le0" module: set internet address */
+         
+        /* special treatment for the "le0" and "inetdb" module: set internet address */
         if (ustrcmp(realmodname,"le0"   )==0 ||
             ustrcmp(realmodname,"inetdb")==0) {
         	#ifdef WITH_NETWORK
-              err= MyInetAddr( &my_inetaddr, &my_dnsaddr, &domainName ); /* assign my internet address */
+              err= MyInetAddr( &my_inetaddr, &dns1,&dns2, domainName ); /* assign my internet address */
             #endif
-        }
+        } /* if */
               
-        if (ustrcmp(realmodname,"le0")==0) {
-            bp= (byte*) theModuleP + 0x7a;        /* broadcast address position */
-            lp= (ulong*)bp;
-           *lp= my_inetaddr;
-            bp= (byte*) theModuleP + 0x7d; *bp= 0xff; /* specific for broadcast */
-
-            bp= (byte*) theModuleP + 0x8a;      /* my internet address position */
-            lp= (ulong*)bp;
-           *lp= my_inetaddr;
-            
-        	mod_crc( theModuleP );
-        } /* if */
-
-        if (ustrcmp(realmodname,"inetdb")==0) adapt_inetdb( theModuleP, my_inetaddr,my_dnsaddr, domainName );
-
-        /* special treatment for the "L2" module: set port address */
-        if (ustrcmp(realmodname,"L2")==0) {
-        	dsc= (mod_dev*)theModuleP;
-        	dsc->_mport= (char*) os9_long( (ulong)&l2.hw_location );
-        	mod_crc      ( theModuleP );
-        } /* if */
+        if (ustrcmp(realmodname,"init"  )==0) adapt_init  ( theModuleP );
+        if (ustrcmp(realmodname,"le0"   )==0) adapt_le0   ( theModuleP, my_inetaddr );
+        if (ustrcmp(realmodname,"inetdb")==0) adapt_inetdb( theModuleP, my_inetaddr,dns1,dns2, domainName );
+        if (ustrcmp(realmodname,"L2"    )==0) adapt_L2    ( theModuleP );
        
         *midP= mid0;
         if    (dsize==modSize) return 0; /* its done now */ 
@@ -1083,16 +1117,9 @@ modulefound:
             pp= get_mem( dsize );                                 /* get the memory */
         if (pp==NULL)        return os9error(E_NORAM);         /* not enough memory */
         
-//      #ifdef macintosh
-//        theRemainH= pp;
-//        MoveBlk     ( (byte*)*theRemainH, (byte*)theModuleP, dsize );
-//        SetHandleSize(        theModuleH, modSize ); /* adapt to new size */
-//        theModuleH=           theRemainH;
-//      #else
-          theRemainP= pp;
-          MoveBlk      ( (byte*)theRemainP, (byte*)theModuleP, dsize );
-          theModuleP=           theRemainP;
-//      #endif
+        theRemainP= pp;
+        MoveBlk( (byte*)theRemainP, (byte*)theModuleP, dsize );
+        theModuleP=     theRemainP;
     } /* loop */
     
     /* --- bad module */
@@ -1126,7 +1153,7 @@ os9err link_module( ushort pid, const char *name, ushort *mid )
         err = 0;
         debugprintf(dbgModules,dbgNorm,
             ("# link_module: 'OS9exec' not found, returned ptr to main module\n"));
- 	}
+ 	} /* if */
  	
  	return err;
 } /* link_module */
