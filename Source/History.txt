@@ -1033,7 +1033,8 @@
           02-07-22  Bfo     Playing around with 'UpTime'
           02-07-23  Bfo     Go back to the 1/60th second system
           02-07-23  Bfo     Synchronise with <syCorr> variable
-
+          02/07/24  Bfo     First version with multi sector read/write
+          02/07/24  Bfo     Timer synchronisation enhanced
     3.14  02-07-??  Bfo     ...
     -------------------
 */
