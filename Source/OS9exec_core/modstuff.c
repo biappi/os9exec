@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2003/07/08 15:42:24  bfo
+ *    /socket and /le0 are built-in modules now
+ *
  *    Revision 1.12  2003/05/26 08:25:49  bfo
  *    "double" big/little endian problem module sizes fixed
  *
@@ -1106,7 +1109,10 @@ modulefound:
               mid, (ulong) theModuleP, os9_long( *(ulong*)theModuleP )));
    
         os9modules[mid].linkcount= 1; /* module is loaded and linked */
-   
+        
+        /* don't forget to flush the CodeRange !! */
+        Flush68kCodeRange( theModuleP, dsize );
+
    
         /* make sure that module is ok */
         /* --- check module SYNC parity and CRC */
