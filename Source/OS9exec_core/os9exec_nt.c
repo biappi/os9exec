@@ -1058,7 +1058,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#endif
 	
 
-	#ifdef MACTERMINAL
+	#if defined MACTERMINAL && !defined USE_CARBON
 	  Install_AppleEvents(); /* do this as early as possible */
 	#endif
 
