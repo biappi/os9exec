@@ -1118,6 +1118,10 @@
           02-10-06  Bfo     "show_timing" call with additional parameter <ticksLim>
           02-10-06  Bfo     uphe_printf => upe_printf
           02-10-09  Bfo     move paths for RBF under Windows corrected
+          02-10-15  Bfo     'CutUp' visible again (for Linux).
+          02-10-15  Bfo     memtable preparations.
+          02-10-15  Bfo     Consider only lobyte at OS9_I_Delete.
+          02-10-15  Bfo     Consider only loword at OS9_F_CmpNam / type casting fixed.
     3.19  02-10-??  Bfo     ...
     -------------------
 */
