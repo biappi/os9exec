@@ -86,17 +86,17 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                 case 'h' :  upe_printf("Usage: %s [options]\n",argv[0]);
                             upe_printf("Function: enter internal debug mode\n");
                             upe_printf("Options:\n" );
-                            upe_printf("    -d[n] msk  set debugging info mask [of level n, x=all, default=0]\n");
-                            upe_printf("    -s    msk  set debugging stop mask (default=0)\n");
-                            upe_printf("    -dh        show debug/stop mask help\n");
-                            upe_printf("    -m         only show current debug/stop masks\n");
-                            upe_printf("    -n [name]  set name to trigger/disable trigger (causes debug stop)\n");
-                            upe_printf("    -q         quit emulator\n");
-                            upe_printf("    -o sysp    redirect debug output to <syspath>\n");
-                            upe_printf("    -w pid     do not generate debug output for <pid>\n");
-    						upe_printf("    -x width   define MGR screen width\n" );
-    						upe_printf("    -y height  define MGR screen width\n" );
-    						upe_printf("    -z         define MGR fullscreen mode\n" );
+                            upe_printf("    -d[n] msk    set debugging info mask [of level n, x=all, default=0]\n");
+                            upe_printf("    -s    msk    set debugging stop mask (default=0)\n");
+                            upe_printf("    -dh          show debug/stop mask help\n");
+                            upe_printf("    -m           only show current debug/stop masks\n");
+                            upe_printf("    -n=[<name>]  set name to trigger/disable trigger (causes debug stop)\n");
+                            upe_printf("    -q           quit emulator\n");
+                            upe_printf("    -o=<syspath> redirect debug output to <syspath>\n");
+                            upe_printf("    -w=<pid>     do not generate debug output for <pid>\n");
+    						upe_printf("    -x=<width>   define MGR screen width\n" );
+    						upe_printf("    -y=<height>  define MGR screen height\n" );
+    						upe_printf("    -z           define MGR fullscreen mode\n" );
                             return 0;
                             
                 case 'm' :  break;
