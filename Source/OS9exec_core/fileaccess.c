@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/10/16 20:06:29  bfo
+ *    Make it compatible for gcc 3.2
+ *
  *    Revision 1.11  2002/09/22 20:58:47  bfo
  *    Some bugs (at least 5 !!) at getFD fixed: The access to the top directory (Windows32) was seriously wrong. Now it seems to work fine with "mdt".
  *
@@ -813,7 +816,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     pp      = hostpath;
 
     if (spP->rawMode) {        /* rawmode allows only reading of 1st sector */
-        spP->rw_sct = get_mem( STD_SECTSIZE,false ); /* for some info procs */
+        spP->rw_sct = get_mem( STD_SECTSIZE );       /* for some info procs */
         spP->rawPos = 0;
                      vn= &spP->rw_sct[31];
         VolInfo( pp, vn );    /* this is the correct position */      
@@ -960,7 +963,7 @@ os9err pFclose(ushort pid, syspath_typ* spP )
     file_typ* f= &spP->u.disk.u.file;
       
     if (spP->rawMode) {
-        release_mem( spP->rw_sct, false ); 
+        release_mem( spP->rw_sct ); 
         spP->rw_sct= NULL;
         spP->rawMode= false;
         return 0;

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2002/10/15 17:58:21  bfo
+ *    'CutUp' visible again (for linuxfiles.c)
+ *
  *    Revision 1.26  2002/10/02 18:52:54  bfo
  *    GetScreen function is now defined at "utilstuff"
  *
@@ -1214,7 +1217,7 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
       for (ii=0;ii<MAXDIRS-1;ii++) {
                m= &dirtable[ii];
           if (*m==NULL) {
-              *m= get_mem( strlen(tmp)+1, false );
+              *m= get_mem( strlen(tmp)+1 );
               strcpy( *m,tmp );
               dirtable[ii+1]= NULL; /* prepare the next undefined field */
               

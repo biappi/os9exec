@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/09/11 17:15:13  bfo
+ *    Definition changed from "ulong* dat_buf" ==> "byte* dat_buf"
+ *
  *
  */
 
@@ -338,8 +341,8 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
           ));
           // we need an aligned temp buffer
           // - get buffer that is long enough to contain aligned data
-          dataBuffer = get_mem(len+align,false);
-          if (!dataBuffer) {
+              dataBuffer= get_mem( len+align );
+          if (dataBuffer==NULL) {
               debugprintf(dbgFiles,dbgNorm,("# SCSI subsystem: Could not allocate aligned buffer\n"));
               err=E_NORAM;
               goto closeandexit;
@@ -457,7 +460,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
           // copy back to original buffer on read
           if (!doWrite) CopyMemory(dat_buf,bufptr,len);
           // anyway, get rid of buffer
-          release_mem(dataBuffer,false);
+          release_mem( dataBuffer );
       }
       // - close file
     closeandexit:
