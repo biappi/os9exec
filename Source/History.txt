@@ -1211,6 +1211,8 @@
 		  03-07-25  Bfo     Change calculation of PD_FD/PD_DFD (sector size instead of 256)
 		  03-07-31  Bfo     "get_locations": Additional parameter for sectorsize
 		  03-07-31  Bfo     Use sector size instead of 256 at "int_move"
+		  03-07-31  Bfo     /L2 getstat & 'Blue' support
+		  03-07-31  Bfo     do not create file w/o existing subdir
     3.22  03-??-??  Bfo
     -------------------
 */

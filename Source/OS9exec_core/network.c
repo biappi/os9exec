@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2003/05/21 20:34:25  bfo
+ *    Preparations for seteuid on Mac OS X
+ *
  *    Revision 1.18  2003/05/17 10:36:14  bfo
  *    Several adaptions for Carbon: MGR/telnet are running now.
  *    Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
@@ -1001,9 +1004,9 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       TBind         bindReq;
       char*         kN;
       
-      #if __MWERKS__ >= CW7_MWERKS
-        OSStatus    junk;
-      #endif
+//    #if __MWERKS__ >= CW7_MWERKS
+//      OSStatus    junk;
+//    #endif
     #endif
     
     #ifdef win_linux
@@ -1031,9 +1034,9 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
                                
       if (err) return E_FNA;
       
-      #if __MWERKS__ >= CW7_MWERKS
-	    junk= DoNegotiateIPReuseAddrOption( net->ls, true );
-	  #endif    
+//    #if __MWERKS__ >= CW7_MWERKS
+//      junk= DoNegotiateIPReuseAddrOption( net->ls, true );
+//    #endif    
     #elif defined win_linux
           net->ls= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
       if (net->ls==INVALID_SOCKET) return E_FNA;
