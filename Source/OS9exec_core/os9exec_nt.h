@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/07/06 15:54:34  bfo
+ *    mnt_ramSize included
+ *
  *    Revision 1.6  2002/06/26 21:24:24  bfo
  *    Mac version can be compiled with "printer.c"
  *
@@ -308,6 +311,7 @@ typedef struct {
 #define PthOffs    0x80           /* Offset to option section */
     
 #define PD_TYP     0x83 - PthOffs /* RBF */
+#define PD_SCT     0x8A - PthOffs
 #define PD_SAS     0x8E - PthOffs
 #define PD_SSize   0x94 - PthOffs
 #define PD_CtrlID  0xA6 - PthOffs
