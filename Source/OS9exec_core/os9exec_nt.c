@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2005 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2004/12/04 00:04:05  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.39  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -261,7 +264,7 @@ dir_type mdir;	         /* current module dir */
 char     startPath[OS9PATHLEN];   /* start path */
 char     strtUPath[OS9PATHLEN];   /* next higher than start path */
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   /* the MPW-level default directory */
   short  startVolID;	          /* startup dir's volume id    */
   long   startDirID;	          /* startup dir's directory id */
@@ -584,7 +587,7 @@ static void cleanup(void)
     free_modules(); /* unlink the OS9 module resources */
 	fflush(stdout);
 
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  debugprintf(dbgStartup,dbgNorm,("# cleanup: restoring MPW current directory\n"));
 	  HSetVol(NULL,startVolID,startDirID); /* restore the original directory */
 	#endif
@@ -601,7 +604,7 @@ static void cleanup(void)
 void getversions()
 /* obtain tool and package (os9exec) version */
 {
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	Handle versH;
 	#endif
 	
@@ -610,7 +613,7 @@ void getversions()
 	exec_version = 0; 
 	exec_revision= 0;
 	
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	/* obtain tool's version */
 	if ((versH=GetResource('vers',1))!=NULL) {
 		appl_version = *((byte*)*versH+0);
@@ -630,7 +633,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x25;
+	exec_revision= 0x26;
 	#endif
 } /* getversions */
 
@@ -693,7 +696,7 @@ void StartDir( char* pathname )
 
 static os9err GetStartPath( char* pathname )
 {
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  os9err err;
 	  Str255 rel, tmp;
 	  FSSpec spec; /* the HFS object's FSSpec */
@@ -757,7 +760,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	os9err err;
 	char   tmp[OS9PATHLEN];
 
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  char svPath[OS9PATHLEN];
 	#endif
 	
@@ -772,7 +775,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 		return;
 	}
 	
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  p++;
 	#elif defined windows32
 	  if (p[0]==PSEP && 
@@ -794,7 +797,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	/* do this before the recursive loop */
 	strncpy( drP->path,p, OS9PATHLEN );
 			
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  get_dirid( &drP->volID, &drP->dirID, tmp );
 	  
 	  if (recursive && drP->volID==0 &&
@@ -1194,7 +1197,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 	
 	/* ---- assign startVolID/dirID ---------------------------------- */
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 			  fs.vRefNum= 0; /* default path is my own path */
 			  fs.parID  = 0;
 	  strcpy( fs.name,"" );
@@ -1230,7 +1233,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	debug_prep();
 	debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
     
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  GetStartPath( callPath );
 
 	  applVolID= 0;
@@ -1306,7 +1309,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	PathUp( strtUPath );
 //	upo_printf( "'%s' '%s'\n", startPath, strtUPath ); 
 	
-	#ifdef MAC_NOTX	
+	#ifdef MACOS9	
 	  /* save current default directory */
 	  startVolID= fs.vRefNum;
 	  startDirID= fs.parID; /* get default dir */
@@ -1332,7 +1335,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	drP->dev = 0;
 	drP->lsn = 0;
 
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  drP->volID= 0;
 	  drP->dirID= 0;
 	#endif
@@ -1347,14 +1350,14 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	drP->dev = 0;
 	drP->lsn = 0;
 
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  drP->volID= 0;
 	  drP->dirID= 0;
 	#endif
 	
 	GetCurPaths( "OS9MDIR", 0x80, &mdir, true );
 	
-	#ifdef MAC_NOTX
+	#ifdef MACOS9
 	  debugprintf(dbgStartup,dbgNorm,("# main startup: (mdir) mdir.volID=%d, mdir.dirID=%ld\n",
 									     mdir.volID,mdir.dirID));
 	#endif

@@ -19,7 +19,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2005 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -34,10 +34,10 @@
  
 resource 'vers' (1, purgeable) {
     0x3,
-    0x25,
+    0x26,
     beta,
     0x1,
     verGrSwiss,
-    "3.25",
-    "OS9exec V3.25   © 1993-2004   luz@synthesis.ch / bfo@synthesis.ch"
+    "3.26",
+    "OS9exec V3.26   © 1993-2005   luz@synthesis.ch / bfo@synthesis.ch"
 };
