@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2002/10/09 20:41:16  bfo
+ *    uphe_printf => upe_printf
+ *
  *    Revision 1.30  2002/10/02 19:21:37  bfo
  *    Correct handling for "mount" without parameters
  *
@@ -2643,8 +2646,9 @@ os9err pRdelete( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
     ushort      path;
     ulong       dfd;
     
-    err=    usrpath_open( pid,&path, fRBF, pathname,*modeP ); if (err) return err;
-        spP= get_syspath( pid, procs[pid].usrpaths[path] ); /* get spP for fd sects */
+        err= usrpath_open( pid,&path, fRBF, pathname,*modeP ); 
+    if (err) return err;
+        spP= get_syspath ( pid, procs[pid].usrpaths[path] ); /* get spP for fd sects */
     if (spP==NULL) return os9error(E_BPNUM);
     
     dev= &rbfdev[spP->u.rbf.devnr]; /* can't be assigned earlier */

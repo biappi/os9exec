@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/10/02 19:16:43  bfo
+ *    OS9_I_OpenCreate Bugfix for poCreateMask problem: consider only byte (d0.b)
+ *
  *
  */
 
@@ -174,7 +177,7 @@ os9err OS9_I_Delete( regs_type *rp, ushort cpid )
  *                termination characters.
  */
 {
-    ushort    mode    = loword(rp->d[0]);
+    ushort    mode    = lobyte(rp->d[0]); /* take do.b, avoid poCreate bug problem */   
     char*     os9_name= (char*)rp->a[0];
     char      os9_path[OS9PATHLEN];
     char*     pastpath;
