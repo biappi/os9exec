@@ -30,6 +30,7 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+
 #include "os9exec_incl.h"
 
 /* process routines */
@@ -160,6 +161,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->masklevel  = 0;            /* sigmask is disabled by default */
             cp->icptroutine= 0;            /* no intercept routine installed */
             cp->last_mco   = NULL;         /* last console buffer */
+            cp->wakeUpTick = 0;            /* to be woken up */
+            cp->pW_age     = 0;            /* sleep aging */
             init_mem(npid);                /* init memory block list */
             init_traphandlers(npid);       /* init traphandlers */
             init_usrpaths    (npid);       /* init user paths */
@@ -637,11 +640,20 @@ void do_arbitrate(void)
         } 
         
         /* --- check if process can be activated */
-        if (sprocess->state==pActive  ||       /* process can run, if one of these states */
-            sprocess->state==pSysTask ||
-            sprocess->state==pWaitRead) break;
+        if     (sprocess->state==pActive  ||       /* process can run, if one of these states */
+                sprocess->state==pSysTask) break;
 
-        if (sprocess->state==pSleeping) {
+        if     (sprocess->state==pWaitRead) {      /* only every nth time for this mode */
+            if (sprocess->pW_age--<=0) { 
+                sprocess->pW_age= NewAge;  break;
+            }
+            done= false;
+        }
+
+        if (sprocess->state==pSleeping && /* slow down also here */
+            sprocess->pW_age--<=0) {
+            sprocess->pW_age= NewAge;
+            
         	async_area= true; 
 			if (async_pending) sigmask( spid,0 ); /* disable signal mask */
 			/* asynchronous signals are allowed here */
