@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2005 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2004/12/03 23:56:04  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.19  2004/11/27 12:05:34  bfo
  *    _XXX_ introduced
  *
@@ -285,7 +288,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       OSErr oserr;
       #define READCHUNKSZ 200
     #else
-      #ifndef MAC_NOTX
+      #ifndef MACOS9
         byte *p;
         char c;
       #endif
@@ -349,7 +352,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       
     #else
       /* input not more than one line from a FILE */
-      #ifdef MAC_NOTX
+      #ifdef MACOS9
         if     (*n <2) {
             if (*n!=0) {
                 /* single char only */
@@ -512,7 +515,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 {
     os9err err= pRBFopt( pid,spP, buffer );
     
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       FSSpec*    spc= &spP->u.disk.spec;
       CInfoPBRec cipb;
     
@@ -530,6 +533,18 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 
       l= &buffer[ PD_FD ]; *l= os9_long(fd)<<BpB; /* LSN of file */
     #endif
+
+    #ifdef win_linux
+      dirent_typ  dEnt;
+      ulong       fdpos;
+      ulong*      l;
+
+      strcpy( dEnt.d_name, spP->name );
+      FD_ID( spP->fullName,&dEnt, &fdpos );
+    //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
+      
+      l= &buffer[ PD_FD ]; *l= os9_long(fdpos); /* LSN of file */
+    #endif
     
     return err;
 } /* pFopt */
@@ -545,7 +560,7 @@ os9err pFready( _pid_, _spP_, ulong *n )
 /* get device name from HFS object */
 os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 {
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       long  free= 0;
       short volid= spP->u.disk.spec.vRefNum;
       
@@ -1297,7 +1312,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     ulong     u       = 0;
     struct tm tim;
         
-    #if defined MAC_NOTX
+    #if defined MACOS9
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
 
     #elif defined win_linux || defined __MACH__
@@ -1409,7 +1424,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     /* fill in constants */
     *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       /* now get info from CInfoPBRec */
       isFolder= cipbP->hFileInfo.ioFlAttrib & ioDirMask; /* is it a folder */
       if (cipbP->hFileInfo.ioFlAttrib & 0x01) *att &= 0xED; /* clear write attrs */
@@ -1451,7 +1466,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     fdbeg[2] =0; /* owner = superuser */
 
     /* file dates */
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       u= cipbP->hFileInfo.ioFlMdDat + OFFS_1904; /* get modification time */
     
     #elif defined win_linux
@@ -1501,7 +1516,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     debugprintf(dbgFiles,dbgNorm,("# getFD: %02d/%02d/%02d %02d:%02d\n", 
                 tim.tm_year % 100,tim.tm_mon+1,tim.tm_mday, tim.tm_hour,tim.tm_min));
     
-    #if defined MAC_NOTX
+    #if defined MACOS9
       u= cipbP->hFileInfo.ioFlCrDat + OFFS_1904; /* get creation time */
     #elif defined linux || defined __MACH__
       #ifdef windows32
@@ -1524,7 +1539,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #endif // NEW_LUZ_FD_IMPL
 
         
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
           *sizeP= (ulong)(cipbP->dirInfo.ioDrNmFls+2)*DIRENTRYSZ;
       }
@@ -1626,7 +1641,7 @@ os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 {
     void* fdl;
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       os9err err;
       CInfoPBRec cipb;  
 
@@ -1859,7 +1874,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     err     = parsepath( pid, &pastpath,hostpath, exedir ); if (err) return err;
     pp      = hostpath;
     
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       /* make an FSSpec for the directory */
                                    defdir= exedir ?_exe:_data;  
            err= getFSSpec( pid,pp, defdir, spc );
@@ -1925,7 +1940,7 @@ os9err pDclose( _pid_, syspath_typ* spP )
 
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
 static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
 {
     dirent_typ* dEnt= NULL;
@@ -2361,7 +2376,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
     Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
     process_typ* cp= &procs[pid];
 
-    #if defined MAC_NOTX
+    #if defined MACOS9
       FSSpec     localFSSpec;
       defdir_typ defdir;
       long       newdirid;
@@ -2373,7 +2388,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
     err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
     pathname= p;
     
-    #if defined MAC_NOTX
+    #if defined MACOS9
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Mac path=%s\n",pathname));
 
       /* --- create FSSpec, use default volume/dir */
@@ -2419,7 +2434,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     OSErr  oserr= 0;
     ushort mode;
       
-    #if defined MAC_NOTX
+    #if defined MACOS9
       int    k;
       char*  pp= spP->name;
       char*  sv;
@@ -2450,7 +2465,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     /* But remove and recreate as file is possible */
     pDclose( pid, spP );
       
-    #if defined MAC_NOTX
+    #if defined MACOS9
       sv   = pp; /* 'parsepath' will change <pp> */
       err  = parsepath( pid,&pp, pathname, false); if (err) return err;
       oserr= getFSSpec( pid,     pathname, _data, &delSpec );
