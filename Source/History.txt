@@ -1,6 +1,6 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
-//    Copyright (C) 2002 Lukas Zeller / Beat Forster
+//    Copyright (C) 1993-2004  Lukas Zeller / Beat Forster
 //    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
@@ -1227,8 +1227,11 @@
           04-03-13  Bfo     "network.c" adapted for new socket library and gcc 3.3.1 (__CONST_SOCKADDR_ARG)
           04-09-12  Bfo     "Flush68kCodeRange" now activated for ALL memory block allocations.
           04-09-12  Bfo     "Flush68kCodeRange" now activated for ALL module loads.
-          04-10-23  Bfo     Most of the "pragma unused" eliminated
-    3.24  04-03-??  Bfo     ...
+          04-10-23  Bfo     Most of the "pragma unused" eliminated.
+    3.24  04-10-23  Bfo     Last valid V3.24
+          04-11-20  Bfo     Networking enhanced (for the demo httpd server).
+          04-11-20  Bfo     System load problem because of zombie fixed.
+    3.25  04-??-??  Bfo     ...
     -------------------    
 */
 
