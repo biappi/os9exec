@@ -37,8 +37,10 @@ static void InitConsoles()
     ttydev_typ* mco;
     int         k, h;
 
-    InitSerials();
-
+    #ifndef USE_CARBON
+      InitSerials();
+    #endif
+    
     for (k=0; k<MAX_CONSOLE; k++) {
         mco= &mac_console[k];
         mco->installed      = false;
@@ -120,6 +122,7 @@ Boolean       KeyToBuffer( ttydev_typ* mco, char key );
 //  Set up the tool box, if not done already...
 static void DoSetupToolbox(void)
 {
+    #ifndef USE_CARBON
     Handle menuBar;
     
     if (toolBoxDone) return;
@@ -143,6 +146,7 @@ static void DoSetupToolbox(void)
     DisposeHandle(menuBar);
     AppendResMenu(GetMenuHandle(mApple), 'DRVR');   /* add DA names to Apple menu */
     DrawMenuBar();
+    #endif
 
     toolBoxDone = true;
 }
@@ -247,20 +251,24 @@ int CanCopy()
 /*  Edit configuration of the Terminal tool */
 int DoEditConfig()
 {
-    ttydev_typ*   mco;
-    TermWindowPtr tw;
+    #ifndef USE_CARBON
+      ttydev_typ*   mco;
+      TermWindowPtr tw;
+    #endif
     
     if (gConsoleID<0 || 
         gConsoleID>=TTY_Base) return 0; /* only valid for mac consoles */
 
-    if      (FrontConsole(&mco)) {
-        tw= (TermWindowPtr)mco->consoleTermPtr;
+    #ifndef USE_CARBON
+      if      (FrontConsole(&mco)) {
+          tw= (TermWindowPtr)mco->consoleTermPtr;
 
-        if (ConfigTerminal      (&tw)) {
-            SaveTerminalSettings(&tw,"OS9App" );
-            DoZoomTermWindow    ( tw,inZoomOut, 0,0);
-        }
-    }
+          if (ConfigTerminal      (&tw)) {
+              SaveTerminalSettings(&tw,"OS9App" );
+              DoZoomTermWindow    ( tw,inZoomOut, 0,0);
+          }
+      }
+    #endif
     
     return 0;
 }
@@ -608,10 +616,10 @@ void HandleOneEvent(EventRecord* pEvent)
     EventRecord    event, *eventPtr;
     ttydev_typ*    mco;
     TermWindowPtr  tw;
-    WindowPtr      window;
+    WindowPtr      window= NULL;
     int            k;
-    short          part;
-    Boolean        front;
+    short          part = 0;
+    Boolean        front= false;
     ulong          ctick= GetSystemTick();
     static int     hov  = STARTVAL;
     static Boolean first= true;
@@ -647,6 +655,7 @@ void HandleOneEvent(EventRecord* pEvent)
                                mco= &mac_console[k];
             tw= (TermWindowPtr)mco->consoleTermPtr;
             
+            #ifndef USE_CARBON
             if (mco->installed &&
                 IsTermWindowEvent    (tw, eventPtr)) {
                 part = FindWindow( eventPtr->where, &window );
@@ -674,12 +683,13 @@ void HandleOneEvent(EventRecord* pEvent)
 
                 gotEvent = false; break;
             }
-        }
+            #endif
+        } /* for */
     } /* if */
         
-    if ( gotEvent ) {
-        DoEvent(&event);
-    }
+    #ifndef USE_CARBON
+      if (gotEvent) DoEvent( &event );
+    #endif
 } /* HandleOneEvent */
 
 
@@ -748,20 +758,20 @@ static void GetVModDyn_ID()
  *  short fd:       The stream which we are reading/writing to/from.
  *  returns short:  0 no error occurred, anything else error.
  */
-
+#ifndef USE_CARBON
 short InstallConsole(short fd)
 {
     #pragma unused(fd)
     
-    static int  main_installed= false;
-    Rect        windowRect;
-    Rect*       w;
-    ttydev_typ* mco;
-    Str255      title;
-    OSErr       result;
     TermWindowPtr tw;
-    Boolean     goAway, vmod;
-    int         woffs;
+    static int    main_installed= false;
+    Rect          windowRect;
+    Rect*         w;
+    ttydev_typ*   mco;
+    Str255        title;
+    OSErr         result;
+    Boolean       goAway, vmod;
+    int           woffs;
     
     if (!main_installed) {                   
          main_installed= true; /* don't do this again  */
@@ -770,7 +780,11 @@ short InstallConsole(short fd)
     }
 
     if (gConsoleID<0) {
-        InstallSerial( -gConsoleID ); return 0; /* Mac serial */
+        #ifndef USE_CARBON
+          InstallSerial( -gConsoleID ); /* Mac serial */
+        #endif
+         
+        return 0;
     }
     
     if (gConsoleID>=VModBase) GetVModDyn_ID();
@@ -780,8 +794,13 @@ short InstallConsole(short fd)
         mco->spP= g_spP;
     
     DoSetupToolbox();
-        
-        result= InitTermMgr();
+    
+    #ifdef USE_CARBON
+      result= noErr;
+    #else    
+      result= InitTermMgr();
+    #endif
+    
     if (result==noErr) {
         vmod= (gConsoleID>=VModBase);
         WindowTitle( title,vmod );
@@ -807,31 +826,35 @@ short InstallConsole(short fd)
         
             mco->consoleTermPtr= (ulong)NewPtrClear( sizeof(TermWindowRec) );
         if (mco->consoleTermPtr!=nil) {
-            result= NewTermWindow(&mco->consoleTermPtr,
-                                  w, 
-                                  title,
-                                  true,
-                                  zoomDocProc, 
-                                  nil,
-                                  goAway, 
-                                  "" );
+            result= noErr;
             
-            if (result==noErr) {
-                //we initialized!
-                /* now try to read Preferences for Terminal Window */
-                tw= (TermWindowPtr)mco->consoleTermPtr;
+            #ifndef USE_CARBON
+              result= NewTermWindow(&mco->consoleTermPtr,
+                                    w, 
+                                    title,
+                                    true,
+                                    zoomDocProc, 
+                                    nil,
+                                    goAway, 
+                                    "" );
+            
+              if (result==noErr) {
+                  //we initialized!
+                  /* now try to read Preferences for Terminal Window */
+                  tw= (TermWindowPtr)mco->consoleTermPtr;
 
-                if (gConsoleID<VModBase) {
-                    LoadTerminalSettings( &tw,"OS9App" ); /* parametrize! */
-                    DoZoomTermWindow(tw,inZoomOut, w->left,
-                                                   w->top);
-                }
-            } 
-            else {
-                DebugStr("\p Error @NewTermWindow");
-                //AlertUser();                      // error at NewTermWindow
-                return result;
-            }
+                  if (gConsoleID<VModBase) {
+                      LoadTerminalSettings( &tw,"OS9App" ); /* parametrize! */
+                      DoZoomTermWindow(tw,inZoomOut, w->left,
+                                                     w->top);
+                  }
+              } 
+              else {
+                  DebugStr("\p Error @NewTermWindow");
+                  //AlertUser();                      // error at NewTermWindow
+                  return result;
+              }
+            #endif
         } else {
             DebugStr("\p Error @NewPtr;dw ResErr;dw MemErr");
             //AlertUser();                      // error at NewPtr
@@ -848,6 +871,7 @@ short InstallConsole(short fd)
     mco->installed = true;      // don't do this again!
     return 0;
 } /* InstallConsole */
+#endif
 
 
 
@@ -860,6 +884,7 @@ short InstallConsole(short fd)
  *  have been called.  Since there is no way to recover from an error,
  *  this function doesn't need to return any.
  */
+#ifndef USE_CARBON
 void RemoveConsole(void)
 {
     // so that the user gets one last chance to read the screen,
@@ -880,7 +905,11 @@ void RemoveConsole(void)
     if (gConsoleID==0) return;  /* do not close the main console */
 
     if (gConsoleID<0) {                      /* close Mac Serial */
-        RemoveSerial( -gConsoleID ); return;  
+        #ifndef USE_CARBON
+          RemoveSerial( -gConsoleID );
+        #endif
+        
+        return;  
     }
           
     if (gConsoleID>=VModBase) GetVModDyn_ID();
@@ -899,17 +928,24 @@ void RemoveConsole(void)
             }
         }
         
-        DisposeTermWindow( tw );
+        #ifndef USE_CARBON
+          DisposeTermWindow( tw );
+        #endif
     }
 } /* RemoveConsole */
+#endif
 
 
 
 
 static OSErr WriteToTermW(ttydev_typ* mco, Ptr theData, Size *lengthOfData)
 {
-    while (mco->holdScreen) CheckInputBuffers(); /* XOn/XOff flow control */
-    return WriteToTermWindow( (TermWindowPtr)mco->consoleTermPtr, theData,lengthOfData );
+    #ifdef USE_CARBON
+      return 0;
+    #else
+      while (mco->holdScreen) CheckInputBuffers(); /* XOn/XOff flow control */
+      return WriteToTermWindow( (TermWindowPtr)mco->consoleTermPtr, theData,lengthOfData );
+    #endif
 } /* WriteToTermW */
 
 
@@ -926,6 +962,7 @@ static OSErr WriteToTermW(ttydev_typ* mco, Ptr theData, Size *lengthOfData)
  *                  -1 if an error occurred.
  */
 
+#ifndef USE_CARBON
 long WriteCharsToConsole(char *buffer, long n)
 {
     // to make it act like a normal window, we need to convert
@@ -937,9 +974,13 @@ long WriteCharsToConsole(char *buffer, long n)
     ttydev_typ* mco;
         
     /* modified by Bfo for Serial Interface */
-    if (gConsoleID<0)
-        return WriteCharsToSerial( buffer, n, -gConsoleID );
-
+    if (gConsoleID<0) {
+        #ifndef USE_CARBON
+          return WriteCharsToSerial( buffer, n, -gConsoleID );
+        #endif
+        return 0;
+    }
+    
     if (gConsoleID>=TTY_Base) /* write to tty connection */
         return WriteCharsToPTY   ( buffer, n,  gConsoleID, false ); 
 
@@ -969,6 +1010,7 @@ long WriteCharsToConsole(char *buffer, long n)
     }
     return n;
 } /* WriteCharsToConsole */
+#endif
 
 
 
@@ -1062,6 +1104,7 @@ void UpdatePrms( ulong  wPtr,   ulong  wStore, ulong wSize,
  *  returns short:  Actual number of characters read from the stream,
  *                  -1 if an error occurred.
  */
+#ifndef USE_CARBON
 long ReadCharsFromConsole(char *buffer, long n)
 {
     //  Get chars from the console.  If we have any in the buffer, just 
@@ -1077,8 +1120,13 @@ long ReadCharsFromConsole(char *buffer, long n)
     if (gConsoleQuickInput) n= 1;
 
     if (gConsoleID<0) {               /* access to Serial Interface */
-        cnt= ReadCharsFromSerial( buffer,n, -gConsoleID );
-        if (!devIsReady) HandleEvent();      /* go to the eventloop */
+        cnt= 0;
+        
+        #ifndef USE_CARBON
+          cnt= ReadCharsFromSerial( buffer,n, -gConsoleID );
+          if (!devIsReady) HandleEvent();    /* go to the eventloop */
+        #endif
+        
         return cnt;
     }
 
@@ -1093,7 +1141,7 @@ long ReadCharsFromConsole(char *buffer, long n)
     if (!devIsReady) HandleEvent();          /* go to the eventloop */
     return cnt;
 } /* ReadCharsFromConsole */
-
+#endif
 
 
 
@@ -1108,7 +1156,7 @@ long ReadCharsFromConsole(char *buffer, long n)
  *  returns char*:  A pointer to static global data which contains a C string
  *                  or NULL if the stream is not valid.
  */
-
+#ifndef USE_CARBON
 extern char *__ttyname(long fildes)
 {
     #pragma unused(fildes)
@@ -1121,4 +1169,5 @@ extern char *__ttyname(long fildes)
 
     return 0L;
 }
+#endif
 
