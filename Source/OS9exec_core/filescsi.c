@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 /* This file contains the RBF Emulator */
 #include "os9exec_incl.h"
@@ -201,7 +215,7 @@ void scsi_finddefaults(void)
 
 /* the SCSI lowlevel call */
 static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                        byte* cb, ulong  cb_size, ulong* dat_buf, ulong len, Boolean doWrite )
+                        byte* cb, ulong  cb_size, byte* dat_buf, ulong len, Boolean doWrite )
 {
     os9err err;
     char*  s;
