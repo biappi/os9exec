@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2003/04/25 19:31:30  bfo
+ *    Handle Netatalk IDs out of range correctly now (using FD_ID)
+ *
  *    Revision 1.29  2002/11/06 20:08:23  bfo
  *    zero is zero for os9_word/os9_long
  *
@@ -1860,25 +1863,25 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
-#ifdef RAM_SUPPORT
-  Boolean RAM_Device( const char* os9path )
-  /* check, if it is a RAM device */
-  {
-      char     cmp[OS9PATHLEN];
-      mod_dev* mod;
-      char*    p;
+// #ifdef RAM_SUPPORT
+Boolean RAM_Device( const char* os9path )
+/* check, if it is a RAM device */
+{
+    char     cmp[OS9PATHLEN];
+    mod_dev* mod;
+    char*    p;
     
-      GetOS9Dev( os9path, (char*)&cmp );
-      if (mnt_ramSize>0) return true;
+    GetOS9Dev( os9path, (char*)&cmp );
+    if (mnt_ramSize>0) return true;
     
-      if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
-          p= (char*)mod + os9_word(mod->_mpdev);
-          return ustrcmp( p,"ram" )==0;
-      }
+    if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
+        p= (char*)mod + os9_word(mod->_mpdev);
+        return ustrcmp( p,"ram" )==0;
+    }
     
-      return false;
-  } /* RAM_Device */
-#endif
+    return false;
+} /* RAM_Device */
+// #endif
 
 
 static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )

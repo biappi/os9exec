@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2002/10/27 23:31:02  bfo
+ *    ReleaseBuffers at pRclose done in every case
+ *    get_mem/release_mem without param <mac_asHandle>
+ *
  *    Revision 1.32  2002/10/15 18:38:23  bfo
  *    Consider only lobyte at OS9_I_Delete
  *
@@ -106,10 +110,10 @@ typedef struct {
 			Boolean fProtected;			  /* true, if format protected */
 			Boolean multiSct;             /* true, if multi sector support */
 			
-			#ifdef RAM_SUPPORT
+	     // #ifdef RAM_SUPPORT
 			  Boolean isRAM;              /* true, if RAM disk */
               byte*   ramBase;            /* start address of RAM disk */
-            #endif
+         // #endif
             
 			int	    scsiID;               /* SCSI ID, -1 if NO_SCSI */
 			short   scsiAdapt;            /* SCSI Adaptor, -1 if none */
@@ -270,12 +274,12 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
     }
    
     do {
-        #ifdef RAM_SUPPORT    
+     // #ifdef RAM_SUPPORT    
           if (dev->isRAM) {
               memcpy( buffer, dev->ramBase+(sectorNr*dev->sctSize), nSectors*dev->sctSize );
               break;
           }
-        #endif
+     // #endif
         
         if (IsSCSI(dev)) {
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
@@ -330,12 +334,12 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
     }
         
     do {
-        #ifdef RAM_SUPPORT
+     // #ifdef RAM_SUPPORT
           if (dev->isRAM) {
               memcpy( dev->ramBase+(sectorNr*dev->sctSize), buffer, nSectors*dev->sctSize );
               break;
           }
-        #endif
+     // #endif
         
         if (IsSCSI(dev))
             err= WriteToSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
@@ -434,9 +438,9 @@ static os9err DevSize( rbfdev_typ* dev )
     ulong  size,ssize;
     
     /* should be defined already for the RAM disk */
-    #ifdef RAM_SUPPORT
+ // #ifdef RAM_SUPPORT
       if (dev->isRAM) return 0;
-    #endif
+ // #endif
 
     if (IsSCSI(dev)) {  /* try to switch to correct sector size first */
         err= Set_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize );
@@ -681,7 +685,7 @@ static Boolean MWrong( int cdv )
 
 
 
-#ifdef RAM_SUPPORT
+// #ifdef RAM_SUPPORT
 static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
 {
     #define DefaultScts 8192
@@ -734,26 +738,26 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     f=  1 + allocSize; fN= f*dev->sctSize;
     r=  f + 1;         rN= r*dev->sctSize;
     
-    u= &dev->ramBase[   0x00]; *u= os9_long( dev->totScts<<BpB ); /* 0x03 will be overwritten, is 0 anyway */
-    w= &dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
-    u= &dev->ramBase[   0x08]; *u= os9_long( f<<BpB );            /* 0x0b will be overwritten, is 0 anyway */
+    u= (ulong*) &dev->ramBase[   0x00]; *u= os9_long( dev->totScts<<BpB ); /* 0x03 overwritten, is 0 anyway */
+    w= (ushort*)&dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
+    u= (ulong*) &dev->ramBase[   0x08]; *u= os9_long( f<<BpB );            /* 0x0b overwritten, is 0 anyway */
                         
-        dev->ramBase[fN+0x00]= 0xbf; /* prepare the fd sector */
-        dev->ramBase[fN+0x08]= 0x01;
-        dev->ramBase[fN+0x0C]= 0x40;
-    u= &dev->ramBase[fN+0x10]; *u= os9_long( r<<BpB );
-        dev->ramBase[fN+0x14]= 0x01;
+                 dev->ramBase[fN+0x00]= 0xbf; /* prepare the fd sector */
+                 dev->ramBase[fN+0x08]= 0x01;
+                 dev->ramBase[fN+0x0C]= 0x40;
+    u= (ulong*) &dev->ramBase[fN+0x10]; *u= os9_long( r<<BpB );
+                 dev->ramBase[fN+0x14]= 0x01;
             
-        dev->ramBase[rN+0x00]= 0x2e; /* prepare the directory entry */
-        dev->ramBase[rN+0x01]= 0xae;
-    w= &dev->ramBase[rN+0x1e]; *w= (ushort) os9_word( f );
-        dev->ramBase[rN+0x20]= 0xae;
-    w= &dev->ramBase[rN+0x3e]; *w= (ushort) os9_word( f );
+                 dev->ramBase[rN+0x00]= 0x2e; /* prepare the directory entry */
+                 dev->ramBase[rN+0x01]= 0xae;
+    w= (ushort*)&dev->ramBase[rN+0x1e]; *w= (ushort) os9_word( f );
+                 dev->ramBase[rN+0x20]= 0xae;
+    w= (ushort*)&dev->ramBase[rN+0x3e]; *w= (ushort) os9_word( f );
     
     strcpy( dev->img_name,cmp );
     return 0;
 } /* PrepareRAM */
-#endif
+// #endif
 
 
 
@@ -769,7 +773,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     rbfdev_typ*  dev;
     ptype_typ    type;
     int          ii, n;
-    Boolean      abs, isSCSI, isRAM, isFolder, wProtect;
+    Boolean      abs, isSCSI, isRAMDisk= false, isFolder, wProtect;
     
     process_typ* cp    = &procs[pid];
     
@@ -825,15 +829,15 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         /* existing relative path ? */
         if (!abs && cdv!=0 && mnt_scsi==NO_SCSI) break;
 
-        err  =     0;
-        isRAM= false; /* do it for all conditions */
+        err      =     0;
+        isRAMDisk= false; /* do it for all conditions */
         
         if (!fu) {
             #ifdef RAM_SUPPORT
-              isRAM= RAM_Device( pathname );
+              isRAMDisk= RAM_Device( pathname );
             #endif
                  
-            if (!isRAM) {
+            if (!isRAMDisk) {
                 #ifdef MACFILES
                   err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
                 #elif defined win_linux
@@ -845,7 +849,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             }
         }
 
-        if (isRAM) {
+        if (isRAMDisk) {
                  isSCSI= false; /* don't forget to set a default */
             GetOS9Dev( pathname, (char*)&cmp );
         }
@@ -897,7 +901,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                     #endif
                 }
             } /* if isSCSI */
-        } /* if !isRAM */
+        } /* if !isRAMDisk */
 
         if (!AbsPath(pathname)) {
             if (IsExec(mode)) strcpy( tmp, cp->x.path );
@@ -989,9 +993,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->last_alloc= 0;            /* initialize allocater pointer */
     dev->sp_img    = 0;            /* the image syspath will be connected here later */
     
-    #ifdef RAM_SUPPORT
-      dev->isRAM   = isRAM;        /* RAM disk flag */
-    #endif
+ // #ifdef RAM_SUPPORT
+      dev->isRAM   = isRAMDisk;    /* RAM disk flag */
+ // #endif
    
     strcpy( dev->img_name,"" );    /* no  image name by default */
     strcpy( dev->name2,   "" );    /* no  2nd   name by default */
@@ -1035,9 +1039,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         err= 0;                 /* set it as default   */
         dev->installed= true;   /* now it is installed */
 
-        #ifdef RAM_SUPPORT
-          if (isRAM) { err= PrepareRAM( dev, &cmp ); break; }  /* no more actions for RAM disk */
-        #endif
+     // #ifdef RAM_SUPPORT
+          if (isRAMDisk) { err= PrepareRAM( dev, cmp ); break; }  /* no more actions for RAM disk */
+     // #endif
         
         if (IsSCSI(dev)) break; /* no more actions for SCSI */
             
@@ -1299,10 +1303,10 @@ static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
     os9err   err     = 0;
     Boolean isRAMDisk= false;
     
-    #ifdef RAM_SUPPORT
+ // #ifdef RAM_SUPPORT
           isRAMDisk= dev->isRAM;
       if (isRAMDisk) release_mem( dev->ramBase );
-    #endif
+ // #endif
     
     if  (!isRAMDisk) {    
         if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img );
@@ -1418,9 +1422,9 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
     float r;
     Boolean isRAMDisk= false;
     
-    #ifdef RAM_SUPPORT
-        isRAMDisk= rb->isRAM;
-    #endif
+ // #ifdef RAM_SUPPORT
+      isRAMDisk= rb->isRAM;
+ // #endif
 
                          unit= "kB";
     if (Mega( size,&r )) unit= "MB";

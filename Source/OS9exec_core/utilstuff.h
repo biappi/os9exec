@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2003/04/25 19:29:17  bfo
+ *    Handle Netatalk IDs out of range correctly now (using FD_ID)
+ *
  *    Revision 1.14  2002/10/15 17:58:36  bfo
  *    'CutUp' visible again (for linuxfiles.c)
  *
@@ -143,9 +146,9 @@ Boolean SCSI_Device  ( const char* os9path,
                        short  *scsiAdapt, short  *scsiBus, int  *scsiId,    short   *scsiLUN,
                        ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp, ptype_typ *typeP );
 
-#ifdef RAM_SUPPORT
+// #ifdef RAM_SUPPORT
   Boolean RAM_Device ( const char* os9path );
-#endif
+// #endif
 
 #ifdef windows32
   os9err AdjustPath ( const char* pathname, char* adname, Boolean creFile );
