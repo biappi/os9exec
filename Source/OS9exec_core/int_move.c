@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/11/09 11:30:37  bfo
+ *    RBF move in same directly running now correctly
+ *
  *    Revision 1.4  2002/10/09 20:47:41  bfo
  *    uphe_printf => upe_printf, move paths for RBF under Windows corrected
  *
@@ -209,7 +212,8 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     ushort     pathS, pathD, pathX;
     ptype_typ  typeS, typeD;
     char       *nameS, *nameD;
-    ulong      a0, dcpS, dcpD, len, fdS, fdD, dfdS, dfdD, l;
+    ulong      fdS, dfdS, dcpS, sctS, len, 
+               fdD, dfdD, dcpD, sctD, l, a0;
     Boolean    isRBF, asDirS, asDirD;
     
     
@@ -248,7 +252,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
             return _errmsg( 1, "can't move from one device to another" );
         
         /* try as file first, then as dir */
-            err= get_locations( cpid,typeS, nmS,false, &asDirS, &fdS,&dfdS,&dcpS ); 
+            err= get_locations( cpid,typeS, nmS,false, &asDirS, &fdS,&dfdS,&dcpS,&sctS ); 
         if (err) return _errmsg( err, "can't find \"%s\". ", nmS );
     }
     else {
@@ -369,7 +373,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
 
         do {
             /* create the new dest file */
-            err= get_locations( cpid,typeD, nmD,true, &asDirD, &fdD,&dfdD,&dcpD ); 
+            err= get_locations( cpid,typeD, nmD,true, &asDirD, &fdD,&dfdD,&dcpD,&sctD ); 
                                                                     if (err) return err; 
             /* reopen in the same directory */
             if (dfdS==dfdD) {
@@ -381,7 +385,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
             if (asDirS) {
                 err= usrpath_open ( cpid,&pathX, typeS, nmS,0x83 ); if (err) break;
                 err= usrpath_seek ( cpid, pathX, DIRNAMSZ );        if (err) break;
-                                    len= sizeof(ulong); l= os9_long(dfdD>>8);
+                                    len= sizeof(ulong); l= os9_long(dfdD/sctD);
                 err= usrpath_write( cpid, pathX, &len, &l, false ); if (err) break;
                 err= usrpath_seek ( cpid, pathX, 0 ); /*hld alloc*/ if (err) break;
                 err= usrpath_close( cpid, pathX );                  if (err) break;
@@ -390,7 +394,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         
             /* and write the fd positions vice versa */
             err= usrpath_seek ( cpid, pathS, dcpS+DIRNAMSZ );       if (err) break;
-                                len= sizeof(ulong); l= os9_long(fdD>>8);
+                                len= sizeof(ulong); l= os9_long(fdD/sctD);
             err= usrpath_write( cpid, pathS, &len, &l, false );     if (err) break;
             err= usrpath_seek ( cpid, pathS, 0 ); /* hold alloc */  if (err) break;
 
@@ -398,7 +402,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
             else               pathX= pathD; /* directories are different */
             
             err= usrpath_seek ( cpid, pathX, dcpD+DIRNAMSZ );       if (err) break;
-                                len= sizeof(ulong); l= os9_long(fdS>>8);
+                                len= sizeof(ulong); l= os9_long(fdS/sctS);
             err= usrpath_write( cpid, pathX, &len, &l, false );     if (err) break;
             err= usrpath_seek ( cpid, pathX, 0 ); /* hold alloc */  if (err) break;
         } while (false);

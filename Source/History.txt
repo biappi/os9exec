@@ -1208,6 +1208,9 @@
 		  03-06-09	Bfo		Signals can be sent only to process ids < MAXPROCESSES
 		  03-07-08  Bfo     Print hw name additionally
 		  03-07-08  Bfo     /socket and /le0 are built-in modules now
+		  03-07-25  Bfo     Change calculation of PD_FD/PD_DFD (sector size instead of 256)
+		  03-07-31  Bfo     "get_locations": Additional parameter for sectorsize
+		  03-07-31  Bfo     Use sector size instead of 256 at "int_move"
     3.22  03-??-??  Bfo
     -------------------
 */
