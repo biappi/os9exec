@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/10/09 20:39:37  bfo
+ *    uphe_printf => upe_printf
+ *
  *    Revision 1.10  2002/09/22 20:50:22  bfo
  *    SS_206 (unused setstat call) included.
  *
@@ -1252,6 +1255,8 @@ os9err syspath_new( ushort *sp, ptype_typ type )
             spK->nr       = k;       /* store it also in itself */
             spK->rawMode  = false;   /* by default it is not raw mode */
             spK->mustW    = 0;       /* last sector to be written */
+            spK->fd_sct   = NULL;
+            spK->rw_sct   = NULL;
             *sp           = k;       /* return new syspath's number */
 
             spK->signal_to_send = 0; /* send signal on data ready: none */
@@ -1414,7 +1419,7 @@ os9err usrpath_write(ushort pid,ushort up, ulong *len, void* buffer, Boolean wrl
 
 
 /* print to user path */
-static void usrpath_puts( ushort pid, ushort up, char* s )
+static void usrpath_puts( ushort pid, ushort up, char* s, Boolean direct )
 {
     ulong        n, c, base;
     ushort       sp;
@@ -1423,6 +1428,7 @@ static void usrpath_puts( ushort pid, ushort up, char* s )
     Boolean      sv          = in_recursion;
     int          sv_ConsoleID= gConsoleID;
     syspath_typ* sv_spP      = g_spP;
+    Boolean      no_o        = direct || dbgOut==-1;
     
     ii= 0; /* replace LF by CR */
     while  (s[ii]!=NUL) {
@@ -1439,10 +1445,10 @@ static void usrpath_puts( ushort pid, ushort up, char* s )
             b= &s[base];
             c=  n-base;
             
-            if      (up<MAXUSRPATHS && dbgOut==-1)
+            if      (up<MAXUSRPATHS && no_o)
                 usrpath_write( pid,up, &c, b, true );
             else {                 
-                                   sp= dbgOut==-1 ? 0 : dbgOut;
+                                   sp= no_o ? 0 : dbgOut;
                 syspath_write( pid,sp, &c, b, true );
             }
             
@@ -1457,8 +1463,8 @@ static void usrpath_puts( ushort pid, ushort up, char* s )
 
 
 
+void usrpath_printf( ushort pid, ushort up, const char* format, ... )
 /* printf to OS9 user path */
-void usrpath_printf(ushort pid, ushort up, const char* format, ...)
 {
     char buffer[MAXPRINTFLEN];
     va_list vp;
@@ -1466,11 +1472,11 @@ void usrpath_printf(ushort pid, ushort up, const char* format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
 
-    usrpath_puts(pid,up,buffer);
+    usrpath_puts( pid,up,buffer, true );
 } /* usrpath_printf */
 
 
-void upo_printf(const char* format, ...)
+void upo_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
     va_list vp;
@@ -1478,11 +1484,11 @@ void upo_printf(const char* format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
 
-    usrpath_puts(currentpid,usrStdout,buffer);
+    usrpath_puts( currentpid,usrStdout,buffer, true );
 } /* upo_printf */
 
 
-void upho_printf(const char* format, ...)
+void upho_printf( const char* format, ... )
 /* usr path with hash std output printing */
 {
     char  buffer[MAXPRINTFLEN];
@@ -1495,11 +1501,11 @@ void upho_printf(const char* format, ...)
 
     buffer[ 0 ]= '#';
     buffer[ 1 ]= ' ';
-    usrpath_puts(currentpid,usrStdout,buffer);
+    usrpath_puts( currentpid,usrStdout,buffer, true );
 } /* upho_printf */
 
 
-void upe_printf(const char* format, ...)
+void upe_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
     va_list vp;
@@ -1507,11 +1513,11 @@ void upe_printf(const char* format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
 
-    usrpath_puts(currentpid,usrStderr,buffer);
+    usrpath_puts( currentpid,usrStderr,buffer, false );
 } /* upe_printf */
 
 
-void uphe_printf(const char* format, ...)
+void uphe_printf( const char* format, ... )
 /* usr path with hash error output printing */
 {
     char  buffer[MAXPRINTFLEN];
@@ -1524,12 +1530,12 @@ void uphe_printf(const char* format, ...)
 
     buffer[ 0 ]= '#';
     buffer[ 1 ]= ' ';
-    usrpath_puts(currentpid,usrStderr,buffer);
+    usrpath_puts( currentpid,usrStderr,buffer, false );
 } /* uphe_printf */
 
 
 
-void main_printf(const char* format, ...)
+void main_printf( const char* format, ... )
 /* main path error output printing */
 {
     char buffer[MAXPRINTFLEN];
@@ -1538,7 +1544,7 @@ void main_printf(const char* format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
 
-    usrpath_puts(currentpid,MAXUSRPATHS,buffer);
+    usrpath_puts( currentpid,MAXUSRPATHS,buffer, true );
 } /* main_printf */
 
 
