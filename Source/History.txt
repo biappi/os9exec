@@ -1011,6 +1011,7 @@
           02-07-02  Bfo     Preparations done for /r0 RAM disk implementation.
           02-07-03  Bfo     RAM disk is now implemented (fixed to 2MB), it seems to work !!
           02-07-06  Bfo     E_FULL problem fixed.
+          02-07-07  Bfo     RamDisk can be activated with "mount", -r=<size> prepared, but not yet active
     3.14  02-07-??  Bfo     ...
     -------------------
 */
