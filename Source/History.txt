@@ -978,6 +978,8 @@
           02-05-16  Bfo     "See" mac files with spaces as files with underscores
           02-05-16  Bfo     Replace strange \ca charactres by spaces in all project files.
           02-05-17  Bfo     MPW version can be compiled again, fully working on CVS directory now.
+          02-05-18  Bfo     Linux version checked, +-ok (has to convert sources with LF now).
+          02-05-18  Bfo     Strange filedate problem (Mac) completely fixed (see also 02-04-12).
     3.12  02-05-??  Bfo     ...
     -------------------
 */
