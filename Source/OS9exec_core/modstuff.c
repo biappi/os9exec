@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.14  2004/09/15 19:48:44  bfo
  *    "Flush68kCodeRange" now activated for ALL module loads.
  *
@@ -73,6 +76,7 @@
 
 
 #include "os9exec_incl.h"
+#include "net_platform.h"
 
 /* additional memory for all processes */
 ulong memplusall;
