@@ -27,11 +27,11 @@
 /*    main include file for all versions      */
 /*                                            */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2003/05/24 11:34:13  bfo
+ *    Some more MACH-O adaptions, still not able to compile
+ *
  *    Revision 1.9  2003/05/21 20:27:43  bfo
  *    #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
  *
@@ -52,7 +55,7 @@
  *    Clean Carbon import
  *
  *    Revision 1.7  2002/07/30 16:46:14  bfo
- *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *    E-Mail adress bfo@synthesis.ch       is updated everywhere
  *
  *    Revision 1.6  2002/07/23 19:37:15  bfo
  *    go back to the 1/60th second system

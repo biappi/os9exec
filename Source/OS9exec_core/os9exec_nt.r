@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 
@@ -35,10 +35,10 @@
 
 resource 'vers' (2, purgeable) {
     0x3,
-    0x24,
+    0x25,
     beta,
     0x1,
     verGrSwiss,
-    "3.24",
-    "OS9exec V3.24   © by luz/bfo"
+    "3.25",
+    "OS9exec V3.25   © by luz/bfo"
 };

@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2004/10/22 22:51:12  bfo
+ *    Most of the "pragma unused" eliminated
+ *
  *    Revision 1.16  2003/08/01 11:14:38  bfo
  *    /L2 getstat support
  *
@@ -72,7 +75,7 @@
  *    Some more variables defined at the real procid struct now.
  *
  *    Revision 1.6  2002/07/30 16:47:20  bfo
- *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *    E-Mail adress bfo@synthesis.ch       is updated everywhere
  *
  *    Revision 1.5  2002/07/06 15:56:42  bfo
  *    ram disks (also other names than /r0) can be mounted/unmounted with "mount"
@@ -1543,7 +1546,7 @@ void main_printf( const char* format, ... )
 /* copyright notice */
 void copyright(void)
 {
-    upe_printf( "(c) 1993-2002 by luz/bfo (luz@synthesis.ch / beat.forster@ggaweb.ch)\n");
+    upe_printf( "(c) 1993-2004 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
 } /* copyright */
 
 

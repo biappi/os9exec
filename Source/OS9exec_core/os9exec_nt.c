@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2004/10/22 22:51:12  bfo
+ *    Most of the "pragma unused" eliminated
+ *
  *    Revision 1.37  2004/09/15 19:56:19  bfo
  *    changed to V3.24
  *
@@ -624,7 +627,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x24;
+	exec_revision= 0x25;
 	#endif
 } /* getversions */
 

@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh und PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,12 +41,15 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2003/05/17 11:14:04  bfo
+ *    (CVS header included)
+ *
  *
  */
 
 
 /*      Telnet/TTY interface Routines
-**      by Beat Forster (beat.forster@ggaweb.ch)
+**      by Beat Forster (bfo@synthesis.ch)
 */
 
 void               InitTTYs(void );

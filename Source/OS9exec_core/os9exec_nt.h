@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2004/01/04 02:03:12  bfo
+ *    #define MAXPROCESSES 129
+ *    => this allows processes with id 1..128, id=0 is not used.
+ *
  *    Revision 1.30  2003/08/01 11:11:40  bfo
  *    /L2 getstat support
  *
@@ -99,7 +103,7 @@
  *    F$SetSys extended with D_PrcDBT support
  *
  *    Revision 1.11  2002/07/30 16:46:14  bfo
- *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *    E-Mail adress bfo@synthesis.ch       is updated everywhere
  *
  *    Revision 1.10  2002/07/24 22:33:28  bfo
  *    Timer synchronisation enhanced
@@ -538,7 +542,7 @@ typedef struct {
 /* variant for network objects */
 typedef struct {
             SOCKET      ep;             /* end point reference */
-            SOCKET      ls;             /* listener's end point */
+         // SOCKET      ls;             /* listener's end point */
             Ptr         transferBuffer; /* OpenTransport's network buffer */
             Ptr         b_local;        /* local buffer */
             ulong       bsize;          /* local buffer size */     

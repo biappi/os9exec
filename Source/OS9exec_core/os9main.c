@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2003/05/17 10:32:15  bfo
+ *    UserOpt activated for Carbon (gs_ready problem, same as Linux version)
+ *
  *    Revision 1.6  2002/10/09 20:14:03  bfo
  *    "show_timing" call with additional parameter <ticksLim>
  *
@@ -361,7 +364,7 @@ static void os9_usage(char *name)
     upho_printf("\n");
 
     upho_printf("%s\n", OS9exec_Name() );
-    upho_printf("1993-2002 by luz/bfo ( luz@synthesis.ch / beat.forster@ggaweb.ch )\n");
+    upho_printf("1993-2004 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
      upo_printf("\n");
 } /* os9_usage */
 

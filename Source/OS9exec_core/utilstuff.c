@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2004/10/22 23:00:25  bfo
+ *    Most of the "pragma unused" eliminated
+ *
  *    Revision 1.31  2003/05/05 17:57:02  bfo
  *    Activate most of the ramDisk things even without RAM_SUPPORT
  *
@@ -82,7 +85,7 @@
  *    Fixed "Retry/Abort" pop-up dialog
  *
  *    Revision 1.18  2002/07/30 16:45:37  bfo
- *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *    E-Mail address beat.forster@ggaweb.ch is updated everywhere
  *
  *    Revision 1.17  2002/07/24 22:33:53  bfo
  *    Timer synchronisation enhanced

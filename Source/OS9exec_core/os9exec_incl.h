@@ -27,11 +27,11 @@
 /*    main include file for all versions      */
 /*                                            */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2003/05/21 20:23:39  bfo
+ *    Use "procid_special.h" with *except[10] instead of *_except[10]
+ *
  *    Revision 1.6  2002/09/11 17:32:04  bfo
  *    Import all os9defs files from here / adapt it for "errno_adapted.h"
  *
@@ -52,7 +55,7 @@
  *    include "errno_adapted.h"
  *
  *    Revision 1.4  2002/07/30 16:46:14  bfo
- *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *    E-Mail adress bfo@synthesis.ch       is updated everywhere
  *
  *    Revision 1.3  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
