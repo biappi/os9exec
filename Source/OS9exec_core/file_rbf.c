@@ -647,7 +647,7 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
         p= (char*)mod + os9_word(mod->_mpdev);
         if (ustrcmp( p,"ram" )==0) {
             w= (ushort*)(&mod->_mdtype + PD_SCT);
-            dev->totScts= *w;
+            dev->totScts= os9_word( *w );
         }
     } /* if */
 
@@ -657,6 +657,7 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     allocN   =       allocSize * dev->sctSize*BpB;
     allocScts= 1 +   allocSize + 2;
     
+    printf( "%d %s\n", dev->totScts, cmp );
     dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
     if (dev->ramBase==NULL) return E_NORAM;
     
@@ -675,14 +676,15 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     f=  1 + allocSize; fN= f*dev->sctSize;
     r=  f + 1;         rN= r*dev->sctSize;
     
-    u= &dev->ramBase[   0x00]; *u= os9_long( dev->totScts )<<BpB; /* 0x03 will be overwritten, is 0 anyway */
+    u= &dev->ramBase[   0x00]; *u= os9_long( dev->totScts<<BpB ); /* 0x03 will be overwritten, is 0 anyway */
+    printf( "%08X\n", *u );
     w= &dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
-    u= &dev->ramBase[   0x08]; *u= os9_long( f )<<BpB;            /* 0x0b will be overwritten, is 0 anyway */
+    u= &dev->ramBase[   0x08]; *u= os9_long( f<<BpB );            /* 0x0b will be overwritten, is 0 anyway */
                         
         dev->ramBase[fN+0x00]= 0xbf; /* prepare the fd sector */
         dev->ramBase[fN+0x08]= 0x01;
         dev->ramBase[fN+0x0C]= 0x40;
-    u= &dev->ramBase[fN+0x10]; *u= os9_long( r )<<BpB;
+    u= &dev->ramBase[fN+0x10]; *u= os9_long( r<<BpB );
         dev->ramBase[fN+0x14]= 0x01;
             
         dev->ramBase[rN+0x00]= 0x2e; /* prepare the directory entry */
@@ -964,13 +966,8 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         err= 0;                 /* set it as default   */
         dev->installed= true;   /* now it is installed */
         
-        if (isRAM) {
-            err= PrepareRAM( dev, &cmp );
-            break;
-        }
-        
-        if (IsSCSI(dev)) break; /* no more actions for SCSI */
-
+        if (isRAM) { err= PrepareRAM( dev, &cmp ); break; }  /* no more actions for RAM disk */
+        if (IsSCSI(dev))                           break;    /* no more actions for SCSI */
             
         type    = IO_Type( pid, pathname, poRead );
         wProtect= mnt_wProtect;
