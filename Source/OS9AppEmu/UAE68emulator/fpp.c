@@ -4,7 +4,25 @@
   * MC68881 emulation
   *
   * Copyright 1996 Herman ten Brugge
+  * adapted by luz/bfo
   */
+
+
+
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 #include <math.h>
 
@@ -632,12 +650,13 @@ void fdbcc_opp(uae_u32 opcode, uae_u16 extra)
     uaecptr pc = (uae_u32) m68k_getpc ();
     uae_s32 disp = (uae_s32) (uae_s16) next_iword();
     int cc;
+    cc= fpp_cond(opcode, extra & 0x3f);
 
 #if DEBUG_FPP
-    printf("fdbcc_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("fdbcc_opp (%08X %04X %d) at %08lx\n", opcode,extra & 0x3f,cc, m68k_getpc () );
+    // fflush(stdout);
 #endif
-    cc = fpp_cond(opcode, extra & 0x3f);
+
     if (cc == -1) {
 	m68k_setpc (pc - 4);
 	op_illg (opcode);
@@ -657,8 +676,8 @@ void fscc_opp(uae_u32 opcode, uae_u16 extra)
     int cc;
 
 #if DEBUG_FPP
-    printf("fscc_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("fscc_opp at %08lx\n", m68k_getpc ());
+    // fflush(stdout);
 #endif
     cc = fpp_cond(opcode, extra & 0x3f);
     if (cc == -1) {
@@ -681,8 +700,8 @@ void ftrapcc_opp(uae_u32 opcode, uaecptr oldpc)
     int cc;
 
 #if DEBUG_FPP
-    printf("ftrapcc_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("ftrapcc_opp at %08lx\n", m68k_getpc ());
+    // fflush(stdout);
 #endif
     cc = fpp_cond(opcode, opcode & 0x3f);
     if (cc == -1) {
@@ -696,12 +715,13 @@ void ftrapcc_opp(uae_u32 opcode, uaecptr oldpc)
 void fbcc_opp(uae_u32 opcode, uaecptr pc, uae_u32 extra)
 {
     int cc;
+    cc= fpp_cond(opcode, opcode & 0x3f); /* extra instead of opcode (bfo) !! */
 
 #if DEBUG_FPP
-    printf("fbcc_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("fbcc_opp (%04X %04X %d) at %08lx\n", opcode,opcode & 0x3f,cc, m68k_getpc () );
+    // fflush(stdout);
 #endif
-    cc = fpp_cond(opcode, opcode & 0x3f);
+
     if (cc == -1) {
 	m68k_setpc (pc);
 	op_illg (opcode);
@@ -719,8 +739,8 @@ void fsave_opp(uae_u32 opcode)
     int i;
 
 #if DEBUG_FPP
-    printf("fsave_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("fsave_opp at %08lx\n", m68k_getpc ());
+    // fflush(stdout);
 #endif
     if (get_fp_ad(opcode, &ad) == 0) {
 	m68k_setpc (m68k_getpc () - 2);
@@ -759,8 +779,8 @@ void frestore_opp(uae_u32 opcode)
     int incr = (opcode & 0x38) == 0x20 ? -1 : 1;
 
 #if DEBUG_FPP
-    printf("frestore_opp at %08lx\n", m68k_getpc ());
-    fflush(stdout);
+    upe_printf("frestore_opp at %08lx\n", m68k_getpc ());
+    // fflush(stdout);
 #endif
     if (get_fp_ad(opcode, &ad) == 0) {
 	m68k_setpc (m68k_getpc () - 2);
@@ -809,14 +829,14 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 	  char* r;
 	  
 	  v= (extra >> 13) & 0x7;
-      printf( "FPP %04lx %04x %1x at %08lx", 
+      upe_printf( "FPP %04lx %04x %1x at %08lx", 
              opcode & 0xffff, extra & 0xffff, v, m68k_getpc() - 4 );
     
       if (v!=0 &&
     	  v!=2 &&
-    	  v!=3) printf( "\n" );
+    	  v!=3) upe_printf( "\n" );
     	
-      fflush(stdout);
+      // fflush(stdout);
 	#endif
 
     switch ((extra >> 13) & 0x7) {
@@ -849,9 +869,9 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 	
 	  reg = (extra >> 7) & 7;
 	  p= "FMOVE";
-      printf(" %-7s fp%d,%s%d  %f\n", p, reg, r,sreg,
+      upe_printf(" %-7s fp%d,%s%d  %f\n", p, reg, r,sreg,
                                       regs.fp[reg] );
-      fflush(stdout);
+      // fflush(stdout);
 	#endif
 	return;
 	
@@ -1154,7 +1174,7 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 	    }
 
 		#if DEBUG_FPP
-			printf( " const %f\n", regs.fp[reg] );
+			upe_printf( " const %f\n", regs.fp[reg] );
 		#endif
 	    return;
 	}
@@ -1163,7 +1183,7 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 	    op_illg (opcode);
 	    
 		#if DEBUG_FPP
-			printf( " ?\n" );
+			upe_printf( " ?\n" );
 		#endif
 	    return;
 	}
@@ -1174,7 +1194,19 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 
 	switch (extra & 0x7f) {
 	case 0x00:		/* FMOVE */
+	case 0x40:  /* Explicit rounding. This is just a quick fix. Same
+		     * for all other cases that have three choices */
+	case 0x44:   
 	    regs.fp[reg] = src;
+	    /* Brian King was here.  <ea> to register needs FPSR updated.
+	     * See page 3-73 in Motorola 68K programmers reference manual.
+	     * %%%FPU */
+	    if ((extra & 0x44) == 0x40)
+		regs.fp[reg] = (float)regs.fp[reg];
+		
+	//  MAKE_FPSR (regs.fp[reg]);
+	    regs.fpsr = (regs.fp[reg] == 0 ? 0x4000000 : 0) |
+		(regs.fp[reg] < 0 ? 0x8000000 : 0);
 	    break;
 	case 0x01:		/* FINT */
 	    regs.fp[reg] = (int) (src + 0.5);
@@ -1459,9 +1491,9 @@ void fpp_opp(uae_u32 opcode, uae_u16 extra)
 		}
 	}
 	
-    printf(" %-7s %s%d,fp%d  %f %f (%f)\n", p, r,sreg, reg,
+    upe_printf(" %-7s %s%d,fp%d  %f %f (%f)\n", p, r,sreg, reg,
                                             src,regs.fp[reg], sav );
-    fflush(stdout);
+    // fflush(stdout);
 	#endif
 
 	return;
