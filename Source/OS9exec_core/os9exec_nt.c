@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/07/30 16:46:14  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.13  2002/07/24 22:33:14  bfo
  *    Timer synchronisation enhanced
  *
@@ -544,7 +547,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x14;
+	exec_revision= 0x15;
 	#endif
 } /* getversions */
 

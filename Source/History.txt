@@ -1040,6 +1040,10 @@
           02-07-30  Bfo     "idbg" comments adapted.
     3.14  02-07-30  Bfo     Version V3.14 released for the customer.
     -------------------
+
+          02-07-30  Bfo     Changed to the new version !
+    3.15  02-08-??  Bfo     ???
+    -------------------
 */
 
 
