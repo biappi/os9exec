@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2003/04/12 21:50:33  bfo
+ *    New functions _SS_Send, _SS_Recv, ... included
+ *
  *    Revision 1.12  2002/10/27 23:44:19  bfo
  *    idbg -o has only influence on StdErr
  *
@@ -1783,7 +1786,7 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
         case SS_Accept : err= (s->_SS_Accept )( pid,spP, d1,   *a ); break; /* $70 */
         case SS_Recv   : err= (s->_SS_Recv   )( pid,spP, d1,d2,*a ); break; /* $71 */
         case SS_Send   : err= (s->_SS_Send   )( pid,spP, d1,d2,*a ); break; /* $72 */
-        case SS_GNam   : err= (s->_SS_GNam   )( pid,spP,    d2,*a ); break; /* $73 */
+        case SS_GNam   : err= (s->_SS_GNam   )( pid,spP, d1,d2,*a ); break; /* $73 */
         case SS_SOpt   : err= (s->_SS_SOpt   )( pid,spP, d1,d2    ); break; /* $74 set socket option   */
         case SS_SendTo : err= (s->_SS_SendTo )( pid,spP, d1,d2,*a ); break; /* $77 */
         case SS_PCmd   : err= (s->_SS_PCmd   )( pid,spP,       *a ); break; /* $7A protocol direct cmd */
