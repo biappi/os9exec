@@ -966,19 +966,20 @@
                     luz     checkout tests with WinCVS and MacCVS successful!
 
           02-04-30  Bfo     Bring the update to sourceforge:
-		  02-04-12	Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
-		  02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
-		  02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
-		  02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
-		  02-05-05  Bfo     Prepare the Carbon implementation for Mac OS X
-	3.11  02-05-10  Bfo     First Carbon version without compile/link errors, but not yet running.
-    -------------------		(UAE must be in the same subdir, don't know why)
+          02-04-12  Bfo     Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
+          02-04-12  Bfo     CLOCKS_PER_SECOND problem found (and workaround implemented)
+          02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
+          02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
+          02-05-05  Bfo     Prepare the Carbon implementation for Mac OS X
+    3.11  02-05-10  Bfo     First Carbon version without compile/link errors, but not yet running.
+    -------------------     (UAE must be in the same subdir, don't know why)
 
-	      02-05-11  Bfo     Problem ftp/telnet quit emulator fixed (pW_age bug all sleeping)
-	      02-05-16  Bfo     "See" mac files with spaces as files with underscores
-	      02-05-16  Bfo     Replace strange \ca charactres by spaces in all project files.
-	3.12  02-05-??  Bfo     ...
-	-------------------		
+          02-05-11  Bfo     Problem ftp/telnet quit emulator fixed (pW_age bug all sleeping)
+          02-05-16  Bfo     "See" mac files with spaces as files with underscores
+          02-05-16  Bfo     Replace strange \ca charactres by spaces in all project files.
+          02-05-17  Bfo     MPW version can be compiled again, fully working on CVS directory now.
+    3.12  02-05-??  Bfo     ...
+    -------------------
 */
 
 
