@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *
  */
 
@@ -51,7 +54,7 @@ int   ustrcmp( const char* s1,const char* s2 );
 int  pustrcmp( const char* s1,const char* s2 );
 int  ustrncmp( const char* s1,const char* s2, ushort n );
 
-void os9_long_inc ( ulong* a, ulong increment );
+void os9_long_inc ( unsigned int* a, ulong increment );
 void set_os9_state( ushort cpid, pstate_typ state );
 
 os9err host2os9err( OSErr hosterr, ushort suggestion );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.21  2002/08/13 15:15:23  bfo
  *    The state <dead> will be handled correctly now (state=0x9100)
  *
@@ -194,7 +197,7 @@ int ustrncmp( const char *s1, const char *s2, ushort n )
 
 
 
-void os9_long_inc( ulong* a, ulong increment )
+void os9_long_inc( unsigned int* a, ulong increment )
 /* increment ulong field <a> dependent on big/little endian */
 {   *a= os9_long( os9_long( *a ) + increment );
 } /* os9_long_inc */
