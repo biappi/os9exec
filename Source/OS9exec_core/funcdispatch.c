@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *
  */
 
@@ -801,7 +804,8 @@ os9err int_systime(ushort pid, int argc, char **argv)
             while (*p!=NUL) {
                         opt= p[0];
                 switch (opt) { /* no longer case sensitive */
-                    case '?': usage(argv[0],pid);                              break;
+                    case '?': usage(argv[0],pid); return 0;
+                    
                     case 'r': init_syscalltimers();
      						  upho_printf("Activated and resetted timing measurement\n"); break;
                     case 'd': logtiming= false;
