@@ -1126,6 +1126,7 @@
     -------------------
 
           02-10-15  Bfo     Changed to new version
+          02-10-16  Bfo/WO  DevPak 68K OS-9 V1.2 _resvd1, _procstk conflict resolved
     3.20  02-10-??  Bfo     ...
     -------------------
 */
@@ -1140,12 +1141,10 @@
     
     -   MPW uses its I/O currently partly also for the tty/pty system.
     -   "mgencas" will not startup over network (Linux), "mme" has also problems.
-    -   "plotf" orig/max times not correct, problem in UAE FPU => workaround: use plotf instead of plotf020
     -   Linux telnet close still quits emulator (recognition of end cond not correctly)
     -   "inetd" superdaemon is not yet running correctly.
-    -   Mouse movements on XServer still slow and jumpy.
+    -   Mouse movements on XServer (Mac) still slow and jumpy.
     -   MGP slow startup problems (NT 4.0).
-    -   Problems 'ps -e' and check memory info of "ps" (for trap handlers)
     -   inode support for transparent Mac file system
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
     -   'showprocs -e' crash on Windows.
@@ -1153,13 +1152,11 @@
    (+)  Take tty00/pty00 first (problems with arbitration)
    (+)  setime_Y2K version with param passing --> 1900
    (-)  'pragma unused' not possible with gcc (Linux): cuts the file there !!
-   (-)  mfree "os9serial" too small ??
 */
 
 
 /* To do: */
 /*
-    -   RBF algorithm is not yet adapted for multisector support
     -   RBF disk cache not yet implemented.
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
@@ -1176,8 +1173,6 @@
     -   <in_recursion> for debug load
     -   btree for Mac
     -   btree optimisation
-    -   Implement an RBF RAM disk
-    -   too many file attributes set when writing to RBF (image)
     -   termcap support for the DOS window.
     -   fix the msnap mouse blocker problem.
     -   fix the "mmore" MGR scroll problem.

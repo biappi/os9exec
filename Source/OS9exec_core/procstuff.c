@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2002/09/11 17:25:53  bfo
+ *     Definition is correct now: pd= &procs[k].pd
+ *
  *    Revision 1.14  2002/09/01 20:15:39  bfo
  *    big/little endian bug with *idp fixed
  *
@@ -127,16 +130,19 @@ void init_processes()
     short*  s;
     procid* pd;
     int     j, k;
-
+    ulong   sz= sizeof(procid);
+    
     for (k=0; k<MAXPROCESSES; k++) {   /* assign all the constant values which never change */
         pd= &procs[k].pd; 
+        memset( pd,0, sz );            /* cleanup the whole proc descriptor */
+        
         pd->_id    = os9_word(k);
         pd->_sp    = 0;                /* just to be sure */
         
         pd->_pagcnt= 0;
         pd->_age   = os9_word(128);    /* as in real OS-9 */
         pd->_task  = 0;
-        pd->_resvd1= os9_word(0xBD00); /* as in real OS-9 */
+     // pd->_resvd1= os9_word(0xBD00); /* invisible at DevPak von 68K OS-9 V1.2 */
         pd->_deadlk= 0;                /* as in real OS-9 */
     
         pd->_frag  = NULL;             /* don't use OS-9 V3.0 memory method */
@@ -147,7 +153,7 @@ void init_processes()
     
         for (j=0; j<   7; j++) pd->FPExcpt [j]= NULL;
         for (j=0; j<   7; j++) pd->FPExStk [j]= NULL;
-        for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* no system stack used */
+     // for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* invisible at DevPak von 68K OS-9 V1.2 */
         
         set_os9_state( k, pUnused );   /* invalidate this process  */
         prDBT[k]= 0;                   /* and also the table entry */
@@ -155,7 +161,7 @@ void init_processes()
     
                                   s= (short*)prDBT;
     *s= os9_word(MAXPROCESSES-1); s++; /* no process 0 */
-    *s= os9_word(2048);           s++; /* the size of the real descriptor */
+    *s= os9_word((ushort)sz);     s++; /* the size of the real descriptor */
     
     currentpid= 0; /* earlier: MAXPROCESSES; no process is running */
 } /* init_processes */
