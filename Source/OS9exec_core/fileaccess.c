@@ -743,6 +743,7 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 	      if (TCSuff( &v, ".tif",    '8BIM','TIFF' )) return; // TIFF
 	      if (TCSuff( &v, ".gif",    '8BIM','GIFf' )) return; // GIF
 	      if (TCSuff( &v, ".pdf",    'CARO','PDF ' )) return; // PDF
+	      if (TCSuff( &v, ".rm",     'PNst','PNRM' )) return; // RealMovie
 
 	      if (TCSuff( &v, ".lzh",    'LARC','LHA ' )) return; // lzh
 	      if (TCSuff( &v, ".sit",    'SIT!','SIT!' )) return; // StuffIt
@@ -758,7 +759,7 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 
       if   ( RBF_Rsc( spc ) && TCRBFi( &v, "" ) )     return; // RBF images
    			  TCSuff( &v, "",        'os9a','PROG' );         // default
-  }
+  } /* Get_Creator_And_Type */
 #endif 
 
 
@@ -1610,8 +1611,10 @@ os9err pHsetFD( ushort pid, syspath_typ* spP, byte *buffer )
     void*  fdl;
     
     #ifdef MACFILES
-      CInfoPBRec cipb;  
-      FSSpec*    spc= &spP->u.disk.spec;
+      OSErr       oserr;
+      CInfoPBRec  cipb;  
+      FSSpec*     spc= &spP->u.disk.spec;
+      FInfo       f;
 
       /* get the cipb */
                     fdl= &cipb;
@@ -1631,6 +1634,12 @@ os9err pHsetFD( ushort pid, syspath_typ* spP, byte *buffer )
 
     #ifdef MACFILES
       err= setCipb( fdl, spc ); /* and write it back */
+
+           oserr= FSpGetFInfo  ( spc, &f );
+      if (!oserr) {           
+           Get_Creator_And_Type( spc, &f.fdCreator, &f.fdType );
+           oserr= FSpSetFInfo  ( spc, &f );
+      }
     #endif
 
     return err;
