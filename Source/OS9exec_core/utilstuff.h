@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/10/15 17:58:36  bfo
+ *    'CutUp' visible again (for linuxfiles.c)
+ *
  *    Revision 1.13  2002/10/02 18:52:29  bfo
  *    GetScreen function is now defined at "utilstuff"
  *
@@ -116,10 +119,10 @@ Boolean FileFound    ( const char* pathname );
 
 void    CutUp( char* pathname, const char* prev );
 void    EatBack            ( char* pathname );
+os9err  FD_ID        ( const char* pathname, dirent_typ* dEnt, ulong *id );
 
 
 #ifdef win_linux
-  os9err FD_ID       ( const char* pathname, dirent_typ* dEnt, ulong *id );
   os9err DirNthEntry       ( syspath_typ*, int n );
   os9err RemoveAppledouble ( syspath_typ* );
   void   seekD0            ( syspath_typ* );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2002/11/06 20:08:23  bfo
+ *    zero is zero for os9_word/os9_long
+ *
  *    Revision 1.28  2002/10/27 23:16:39  bfo
  *    get_mem/release_mem no longer with param <mac_asHandle>
  *
@@ -1199,10 +1202,13 @@ void EatBack( char* pathname )
 
 
 
-#ifdef win_linux
 os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
 {
-    #ifdef windows32
+    #ifdef macintosh
+    #pragma unused(dEnt)
+    #endif
+
+    #if defined(windows32) || defined macintosh
       #define ATTR_DIR 0x0010
       char    tmp[MAX_PATH];
       int     ii;
@@ -1210,9 +1216,13 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
       Boolean isNew= false;
       
       strcpy( tmp,pathname );
-      if (tmp[strlen(tmp)-1]!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
-      strcat( tmp,dEnt->d_name );
-      EatBack(tmp);
+      
+      #ifdef windows32
+        if      (tmp[strlen(tmp)-1]!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
+        strcat ( tmp, dEnt->d_name );
+        EatBack( tmp );
+      #endif
+      
           
 //    if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
       
@@ -1222,13 +1232,19 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
           if (*m==NULL) {
               *m= get_mem( strlen(tmp)+1 );
               strcpy( *m,tmp );
-              dirtable[ii+1]= NULL; /* prepare the next undefined field */
+          //  dirtable[ii+1]= NULL; /* prepare the next undefined field */
               
               isNew= true;
           } /* if */
               
           if (ustrcmp( *m,tmp )==0) {
-              *id= (ulong)m; break;
+              #ifdef windows32
+                *id= (ulong)m;
+              #else
+                *id= (ulong)ii+1;
+              #endif  
+                
+              break;
           } /* if */
       } /* for */
       if (*id==(ulong)-1) return E_NORAM;
@@ -1247,6 +1263,7 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
 
   
   
+#ifdef win_linux
 os9err DirNthEntry( syspath_typ* spP, int n )
 /* prepare directory to read the <n>th entry */
 {   
