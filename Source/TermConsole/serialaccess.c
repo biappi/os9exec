@@ -249,7 +249,7 @@ long WriteCharsToSerial(char *buffer, long n, int serialID)
 void CheckInBufferSerial( int serialID )
 {
     OSErr       oserr;
-    long        cnt;
+    long        cnt= 0;
     char        key;
     ttydev_typ* mco;
     
@@ -259,7 +259,10 @@ void CheckInBufferSerial( int serialID )
          mco= &mac_serial[serialID];
     if (!mco->installed) return;
    
-    oserr= SerGetBuf( mco->rIn, &cnt );
+    #ifndef USE_CARBON
+      oserr= SerGetBuf( mco->rIn, &cnt );
+    #endif
+    
     if (cnt==0) return; /* currently nothing to read from serial line */
     
     cnt  = 1;
