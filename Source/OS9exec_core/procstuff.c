@@ -730,6 +730,7 @@ static os9err os9exec_compatible( mod_exec* mod )
     
     if (ustrcmp(p,"deldir" )==0 && ed<=100) return E_BADREV; /* shrinking directory entries not supported */
     if (ustrcmp(p,"sysdbg" )==0 && ed<=100) return E_BADREV; /* crashes right at the beginning */
+    if (ustrcmp(p,"mnt"    )==0 && ed<=100) return E_BADREV; /* no "/mt" device available */
     
     return 0;
 } /* os9exec_compatible */
