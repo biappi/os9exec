@@ -417,6 +417,19 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, Boolean asGregorian )
 
 
 /* ------------------------------------------------------------------------ */
+#ifdef USE_CARBON
+  char* p2cstr( unsigned char* s )
+  {
+      return s;
+  } /* p2cstr */
+
+
+  unsigned char* c2pstr( char* s )
+  {
+      return s;
+  } /* c2pstr */
+#endif
+
 
 ulong Min( ulong a, ulong b )
 /* returns the smaller of two ulongs */
@@ -1444,7 +1457,7 @@ Boolean SCSI_Device( const char* os9path,
         err= RBF_Rsc( fs );
       
       #else
-        #pragma unused(isFolder,fs,afs)
+        #pragma unused(mode,isFolder,fs,afs)
         err= E_UNIT;
       #endif
       
