@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2002/09/22 20:48:23  bfo
+ *    SS_206 (unused setstat call) included.
+ *
  *    Revision 1.17  2002/09/11 17:28:30  bfo
  *    printerHandle definition disabled for Linux
  *
@@ -250,7 +253,7 @@
 /* OS9 error code */
 typedef ushort os9err;
 
-/* a module directory entry */
+/* an (internal) module directory entry */
 typedef struct {
             #ifdef macintosh
               Handle modulehandle;
@@ -261,6 +264,16 @@ typedef struct {
             Boolean isBuiltIn; /* set if module compiled into code (such as OS9exec module) */
             short linkcount;
          } module_typ;
+
+
+/* a standard module directory entry */
+typedef struct {
+            ulong m1;
+            ulong m2;
+            ulong size;
+            ulong lnk;
+         } mdir_entry;
+
 
 
 /* a error trap handler */
@@ -821,10 +834,11 @@ typedef struct {
 extern  module_typ  os9modules[MAXMODULES];
 extern  mod_exec*   init_module;
 extern  ulong       totalMem;
+extern  mdir_entry  mdirField [MAXMODULES];
 
 /* the system paths */
-extern  syspath_typ syspaths[MAXSYSPATHS];
-extern  ulong       syspth  [MAXSYSPATHS];
+extern  syspath_typ syspaths [MAXSYSPATHS];
+extern  ulong       syspth   [MAXSYSPATHS];
 
 
 /* the RBF and SCSI devices */
