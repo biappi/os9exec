@@ -29,12 +29,14 @@
   
    #define INT_CMD          // internal commands       supported
    #define CON_SUPPORT      // conole and TTYs         supported
+   #define PIP_SUPPORT      // pipes  and PTYs         supported
+
+#ifndef __MACH__
    #define TFS_SUPPORT      // transparent file system supported
-   #define PIP_SUPPORT      // pipes and PTYs          supported
+#endif
 
 
-
-#ifdef USE_CARBON
+#if defined USE_CARBON
    #define RBF_SUPPORT      // RBF acesss is           supported
    #define RAM_SUPPORT      // RAM disk                supported
    #define NET_SUPPORT      // TCP/IP sockets          supported
