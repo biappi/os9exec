@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/07/30 16:47:19  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.4  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -649,6 +652,7 @@ char* get_stat_name(ushort stat)
         
         case SS_201:     name="SS_201";        break;
         case SS_204:     name="SS_204";        break;
+        case SS_206:     name="SS_206";        break;
         case SS_Etc:     name="SS_Etc";        break;
         default:         name="<<<unknown>>>"; break;
     } /* switch */

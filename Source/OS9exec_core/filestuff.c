@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/09/19 22:01:32  bfo
+ *    "/h0" can be mounted again
+ *
  *    Revision 1.8  2002/09/01 17:57:53  bfo
  *    some more variables of the real "procid" record used now
  *
@@ -1646,8 +1649,8 @@ os9err syspath_getstat( ushort pid, ushort sp, ushort func,
     syspath_typ*  spP= get_syspathd( pid,sp ); 
     if           (spP==NULL) return os9error(E_BPNUM);
 
-    debugprintf(dbgFiles,dbgNorm,("# syspath_getstat %s: sp=%d, type=%s\n", 
-                                     get_stat_name(func),sp,spP_TypeStr(spP) ));
+    debugprintf(dbgFiles,dbgDetail,("# syspath_getstat %s (%d): sp=%d, type=%s\n", 
+                                       get_stat_name(func), func, sp, spP_TypeStr(spP) ));
     f= fmgr_op[spP->type];
     g= &f->gs;
     a= (byte**)a0; /* *a0 access is not allowed, if not correctly defined !! */
@@ -1727,8 +1730,8 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
     syspath_typ*  spP= get_syspathd( pid,path ); 
     if           (spP==NULL) return os9error(E_BPNUM);
         
-    debugprintf(dbgFiles,dbgNorm,("# syspath_setstat %s: sp=%d, type=%s\n", 
-                                     get_stat_name(func),path,spP_TypeStr(spP) ));
+    debugprintf(dbgFiles,dbgDetail,("# syspath_setstat %s (%d): sp=%d, type=%s\n", 
+                                       get_stat_name(func), func, path, spP_TypeStr(spP) ));
     f= fmgr_op[spP->type];
     s= &f->ss;
     a= (byte**)a0;
@@ -1780,6 +1783,7 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
             break;
             
         case SS_204: /* don't know yet what is it good for, used by mgratrap */
+        case SS_206:
 //                 spC= crossedPath( pid,spP );
 //              p= spC->u.pipe.pchP;
 //          if (p!=NULL) p->sp_win= *a0;

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2002/09/11 17:28:30  bfo
+ *    printerHandle definition disabled for Linux
+ *
  *    Revision 1.16  2002/09/01 17:56:20  bfo
  *    some more variables of the real "procid" record used now
  *
@@ -362,6 +365,7 @@ typedef struct {
 #define SS_LBlink  0x080 + 32
 #define SS_201     0x201
 #define SS_204     0x204
+#define SS_206     0x206
 #define SS_Etc     0x3EE
 
 
