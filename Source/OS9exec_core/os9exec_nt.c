@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2002/09/04 14:09:45  bfo
+ *    built-in "init" will be used, if no external module available
+ *
  *    Revision 1.20  2002/08/13 21:55:46  bfo
  *    grp,usr and prior at the real prdsc now
  *
@@ -565,7 +568,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x16;
+	exec_revision= 0x17;
 	#endif
 } /* getversions */
 
