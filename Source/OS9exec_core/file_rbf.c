@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2003/07/31 14:38:56  bfo
+ *    Change calculation of PD_FD/PD_DFD (sector size instead of 256)
+ *
  *    Revision 1.34  2003/05/05 17:55:07  bfo
  *    Activate most of the ramDisk things even without RAM_SUPPORT
  *
@@ -2431,8 +2434,8 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     while (true) {               dir_len= DIRENTRYSZ; /* read 1 dir entry */
             err= DoAccess( spP, &dir_len, (byte*)&dir_entry, false,false ); 
         if (err) {
-            if (err==E_EOF) {
-                if (cre) {  /* create it ? */
+            if (err==E_EOF) {           /* do not create new sub paths !! */
+                if (cre && strcmp( p,"" )==0) {            /* create it ? */
                     err= CreateNewFile( spP, procs[pid].fileAtt,
                           (char*)&cmp_entry, procs[pid].cre_initsize );
                     rbf->currPos= 0;  /* initialize position to 0 */
