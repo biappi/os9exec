@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2003/04/25 19:37:50  bfo
+ *    Setuid/seteuid support for Linux
+ *
  *    Revision 1.12  2003/04/20 23:10:41  bfo
  *    Various adaptions for "ping" support on all 3 platforms
  *
@@ -1128,23 +1131,20 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           if (fPort==0) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
           else          { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
-       // #ifdef linux
-       //   if (fPort==0) {
-       //       ty   = SOCK_DGRAM;
-       //       proto= IPPROTO_TCP;
-       //   }
-       // #endif
-          
           #ifdef linux
-            id= getuid();         // printf( "%d\n",     id    );
-            u_err= seteuid(  0 ); // printf( "err=%d\n", u_err );
+            if (fPort==0) {
+                id= geteuid();        // printf( "%d\n",     id    );
+                u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
+            }
           #endif
           
           net->ep= socket( af, ty, proto );
           
           #ifdef linux
-                                  // printf(  "ep=%d %d\n", net->ep, fPort );
-            u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
+            if (fPort==0) {
+                                      // printf(  "ep=%d %d\n", net->ep, fPort );
+                u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
+            }
           #endif
           
           debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort ));

@@ -1176,6 +1176,7 @@
           03-04-21  Bfo     Handle Netatalk IDs out of range correctly now (using FD_ID)
           03-04-21  Bfo     MAXDIR/MAX_PATH now visible for Macintosh version
           03-04-25  Bfo     Setuid/seteuid support for Linux
+          03-04-25  Bfo     Use geteuid / set user ID only to 0 for raw sockets
     3.22  03-??-??  Bfo
     -------------------
 */
