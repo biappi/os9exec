@@ -574,7 +574,7 @@ void do_arbitrate(void)
     process_typ  *cp, *sprocess;
     Boolean      done    = false;
     Boolean      chkAll  = false; /* 2nd run when all sleeping */
-    Boolean      atLeast1= false; /* at least one process is sleeping */
+    Boolean      atLeast1;        /* at least one process is sleeping */
     
     debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",currentpid,arbitrate));
     sleepingpid= MAXPROCESSES; /* assume none sleeping */
@@ -594,7 +594,8 @@ void do_arbitrate(void)
     /* now arbitrate if needed */
     spid    =  currentpid;
     sprocess= &procs[spid];
-
+    atLeast1= (sprocess->state==pSleeping);
+    
     debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: after correction: current pid=%d (state=%d), arbitrate=%d\n",
                                             cpid,PStateStr(cp),      arbitrate));
     do {
@@ -610,22 +611,27 @@ void do_arbitrate(void)
             /* --- test if all processes tested */
             if (cpid==spid) {
                 /* -- no other process found to run */
-                debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: checked all, now pid=%d must be startable\n",spid));
-                if  (sprocess->state==pSleeping) {
-                    #if defined macintosh || defined(windows32)
-                      ulong ticks   = GetSystemTick();
-                      HandleEvent();
-                      slp_idleticks+= GetSystemTick()-ticks;
-                                          
-                    #elif defined linux
-                      usleep( 1 ); /* sleep in milliseconds */
-                      slp_idleticks++;
-                    #endif
-                } 
-                else {
-                    if (chkAll) done= true; /* don't stop if sleeping in slow mode */
-                    else { if (atLeast1) chkAll= true; }
+                if (!chkAll) {
+                    if (atLeast1) chkAll= true;
+                    else          done  = true; 
                 }
+                else {
+                    debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: checked all, now pid=%d must be startable\n",spid));
+                    if  (sprocess->state==pSleeping) {
+                        #if defined macintosh || defined(windows32)
+                          ulong ticks   = GetSystemTick();
+                          HandleEvent();
+                          slp_idleticks+= GetSystemTick()-ticks;
+                                          
+                        #elif defined linux
+                          usleep( 1 ); /* sleep in milliseconds */
+                          slp_idleticks++;
+                        #endif
+                    } 
+                    else {
+                        done= true; /* don't stop if sleeping in slow mode */
+                    }
+                } /* if !chkAll */
             }
             else if (sprocess->state==pUnused) continue; /* fast forward */
         } /* if arbitrate */
