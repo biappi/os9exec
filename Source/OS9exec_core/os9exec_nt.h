@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2003/08/01 11:11:40  bfo
+ *    /L2 getstat support
+ *
  *    Revision 1.29  2003/06/09 21:53:32  bfo
  *    Maximum number of modules changed from 512 -> 1024
  *
@@ -182,7 +185,8 @@
  * (which are heavily used in standard OS9 builds).
  * In the meantime multitasking is possible.
  */
-#define MAXPROCESSES    128
+#define MAXPROCESSES    129
+/* this allows processes with id 1..128 / id=0 is not used */
 
 /* number of active events */
 #define MAXEVENTS       512
