@@ -155,6 +155,9 @@
 /* special hi-byte flag for "silent" errors */
 #define E_OKFLAG    0x4200
 
+/* aging for pWaitRead state processes */
+#define NewAge      30;
+
 /* private error code */
 #define E_PLINK     0x1234  /* returned by xOpen when *mode is the new syspath number */
 #define SIG_SCRATCH 0x20    /* sigdat scratch area */
@@ -677,13 +680,14 @@ typedef struct {
                        _group,              /* group number */
                        _user,               /* user  number */
                        _prior;              /* the process' priority */
-                os9err exiterr;             /* process' exit OS9 error */
-                regs_type os9regs;          /* the process' register stack */
-                save_type savread;          /* saved variables during read */
+
+                os9err          exiterr;    /* process' exit OS9 error */
+                regs_type       os9regs;    /* the process' register stack */
+                save_type       savread;    /* saved variables during read */
                 systaskfunc_typ systask;    /* the system task function if state=pSysTask */
-                void   *systaskdataP;       /* system task data pointer */
-                ulong   systask_offs;       /* offset for rewrite call (from tty/pty) */
-                ushort lastsyscall;         /* last system call issued by this process */
+                void      *systaskdataP;    /* system task data pointer */
+                ulong      systask_offs;    /* offset for rewrite call (from tty/pty) */
+                ushort      lastsyscall;    /* last system call issued by this process */
                 
                 /* statistics */
                 unsigned int
@@ -737,6 +741,7 @@ typedef struct {
                         icpt_signal;
 
                 ulong   wakeUpTick;
+                int		pW_age;				/* aging for pWaitRead */
 
                 ttydev_typ* last_mco;
                 /* Stdout filtering %%% needs some work... */
