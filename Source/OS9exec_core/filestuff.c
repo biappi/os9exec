@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.17  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -235,7 +238,7 @@ void init_fmgrs(void)
       conn_FMgr( fRBF, &fmgr_rbf,  init_RBF  ); /*    "    RBF              routines (file_rbf)   */
     #endif
     
-    #ifdef NET_SUPPORT /* network support */
+    #ifdef WITH_NETWORK /* network support */
       conn_FMgr( fNET, &fmgr_net,  init_Net  ); /*    "    network          routines (network)    */
     #endif
     
@@ -890,39 +893,39 @@ os9err parsepath(ushort pid, char **inp, char *out, Boolean exedir)
 /* -------------------- */
 
 /* unimplemented function */
-os9err pUnimp( ushort /* pid */, syspath_typ* )
+os9err pUnimp( _pid_, _spP_ )
 {   return os9error(E_UNKSVC);
 } /* pUnimp */
 
 
 /* unimplemented function, but that's OS9-conformant and therefore not to be alerted */
-os9err pUnimpOk( ushort /* pid */, syspath_typ* )
+os9err pUnimpOk( _pid_, _spP_ )
 {   return E_UNKSVC+E_OKFLAG;
 } /* pUnimpOk */
 
 
 /* bad mode */
-os9err pBadMode( ushort /* pid */, syspath_typ* )
+os9err pBadMode( _pid_, _spP_ )
 {   return os9error(E_BMODE);
 } /* pBadMode */
 
 
 /* no operation (allowed, but useless) */
-os9err pNop( ushort /* pid */, syspath_typ* )
+os9err pNop( _pid_, _spP_ )
 {   return 0;
 } /* pNop */
 
 
 
 /* unavailable 'open' function, as in OS-9 */
-os9err pNoModule( ushort /* pid */, syspath_typ* )
+os9err pNoModule( _pid_, _spP_ )
 {   return os9error(E_MNF);
 } /* pNoModule */
 
 
 
 /* get SCF device name from file */
-os9err pSCFnam( ushort /* pid */, syspath_typ* spP, char* volname )
+os9err pSCFnam( _pid_, syspath_typ* spP, char* volname )
 {
     char *p;
     
@@ -1613,7 +1616,7 @@ os9err usrpath_seek(ushort pid,ushort up, ulong pos)
 
 
 
-static os9err etc_path( ushort /* pid */, syspath_typ*, ulong* /* d2 */, byte* a0 )
+static os9err etc_path( _pid_, _spP_, _d2_, byte* a0 )
 /* %%% this is a very straight forward implementation for OS9TCP/inetd */
 {
     ulong* u;
@@ -1634,7 +1637,7 @@ static os9err etc_path( ushort /* pid */, syspath_typ*, ulong* /* d2 */, byte* a
 
 
 os9err syspath_getstat( ushort pid, ushort sp, ushort func,
-                        ulong* a0, ulong* /* d0 */, ulong* d1, ulong* d2, ulong* d3 )
+                        ulong* a0, _d0_, ulong* d1, ulong* d2, ulong* d3 )
 /* GetStat from syspath */
 {
     os9err        err;
@@ -1705,15 +1708,15 @@ os9err usrpath_getstat( ushort pid, ushort up, ushort func,
 /* GetStat from usrpath */
 {
     if (up>=MAXUSRPATHS) return os9error(E_BPNUM);
-    return syspath_getstat(pid,procs[pid].usrpaths[up],func, a0, d0,d1,d2,d3);
+    return syspath_getstat( pid,procs[pid].usrpaths[up],func, a0, d0,d1,d2,d3 );
 } /* usrpath_getstat */
 
 
 
 /* SetStat from syspath */
 os9err syspath_setstat( ushort pid, ushort path, ushort func,
-                        ulong* a0, ulong* /* a1 */, 
-                        ulong* d0, ulong* d1,ulong* d2,ulong* /* d3 */ )
+                        ulong* a0,       _a1_, 
+                        ulong* d0, ulong* d1, ulong* d2, _d3_ )
 {
     os9err    err;
     fmgr_typ* f;
