@@ -30,11 +30,21 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
-/* ??/??/?? luz  ...                                         */
-/* 00/04/23 bfo  readout with READCHUNKSZ done correctly now */
-/* 00/05/02 bfo  rearranged "pFread" for more common source  */
-/* 00/05/07 bfo  rearranged "pFopen" for more common source  */
-/* 00/05/07 bfo  open files in binary mode for PC version    */
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 
 #include "os9exec_incl.h"
 
@@ -1314,7 +1324,8 @@ os9err pFeof( ushort pid, syspath_typ* spP )
 /* prepare a FD from a cipb */
 static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 {
-    byte      fdbeg[16];                   /* buffer for preparing FD */
+    #define   FDS 16
+    byte      fdbeg[FDS];                  /* buffer for preparing FD */
     byte*     att     = (byte*) &fdbeg[0]; /* the position of the attr field */
     ulong*    sizeP   = (ulong*)&fdbeg[9]; /* the position of the size field */
     Boolean   isFolder= false;
@@ -1337,7 +1348,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         // This was the bad thing: declared pointer instead of data structure !
         // LPWIN32_FIND_DATA data;
         WIN32_FIND_DATA data;
-        FILETIME cr, lastA, lastW, lastL;
+        FILETIME cr, lastA, lastW, lastL;        
           mode_t v;
       #else
         __mode_t v;
@@ -1346,62 +1357,86 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #else
       #pragma unused(fdl)
     #endif
+
+    /* fill up with 0 as far as needed, used as default */
+    memset( buffer,0, maxbyt );
+    memset( fdbeg, 0, FDS    );
     
     #if defined NEW_LUZ_FD_IMPL && defined windows32
-    
-    #pragma unused(v,lastA,tim)
-    // use FindFirstFile for everything
-    pathname= (char*)fdl;
-    hFile= FindFirstFile( pathname, &data);
-    if (hFile) {
-      FindClose( hFile );
-      // now extract all the data from WIN32_FIND_DATA structure
-      // - is it a folder?
-      isFolder=(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
-      // - basic r or rw
-      *att=poRead | (poRead<<3); // always readable
-      if ((data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)==0)
-        *att |= poWrite | poWrite<<3; // if not write protected, also writeable
-      // - always executable
-      *att |= poExec | (poExec<<3);
-      // - dirs are special
-      if (isFolder) {
-        *att |= 0x3F; // all permissions
-        *att |= 0x80; // and dir bit
+      #pragma unused(v,lastA,tim)
+      // use FindFirstFile for everything
+      pathname= (char*)fdl;
+      
+          ok= (pathname!=NULL && ustrcmp( pathname,"" )!=0);
+      if (ok) {
+          hFile= FindFirstFile( pathname, &data );
+          ok= ( (int)hFile>0 ); /* is -1, if error -> compare on >= !! */
       }
-      // - owner
-      fdbeg[1] =0;
-      fdbeg[2] =0; /* owner = superuser */
-      // - get moification dates
-      lastW = data.ftLastWriteTime;  
-      // - convert to systemtime
-      FileTimeToLocalFileTime ( &lastW, &lastL );
-      FileTimeToSystemTime    ( &lastL, &sy );
-      fdbeg[3]= sy.wYear-1900;
-      fdbeg[4]= sy.wMonth;
-      fdbeg[5]= sy.wDay;
-      fdbeg[6]= sy.wHour;
-      fdbeg[7]= sy.wMinute;
+        
+      if (ok) { 
+          FindClose( hFile );
+          // now extract all the data from WIN32_FIND_DATA structure
+          // - is it a folder?
+          isFolder= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
+          
+          // - basic r or rw
+          *att=poRead | (poRead<<3); // always readable
+          if ((data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)==0)
+              *att |= poWrite | poWrite<<3; // if not write protected, also writeable
+          // - always executable
+          *att |= poExec | (poExec<<3);
+          
+          // - dirs are special
+          if (isFolder) {
+              *att |= 0x3F; // all permissions
+              *att |= 0x80; // and dir bit
+          }
+          
+          // - owner
+          fdbeg[1] =0;
+          fdbeg[2] =0; /* owner = superuser */
+          
+          // - get moification dates
+          lastW = data.ftLastWriteTime;  
+          // - convert to systemtime
+          FileTimeToLocalFileTime ( &lastW, &lastL );
+          FileTimeToSystemTime    ( &lastL, &sy );
+          fdbeg[3]= sy.wYear-1900;
+          fdbeg[4]= sy.wMonth;
+          fdbeg[5]= sy.wDay;
+          fdbeg[6]= sy.wHour;
+          fdbeg[7]= sy.wMinute;
 
-      // link count
-      fdbeg[8]= 1; /* link count = 1 */
-      // creation date
-      cr = data.ftCreationTime;
-      FileTimeToLocalFileTime ( &cr, &lastL );
-      FileTimeToSystemTime    ( &lastL, &sy );
-      fdbeg[13]= sy.wYear-1900;
-      fdbeg[14]= sy.wMonth;
-      fdbeg[15]= sy.wDay;
-      // size of file
-      // NOTE: only lower 32 bits are used. NT returns 64bits here...
-      // NOTE: this is still a little hacky, as we use the info record only for size
-      //       by now.
-      info.st_size = data.nFileSizeLow; 
-    }
-    else {
-      // file does not exist (any more)
-      *att=0; // not accessible
-    }
+          // link count
+          fdbeg[8]= 1; /* link count = 1 */
+          
+          // creation date
+          cr = data.ftCreationTime;
+          FileTimeToLocalFileTime ( &cr, &lastL );
+          FileTimeToSystemTime    ( &lastL, &sy );
+          fdbeg[13]= sy.wYear-1900;
+          fdbeg[14]= sy.wMonth;
+          fdbeg[15]= sy.wDay;
+          
+          // size of file
+          // NOTE: only lower 32 bits are used. NT returns 64bits here...
+          // NOTE: this is still a little hacky, as we use the info record only for size
+          //       by now.
+          info.st_size = data.nFileSizeLow; 
+      }
+      else {
+          isFolder= true; /* assuming it is the top directory */
+
+//     // file does not exist (any more)
+//        *att= 0; // not accessible
+      }
+    
+//    printf( "fd: " );
+//    for (ii=0; ii<FDS; ii++) {
+//        printf( "%02X ", fdbeg[ii] );
+//    }
+//    printf( "- %d '%s'\n", hFile, pathname );
+    
     #else
     // conventional ifdef haystack :-)
 
@@ -1519,9 +1554,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     fdbeg[15]= tim.tm_mday;
 
     /* file length */
-    *sizeP= 0; /* by default */
-    
+//  *sizeP= 0; /* by default */
     #endif // NEW_LUZ_FD_IMPL
+
         
     #ifdef macintosh
       if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
@@ -1533,33 +1568,36 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 
     #elif defined win_linux
       if (isFolder) {
-          strcpy( spRec.fullName, (char*)fdl );
-    	  debugprintf(dbgFiles,dbgNorm,("# getFD: still alive %s\n", spRec.fullName ));
-    
-              ok= OpenTDir( spRec.fullName, &spRec.dDsc );
-          if (ok) *sizeP= os9_long( 2*DIRENTRYSZ ); /* if no entries */
-    	  debugprintf(dbgFiles,dbgNorm,("# getFD: still alive %d\n", ok ));
+          *sizeP= 0; /* by default */
+          
+              ok= (pathname!=NULL && ustrcmp( pathname,"" )!=0);
+          if (ok) {
+                        strcpy( spRec.fullName, (char*)fdl );
+                  ok= OpenTDir( spRec.fullName, &spRec.dDsc );
+              if (ok) {
+                  *att  = 0x80 | 0x3F;
+                  *sizeP= os9_long( 2*DIRENTRYSZ ); /* if no entries */   
               
-          if (spRec.dDsc!=NULL) {
-                  *sizeP= os9_long( DirSize(&spRec) );
-                  closedir( spRec.dDsc );
-          }
-    	  debugprintf(dbgFiles,dbgNorm,("# getFD: still alive %d\n", *sizeP ));
+                  if (spRec.dDsc!=NULL) {
+                      *sizeP= os9_long( DirSize(&spRec) );
+                      closedir( spRec.dDsc );
+                  }
+              }
+    	  } /* if (ok) */
       }
-      else    *sizeP= os9_long(info.st_size);
+      else *sizeP= os9_long(info.st_size);
         
 //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
     #endif
     
-
     
     /* copy FD beginning to caller's buffer */
-    memcpy(buffer,fdbeg,maxbyt>16 ? 16 : maxbyt);
+    memcpy(buffer,fdbeg,maxbyt>FDS ? FDS : maxbyt);
 
-    /* fill up with 0 as far as needed */
-    if (maxbyt>16) {
-        memset( &buffer[16],0, maxbyt-16 );
-    }
+//  /* fill up with 0 as far as needed */
+//  if (maxbyt>16) {
+//      memset( &buffer[16],0, maxbyt-16 );
+//  }
 } /* getFD */
 
 
@@ -2016,6 +2054,7 @@ os9err pDread( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
     ulong* pos  = &spP->u.disk.u.dir.pos; /* current file position */
     ulong  offs = *pos & 0x1F;            /* offset    to start */
     ushort index= *pos >> 5;              /* dir index to start */
+    char*  myb= buffer;
     
     ulong  cnt, nbytes;
     os9direntry_typ os9dirent;
@@ -2032,7 +2071,7 @@ os9err pDread( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
       #endif
     #endif
     
-    
+//  printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
     debugprintf(dbgFiles,dbgDetail,("# pDread: requests $%lX bytes\n",*n)); 
     cnt= *n;
     if  (*n==0) return 0;
@@ -2111,12 +2150,12 @@ os9err pDread( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
         
         if (!err) {
             nbytes = (offs+cnt)>DIRENTRYSZ ? DIRENTRYSZ-offs:cnt;
-            memcpy(buffer,(byte*)&os9dirent+offs, nbytes);
+            memcpy(myb,(byte*)&os9dirent+offs, nbytes);
             
-            cnt   -= nbytes;
-            buffer+= nbytes;
-            offs   = (offs+nbytes) & 0x1F;
-            *pos  += nbytes;
+            cnt -= nbytes;
+            myb += nbytes;
+            offs = (offs+nbytes) & 0x1F;
+            *pos+= nbytes;
             if (offs==0) index++;
         }
         else {
@@ -2132,6 +2171,12 @@ os9err pDread( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
     /* sucessful, set number of bytes actually read */
     *n-= cnt; /* adjust to show actually read # of bytes */
     debugprintf(dbgFiles,dbgDetail,("# pDread: returned $%lX bytes\n",*n)); 
+
+//  printf( "buf=%8d n=%4d '%s'\n", buffer, *n, spP->name );
+//  for (ii=0;ii<*n;ii++) {
+//      printf( "%04X ", (byte)buffer[ii] );
+//      if (ii%8==7) printf( "\n" );
+//  }
     
     return 0;
 } /* pDread */
