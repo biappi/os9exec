@@ -1,7 +1,7 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
-//	  Available under http://www.synthesis.ch/os9exec
+//    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
 //    modify it under the terms of the GNU General Public License as 
@@ -1299,8 +1299,8 @@ Boolean SamePathBegin( const char* pathname, const char* cmp )
 
 
 Boolean SCSI_Device( const char* os9path,
-                     short *scsiAdapt, short *scsiBus, int *scsiId, short *scsiLUN,
-                     ushort *scsiSsize, ushort *scsiSas,
+                     short *scsiAdapt, short *scsiBus, int *scsiID, short *scsiLUN,
+                     ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp,
                      ptype_typ *typeP )
 /* expect OS-9 notation */
 {
@@ -1312,6 +1312,7 @@ Boolean SCSI_Device( const char* os9path,
     byte      lun;
     byte      id;
     ushort    *ssize, *sas;
+    byte      *pdtyp;
     
     *typeP= fNone;         /* the default value */
     strcpy( tmp,os9path ); /* make a local copy */
@@ -1329,13 +1330,14 @@ Boolean SCSI_Device( const char* os9path,
     for (ii=0; ii<MAXSCSI; ii++) { /* returns true, if SCSI device */
         if (ustrcmp(dvn,scsi[ ii ].name)==0) {
             // found, return SCSI address 
-            *scsiAdapt=scsi[ii].adapt;
-            *scsiBus=scsi[ii].bus;
-            *scsiId=scsi[ii].id;
-            *scsiLUN=scsi[ii].lun;
-            *scsiSsize=scsi[ii].ssize;
-            *scsiSas=scsi[ii].sas;
-            *typeP= fRBF;
+            *scsiAdapt= scsi[ ii ].adapt;
+            *scsiBus  = scsi[ ii ].bus;
+            *scsiID   = scsi[ ii ].id;
+            *scsiLUN  = scsi[ ii ].lun;
+            *scsiSsize= scsi[ ii ].ssize;
+            *scsiSas  = scsi[ ii ].sas;
+            *scsiPDTyp= scsi[ ii ].pdtyp;
+            *typeP    = fRBF;
             return true;
         }
     }
@@ -1351,15 +1353,16 @@ Boolean SCSI_Device( const char* os9path,
     if (ustrcmp( p,"RBF" )==0) {
         id   = *((byte  *)(&mod->_mdtype + PD_CtrlID));
         lun  = *((byte  *)(&mod->_mdtype + PD_LUN));
+
         // full SCSI address
-        *scsiId= id;
-        *scsiLUN= lun;
-        *scsiAdapt = defSCSIAdaptNo; // bus and adaptor come from defaults
-        *scsiBus   = defSCSIBusNo;
-        ssize= (ushort*)(&mod->_mdtype + PD_SSize);
-        sas  = (ushort*)(&mod->_mdtype + PD_SAS);
-        *scsiSsize = *ssize;
-        *scsiSas = *sas;
+        *scsiID   = id;
+        *scsiLUN  = lun;
+        *scsiAdapt= defSCSIAdaptNo; // bus and adaptor come from defaults
+        *scsiBus  = defSCSIBusNo;
+        ssize     = (ushort*)(&mod->_mdtype + PD_SSize); *scsiSsize= *ssize;
+        sas       = (ushort*)(&mod->_mdtype + PD_SAS  ); *scsiSas  = *sas;
+        pdtyp     = (byte  *)(&mod->_mdtype + PD_TYP  ); *scsiPDTyp= *pdtyp;
+        
         // find empty scsi entry
         for (ii=0; ii<MAXSCSI; ii++) {
             if (scsi[ii].name[0]==NUL) {
@@ -1367,13 +1370,14 @@ Boolean SCSI_Device( const char* os9path,
                 // - name
                 strcpy( scsi[ii].name, dvn );
                 // - full SCSI address
-                scsi[ii].id    = id;
-                scsi[ii].lun   = lun;
-                scsi[ii].adapt = defSCSIAdaptNo; // bus and adaptor come from defaults
-                scsi[ii].bus   = defSCSIBusNo;
+                scsi[ ii ].id    = id;
+                scsi[ ii ].lun   = lun;
+                scsi[ ii ].adapt = defSCSIAdaptNo; // bus and adaptor come from defaults
+                scsi[ ii ].bus   = defSCSIBusNo;
                 // - params
-                scsi[ii].ssize= os9_word (*ssize);
-                scsi[ii].sas  = os9_word (*sas);
+                scsi[ ii ].ssize= os9_word (*ssize);
+                scsi[ ii ].sas  = os9_word (*sas);
+                scsi[ ii ].pdtyp=           *pdtyp;
                 *typeP= fRBF;
                 // done!
                 return true;
@@ -1589,6 +1593,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     short  bus;
     short  adapt;
     ushort sas,ssize;
+    byte   pdtyp;
     
     #ifdef macintosh
       Boolean isFolder;
@@ -1636,7 +1641,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     if (!err && !isFolder)          { *typeP= fRBF;  return true;  }
 
     /* searching for SCSI after searching file image !! */
-    if (SCSI_Device( os9path, &adapt, &bus, &id, &lun, &ssize, &sas, typeP ) || 
+    if (SCSI_Device( os9path, &adapt, &bus, &id, &lun, &ssize, &sas,&pdtyp, typeP ) || 
                                   *typeP!=fNone ) return true;
     return false;
 } /* OS9_Device */
