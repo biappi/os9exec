@@ -1078,7 +1078,7 @@
           02-09-04  luz     Added CR -> CRLF expansion for /lp (actually, if _sg_eorch is found,
                             and _sg_alf is not 0, a extra 0x0A is appended after the _sg_eorch).
                             Tested with "list errmsg.short >/lp", ok. Postscript output also ok.
-
+          02-09-04  Bfo     "init" module is built-in now and will be used if no external module available.
     3.16  02-09-??  Bfo     ...
     -------------------
 */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2002/08/13 21:55:46  bfo
+ *    grp,usr and prior at the real prdsc now
+ *
  *    Revision 1.19  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -753,22 +756,27 @@ static void BootLoader( int cpid )
 	ushort   mid;
 
 	p= "OS9exec";
-             err= link_module( cpid, p, &mid ); /* do not abort on error */
+        err= link_module( cpid, p, &mid ); /* do not abort on error */
 		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
 
 	p= "init";
-             err= link_module( cpid, p, &mid );
-    if (err) err= load_module( cpid, p, &mid, false,false );
+        err= load_module( cpid, p, &mid, false,false );
    		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err )); 
    	
+    p= "OS9Boot";
    	if (err) {
-		p= "OS9Boot";
-	         err= load_module( cpid, p, &mid, false,false );
+	    err= load_module( cpid, p, &mid, false,false );
 		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
 	} /* if */
+
+	p= "init";
+    if (err) {
+        err= link_module( cpid, p, &mid );
+		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
+	}
 	
 	p= "socket";
-             err= link_module( cpid, p, &mid );
+        err= link_module( cpid, p, &mid );
    		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err )); 
 } /* Bootloader */
 
