@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2003/05/17 10:10:41  bfo
+ *    Disabled for USE_CARBON
+ *
  *
  */
 
@@ -65,15 +68,10 @@
 #endif
 
 
-os9err pVMod( ushort pid, syspath_typ* spP, ulong *d1,ulong *d2 )
+os9err pVMod( ushort pid, syspath_typ*, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {
-    #ifndef linux
-    #pragma unused(spP)
-    #endif
-
-
     #if defined macintosh && !defined MPW && !defined USE_CARBON
       ushort       func;
       newwin_type* nw;
