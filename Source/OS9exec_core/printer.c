@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/07/30 17:16:34  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.3  2002/06/29 21:51:21  bfo
  *    GetDefaultPrinter not available for CW5 -> skip whole printer part for CW5
  *
@@ -333,9 +336,39 @@ os9err pPrClose( ushort pid, syspath_typ* spP )
 /* output to printer */
 os9err pPrOut  ( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer )
 {
-  // send data to printer
-  if (!WritePrinterRaw(spP->printerHandle, buffer, *maxlenP))
-    return E_WRITE;
+  struct _sgs* ot = (struct _sgs*)&spP->opt; /* path opt table */
+  char *p,*q;
+
+  // search for lineends
+  p=buffer; // start here
+  q=buffer+*maxlenP; // end here
+  // write line-by-line
+  if (ot->_sgs_eorch) {
+    q=p; // start at beginning
+    while (q<buffer+*maxlenP) {
+      if (*q==ot->_sgs_eorch) {
+        q++; // line end inclusive!
+        // write all up to here
+        if (!WritePrinterRaw(spP->printerHandle, p, q-p))
+          return E_WRITE;
+        // add a LF if enabled
+        if (ot->_sgs_alf) {
+          if (!WritePrinterRaw(spP->printerHandle, "\x0A", 1))
+            return E_WRITE;            
+        }
+        // update to what we've already written
+        p=q;
+      }
+      else
+        q++;
+    }
+  }
+  // write rest (between p and q)
+  if (p<q) {
+    if (!WritePrinterRaw(spP->printerHandle, p, q-p))
+      return E_WRITE;            
+  }
+  // ok
   return 0;
 } /* pPrOut */
 

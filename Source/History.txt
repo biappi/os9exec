@@ -1075,6 +1075,10 @@
           02-09-01  Bfo     big/little endian bug with *idp fixed
           02-09-02  Bfo     Bug at rawmode write with multisector support fixed.
           02-09-03  Bfo     errno.h -> errno_adapted.h
+          02-09-04  luz     Added CR -> CRLF expansion for /lp (actually, if _sg_eorch is found,
+                            and _sg_alf is not 0, a extra 0x0A is appended after the _sg_eorch).
+                            Tested with "list errmsg.short >/lp", ok. Postscript output also ok.
+
     3.16  02-09-??  Bfo     ...
     -------------------
 */
