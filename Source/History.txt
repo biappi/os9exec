@@ -1127,6 +1127,7 @@
 
           02-10-15  Bfo     Changed to new version
           02-10-16  Bfo/WO  DevPak 68K OS-9 V1.2 _resvd1, _procstk conflict resolved
+          02-10-16  WO      Make it compatible for gcc 3.2
     3.20  02-10-??  Bfo     ...
     -------------------
 */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/09/22 20:58:47  bfo
+ *    Some bugs (at least 5 !!) at getFD fixed: The access to the top directory (Windows32) was seriously wrong. Now it seems to work fine with "mdt".
+ *
  *
  */
 
@@ -1236,11 +1239,10 @@ os9err pFsetsz(ushort pid, syspath_typ* spP, ulong *sizeP )
       err= host2os9err( oserr,E_SEEK );
 
     #else
-      fpos_t tmp_pos;
-      
-      fgetpos( spP->stream, &tmp_pos );  /* save current position */
-      
       #ifdef windows32
+        fpos_t tmp_pos;
+        fgetpos( spP->stream, &tmp_pos );  /* save current position */
+      
         /* create a temporary file and copy until length */
         ii= 1;
         for (ii=0; ii<N_Tries; ii++) { /* try some tmp files */
@@ -1273,16 +1275,22 @@ os9err pFsetsz(ushort pid, syspath_typ* spP, ulong *sizeP )
         err= rename( name,  spP->fullName ); if (err) return E_PNNF;
         spP->stream= fopen( spP->fullName, "rb+" );
 
+        if     (tmp_pos!=*sizeP) {
+            if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
+          fsetpos(spP->stream, &tmp_pos); /* restore position */
+        }
+
       #elif defined linux
+        long tmp_pos= ftell( spP->stream ); /* make it compatible for gcc 3.2 */
+
         fflush     ( spP->stream );        /* unbuffer everything */
         fd = fileno( spP->stream );  /* <fd> used for "ftruncate" */
         err= ftruncate( fd, *sizeP ); /* cut the file at <*sizeP> */
+        if     (tmp_pos!=*sizeP) {
+            if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
+            fseek(spP->stream, tmp_pos, SEEK_SET); /* restore position */
+        }
       #endif
-      
-      if     (tmp_pos!=*sizeP) {
-          if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
-          fsetpos(spP->stream, &tmp_pos); /* restore position */
-      }
     #endif
     
     return err;
