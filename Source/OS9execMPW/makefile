@@ -15,8 +15,9 @@ ObjDir¥PPC   =  :::Output:OBJPPC:
 ObjDir¥68K   =  :::Output:OBJ68k:
 output       =  :::Output:
 
-os9exec      =  ::os9exec_core:
 os9mpw       =
+os9exec      =  ::os9exec_core:
+platforms    =  ::platforms:
 
 
 # everything
@@ -46,7 +47,8 @@ toolnameFat Ä
 
 
 PROJHEADERS = ¶
-        "{os9mpw}os9exec_incl.h" ¶
+        "{os9mpw}target_options.h" ¶
+        "{platforms}net_platform.h" ¶
         "{os9exec}os9main_incl.h" ¶
         "{os9exec}os9_llm.h" ¶
         "{os9exec}os9funcs.h" ¶
@@ -84,9 +86,9 @@ MAKEFILE     =
 #¥MondoBuild¥ = {PROJHEADERS}
 ¥MondoBuild¥ =
 
-PROJINCLUDES = -i {os9exec}
+PROJINCLUDES = -i {os9exec} -i {platforms}
 #Includes    =  {PROJINCLUDES} -i "{HeadersAndLibs}Interfaces:CIncludes:"
-# Note: MWC uses implicit incude paths which should do the trick!
+# Note: MWC uses implicit include paths which should do the trick!
 Includes     = {PROJINCLUDES}
 
 Sym¥PPC      =  
@@ -142,6 +144,7 @@ Objects¥PPC  = ¶
         "{ObjDir¥PPC}macfiles.c.x" ¶
         "{ObjDir¥PPC}memstuff.c.x" ¶
         "{ObjDir¥PPC}network.c.x" ¶
+        "{ObjDir¥PPC}net_mac.c.x" ¶
         "{ObjDir¥PPC}alarms.c.x" ¶
         "{ObjDir¥PPC}events.c.x" ¶
         "{ObjDir¥PPC}modstuff.c.x" ¶
@@ -174,6 +177,7 @@ Objects¥68K  = ¶
         "{ObjDir¥68K}macfiles.c.o" ¶
         "{ObjDir¥68K}memstuff.c.o" ¶
         "{ObjDir¥68K}network.c.o" ¶
+        "{ObjDir¥68K}net_mac.c.o" ¶
         "{ObjDir¥68K}alarms.c.o" ¶
         "{ObjDir¥68K}events.c.o" ¶
         "{ObjDir¥68K}modstuff.c.o" ¶
@@ -337,6 +341,9 @@ doAddRes = ¶
 "{ObjDir¥PPC}network.c.x" Ä {¥MondoBuild¥} "{os9exec}network.c"
     {PPCC} "{os9exec}network.c" -o {Targ} {PPCCOptions}
 
+"{ObjDir¥PPC}net_mac.c.x" Ä {¥MondoBuild¥} "{platforms}MAC:net_mac.c"
+    {PPCC} "{platforms}MAC:net_mac.c" -o {Targ} {PPCCOptions}
+
 "{ObjDir¥PPC}alarms.c.x" Ä {¥MondoBuild¥} "{os9exec}alarms.c"
     {PPCC} "{os9exec}alarms.c" -o {Targ} {PPCCOptions}
 
@@ -427,6 +434,9 @@ doAddRes = ¶
 
 "{ObjDir¥68K}network.c.o" Ä {¥MondoBuild¥} "{os9exec}network.c"
     {C} "{os9exec}network.c" -o {Targ} {COptions}
+
+"{ObjDir¥68K}net_mac.c.o" Ä {¥MondoBuild¥} "{platforms}MAC:net_mac.c"
+    {C} "{platforms}MAC:net_mac.c" -o {Targ} {COptions}
 
 "{ObjDir¥68K}alarms.c.o" Ä {¥MondoBuild¥} "{os9exec}alarms.c"
     {C} "{os9exec}alarms.c" -o {Targ} {COptions}
