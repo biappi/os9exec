@@ -35,10 +35,15 @@
 
 
 #ifdef USE_CARBON
-// #define RBF_SUPPORT      // RBF acesss is           supported
-// #define RAM_SUPPORT      // RAM disk                supported
-// #define NET_SUPPORT      // TCP/IP sockets          supported
-// #define PRINTER_SUPPORT  // LPT printers Win        supported   
+   #define RBF_SUPPORT      // RBF acesss is           supported
+   #define RAM_SUPPORT      // RAM disk                supported
+   #define NET_SUPPORT      // TCP/IP sockets          supported
+   #define PRINTER_SUPPORT  // LPT printers Win        supported   
+#elif defined linux
+   #define RBF_SUPPORT      // RBF acesss is           supported
+   #define RAM_SUPPORT      // RAM disk                supported
+   #define NET_SUPPORT      // TCP/IP sockets          supported
+   #define PRINTER_SUPPORT  // LPT printers Win        supported   
 #else
    #define RBF_SUPPORT      // RBF acesss is           supported
 // #define RAM_SUPPORT      // RAM disk                supported
