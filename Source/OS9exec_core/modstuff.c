@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/11/06 19:59:48  bfo
+ *    zero is zero for os9_word/os9_long
+ *
  *    Revision 1.8  2002/10/27 23:20:14  bfo
  *    module system on Mac no longer implemented with handles
  *
@@ -502,6 +505,50 @@ int NextFreeModuleId( char* name )
 
 
 
+static void fill_s( char** b, char* s )
+{
+    sprintf( *b, "%s", s );
+    *b=      *b + strlen( *b )+1;
+} /* fill_s */
+
+
+static void adapt_inetdb( mod_exec* theModuleP, ulong inetAddr, ulong dns_Addr, char* domainName )
+{
+    #define OFFS_HOSTS 0x34 /* "hosts" location */
+    #define OFFS_DNS   0x4c /* DNS location */
+     
+    ulong*  up;
+    short*  hp;
+    char*   bp;
+    ulong   d;
+    byte*   h;
+    
+    up= (byte*) theModuleP + OFFS_HOSTS;
+    bp= (byte*) theModuleP +    os9_long( *up );
+    up=  bp + 4;
+    *up= inetAddr;
+    
+    up= (byte*) theModuleP + OFFS_DNS;
+    bp= (byte*) theModuleP +    os9_long( *up );
+    hp=  bp + 2;
+    bp=  bp + 4; memset( bp, 0, os9_word( *hp )-2 ); /* clear the original area */
+    
+    if  (strcmp( domainName,"" )==0) domainName= "local";
+    fill_s( &bp, domainName );
+    
+                                  d= os9_long( dns_Addr );
+                                  h= (byte*) &d;
+    sprintf( bp, "%d.%d.%d.%d\0", h[0],h[1],h[2],h[3] );
+    bp=  bp + strlen( bp )+1;
+                        
+    fill_s( &bp, ""         );
+    fill_s( &bp, domainName );
+           
+    mod_crc( theModuleP );
+} /* adapt_inetdb */
+
+
+
 os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir, 
                                                          Boolean linkstyle)
 /* load a module by name or path
@@ -512,24 +559,21 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     ushort  mid, mid0, oldmid;
     ushort  linkmid;
     Boolean isBuiltIn;
+    ulong   my_dnsaddr= 0;
 
     #ifdef macintosh
       Handle hh;
     #endif
-    
-//  #ifdef macintosh
-//    Handle    theModuleH,theRemainH;
-//  #else
-      mod_exec *theRemainP;
-//  #endif
-    
+
+    mod_exec* theRemainP;    
     mod_exec* theModuleP;
     mod_dev*  dsc;
     
-    char datapath[OS9PATHLEN];
+    char    datapath  [OS9PATHLEN];
+    char    domainName[OS9PATHLEN];
     Boolean isPath;
-    char* pn;
-    void* pp;
+    char*   pn;
+    void*   pp;
     
     #ifdef MACFILES
       OSErr  oserr;
@@ -995,22 +1039,27 @@ modulefound:
         } /* if */
  
         /* special treatment for the "le0" module: set internet address */
-        if (ustrcmp(realmodname,"le0")==0) {
+        if (ustrcmp(realmodname,"le0"   )==0 ||
+            ustrcmp(realmodname,"inetdb")==0) {
         	#ifdef WITH_NETWORK
-              err= MyInetAddr( &my_inetaddr ); /* assign my internet address */
+              err= MyInetAddr( &my_inetaddr, &my_dnsaddr, &domainName ); /* assign my internet address */
             #endif
+        }
               
-             bp= (byte*) theModuleP + 0x7a; /* broadcast address */
-             lp= (ulong*)bp;
-            *lp=  my_inetaddr;
-             bp= (byte*) theModuleP + 0x7d; *bp= 0xff; /* specific for broadcast */
+        if (ustrcmp(realmodname,"le0")==0) {
+            bp= (byte*) theModuleP + 0x7a;        /* broadcast address position */
+            lp= (ulong*)bp;
+           *lp= my_inetaddr;
+            bp= (byte*) theModuleP + 0x7d; *bp= 0xff; /* specific for broadcast */
 
-             bp= (byte*) theModuleP + 0x8a; /* my internet address */
-             lp= (ulong*)bp;
-            *lp=  my_inetaddr;
+            bp= (byte*) theModuleP + 0x8a;      /* my internet address position */
+            lp= (ulong*)bp;
+           *lp= my_inetaddr;
             
         	mod_crc( theModuleP );
         } /* if */
+
+        if (ustrcmp(realmodname,"inetdb")==0) adapt_inetdb( theModuleP, my_inetaddr,my_dnsaddr, domainName );
 
         /* special treatment for the "L2" module: set port address */
         if (ustrcmp(realmodname,"L2")==0) {
