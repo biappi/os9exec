@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/10/15 18:36:39  bfo
+ *    Consider only lobyte at OS9_I_Delete
+ *
  *    Revision 1.4  2002/10/02 19:16:43  bfo
  *    OS9_I_OpenCreate Bugfix for poCreateMask problem: consider only byte (d0.b)
  *
@@ -306,6 +309,8 @@ os9err OS9_I_WritLn( regs_type *rp, ushort cpid )
     path= loword(rp->d[0]);
     cnt =        rp->d[1];
     buff= (char*)rp->a[0];
+    
+    path= path & 0x7f; /* mask the specific OS9exec non-debug flag */
    
     /* search if there is a CR char before end of the buffer */
     /* if yes, terminate the string a little bit earlier     */

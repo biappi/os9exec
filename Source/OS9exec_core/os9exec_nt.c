@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2003/04/25 19:34:30  bfo
+ *    MAXDIR/MAX_PATH now visible for Macintosh version
+ *
  *    Revision 1.33  2003/04/20 23:06:58  bfo
  *    <my_inetaddr> big endian/little endiran swap
  *
@@ -908,11 +911,24 @@ static void titles( void )
 	 #endif
    #endif
    
+   #ifdef USE_CARBON
+       upho_printf("- With CarbonLib Interface\n");
+   #endif
+   
    upo_printf( "\n" );   
    fflush(stderr);
    fflush(stdout);
 } /* titles */
-				
+
+
+
+static Boolean Dbg_SysCall( process_typ* cp, regs_type* crp )
+{
+	if (!debugcheck(dbgSysCall,dbgNorm)) return false;
+	 
+	return cp->func!=0x8c /* OS9_I_WritLn */ || loword(crp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
+} /* Dbg_SysCall */
+
 
 
 static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid )
@@ -1013,10 +1029,9 @@ static void debug_comein( process_typ* cp, regs_type* crp, ushort cpid )
 
 	/* (enclosed in another if to avoid get_syscall_name invocation */
 	/* in nodebug case!) */
-	uphe_printf(">>>%cPid=%02d: OS9 %s : ",msk ? '*':' ',cpid,fdeP->name);
-	
-	show_maskedregs(crp,fdeP->inregs);
-	debugprintf(dbgSysCall,dbgNorm,("\n"));
+	uphe_printf( ">>>%cPid=%02d: OS9 %s : ",msk ? '*':' ', cpid,fdeP->name );
+	show_maskedregs( crp,fdeP->inregs );
+	upe_printf ( "\n" );
 } /* debug_comein */
 
 
@@ -1030,12 +1045,11 @@ static void debug_retsystask( process_typ* cp, regs_type* crp, ushort cpid )
 	
 	if (cp->oerr) {
 		get_error_strings(cp->oerr, &errnam,&errdesc);
-		debugprintf(dbgSysCall,dbgNorm,("#%03d:%03d - %s\n",
-						  cp->oerr>>8,cp->oerr &0xFF,errnam));
+		upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
 	}
 	else {
 		show_maskedregs(crp,fdeP->outregs);
-		debugprintf(dbgSysCall,dbgNorm,("\n"));
+		upe_printf( "\n" );
 	}
 } /* debug_retsystask */
 
@@ -1054,12 +1068,12 @@ static void debug_return( process_typ* cp, Boolean cwti )
 	Boolean strt;
 		
 	if (cwti) {
-		uphe_printf("<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
+		uphe_printf( "<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
 						msk ? '*':' ',currentpid,
 						hdl ? "" :" (no handler)", PStateStr(cp) );
 							 
 		show_maskedregs( &cp->os9regs, d_w(1)+a_l(6) );
-		debugprintf(dbgSysCall,dbgNorm,("\n"));
+		upe_printf ( "\n" );
 	}
 	else {
 		if ((cp->state==pActive || cp->oerr) &&
@@ -1082,12 +1096,11 @@ static void debug_return( process_typ* cp, Boolean cwti )
 			if (cp->oerr) {
 				get_error_strings(cp->oerr, &errnam,&errdesc);
 			//  errnam= "XXX"; errdesc= "";
-				debugprintf(dbgSysCall,dbgNorm,("#%03d:%03d - %s\n",
-					        cp->oerr>>8,cp->oerr &0xFF,errnam));
+				upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
 			}
 			else {
 				show_maskedregs( &cp->os9regs,fdeP->outregs );
-				debugprintf(dbgSysCall,dbgNorm,("\n"));
+				upe_printf( "\n" );
 			}
 		} 
 	} /* if (cwti) */
@@ -1421,8 +1434,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			if (cp->oerr!=0) set_os9_state( cpid, pActive ); /* on error, continue with task execution anyway */
 			if (cp->state==pActive) {
 				/* process gets active again, report errors to OS9 programm */
-				if (debugcheck(dbgSysCall,dbgNorm)) 
-					debug_retsystask( cp,crp, cpid );
+				if (Dbg_SysCall( cp,crp )) debug_retsystask( cp,crp, cpid );
 				
 				if (!cp->oerr) crp->sr &= ~CARRY;
 				else {
@@ -1480,10 +1492,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				/* TRAP0 = OS-9 system call called */
 				arbitrate=false; /* disallow arbitration by default */
 
-				if (debugcheck(dbgSysCall,dbgNorm)) 
-					debug_comein( cp, crp,cpid );
+				if (Dbg_SysCall( cp,crp )) debug_comein( cp,crp, cpid );
 				
-    			
     			/* --- Alarm handling */
     				aa= alarm_queue[0];
     			if (aa!=NULL) {
@@ -1621,10 +1631,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		if    (!cwti) {
 			    cwti=  cp->way_to_icpt;
 			if (cwti) {
-				debugprintf(dbgSysCall,dbgNorm,( "%d %d %d %x\n", 
-								 				  cp->icpt_pid,currentpid,
-								 				  cp->icpt_signal,
-								 				  os9_long((ulong)cp->pd._sigvec) ));
+			    if (Dbg_SysCall( cp,crp ))
+					upe_printf( "%d %d %d %x\n", cp->icpt_pid,currentpid,
+								 				 cp->icpt_signal,
+								 				 os9_long( (ulong)cp->pd._sigvec ) );
 
 				if (cp->icpt_pid!=currentpid) {
 					cp->way_to_icpt= false;    /* reset if another process */
@@ -1653,8 +1663,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			}
 		}
 		
-		if (debugcheck(dbgSysCall,dbgNorm))
-			debug_return( cp,cwti );
+		if (Dbg_SysCall( cp,crp )) debug_return( cp,cwti );
    } while(currentpid<MAXPROCESSES); /* while active processes */
    /* End of emulation, all processes exited */
 	
