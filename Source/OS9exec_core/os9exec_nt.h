@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2002/10/02 18:47:25  bfo
+ *    <mdir_entry> / <mdirField> structures included
+ *
  *    Revision 1.18  2002/09/22 20:48:23  bfo
  *    SS_206 (unused setstat call) included.
  *
@@ -183,6 +186,8 @@
 /* number of statistics entries */
 #define MAX_OS9PROGS   1000
 
+/* number of mem alloc entries */
+#define MAX_MEMALLOC  10000
 
 
 /* "per-process" constants */
@@ -274,6 +279,11 @@ typedef struct {
             ulong lnk;
          } mdir_entry;
 
+/* ptr and size structure */
+typedef struct {
+            ulong ptr;
+            ulong size;
+         } ptrsize_typ;
 
 
 /* a error trap handler */
@@ -866,6 +876,9 @@ extern  char*       dirtable[MAXDIRS];
 
 /* the OS-9 statistics table */
 extern  st_typ      statistics[MAX_OS9PROGS];
+
+/* the mem alloc table */
+extern  ptrsize_typ memtable[MAX_MEMALLOC];
 
 /* I/O device table */
 extern  byte        devs[0x0900];       
