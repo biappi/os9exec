@@ -1206,6 +1206,8 @@
 		  
 		  03-06-09	Bfo		Maximum number of modules changed from 512 -> 1024
 		  03-06-09	Bfo		Signals can be sent only to process ids < MAXPROCESSES
+		  03-07-08  Bfo     Print hw name additionally
+		  03-07-08  Bfo     /socket and /le0 are built-in modules now
     3.22  03-??-??  Bfo
     -------------------
 */
