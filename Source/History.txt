@@ -1156,6 +1156,9 @@
           03-01-02  Bfo     Remaining ticks of F$Sleep after intercept is correct now.
           03-01-02  Bfo     Some type casting things fixed.
           03-01-03  Bfo     Store the signals during read the same way as in real OS-9, add pwr_brk flag
+          03-01-06  Bfo     Adapt state correctly for intercept
+          03-01-07  Bfo     More intercept adaptions
+          03-01-09  Bfo     Intercept adaptions (pWaitRead), longer signal chain
     3.21  03-01-??  Bfo     ...
     -------------------
 */

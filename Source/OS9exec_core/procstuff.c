@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2003/01/03 14:57:20  bfo
+ *    Store the signals during read the same way as in real OS-9, add pwr_brk flag
+ *
  *    Revision 1.20  2003/01/02 14:34:52  bfo
  *    Some type castinmg things fixed
  *
@@ -460,7 +463,7 @@ os9err kill_process( ushort pid )
         cp->last_mco->spP->lastwritten_pid= 0; /* disconnect CtrlC/E signal */
         cp->last_mco= NULL;
     }
-    debugprintf(dbgProcess,dbgNorm,("# kill_process: CtrlC/E signal discnnected\n" ));
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: CtrlC/E signal disconnected\n" ));
     
     A_Kill  ( pid ); /* remove all alarms of this process */
     free_mem( pid ); /* IMPORTANT: use this only after all other resources are freed (because they might have memory allocated, such as traphandlers) */
@@ -476,9 +479,10 @@ os9err send_signal(ushort spid, ushort signal)
     process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
     process_typ* sigp= &procs[      spid]; /* ptr to procs dsc to which the signal will be sent */
     sig_typ*     s   = &sig_queue;
-    save_type*   svd;
+//  save_type*   svd;
 	int          k;
 	Boolean      wRead;
+	regs_type*   v;
 	
 	/* the broadcast (send to pid=0) is implemented here */
 	if (currentpid!=0 && spid==0) {
@@ -558,17 +562,13 @@ os9err send_signal(ushort spid, ushort signal)
         if (sigp->pd._signal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
                   /* should never be called, because now a signal queue is implemented */
 
-        sigp->rtestate= sigp->state;    /* save it, active after signal */
-        set_os9_state( spid, pActive ); /* activate for all cases */
-        
         if (sigp->state==pWaiting) {
-            /* signal causes wakeup */
             debugprintf(dbgProcess,dbgDetail,("# send_signal: receiving pid=%d was waiting\n",spid));
-            retword(sigp->os9regs.d[0])= 0;      /* return 0 means that no process has died (pid=0's death can't be awaited) */
-            retword(sigp->os9regs.d[1])= signal; /* return signal code as error */
-                    sigp->os9regs.sr  &= ~CARRY; /* error-free return */
-        }        
-        
+            retword(sigp->os9regs.d[0])= 0; /* return 0 means that no process has died (pid=0's death can't be awaited) */
+            retword(sigp->os9regs.d[1])= 0; /* no signal code !!! returning signal code is wrong (bfo) */
+            sigp->os9regs.sr &= ~CARRY;     /* error-free return */
+        } /* if */      
+                
         arbitrate= false;
         sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
@@ -576,17 +576,24 @@ os9err send_signal(ushort spid, ushort signal)
         if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
             sigp->way_to_icpt = true;    /* activate both */
               cp->way_to_icpt = true;
-            if (sigp->state==pWaitRead) {
-                                          svd= &sigp->savread; 
-                         sigp->rtevector= svd->vector;  /* save some additional info */
-                         sigp->rtefunc  = svd->func;
-                memcpy( (void*)&sigp->rteregs, (void*)&svd->r,         sizeof(regs_type) ); /* save all regs */
-            }
-            else {
-                         sigp->rtevector= sigp->vector;  /* save some additional info */
-                         sigp->rtefunc  = sigp->func;
-                memcpy( (void*)&sigp->rteregs,  (void*)&sigp->os9regs, sizeof(regs_type) ); /* save all regs */
-            }
+        //  if (sigp->state==pWaitRead) {
+        //                        svd= &sigp->savread; 
+        //      sigp->rtevector=  svd->vector;   /* save original info */
+        //      sigp->rtefunc  =  svd->func;
+        //                    v= &svd->r;        /* all original regs */
+        //  }
+        //  else {
+                sigp->rtevector=  sigp->vector;  /* save some additional info */
+                sigp->rtefunc  =  sigp->func;
+                              v= &sigp->os9regs; /* all regs */
+        //  }
+            
+            memcpy( (void*)&sigp->rteregs, (void*)v, sizeof(regs_type) ); /* save all regs */
+            
+            /* signal causes wakeup */
+        //  if (sigp->state!=pWaitRead) 
+              set_os9_state( spid, pActive );      /* activate for all other cases */
+            sigp->rtestate= sigp->state;             /* save it, active after signal */
             
             sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
             sigp->os9regs.a[6]= sigp->icpta6;
