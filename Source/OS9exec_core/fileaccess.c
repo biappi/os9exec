@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2003/05/05 17:53:12  bfo
+ *    Activate inactive "netatalk" nodes automatically in Mac file system
+ *
  *    Revision 1.14  2003/04/25 19:35:47  bfo
  *    "Netatalk" support
  *
@@ -737,13 +740,15 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 	          TCSuff( &v, "",        'os9a','PROG' ); return; // ".*"
 	      }
 	                           
-	      if (TCCWIE( &v, ".c" ))                     return; // C source
-	      if (TCCWIE( &v, ".h" ))                     return; // include files
-	      if (TCCWIE( &v, ".p" ))                     return; // Pascal source
-	      if (TCCWIE( &v, ".m" ))                     return; // Pascal module source
-	      if (TCCWIE( &v, ".f" ))                     return; // Pascal include files
-	      if (TCCWIE( &v, ".a" ))                     return; // Assembler
-	      if (TCCWIE( &v, ".d" ))                     return; // Assembler include files
+	      if (TCCWIE( &v, ".h"   ))                   return; // include files
+	      if (TCCWIE( &v, ".c"   ) ||
+	          TCCWIE( &v, ".cp"  ) ||
+	          TCCWIE( &v, ".cpp" ))                   return; // C/C++ source
+	      if (TCCWIE( &v, ".p"   ))                   return; // Pascal source
+	      if (TCCWIE( &v, ".m"   ))                   return; // Pascal module source
+	      if (TCCWIE( &v, ".f"   ))                   return; // Pascal include files
+	      if (TCCWIE( &v, ".a"   ))                   return; // Assembler
+	      if (TCCWIE( &v, ".d"   ))                   return; // Assembler include files
 	      if (TCSuff( &v, ".r",      'CWIE','MPLF' )) return; 
 	      if (TCSuff( &v, ".x",      'CWIE','MPLF' )) return;
 	      if (TCSuff( &v, ".tm",     'CWIE','MPLF' )) return;
