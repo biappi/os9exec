@@ -30,17 +30,30 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 #include "os9exec_incl.h"
 
-#ifdef macintosh
-#ifndef MPW
-#include "TermWindow.h"
+#if defined macintosh && !defined MPW && !defined USE_CARBON
+  #include "TermWindow.h"
+  
+  /* /VMod access  */
+  /* ============= */
 
-/* /VMod access  */
-/* ============= */
 
-
-typedef struct {
+  typedef struct {
             TermWindowPtr wPtr;
             TermWindowPtr wStore;
             Rect          r;
@@ -48,8 +61,7 @@ typedef struct {
             ulong         wSize;
             ushort        wIndex;        
             ushort        wTot;        
-} newwin_type;
-#endif
+  } newwin_type;
 #endif
 
 
@@ -62,7 +74,7 @@ os9err pVMod( ushort pid, syspath_typ* spP, ulong *d1,ulong *d2 )
     #endif
 
 
-    #if defined macintosh && !defined MPW
+    #if defined macintosh && !defined MPW && !defined USE_CARBON
       ushort       func;
       newwin_type* nw;
       GrafPtr      my_port;

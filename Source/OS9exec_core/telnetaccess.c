@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *
  */
 
@@ -265,7 +268,7 @@ void WindowTitle( char* title, Boolean vmod )
 /* CheckInputBuffers */
 void CheckInputBuffers(void)
 {
-    #ifdef MACTERMINAL
+    #if defined MACTERMINAL && !defined USE_CARBON
       CheckInputBuffersSerial(); /* check characters from serial lines */
     #endif
     
