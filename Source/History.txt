@@ -1090,7 +1090,12 @@
           02-09-05  Bfo     Make an internal copy of the built-in "init" module.
           02-09-09  Bfo     Bug at writing of remaining buffer multisector RBF fixed.
           02-09-10  Bfo     The original "module.h" and nearly original "errno.h" can be used now.
-    3.17  02-09-??  Bfo     ...
+    3.17  02-09-11  Bfo     Checked in for SourceForge Release.
+    -------------------
+
+          02-09-15  Bfo     fpp.c FPU bug (FMOVE) fixed: Brian King's code included.
+          02-09-15  Bfo     Relative paths can be mounted (again).
+    3.18  02-09-??  Bfo     ...
     -------------------
 */
 
