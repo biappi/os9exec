@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/07/21 14:37:16  bfo
+ *    Extended 'Get_Time' function
+ *
  *    Revision 1.13  2002/07/07 22:08:21  bfo
  *    take the RAM disk size from the descriptor (if available)
  *
@@ -468,6 +471,7 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     ulong*    tcp= (ulong*)&tc[0];
     int       y, m, d, ct0;
     
+    /* Get consistent time/date and ticks */
     do {
         if  (withTicks)            ct0= GetSystemTick() % TICKS_PER_SEC;
         
