@@ -1,0 +1,1025 @@
+// 
+// Ê ÊOS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+// Ê ÊCopyright (C) 2002 Ê[ Lukas Zeller / Beat Forster ]
+//	  Available under http://www.synthesis.ch/os9exec
+// 
+// Ê ÊThis program is free software; you can redistribute it and/or 
+// Ê Êmodify it under the terms of the GNU General Public License as 
+// Ê Êpublished by the Free Software Foundation; either version 2 of 
+// Ê Êthe License, or (at your option) any later version. 
+// 
+// Ê ÊThis program is distributed in the hope that it will be useful, 
+// Ê Êbut WITHOUT ANY WARRANTY; without even the implied warranty of 
+// Ê ÊMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// Ê ÊSee the GNU General Public License for more details. 
+// 
+// Ê ÊYou should have received a copy of the GNU General Public License 
+// Ê Êalong with this program; if not, write to the Free Software 
+// Ê ÊFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+
+
+
+/* History */
+/*
+     000  93-06-01  LuZ     Created
+     001  93-06-26  LuZ     First working version (with icc6811, a6801 and xlink) (-->PhilM, Simon Kaiser)
+     002  93-06-27  LuZ     Some minor improvements in file handling and error reporting. Made I$ReadLn not
+                            return the CR char (this seems to be what is expected, at least by xlib).
+     003  93-07-10  LuZ     added spinning cursor, made IRQ proof (no masking any more), made GetStt/SS_Opt
+                            work, made I$ReadLn/stdin work correctly, added F$Link, F$UnLink, I$Write
+                            and I$Read. Added GetStt/SS_DevNm for stdpaths.
+     004  93-07-15  LuZ     Added F$SRtMem. Obviously, making SS_Opt work in GetStt caused some icc output
+                            routines behave differently and return blocks, which was never the case before
+                            and caused crashes because E$UnkSvc was returned. Now it seems to work.
+     005  93-07-20  LuZ     Added stderr. Added correct MPW exit codes. Added atexit-cleanup mechanism.
+                            Added ResolvePath to path processing to resolve aliases within OS-9 paths.
+     006  93-08-10  LuZ     Added CACHE_FLUSH code to make it run on the 040
+                            Added F$ID, F$SetSys, F$GPrDsc
+     007  93-08-11  LuZ     Added constants for process ID etc. (MYPROCID...)
+     008  93-08-21  LuZ     Implemented F$TLink and Trap handler mechanisms. Improved parsepath to handle
+                            /dd and parent dirs correctly. Implemented GetStt:SS_Size and GetStt:SS_Pos.
+     009  93-08-23  LuZ     F$Time, F$Julian made work, F$CRC added (Foese)
+     010  94-04-09  LuZ     Made os9exec return error code to main program instead of exiting.
+
+    1.11  94-09-25  LuZ     Added environment variables (passing all MPW environment variables with
+                            names starting with '@'. Started real VERSION/REVISION numbering
+    1.12  94-10-11  LuZ     Added F_SRqCMem, SS_FD and improved seek to make Ultra C work ok.
+    1.13  94-10-22  LuZ     Added real file mod/crea dates in SS_FD.
+    1.14  94-10-23  LuZ     Added HoldMemory()/UnholdMemort() calls to os9malloc()/os9free() for VM case.
+                   
+
+    2.00  96-08-27  LuZ     Started cooperative multiprocess version. First Demos issued at OS9 Conference '96
+    2.01  96-10-02  LuZ/Bfo Minor modifications (in Discussion with Beat Forster)
+          96-10-14  LuZ     made all register returns 32-bit (seems to be the case in real OS-9)
+                    LuZ     made fetchnames a command line option (-fe)
+                    LuZ/Bfo included Beat's F$GetPrDsc
+    2.01  96-10-02  LuZ/Bfo Minor modifications (in Discussion with Beat Forster)
+          96-10-11  Bfo     F$Permit included.
+          96-10-21  LuZ/Bfo Added more of Beat's Fcalls. Fixed various little bugs. Made working PPC
+                    Version.
+    2.02  96-10-23  LuZ     Revised os9_llm.a to allow open IRQ operation
+          96-10-24  LuZ     Fixed case sesitive "/dd" check, fixed F$CmpNam case sensitivity and "xxx.*" failure.
+          96-10-26  LuZ     Added named pipes, reorganized path struct
+          96-10-27  LuZ     Found and fixed bug in fReadLn (wrong data when no CR was at EOF)
+          96-10-28  LuZ     Added min/sec display of timing in funcdispatch.c
+    2.03  96-10-29  LuZ     Added name trigger feature for debugging
+          96-11-01  LuZ     Added DIRECTMEM (using NewPtr/DisposePtr instead of malloc())
+                    LuZ     Fixed priority inheritance in prepFork and implemented F$SPrior
+                    LuZ     Added -p option to set priority of first process
+                    LuZ     Fixed bug in kill_process: Traphandler memory was returned twice
+                    LuZ     Fixed bug in os9free: returning of wrong-sized memory block did not return E_BPADDR
+                    LuZ     Fixed incompatibility in F$SRqMem: a size of -1 now returns MaxBlock()-16 rounded up
+                            as "largest free memory block".
+                    LuZ     Added checks for bounds in all I$Read(Ln) and I$Write(Ln) when dbgWarning & >=dbgDetail
+                    LuZ     Found and fixed hyperstupid bug in stdwrite that caused crash with console output
+                            lines longer than 300 chars.
+    2.04  96-11-11  LuZ     Added correct handling of uninitialized TCalls (that is, calling the exception entry
+                            point of the program's main module). Fixed bug in Traphandler stack frame (Offset 6
+                            does NOT contain vector NUMBER, bug vector OFFSET, altough OS9 docs say it's the vector
+                            number; r68020 proves them wrong!)
+    2.04  96-12-05  Bfo     Procs stuff included.
+    2.05  96-12-13  Bfo     Added many improvements made by Bfo which fixes numerous bugs.
+    2.06  96-12-13  LuZ     Implemented User mode, works fine on PPC but totally fails on 68k -> This is
+                            no releasable version (User mode must be made work ok with 68k or separate
+                            llm's compiled for PPC and 68k).
+    2.07  97-01-22  LuZ     Separated working User-Mode for PPC and working Non-User-Mode for 68k into separate
+                            files: os9_llm.a was split into os9_llm_ppc.a (with User mode) and os9_llm_68k
+                            (old-style supervisor mode only).
+    2.08  97-01-23  LuZ     Added "Hx" substitution to OS9Hx env variables (filestuff.c, for Cerberus AG), made
+                            F$SUser pass without error and No Op.
+    2.09  97-01-28  LuZ     Fixed bad bug with VM: Must use LockMemory and not HoldMemory (the latter allows memory
+                            pages to move in physical memory, which may not happen. However, VM does not work
+                            on PPC though).
+                    LuZ     Finished stdoutfilters architecture (clean implementation of allocation of filter
+                            private storage), added working filters for "icc6811" and Omegasoft "pc".
+    2.10  97-05-14  LuZ     F$Gregor added
+          97-05-16  LuZ     F$Julian with modulo 100
+    2.11  97-07-27  LuZ     Found bug in prep_Launch (if more than one environment var was imported from MPW Shell
+                            to OS9exec, this lead to a crash due to a real stupid break condition in prep_launch).
+                    LuZ     Made display of $FFFF system call show <none> instead of invalid, such that processes
+                            with no syscall yet are displayed ok (internal commands, for OS9 processes this
+                            is a not observable condition as long as we have no timesliced multitasking).
+    2.12  97-08-06  LuZ     Added Filter for "cfe" (Ultra C compiler) and "r68" (Assembler).
+    
+    2.13  99-01-14  LuZ     Added code to support Mac-Context running in user mode (which seems to be the
+                            case in new G3/Sys 8.5 combinations. Fixed bad error where User trap handler did not
+                            correctly set D0 and D1 (used absolute RP$Dx access instead of RP$Dx(A6)).
+              
+    2.20  99-08-19  LuZ     Standalone version (os9app), version with UAE Emulator (os9App_emu) and 
+    ------------------- <<< PC application (os9App.exe).
+            
+    2.22  00-04-23  Bfo     filestuff.c:  000:208 Error fixed: pNop for poSetOpt fFile included.
+                    Bfo     fileaccess.c: readout with READCHUNKSZ done correctly now.
+          00-04-27  Bfo     F_GBlkMp: implemented.
+                    Bfo     F_SetSys: some additions: FPU/MPU type, MinAlloc.
+          00-04-29  Bfo     Init module will be connected/disconnected at the system globals.
+                    Bfo     Version/Revision of os9exec emulator will be mirrored into 'init' version/revision.
+    2.23  00-05-01  Bfo     Problem Trap Jumpback at os9_uae.c fixed: oldpc+2.
+                    Bfo     Problem float division ( "Kb" ) seen, but not yet fixed.
+          
+    2.24  00-05-03  Bfo     Problem float division in 68k emulator (subx.l) fixed.
+          00-05-07  Bfo     Problem binary read of PC files ( 0d0a ) fixed (use raw read mode 'rb' now).
+                    Bfo     os9_usage at os9exec_nt / copyright notices unified.
+                    Bfo     Some compiler warnings eliminated (e.g. if (a=b) ...).
+                    Bfo     Serial interface activated (os9serial) as a new CodeWarrior project
+          00-05-09  Bfo     0d0a adaptions for the serial interface implemented.
+                    Bfo     'DevReady' implemented for the serial interface: "maint2" works now !!!
+          00-05-12  Bfo     Dup of outputpaths allowed now (getstat and read for console output allowed).
+                    Bfo     %%% Hardcoded env paths of Bfo's system to make life easier for the moment.
+          00-05-13  Bfo     Xon/Xoff problem serial interface fixed.
+                    Bfo     gConsoleNLExpand implemented also for serial interface: "Sedt" works now perfectly !!!
+    2.25  00-05-13  Bfo     Wrong break condition (\r) at terminal write excluded.
+                    Bfo     Module group loader implemented (separate mem blocks implemented for Mac and PC);
+                            this version is not (yet) sticky as it is for a native OS-9 system.
+                    Bfo     Unified access for module handle/pointer with additional routines (os9h/os9mod).
+          00-05-14  Bfo     SetStt (SS_Opt): pNop for poSetOpt fNil included (problems because of dup device).
+                    Bfo     Problem in (my own) MoveBlock routine is now fixed.
+
+    2.26  00-05-16  Bfo     Unified os9_main routine
+          00-05-17  Bfo     Unified main modules
+    2.27  00-05-20  Bfo     Unified include files und Mac resource file. Some compiler warnings eliminated.
+                    Bfo     Some MPW specific tasks masked
+    2.28  00-05-20  Bfo   The MGR client "mgencas" runs under OS9exec !!
+    -------------------     (with one exception so far: the MGR file selector box hangs)
+                
+          00-06-17  Bfo     Preparations for Serial Interface in parallel to Strout
+          00-06-18  Bfo     Re-read and arbitrate support for multi-tasking terminal support
+          00-06-25  Bfo     Implement the gateway for "/ts1" in "os9app" project.
+          00-07-01  Bfo     Reading only ONE char through interface: Store them in-between will cause a mixture.
+                    Bfo     The multi-user support for Strout parallel to "/ts1" is now perfectly working.
+                    Bfo     Input echo for "debughalt", output (for the moment) always to main console.
+    2.29  00-07-01  Bfo     Output of internal commands always to its stdout/stderr (console).
+    -------------------
+    
+          00-07-02  Bfo     F$STime implemented. Some Y2K + month adaptions in time format.
+                    Bfo     F$Chain implemented. parameter block (at a1) must be stored in-between.
+                    Bfo     Set <arbitrate> flag in F$Fork (to release module by shell again)
+                    Bfo     Memory management adapted, process independent get_mem/release_mem.
+                    Bfo     Path names correctly assigned, bugs in F$PrDsc (currentid instead cpid) fixed.
+          00-07-03  Bfo     Problems with new (Y2K) "setime" not yet fixed (something is very strange).
+                    Bfo     "procs -a" is able to display last command (only if fticks/iticks counting).
+                    Bfo     Switch on fticks/iticks counting now permanently.
+          00-07-04  Bfo     usrpath_printf (exchange 0A->0D) for internal commands (first hack).
+                    Bfo     Recognized, that option table for console is existing only once:
+                            (calling program "code" on one terminal makes a "shell" input of another terminal
+                            blind, because the "global" echo mode will be switched off).
+          00-07-05  Bfo     Path option table available now for every system path.
+    2.30  00-07-05  Bfo     Pathnames /t1 .. /t9 are allowed now (preparations for Multi-Strout).
+    -------------------
+    
+          00-07-07  Bfo     upo_printf and upe_printf (userpath stout/stderr) used for everything now.
+                    Bfo     systempath 0 initialized to be used also for title/"OS9 emulation ends here" output.
+          00-07-08  Bfo     The group/user attributes are defined and inherited now. F$SUser implemented.
+                    Bfo     Searching for the MGR file selector box problem (seems to be a problem with memory)
+          00-07-09  Bfo     a_p(x) inserted: Displays the string for F$Link,F$Load at debugging mode.
+                    Bfo     Problem MGR fsb found: There have been 3 errors at F$GModDr implementation (!!):
+                              1) it must be j=j+16 (instead of j=j+4)
+                              2) one block too much has been copied in case the memblock was not divisible by 16.
+                              3) the number of read bytes has not been returned.
+                            The error has not been seen, because MAXPROCESSES*16 is smaller than "mdir" buffer.                   
+                    Bfo     Now some memory problems have been seen. MaxBlock access into module "memstuff"
+                    Bfo     I$WritLn: Must be terminated at CR character, even if buffer content is larger.
+                    Bfo     I$WritLn: The number of actual written characters will now be given back in d1.
+                    Bfo     The MGR fsb works now perfectly (The system has now enough memory space) !!!
+                    Bfo     Some problems in "fplot" lead to Mac system crash -> debugging.
+                    Bfo     If there is an error in F$Fork call (e.g. 000:237), the not yet started process 
+                            will now be reset to unused state.
+          00-07-10  Bfo     Implementing the Multi-Strout at the "TerminalWindow" and "constole.stubs".
+          00-07-11  Bfo     Bug (Bus Error) in the Terinal Setting section fixed; working now on FrontWindow.
+                    Bfo     Variable <gTerminalPath> renamed to <gConsoleID>.
+    2.31  00-07-11  Bfo     Variable <gTerminalName> no longer used: Function "ConsoleName" at "utilstuff.c".
+    -------------------
+  
+                    Bfo     UpdateEvent now works perfectly on all the Strout windows.
+          00-07-12  Bfo     The dirty scroll bars within the larger terminal window are no longer visible now.
+          00-07-13  Bfo     The terminals are now correctly disappearing after use. "/term" remains open.
+                    Bfo     Coordinates for terminals are now 20*gConsoleID; no change with Strout setup
+    2.32  00-07-13  Bfo     Version V2.32 sent to Lukas.
+    -------------------
+  
+          00-07-13  Bfo     Both Mac serial lines are now supported independently.
+                    Bfo     Mac serial lines will be closed correctly (back to HW handshake).
+                    Bfo     "OS9serial" only supports one peripheral device: /term.
+          00-07-15  Bfo     Telnet support prepared ("telnetaccess.c" pt0..pt99 -> <gConsoleID 100..199).
+                    Bfo     Change some dbgPrint features error/arbitrate to dbgDetail ("easier" debugging).
+                    Bfo     Infinit recursive loop broken in case of debugprint with closed stderr path.
+                    Bfo     'RemoveConsole' will be called only when all systempaths of this path name are closed.
+                    Bfo     Problem of vmod's "make -u" is TrapHandler math (no problem in EMU mode !!!).
+          00-07-16  Bfo     Make the invisible parameters of F$TLink visible.
+                    Bfo     Implementation of F$DatMod started.
+                    Bfo     Problem F$SetCRC fixed: Header parity must be adapted before CRC calculation.
+                    Bfo     F$DatMod is running. Attr/Revs, permission, ... have not yet any influence.
+                    Bfo     "fplot" is running !!! (with UAE emulator, avoiding "math" problem").
+                    Bfo     F$GSPUMp called as "Silent unimplemented" (it is used by "fplot").
+          00-07-17  Bfo     Attr/Revs and access permission parameters added to F$DatMod.
+          00-07-18  Bfo     Workaround for "math" problem inserted (problem is direct initialize with 1st tcall):
+                            -> The math trap handler will now be connected together with "cio" at F$TLink.
+                    Bfo     (The new "fixmod" calls 1111-Exceptions directly, replace it by older "fixmod").
+          00-07-22  Bfo     The "math" problem is fixed ! SwitchMacModeSensitive must be called (instead of SwitchMac)
+                            Currently not able to recompile lowlevel -> direct patch at the resource (603C -> 6030)
+                    Bfo     F$TLink: not all parameters any more in debug mode (make as it was before)
+                    Bfo     Some I$XXX commands: make the path name visible in debug mode (with a_p)
+                    Bfo     "deldir" recursion on the OS-9 version activated (by returning the correct error: E_FNA)
+          00-07-23  Bfo     OS-9 can't ever work under OS9exec, because of open-seeknext-close. Under OS-9 the 
+                            directory is really a file and it is possible to get the next dir entry that way.
+                            Under OS9exec the dir table will be created virtually and it shrinks with every delete.
+                            In fact, OS-9 deldir under OS9exec does not catch all dir entries.
+                            => take again own "deldir" (which has been created 1996 because of OS9exec problems).
+                    Bfo     Deleting of directories can cause some strange timeout problems, because Mac OS is not
+                            ready immediately => timeout loop inserted at I$Delete.
+                    Bfo     The file dates are shifted by 4 years (base is 1904) => adapted.
+                    Bfo     Returned file attributes changed from 1F to 3F (= including pe).
+    2.33  00-07-24  Bfo       I$SetStt SS_FD is implemented now: It sets the Mac file date/time correctly.
+    -------------------
+    
+          00-07-25  Bfo     Touch will affect file date now / Bug in creation date (1904 - 1 day) fixed.
+                                    os968k under PPC will not close the window immediately.
+          00-07-28  Bfo     Incomplete module group (file larger than modules in it) will not cause an error,
+                            as long as ModSync is not ok.
+          00-07-29  Bfo     Problem in F$DatMod fixed: Type (=4) was not yet defined / Owner set to 0.
+                    Bfo     Name position same as in OS-9 (latest possible, not directly behind data area).
+                    Bfo     Still some crashes when trying to compile the whole Omegasoft source.
+                    Bfo     Bug in F$Gregor fixed: <d> <==> <y>.
+          00/08/01  Bfo     XOn/XOff support included, CtrlC/CtrlE prepared.
+                    Bfo     Bug in 'ReadCharsFromConsole' fixed: <buffer> copied down instead of <gInBuf>.
+                    Bfo     The "MoveBlock" procedure is now working forward and backwards.
+                    Bfo     pWaitRead makes problems with exception handling (the OS9_F_RTE has no chance to get 
+                            through) -> adapted in "os9exec_nt.c"
+                            -> CtrlC/CtrlE handling is now working (supported for Strout, not yet for serial)
+                    Bfo     CtrlE without exception routine handled correctly now (no warning in os9exec_nt.c" 
+                            because of pDead).
+          00/08/02  Bfo     CtrlC/CtrlE support also for serial lines. More consistency in struct definitions.
+                    Bfo     Procedure "KeyToBuffer" is now at "consio.c".
+                    Bfo     The PC version has some crash problems at the moment (for versions >= V2.33 ).
+          00/08/04  Bfo     Further adaptions in the exception routine handling ( <way_to_icpt> ).
+                    Bfo     Cmd-. from FrontWindow acts like CtrlE now (in MultiStrout). 
+          00/08/05  Bfo     childid is implemented now in the process descriptor (because "yes" uses it at CtrlE).
+    2.34  00/08/05  Bfo     Reading within intercept routines is possible now; some changes again in implementation.
+    ------------------- >>> Version given to Lukas Zeller
+          
+          00-09-24  Bfo     RBF implementation started, new type pRBF included (fileStuff).
+          00-09-29  Bfo     pCclose included as method, closing stdOut of proc 0 avoided.
+          00-09-30  Bfo     some more serial routines implemented as methods.
+          00-09-30  Bfo     Read/Write Sector implementation started.
+    2.35  00-10-01  Bfo     RBF access to /mt@ works now (using a file "mt" at the startdata directory)
+    -------------------
+
+          00-10-01  Bfo     Further RBF implementation
+          00-10-03  Bfo     "dir -r" and "id" are working in RBF emulator
+          00-10-04  Bfo     RBF: "list" is working now (readln) / 2 devices currently supported: /mt /c0.
+          00-10-04  Bfo     Recognize, that "load" is not accessing the I/O interface !!
+          00-10-06  Bfo     Load module adapted for accessing RBF emulator.
+          00-10-06  Bfo     Adapt usrpath/syspath with reg variables to make it accessible from outside.
+          00-10-06  Bfo     rHgetFDsect/rRgetFDsect => rHgetFDInf/rRgetFDInf (accessible as methods now).
+    2.36  00-10-06  Bfo     load (modstuff.c) on RBF files is working now.
+    -------------------  
+    
+          00-10-07  Bfo     use same load structure also for access to the Mac file system.
+          00-10-07  Bfo     <dtype> and <xtype> as new variables in the process descriptor.
+          00-10-07  Bfo     chd/chx work now independently from Mac file access.
+          00-10-07  Bfo     Bug with EOF in read fixed.
+          00-10-07  Bfo     Problem with unlink of fNil fixed.
+    2.37  00-10-07  Bfo     RBF Emulator is now perfectly running in read mode.
+    -------------------
+
+          00-10-22  Bfo     Devices /c1 and /c2 supported now also.
+          00-10-23  Bfo     Allocation system for RBF emulator implemented.
+          00-10-24  Bfo     "Copy"   works now; "Makdir" prepared.
+          00-10-25  Bfo     "Makdir" works now; Adpating "touch" and other things.
+          00-10-29  Bfo     Delete is now implemented, delete of directories: SetStat SS_Attr implemented.
+          00-10-29  Bfo     Delete of "./ConfTrap" is working (name stored in path variable)
+    2.38  00-10-29  Bfo     Most RBF write operations are working now.
+    -------------------
+          
+          00-11-04  Bfo     "gencas" with "format" and "os9gen" is supported now for RBF
+          00-11-04  Bfo     Improved allocation algorithm for RBF emulator
+    2.39  00-11-05  Bfo     SPECTRAPOT Cassette is able to boot now on SPOT !!
+    -------------------
+
+          00-11-07  Bfo     Starting with port to **** LINUX **** (using Code Warrior for SuSE Linux).
+          00-11-08  Bfo     Converted text files from Mac (CR) to DOS (CR/LF) to avoid problems with gcc.
+          00-11-08  Bfo     "Pragma unused" makes problems under gcc, also "void *" and "//".
+          00-11-10  Bfo     Implement all the missing procedures under Linux.
+          00-11-11  Bfo     Disable UAE for the moment, because of linking problems.
+          00-11-11  Bfo     The first compilation with 0 errors under Linux !! Program shows the title !!
+          00-11-11  Bfo     "gdb" and "ddd" installed for debugging (it works !!)
+    2.40  00-11-12  Bfo     The first running **** LINUX **** version !! 
+    ------------------- >>> Linux-Version given to Lukas Zeller
+
+          00-11-18  Bfo     Optimized speed under gcc ( -O3 ) => dhrystone is about 45'000 (same as E17)
+          00-11-20  Bfo     System specific HW strings filled into "init" module.      
+          00-11-22  Bfo     Currently copied back to Mac because not completely stable in netatalk device.
+          00-11-26  Bfo     Problem "?CMDS"  fixed (bad first character) 
+          00-11-26  Bfo     Problem "dump ." fixed for RBF. 
+          00-11-28  Bfo     Problem "dump ." fixed also for Mac files. 
+          00-11-30  Bfo     Problem "dump ." fixed also for root path.
+          00-12-04  Bfo     Dcheck on a 30 MB RBF partition is running.
+          00-12-10  Bfo     Allocation bug (asct==256 instead asct==0) fixed now.
+          00-12-16  Bfo     130 MB partition copied to OS9exec to check RBF emulator with "real big project".
+          00-12-16  Bfo     WriteLn works now correctly under RBF.
+          00-12-16  Bfo     Problems with internal tools rename/move detected (do not work on RBF properly).
+          00-12-16  Bfo     RBF now returns additional FD info with SS_Opt GetStat (e.g. for Rename).
+          00-12-17  Bfo     int_rename works now on Mac devices AND on RBF devices
+          00-12-21  Bfo     int_move   works now on Mac devices AND on RBF devices, even move dir is supported
+          00-12-21  Bfo     SetStat SS_Size problem fixed.
+          00-12-21  Bfo     GetStat SS_Size problem (lastPos) fixed.
+          00-12-21  Bfo     size in r/w mode correctly managed in read mode.
+          00-12-23  Bfo     Problems with remaining part (read mode) and SS_Size fixed.
+          00-12-23  Bfo     Problems with attributes at SS_Opt fixed (wrong pointer): Hampered Lha
+    2.41  00-12-23  Bfo     Quite stable version for RBF emulator
+    -------------------
+
+          00-12-23  Bfo     Path option table for pipes introduced (with DV_DTP: PIPE=2 )
+          00-12-24  Bfo     Alias resolver for partition files included (Type/Creator must be defined !!!)
+          00-12-25  Bfo     Speed-Up for RBF Emulator: no reload for the FD sector of a path.
+          00-12-25  Bfo     Speed-Up for RBF Emulator: read/write sector optimization (only when needed.
+          00-12-26  Bfo     Problem "move" with cached system fixed.
+          00-12-26  Bfo     Preparations for access through SCSI sub system ( /c0 ).
+          00-12-26  Bfo     SS_Opt PD_SSize is now defined at the correct location.
+          00-12-27  Bfo     Mac's SCSI sub system activated.
+          00-12-27  Bfo     Sector 0 handling corrected.
+          00-12-27  Bfo     Remove file entries as in real OS-9
+          00-12-27  Bfo     With format protection
+          00-12-27  Bfo     "move" problem with same directory (cached system) solved.
+          00-12-27  Bfo     SS_DSize supported.
+    2.42  00-12-27  Bfo     All versions compiled (except Linux).
+    -------------------
+
+          00-12-28  Bfo     Try to solve strange deallocation problem, not yet successful.
+          00-12-29  Bfo     Problems with 000:251 (change id) fixed.
+          00-12-29  Bfo     Advanced resolver implemented, which can search through path aliases.
+          00-12-29  Bfo     Absolute paths G3:OS9EXEC:.. replaced by relative system [dd dd/CMDS OS9MDIR]
+          00-12-29  Bfo     start/dd/mdir paths: RBF partitions at 'start' level.
+          00-12-29  Bfo     Checked with 'mini' system on separate hard disk -> ok.
+          00-12-29  Bfo     SetStt: Syspath register passing same way as for GetStat 
+          00-12-30  Bfo     dir * -e ( SS_Opt ) problem fixed for Mac file system. 
+          00-12-30  Bfo     RBF name system unified (all names are possible now).
+          00-12-30  Bfo     List for the SCSI devices prepared.
+          00-12-30  Bfo     OS9exec is now able to start from a partition file.
+          00-12-30  Bfo     Some parameters are stored now in procs[1] descriptor.
+    2.43  00-12-30  Bfo     Last version in year 2000.
+    -------------------
+
+          01-01-01  Bfo     Year 2001 (string) adaptions.
+          01-01-01  Bfo     Some enhancements for the alias partition reloader implemented.
+          01-01-02  Bfo     Bug: '0' instead of '\0' fixed (very strange behaviour).
+    2.44  01-01-02  Bfo     Alias resolver for partitions is now completely implemented.
+    -------------------
+
+          01-01-02  Bfo     Tried to implement AppleEvent interface (for ODoc), but callback is too complicated.
+          01-01-03  Bfo     The "last" bugs of clusterSize eliminated (but the dealloc problem is still there).
+          01-01-03  Bfo     The file allocation start pointer is implemented now (correctly).
+          01-01-03  Bfo     The file allocation start pointer will be reset by (DoAccess) raw write to sector 1.
+          01-01-03  Bfo     Alias for volumes is implemented now.
+          01-01-06  Bfo     The deallocation problem with RBF is fixed now (it was the lnk field at FD sector).
+          01-01-06  Bfo     CtrlA ( PD_DUP field ) implemented for input buffer 
+          01-01-07  Bfo     CtrA/CtrlC/CtrlE/XOn/Xoff no longer hardwired (only Cmd-. creates CtrlE).
+          01-01-07  Bfo     Root dir of RBF devices can't be removed any more.
+          01-01-07  Bfo     SCSI ID connection is now done via device descriptors' SCSI ID.
+    2.45  01-01-07  Bfo     "startup" file will be executed, if available.
+    -------------------
+    
+          01-01-09  Bfo     AppleEvents for OpenDocuments are working now (still some strange crashes with debugger)
+          01-01-09  Bfo     Support for "OS9Boot" and "init" call.
+    2.46  01-01-09  Bfo     Enhanced mdir search strategy.
+    -------------------
+    
+          01-01-10  Bfo     vRefNum -> volID assign error fixed at Alias Resolver
+          01-01-11  Bfo     Back to Linux, solving some problems with the RBF emulator
+          01-01-13  Bfo     "modstuff" and other adaptions for os9linux
+          01-01-14  Bfo     Big/little endian problem at "int_move" fixed.
+          01-01-14  Bfo     fd deallocation error fixed.     
+          01-01-14  Bfo     Finding now "/dd" under most conditions, 
+    2.47  01-01-14  Bfo >>> LINUX version is able to compile now the "real big project" (nearly completely) !!
+    -------------------
+
+          01-01-15  Bfo     fSCF type included (for Bfo's /vmod support)
+          01-01-16  Bfo     Starting to implement the ISP package socket connection
+          01-01-16  Bfo     fNET type included for telnet on ISP support (socket connection)
+          01-01-17  Bfo     The undefined SetStt function implemented.
+          01-01-17  Bfo     observing the "ping" call: F$Alarm is currently not implemented.
+          01-01-17  Bfo     "network.c" is a separate file now.
+          01-01-19  Bfo     Hard debugging on the OpenTransport interface.
+    2.48  01-01-21  Bfo     The interface between ISP (Internet Support Package) and OT (OpenTransport) works !!
+    -------------------     (first running version for "telnet" with direct internet address calling)
+    
+          01-01-21  Bfo     Faster version of the network connection.
+          01-01-22  Bfo     ftp command connection works now
+          01-01-26  Bfo     ftp data    connection works now on OpenTransport
+          01-01-27  Bfo     ftp under ISP makes problems, because some FPU functions are missing
+          01-01-28  Bfo     Problems with ISP (calling of FPU functions)
+          01-01-28  Bfo     Support for OS9TCP (in parallel to ISP)
+          01-01-28  Bfo     SetSys D_Ticks supported (division by zero)
+          01-01-29  Bfo     "put" in "ftp" is running now, "get" has still the E_FNA dir bug. 
+          01-01-31  Bfo     More "ftp" implementation work. "put" and "get" are working now.
+          01-01-31  Bfo     Time calculations in "ftp" are correct now.
+          01-01-31  Bfo     Non Executable Module implemented at F$Fork for non program types.
+          01-02-01  Bfo     Further implementation on the "inetd" (OS9TCP), dummy function "select" ($61)
+          01-02-01  Bfo     F$Event implemented: Driver sends back ready signal for "inetd" (ISP).
+          01-02-03  Bfo     F$Alarm implemented (empty)
+          01-02-03  Bfo     Preparations for using the original "select" -> implementation F$SSvc required.
+          01-02-04  Bfo     "ftpd" cmd path is running, searching bugs in ftp data connection
+          01-02-05  Bfo     "ftpd" is running now (dynamic port nr). Port can't be 20 again (see TCP/IP RFC)
+          01-02-06  Bfo     Preparations for "ping".
+          01-02-07  Bfo     "telnetd" returns now the correct paths internally, running now till pseudo ttys
+          01-02-09  Bfo     Implementation for pty/tty connection.
+          01-02-10  Bfo     *** Mac iBook is here; installation under Mac OS 9.1 seems to run ***
+          01-02-11  Bfo     tty/pty connection works now -> telnetd is running !!
+          01-02-16  Bfo     Use prepared "telnetaccess" routines to provide tty/pty system
+          01-02-18  Bfo     tty/pty system is now fully operational over "telnetaccess"
+          01-02-18  Bfo     MPW can be compiled again, tty system interferes with MPW I/O
+          01-02-18  Bfo     New debug option "o": output path for debugging system, default stderr
+          01-02-18  Bfo     still logout problems -> failing F$Fork closes now the usrpaths
+    2.49  01-02-18  Bfo     *** finally telnetd is able to leave *** (telnet/telnetd + ftp/ftpd are running)
+    -------------------
+
+          01-02-18  Bfo     ftpd problem analysed, not yet fixed.
+          01-02-20  Bfo     multiple telnet problem fixed (Close path done correctly now).
+          01-02-26  Bfo     Larger tty/pty buffer for internal commands, not yet properly released.
+    2.50  01-03-06  Bfo     telnet/telnetd and ftp/ftpd seem to run+leave properly, even on the same machine.
+    -------------------     (also access possible via "BlackNight" (telnet) and "fetch" (ftp).
+
+          01-03-06  Bfo     Debugging with iBook (Mac OS 9.1)
+          01-03-06  Bfo     Network close will no longer create errors
+          01-03-07  Bfo     Bug in pipe's system task (re-entrancy offset) fixed tty/pty are working now correctly
+          01-03-07  Bfo     MGR ("mgencas"/"mconfig") fully operational thru telnet interface !! 
+    2.51  01-03-08  Bfo >>> Compiled all versions. Performing not that bad !! <<<
+    -------------------
+
+          01-03-08  Bfo     Release of special tty/pty buffer after use in intcommand implemented.
+          01-03-10  Bfo     tty/pty sharing (of pipe) if more than one system path open.
+    2.52  01-03-11  Bfo     Problem with tmode lf (partly) fixed: workaround in MgrPTrap, syspath open is now ok.
+    -------------------
+
+          01-03-14  Bfo     Still problems with tty lf mode at mgencas
+          01-03-14  Bfo     Large files (35MB) with ftp/ftpd in both directions to E17 no problems: ~ 400kB/sec
+          01-03-15  Bfo     ICMP packet bridge for "ping" works now perfectly.
+    2.53  01-03-15  Bfo     Error messages (because of missing DNS server) can't be switched off.
+    -------------------
+
+          01-03-15  Bfo     /vmod system implemented
+          01-03-16  Bfo     /vmod system enhanced
+          01-03-17  Bfo     Update event on fplot is working now
+    2.54  01-03-17  Bfo     /vmod system checked on iBook: ok
+    -------------------
+
+          01-03-18  Bfo     Testing the current version on PC, minor adaptions for RBF access.
+          01-03-19  Bfo     The tty/pty access to optsect is correct now: mgencas works from E17. 
+          01-03-22  Bfo     Tests with Software FPU V3.07: Looks fine.
+          01-03-23  Bfo     Close syspaths of fConsole/fPK_SCF, if no longer in use. 
+          01-03-23  Bfo     Close usrpaths > numpaths at F$Chain.
+          01-03-24  Bfo     Some CR/LF things adjusted, looks much better now.
+          01-03-25  Bfo     grp/usr correctly handled with F$Chain
+          01-03-25  Bfo     Rename for Windows version adapted.
+    2.55  01-03-25  Bfo     os9app / os9app_emu / os9serial / os9app.exe and MPW version ok.
+    -------------------
+
+          01-03-27  Bfo     Adaptions Big/little endian for Gregorian/Julian in PC version.
+          01-03-27  Bfo     "..." is not always up path: bug in RBF emulator fixed.
+          01-04-03  Bfo     No slow mode, when ftp/ftpd telnet/telnetd are running on same Mac.
+    2.56  01-04-03  Bfo     PowerFPU (John Neil) installed -> runs perfectly (even switch on/off).
+    -------------------
+
+          01-04-04  Bfo     Some more debugging on PC version (especially file system).
+          01-04-05  Bfo/ce  Hack session with Carsten Emde, prepare MGR for XWindows/MGP interface.
+          01-04-07  Bfo     Change telnet tty/pty names from pks/pkm to tty/pty.
+          01-04-07  Bfo     Prepare pty for direct open.
+          01-04-08  Bfo     Keyboard connection to "umgr" (on Linux display) works.
+          01-04-10  Bfo     telnetd disconnect and mgr keyboard is running in same SW version now.
+          01-04-10  Bfo     "SS_Relea" implemented.
+          01-04-10  Bfo     Masked signal handling (with F$Sigmask) is now implemented.
+          01-04-12  Bfo     Adaptions for the eXodus XServer (Demo Version): seems to run.
+          01-04-13  Bfo     eXodus runs now on the same Mac (improved cooperative multi-tasking)
+    2.57  01-04-13  Bfo     ConsRead implemented correctly (Boolean and char separated)
+    -------------------
+    
+          01-04-13  Bfo     Last preparations for Interlaken demo.
+          01-04-13  Bfo     KeyToBuffer 0x00 handling correctly done no, still problems with mouse.
+          01-04-14  Bfo     Keyboard problem MGP fixed (pNSOpt net->check flag only for "ftpd" status=4)
+          01-04-15  Bfo     currentpid no longer changed in "send_signal" (caused wrong output in ipaths).
+          01-04-15  Bfo     signal buffer (fifo) implemented.
+          01-04-15  Bfo     lines longer than 80 chars in iprocs,ipaths reduced.
+          01-04-15  Bfo     S_HangUp will be sent to tty processes, if pty closes (cleanup MGR).
+          01-04-16  Bfo     trap memory info F$GPrDsc corrected for program "ps".
+          01-04-16  Bfo     Process does not change status to sleep if on way to intercept.    
+    2.60  01-04-20  Bfo *** Demo in SF Interlaken / 20th April 2001 ***
+    -------------------
+    
+          01-04-22  Bfo     Direct change to signaled process
+          01-04-22  Bfo     The return parameters at process change are displayed correctly now.
+          01-04-22  Bfo     Closing tty/pty connections correctly After use.
+    2.61  01-04-23  Bfo >>> Hacksession with Lukas Zeller at Rosengartenstrasse / 23th April 2001 <<<
+    -------------------
+
+          01-04-30  Bfo     Problem with very long files in RBF emulator fixed (FD_Sector eof).
+          01-04-30  Bfo     Main title in os9_usage implemented a little bit more readable.
+          01-05-01  Bfo     Problem of wrong process state fixed (way_to_icpt of own process not cleared).
+          01-05-01  Bfo     More than one MGR can run in parallel now (E_DEVBSY for open ptys implemented).
+          01-05-01  Bfo     Internal commands in MGR leave correctly (no broken pipe any more).
+          01-05-01  Bfo     CR/LF switch of pipes ignored now.
+          01-05-01  Bfo     SetStat BlkRd/BlkWr implemented.
+          01-05-01  Bfo     Obsolete syspath 2 problem fixed: int instead of ushort at CheckStartup.
+          01-05-04  Bfo     WinSock2 code included for Windows version.
+          01-05-05  Bfo     Debugging WinSock2 implementation.
+    2.62  01-05-06  Bfo     TCP/IP connection on Windows is partly working
+    -------------------
+
+          01-05-06  Bfo     Further debugging on the TCP/IP connection for Windows, "ftp" is running.
+          01-05-07  Bfo     "network.h" is more readable now with #define NET_SUPPORT
+          01-05-08  Bfo     MGR is running on Windows !! (DevReady not yet running, mouse movements needed)
+          01-05-09  Bfo     OS9exec version is visible now in Mac's window title.
+          01-05-10  Bfo     Read/Write/DevReady directly implemented with WINCON.h
+          01-05-14  Bfo     Asynchronous network support seems to run, MGP (MGR server on PC) is running.
+    2.63  01-05-17  Bfo     Linux version is up-to-date again
+    -------------------
+
+          01-05-18  Bfo     Things around intercept routine fixed (still jumping cursor from time to time)
+          01-05-19  Bfo     Closer look to arbitration
+          01-05-20  Bfo     Bug in WrBlk routine seen, temporary disabled
+          01-05-20  Bfo     setstat wrBlk/rdBlk must return result in d1 (not in d2)
+          01-05-20  Bfo     CtrlC reactivated in case no process is waiting for
+          01-05-20  Bfo     Strange mouse moving problems seems to be mgp problem
+          01-05-20  Bfo     FPU functionality at UAE seems to be incomplete !
+          01-05-21  Bfo     "sleep 0" getting a signal -> fixed now: F$Chain removes icpt routine now !!
+          01-05-23  Bfo     still some open problems with signal handler
+          01-05-23  Bfo     F$SRqmem tries to get too high amount -> Windows version stops.
+          01-05-24  Bfo     signal handling improved again.
+          01-05-26  Bfo     No specific code any more for wrBlk/rdBlk -> do it with write/read directly.
+          01-05-26  Bfo     icommands pipe handling is running again (remove contents before start).
+          01-05-26  Bfo     the mgratrap top/left problem seems to be missing setstat call 0x204.
+          01-05-27  Bfo     "process 0 illegal status pUnused" bug fixed: sprocess wrapper corrected
+          01-05-27  Bfo     Avoid unlink of programs/trap handlers in use. 
+    2.64  01-05-28  Bfo     Asynchronous CtrlC of Windows version synchronised now.
+    -------------------
+
+          01-05-29  Bfo     Clear some fields of process descriptor, which are not used.
+          01-06-02  Bfo     Start after fork documented correctly in debughalt log.
+          01-06-03  Bfo     Sibling implementation done as in in "real" OS-9
+          01-06-04  Bfo     Don't stop emulation if there are still sleeping processes.
+          01-06-13 ..
+       .. 01-07-01  Bfo/WO  Support from Wolfgang Ocker to fix the "links oben" problem.
+          01-07-02  Bfo     Problem MGR "links oben" seems to be SS_GNam.
+          01-07-02  Bfo     Virtual hostname included -> "links oben" windows at (0,0) problem is fixed !!
+    2.65  01-07-14  Bfo     Make it compileable for Linux again
+    -------------------
+    
+          01-07-14  Bfo     Start to implement network.c for Linux
+          01-07-15  Bfo     Linux: MGR is starting up, but mouse/keyboard not yet working
+          01-07-16  Bfo     ioctl( s, FIONREAD, &n ) implemented => MGR on Linux is running !!
+    2.66  01-07-16  Bfo     Right mouse button not yet correctly running under Linux (probably missing sleep)
+    -------------------
+    
+          01-07-16  Bfo     Make Linux paths independent from "/home/forsterb".
+          01-07-16  Bfo     search on higher path, if only Mac alias file (=empty for linux) is there.
+          01-07-20  Bfo     #ifdef win_linux introduced.
+    2.67  01-07-21  Bfo     quite stable network version for Linux.
+    -------------------
+
+          01-07-21  Bfo     Make "ftpd" and "telnetd" running on Linux (using special port 9921/9923)
+          01-07-22  Bfo     A wait loop is needed for "connect" (linux) for ftp data connection
+          01-07-22  Bfo     Module link display (big/little endian) fixed.
+          01-07-23  Bfo     Module link problem ("info_) fixed: Support_F_Chain in SPECTRAPOT software.
+          01-07-23  Bfo     bind socket problem (Windows32) AF_INET fixed.
+          01-07-23  Bfo     logout telnet is working now in Windows32.
+          01-07-23  Bfo     Check again under Linux. Logout is still not possible.
+          01-07-23  Bfo     Math functions are now correctly implemented for Linux.
+          01-07-29  Bfo     Try to avoid problem with logout telnet
+          01-07-30  Bfo     MyInetAddr is now correctly implemented for Linux.
+          01-07-30  Bfo     "init"/"OS9Boot" will be load now from current path.
+          01-07-30  Bfo     Start implementing directory access.
+    2.68  01-07-31  Bfo     Directory access ('dir') is implemented for Linux now.
+    -------------------
+    
+          01-08-01  Bfo     Directories ".." and "." are reversed order in Linux -> corrected.
+          01-08-01  Bfo     Some first problems with case sensitivity of files in Linux fixed.
+          01-08-02  Bfo     Replace ':2e' by '.' in Linux AppleTalk device's file names.
+          01-08-02  Bfo     Make '.AppleDouble' file invisible (Linux to AppleTalk).
+          01-08-03  Bfo     First startup on foreign file system is now possible (Linux).
+          01-08-03  Bfo     Case insensitive support for the Linux file system.
+          01-08-05  Bfo     Still problems with transparent file system
+          01-08-12  Bfo     "TermTrap" will not be produced correctly.
+          01-08-17  Bfo     fwrite/fread problem (Linux) fixed (fflush).
+          01-09-03  Bfo     "rename" problems (Linux) fixed.
+          01-09-04  Bfo     Playing around with inodes (Linux).
+          01-09-04  Bfo     file stat info implemented (file time/date and attributes).
+          01-09-05  Bfo     Problem Adjustpath touch "a/b" fixed.
+          01-09-05  Bfo     startPath correctly implemented for Linux.
+          01-09-05  Bfo     Internal "move" implemented for Linux. 
+    2.69  01-09-06  Bfo     Compiled for Mac/MPW/Windows and Linux.
+    -------------------
+
+          01-09-06  Bfo     pDsetatt problem fixed.
+          01-09-06  Bfo     Recognition of RBF images with any name.
+          01-09-07  Bfo     Starting environment with automatical mechanisms for Linux.
+          01-09-07  Bfo     Enhancements for "parsepathext".
+          01-09-07  Bfo     Automatical run with "startup".   
+          01-09-08  Bfo     SS_Size implemented with ftruncate: strange problems with file system fixed    
+          01-09-08  Bfo     Internal commands CR/LF display correctetly now for Linux also.
+          01-09-08  Bfo     Seek of directory is a little bit special in Linux -> adapt it correctly   
+          01-09-09  Bfo     Linux dir size calculated correctly
+          01-09-09  Bfo     Linux dir dump (in portions of 16 bytes) done correctly
+          01-09-09  Bfo     SS_Attr with dir attribute handled correctly
+          01-09-09  Bfo     Some adaptions for internal "rename".
+          01-09-09  Bfo     " " will be replaced by "_" in path names.
+          01-09-09  Bfo     Some adaptions for the ":2e" and "." paths.
+    2.70  01-09-09  Bfo     Runs quite stable on Linux
+    -------------------
+
+          01-09-09  Bfo     Start more object oriented way to access the file managers.
+          01-09-21  Bfo     All objects for the file managers are implemented. Replace table structure.
+          01-09-22  Bfo     The old proc table structures is removed now.
+          01-09-22  Bfo     Problem with valid subdir in Alias Resolver (Mac) fixed.
+    2.71  01-09-22  Bfo     After last process remove <cprocess> is no longer valid -> assign to procs[0].
+    -------------------
+
+          01-09-23  Bfo     All compiler warnings on Mac and Windows versions solved.
+          01-09-23  Bfo     (byte*)*a0 makes problems in Linux, if a0 is not defined: Take (byte**)a0.
+          01-09-23  Bfo     Some problems with "dummymod" (Linux) fixed.
+          01-09-23  Bfo     Put "diskcache" into the list of incompatible programs.
+          01-09-23  Bfo     Consistent system for calling some help texts (ihelp/dhelp) from in+outside.
+          01-09-23  Bfo     Special buffer internal commands also for pipes (already done for ptys).
+          01-09-24  Bfo     Methods for the file manager access improved.
+          01-09-25  Bfo     fPK -> fPTY / fPK_SCF -> fTTY.
+          01-09-26  Bfo     "network.h" and "file_rbf.h" no longer existing.
+    2.72  01-09-26  Bfo     NET_SUPPORT and RBF_SUPPORT allow connect/disconnect of these file managers
+    -------------------
+
+          01-09-26  Bfo     Inode access no longer at open, but in "ipaths" internal command.
+          01-09-28  Bfo     "linuxfiles.h" included / preparation for disconnected fileaccess system.
+          01-09-28  Bfo     TFS_SUPPORT (transparent file system) can be switched off now.     
+          01-09-29  Bfo     PIP_SUPPORT (pipe and PTY     system) can be switched off now.
+          01-09-29  Bfo     More consistent implementation of chd/deldir/makdir.
+          01-09-30  Bfo     "Free" finds now the default device.
+          01-09-30  Bfo     Scatter problem in allocation strategy of RBF fixed (really preferred blocks).
+          01-09-30  Bfo     SS_Lock implemented as pNop for fRBF and fDir.
+          01-10-02  Bfo     GetSysTicks for Linux implemented, "systime" is running correctly now.
+          01-10-06  Bfo     Try to fix the FPU problem at UAE (problems with fplot), not yet successful.
+          01-10-07  Bfo     Implementation for transparent file system at Windows version.
+          01-10-07  Bfo     Large RBF image with 1024 byte sectorsize prepared, RBF not yet adapted.
+          01-10-08  Bfo     "msdir.c" of Toni Ronkko included into source code for "opendir" issues.
+          01-10-09  Bfo     Implementation of transparent file system is ongoing.
+          01-10-17  Bfo     Problems with setattr (rmdir) solved via call_hostcmd.
+          01-10-18  Bfo     EOF condition for transparent read (Windows) corrected for cnt==0.
+          01-10-19  Bfo     Still problem with files, which are hold by program (Windows)
+          01-10-20  Bfo     "stat_" as replacement for "stat" implemented, "SpecTrap" can be compiled now.
+    2.73  01-10-20  Bfo     egetenv problem (MPW) -> copy to tmp: fixed.  
+    -------------------
+
+          01-10-20  Bfo     AdaptPath (EatBack) adaption.
+          01-10-20  Bfo     Some more problems at transparent file system fixed (getpos/setpos pair)
+          01-10-21  Bfo     systime handling enhanced for OS-9 process names, systime -o support.
+          01-10-22  Bfo     Problem writing file fixed in set_pos (overwritten tmp_pos variable).
+          01-10-22  Bfo     Problems with stat() fixed: Also problems for dir => stat no longer used !!
+    2.74  01-10-22  Bfo     Connection to a 1024 bit partition works perfectly (in read mode)
+    -------------------
+
+          01-10-22  Bfo     Bug fix in sector allocaton/deallocation RBF for sector sizes >256
+          01-10-22  Bfo     Problem with wrong RBF attributes makdir fixed.
+          01-10-23  Bfo     The 1024 bit RBF image works now perfectly (probably for all other sizes also).
+          01-10-28  Bfo     Some problems with the Windows version (two RBF devices) fixed.
+          01-10-29  Bfo     Handling for FPU corrected (stil a bug in the UAE fpp.c)
+          01-10-29  Bfo     "devs" can be called now (support of the D_DevTbl variable)
+          01-10-29  Bfo     Compatible: do not allow "sysdbg" any more
+          01-10-29  Bfo     Alphabetical ordering of the OS-9 program names in "systime".
+          01-11-01  Bfo     Enhanced 'systime' environment, total time is now 100 %
+          01-11-03  Bfo     Dir  time/date (Windows) will be displayed correctly.
+          01-11-03  Bfo     File time/date (Windows) will be written   correctly.
+          01-11-03  Bfo     Some additional utility procedures for attribute handling.
+          01-11-03  Bfo     'ls -la' support for ftp (not yet done for internal command).
+    2.75  01-11-04  Bfo     Chd /e and /f supported correctly now, dump of these directories is ok now also.
+    -------------------
+
+          01-11-04  Bfo     Kernel process tick accounting introduced.
+          01-11-05  Bfo     ftp multiple dir call problen solved: fPort not saved back !
+          01-11-05  Bfo     No "dbgNorm" for arbitration.
+    2.76  01-11-11  Bfo     Linux version compiled also, burn a CD of this version.
+    -------------------
+
+          01-11-11  Bfo     Primary and secondary IP address on Windows handled a little bit more clever.
+          01-11-12  Bfo     telnet "DevBusy" has to do with more frequent arbitration !
+          01-11-12  Bfo     Open for ptys no longer with hard restrictions to avoid "DevBusy" problem.
+          01-11-14  Bfo     Base load on Windows/Mac reduced (sleep in arbitration)
+          01-11-17  Bfo     Optical drive on SCSI (Mac) with RBF is accessible (slow) !
+          01-11-22  Bfo     Hard restrictions for ptys introduced again !
+          01-11-23  Bfo     Still searching problem of pty/tty close.
+          01-11-24  Bfo     Problem with pty/tty at "telnetd" fixed.
+    2.77  01-11-25  Bfo     Problem pty/tty close fixed: RemoveTTY has not been called on PC !! 
+    -------------------
+
+          01-11-25  Bfo     "ipaths" output format problems fixed.
+          01-11-25  Bfo     inhibit_pid for "debugprintf" introduced.
+          01-11-28  Bfo     Purchase order from RUAG is here !!
+          01-11-28  Bfo     "mdt" alertbox problem fixed: NUL chars no longer filtered
+          01-12-02  Bfo     "sigvec" support at F$GPrDsc.
+    2.78  01-12-02  Bfo     Signal problem RTE fixed: d1.w will be set to 0 now.
+    -------------------
+
+          01-12-02  Bfo     Last preparations for Project Meeting with Lukas at 4.12.2001.
+          01-12-02  Bfo     Problem of not starting "show" fixed.
+	2.79  01-12-04  Bfo	>>> Project session with Lukas Zeller at Rainstr. 1 / 4th December 2001 <<<
+	------------------- >>> Running Linux version sent to Hans-Werner Bippus at 01-12-09
+
+		  01-12-08	Bfo		Adaptions for correct RBFimage file creation support
+		  01-12-08  Bfo		Additional <mode> parameter for 'DeviceInit' and 'GetRBFName'.
+		  01-12-08  Bfo		IsDir(v) -> IsTrDir(v)
+		  01-12-08  Bfo     New poEnum: poDir
+		  01-12-09  Bfo     Search 'init' before 'OS9Boot'.
+		  01-12-10	Bfo		E17 image is more or less booteable !
+		  01-12-11	Bfo		"dch" and "diskcache" implemented as dummy int commands.
+	2.80  01-12-11  Bfo		=> problems with umgr_x: Wants a version > 2.2 and recognizes as 2.-128 !
+	-------------------
+
+		  01-12-11  Bfo		Make the major version change (to 3.00) because of umgr_x problem.
+		  01-12-11  Bfo		Don't choose 3.0X (because of "info" display).
+		  01-12-16  Bfo		"info" display is now adapted: V3.00 can be chosen.
+		  01-12-26	Bfo		Searching for SCSI after searching file image.
+		  01-12-27  Bfo		Cleanup (SIGHUP) correctly, if MGR leaving.
+		  01-12-27  Bfo		kill_process: sending of SIGHUP at close path handled correctly.
+		  01-12-27  Bfo		Pending send signals of dead process handled correctly now.
+		  01-12-27  Bfo		S_Connect: Really waiting for the MGP/X Server.
+		  01-12-28  Bfo     Unlink module after invalidate status of process.
+		  01-12-28  Bfo		"sigdat" is now implemented at process descriptor => SPOT V4.02 is running
+	3.00  01-12-29  Bfo		Close pty sends now Hangup signal to all connected processes. 
+	-------------------
+
+		  01-12-29  Bfo		ushort max-- > 1 problem at nullterm fixed (!!!)
+		  01-12-29  Bfo		Problems with too long RBF paths fixed.
+		  01-12-30	Bfo		Resolve_FSSpec for top directory adapted (no longer infinite loop)
+		  01-12-30	Bfo		Empty Windows top directory problems fixed (seen at A:).
+		  01-12-30	Bfo		Raw sector 0 visible for transparent file systems.
+	3.01  01-12-31  Bfo	>>> Last update in year 2001 <<<
+	-------------------
+
+		  02-01-01  Bfo		All dates changed to 2002, not yet available headers included.
+		  02-01-01  Bfo		Include mount/unmout/idevs internal commands
+		  02-01-01  Bfo		Allow slashes within int command display
+		  02-01-01  Bfo		idbg -q can be called directly
+		  02-01-01  Bfo		Bugs in vmod driver (Mac) fixed: d1/d2 missing, pict_title no longer char*
+		  02-01-02  Bfo		Advanced "idevs" display
+		  02-01-02	Bfo		/vmod driver is now fixed to syspath 5.
+		  02-01-02	Bfo		Make RBF Images possible within RBF devices, open a syspath for them.
+		  02-01-03  Bfo		Too big file problem (RBF): There is an upper limit for sectors per segment !!
+		  02-01-03  Bfo		<cmp> variable in 'ReleaseBlocks' is ushort instead of ulong !!
+		  02-01-03	Bfo		RBF "Babushka" is running better and better.
+		  02-01-04  Bfo		"mount" can choose now a mount device name and write protection.
+		  02-01-04  Bfo		More output display for "ipaths".
+	3.02  02-01-05  Bfo >>> CD for Reto Peter <<<
+	-------------------
+
+		  02-01-10  Bfo		More adaptions for the "babushka" system.
+		  02-01-13  Bfo		Debugging for several special cases of mounting devices.
+		  02-01-15	Bfo		h0 will be created as "dd", if not available as file.
+		  02-01-19	Bfo		sleep ticks will now be handled correctly at procs[1].		
+		  02-01-20	Bfo		PD_SAS support (very tight room on the delivery partitions).
+	3.03  02-01-20  Bfo     Image/Partition #000:251 problem fixed.
+	-------------------
+
+		  02-01-20	Bfo		Linux Version up-to-date
+		  02-01-20  Bfo     Jumpy mode in Windows under control: sleep every 200th time.
+		  02-01-27  Bfo     Read routine for /nil returns now E_EOF, as in real OS-9.
+		  02-01-27	Bfo		"con" problem fixed -> convert it to ".con".
+		  02-01-31	Bfo		net write problem (closing MGP window) fixed.
+		  02-01-31  Bfo		"dummymod" is again nr 0.
+		  
+		  02-02-04  luz     Started compiling OS9AppEmu in CW7. Note: Project file
+		                    has to be updated, so old CW5 project file is now
+		                    called OS9App_emu_CW5.mcp and new CW7 project file
+		                    is called OS9App_emu_CW7.mcp. The CW5 file eventually
+		                    needs some adaptations by Bfo (I have no CW5 any more).
+		  02-02-04  luz     Renamed this file to History.txt (to make it clickable in
+		                    Win32)
+
+          02-02-04  luz     reorganized global includes (new target_options.h file,
+                            made non-project includes precompilable: separated
+                            os9main_incl.h into two files, os9main_incl_precomp.h
+                            is new and contains pre-compilable stuff. Added
+                            os9Appemu.pch precompiled header source. Works
+                            fine in x86 environment.
+                            os9exec_incl.h can now be equal for all targets,
+                            differences will be in separate target_options.h in the
+                            appropriate subdirectories.
+                            NOTE: This change is only done in the OS9App_emu for Win
+                            project, other targets need (minor) adaptations:
+                            - put all target-specific DEFINEs into a file
+                              target_options.h
+                            - remove all target-specific stuff from os9exec_incl.h
+                              (or copy neutral version from OS9App_emu dir).
+                            To use precompiled headers, a precompiled header source
+                            file must be added to the project (like os9appemu.pch).
+                            This will compile to something like os9appemu_x86.mch or
+                            os9appemu_ppc.mch. This output filename must be entered
+                            into "Prefix File" in the "C/C++ Settings" Panel of
+                            the Target options in CW. If it is missing, all works
+                            as well, but sloooow (all win hdrs compiled for every source
+                            file).
+                          
+          02-02-05  luz     Removed msdir.c from (CW7) project, not used any more
+                            as MSL provides dirent now.
+                            Included windows.h/ws2spi.h in os9main_incl_precomp.h
+                            now.
+          02-02-05  luz     Added SCSI support for Win32 (NT4/W2K only) using SPTI
+                            (SCSI Pass Through Interface). Not really working yet,
+                            Alpha version!!! HARDWIRED to \\.\SCSI2 (3rd SCSI bus, that
+                            is the real SCSI in a System with two IDE HDs) and
+                            HARDWIRED to SCSI-ID=3. 
+                        
+                        
+          02-02-06  luz     Included luz test (with 2.79 sources) into newest
+                            (3.03) sources from Bfo.
+                            Detabbed all text files (no TAB chars any more). Please
+                            don't add TABs again (CW IDE-Preferences, "Editor"
+                            "Fonts&Tabs", "Tab Inserts Spaces").                            
+          02-02-06  luz     moved MAXRBFDEV to os9exec_nt.h (from file_rbf.c)
+
+          02-02-09	Bfo		SCSI ID fixed to 5 now, 
+          02-02-09  Bfo		Still problems: Expected no alignment restriction, but found mask=0x%lX\n",
+          02-02-09	Bfo		dirent_typ problem fixed (wrong order in #ifdef)
+          02-02-09  Bfo		"filescsi.c": Corrumpted Mac while loop fixed.
+          02-02-09  Bfo		More CW7 adaptions.
+          02-02-10  Bfo		Local "os9exec_incl.h" eliminated, "os9main_incl.h" renamed to "os9exec_incl.h".
+          02-02-10  Bfo		stdwrite (consio.c) must be higher in file to allow MPW to compile.
+   	3.04  02-02-10  Bfo     Version which is running for CW5 and CW7
+	-------------------    
+
+
+		  02-02-10  Bfo		All source changed back to DOS format (to be able to compile under Linux)
+		  02-02-10  Bfo		Reduce some of the Linux warnings.
+   	3.05  02-02-11  Bfo	>>> Version sent zu Lukas and CD burnt (and tested on NT 4.0: It works).    
+	-------------------
+
+          02-02-12  luz     Added -o=<syspath> option to idbg command line parser.
+          02-02-12  luz     Added Get_SSize to read actual sector size of SCSI device
+                            (not really used yet).
+          02-02-12  luz     Found missing os9_word() when loading sector size and
+                            SAS from device descriptor in utilstuff.c SCSI_Device()
+                            which in consequence messed up all SCSI accesses later.
+          02-02-12  luz     Found problem in RootLSN, where in case of a device
+                            without "Cruz", but with dev->sctSize<>0 (valid) the
+                            local sctSize var was not initialized resulting in
+                            random sector size being used afterwards.
+          02-02-12  luz     Win32: Format /h3 (SCSI) works (except that IBM HD
+                            returns too big # of blocks for some reason, and os9
+                            makes 40Meg out of it). Dsave and Dcheck to this /h3
+                            works as well.
+          02-02-12  luz     Win32/SCSI: added code to honour SCSI Device Capabilities,
+                            especially alignment. 
+
+		  02-02-13  Bfo		init_fmgrs() called before 'os9app -h' output / 'os9app -?' works also now.
+		  02-02-17  Bfo		screen coordinate preparations.
+		  02-02-17  Bfo     There are 4 new f_setsys calls for getting screen sizes:
+		  						- 2 of them are using screen width/height of the system
+		  						- 2 of them get the values of -x -y options of os9app/idbg calls.
+		  					Option -z can be used to go into fullscreen mode.
+		  02-02-18  Bfo     Special treatment for /L2 port address.
+		  02-02-18	Bfo		/L2 improvements
+		  02-02-18  Bfo		New routine 'mod_crc'.
+		  02-02-18  Bfo     Module CRCs of "init" / "le0" and "L2" will be fixed now (by using 'mod_crc')
+   	3.06  02-02-19  Bfo		ZZ/TEST_ENV 000:214 is fixed now.   
+	-------------------	    
+
+		  02-02-21  Bfo		Further adaptions for /L2 system.
+		  02-02-22  Bfo		User option -u introduced (used by start_SPE to leave os9exec after use)
+		  02-02-23  Bfo     arbitrate= true after writeln introduced.
+
+          02-02-25  luz     Implemented GetScreen (in fcalls.c) for Windows, now returns
+                            size of "desktop window".
+          02-02-25  luz     Re-integrated changes from 13.2.2002:
+                    luz     Added -a, -b and -ah options to command line (SCSI Adaptor,
+                            SCSI Bus and SCSI devices help (Inquiry list). Works fine.
+                    luz     Moved some init routines out of os9exec_nt() into a
+                            separate function that can be called BEFORE output of
+                            things like help texts etc.
+                    luz     Changed everything in SCSI/RBF to have not only a ScsiID,
+                            but always an AdaptorNo, a BusNo, a SCSI-ID and a LUN.
+          02-02-25  luz     Made enhanced SCSI addressing work (too small buffer for
+                            WINNT device name string, sectsize not copied
+                            from scsi[] array in SCSI_device()).
+          02-02-25  luz     made disk size in Disp_RBF_DevsLine() a long long (64 bit),
+                            as it displayed wrong values on my >4Gig disk.
+                            
+          02-02-25  Bfo     Wrong direction of copy at MoveBlk at serialaddress fixed.
+          			Bfo		Synchronisation problem (all processes are sleeping) fixed.
+          
+          02-02-26  luz     Added -ah, -a,-b and -l parameters to mount
+                            Added auto-search of SCSI adaptor
+                            Improved GetDSize such that it uses sector size of
+                            SCSI device when it cannot set the requested size
+                            (tmp_sct buffer is now always 2048 bytes to allow
+                            reading most sector0 sizes BEFORE real sector size is
+                            known).         
+          
+          02-03-03  Bfo		scsiadaptor_help no longer called for Mac version (at "filerbf.c")
+          					make -a/-b/-l options invisible for the Mac version.
+          					mount 2nd parameter has now again influence.
+          					GetScreen adapted for Linux compatibility.
+          					screenW and screenH defined as ulong.
+          					Ev_Link returns now evId correctly at d0 (not at d1).
+          					Ev_Signl connected to fcalls.
+          					Ev_Signal <=> Ev_Pulse (wrong order corrected now).                                              
+   	3.07  02-03-05  Bfo	>>> Updated version sent to Lukas  
+	-------------------	    
+
+		  02-03-05  Bfo		Creator and type definitions set for Mac version.
+		  			Bfo		Double click of OS-9 programs is possible now (for OS9MDIR).
+		  			Bfo		buses/bus adaption in filescsi
+		  			Bfo		String termination for SCSI vendor string corrected.
+		  02-03-06  Bfo		Startup sequences adapted / OS9MDIR bug fixed.
+		  02-03-07  Bfo		pWaiting problem pReadSysTaskExe fixed.
+		  02-03-08  Bfo		"dummymod" renamed to "OS9exec" (with all needed adaptions).
+		  	        Bfo     argv[0] bug for internal commands fixed.
+		  	        Bfo     "dummymod" no longer required as Mac resource, compiled new file for "OS9exec".
+		  	        Bfo     Search "dd" on "." and ".." correctly done on Mac.
+		  02-03-09  Bfo     File read problem Linux fixed. 		
+   	3.08  02-03-09  Bfo >>> CD V3.08 <<<
+	-------------------	    
+
+		  02/03/09  Bfo		Release setting to "final" in Mac resource.
+					Bfo		F$SysDbg will quit directly, if quitFlag is set.
+					Bfo		XOn/XOff problem at MGR fixed. 
+    				Bfo		The "list p_maloney.m ! head" (crash on Linux) is a problem of "list" V2.4 !!
+    				Bfo		mount with several name combinations works now perfectly.
+    	  02-03-15  Bfo		Raw device bug for mounted systems fixed.
+    	  		    Bfo		(RUAG notebook arrived: V3.08 works perfectly on it !)
+		  02-03-16	Bfo		link of "init" module done now on current path.
+		  	    	Bfo		debugprintf of cpid=0 problem fixed.
+		  02-03-20  Bfo		Played with the target options -> some slight adaptions.
+		  02-03-21  Bfo		E_EOF problem (MGR shell) fixed.
+		  02-03-24  Bfo     Beta for F$Alarm and Send Broadcast implemented.
+		  02-03-26	Bfo		Behaviour of dead process adapted, mid= MAXMODULES, os9h recognizes it.
+		  02-03-27  Bfo		activate arbitration for F$Permit (cooperative multitasking has restrictions)
+		  02-03-29	Bfo		Further implementations for F$Alarm
+		  			Bfo		CARO / PDF bug fixed.
+		  02-03-30  Bfo		Alarms are now completely implemented
+    3.09  02-03-31  Bfo     GNU GPL texts included everywhere.
+	-------------------	    
+
+		  02-03-31  Bfo		Last preparations for RUAG delivery
+		  02-03-31  Bfo		'other progs' problem (F$Fork internal commands) fixed.
+		  02-03-31  Bfo		EOF problem (p->consumers<=0) in pipefiles fixed.
+		  02-04-01  Bfo		Child/Sibling problem of internal commands fixed.
+    3.10  02-04-01  Bfo >>> FINAL RELEASE V3.10 FOR RUAG <<<
+	===================	    
+*/
+
+
+
+
+/* unresolved bugs: */
+/*
+    !!  "_" name convention on Windows (hawk_C0).
+    !!  "show" is using some unimplemented FPU calls.
+    
+    -   No appropriate error, if vt102 (Mac) is not accessible (fatal error/line 1111/...)
+    -   MPW uses its I/O currently partly also for the tty/pty system.
+    -   "mgencas" will not startup over network (Linux), "mme" has also problems.
+    -   "plotf" orig/max times not correct, problem in UAE FPU => workaround: use plotf instead of plotf020
+    -   Linux telnet close still quits emulator (recognition of end cond not correctly)
+    -   "inetd" superdaemon is not yet running correctly.
+    -   Mouse movements on XServer still slow and jumpy.
+    -   MGP slow startup problems (NT 4.0).
+    -   Problems 'ps -e' and check memory info of "ps" (for trap handlers)
+    -   inode support for transparent Mac file system
+    -	A$AtDate restricted to 248 days / will not adjust when system time changes
+
+   (+)  Take tty00/pty00 first (problems with arbitration)
+   (+)  setime_Y2K version with param passing --> 1900
+   (-)  'pragma unused' not possible with gcc (Linux): cuts the file there !!
+   (-)  mfree "os9serial" too small ??
+*/
+
+
+/* To do: */
+/*
+    -   RBF algorithm is not yet adapted for multisector support
+    -   RBF disk cache not yet implemented.
+    -   RBF: do read only, if write larger than a sector
+    -   SCSI subsystem for Linux
+    -   "ping" for Windows & Linux
+    -   socket close not done in every case
+    -   nameserver support for network
+    -   direct line editing on linux (over network)
+    -   inode support instead of file lists for Windows file access, at least faster lists
+    -   CtrlC/CtrlE support for Linux not yet done
+    -   Console echo off mode for Linux not implemented.
+    -   gs_ready Linux for CR
+    -   Faster directory read (Windows)
+    -   Implement internal command "ls" in UNIX style: "ls -la".
+    -   <in_recursion> for debug load
+    -   btree for Mac
+    -   btree optimisation
+    -   Implement an RBF RAM disk
+    -   too many file attributes set when writing to RBF (image)
+    -	termcap support for the DOS window.
+    -	fix the msnap mouse blocker problem.
+    -	fix the "mmore" MGR scroll problem.
+
+   (+)  return of d1.l from pipe-systasks
+   (+)  passing of d2.l to pipe open
+   (-)  Check if "ftp" under ISP is running with PowerFPU. Currently "ftp" of OS9TCP used.
+*/
+ 
+ 
+ 
+ 
+ 

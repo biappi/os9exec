@@ -1,0 +1,31 @@
+// 
+// Ê ÊOS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+// Ê ÊCopyright (C) 2002 Ê[ Lukas Zeller / Beat Forster ]
+//	  Available under http://www.synthesis.ch/os9exec
+// 
+// Ê ÊThis program is free software; you can redistribute it and/or 
+// Ê Êmodify it under the terms of the GNU General Public License as 
+// Ê Êpublished by the Free Software Foundation; either version 2 of 
+// Ê Êthe License, or (at your option) any later version. 
+// 
+// Ê ÊThis program is distributed in the hope that it will be useful, 
+// Ê Êbut WITHOUT ANY WARRANTY; without even the implied warranty of 
+// Ê ÊMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// Ê ÊSee the GNU General Public License for more details. 
+// 
+// Ê ÊYou should have received a copy of the GNU General Public License 
+// Ê Êalong with this program; if not, write to the Free Software 
+// Ê ÊFoundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+
+#include "mactypes.r"
+
+resource 'vers' (2, purgeable) {
+    0x3,
+    0x10,
+    final,
+    0x1,
+    verGrSwiss,
+    "3.10",
+    "OS9exec V3.10, © 1993-2002 by luz/bfo"
+};
