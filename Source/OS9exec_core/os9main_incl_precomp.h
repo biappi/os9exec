@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 // precompilable includes (files that are not part of
@@ -133,9 +136,9 @@
 
 #ifdef macintosh
   #if __MWERKS__ >= CW7_MWERKS
-    #define TICKS_PER_SEC 60 /* seems to buggy in CW7 */ 
+    #define TICKS_PER_SEC 100 /* new strategy with UpTime */
   #else
-    #define TICKS_PER_SEC CLOCKS_PER_SEC
+    #define TICKS_PER_SEC CLOCKS_PER_SEC /* seems to buggy in CW7 */ 
   #endif 
 #endif
 
@@ -234,6 +237,7 @@ typedef struct dirent dirent_typ;
   #include <Resources.h>
   #include <Errors.h>
   #include <Script.h> /* required for smSystemScript */
+  #include <DriverServices.h>
 #endif
 
 

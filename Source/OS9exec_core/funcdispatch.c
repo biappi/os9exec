@@ -481,11 +481,22 @@ static void update_L2( ulong t )
 /* get system tick count and subtract the start tick */
 ulong GetSystemTick(void)
 {
+    #define NanoDiv 250000
     ulong t;
-    
+      
     #ifdef macintosh
-      t=    TickCount();
-
+      AbsoluteTime a;
+      static ulong v= 0xffffffff / NanoDiv + 1;
+      static ulong m= 0xffffffff % NanoDiv + 1;
+      
+      a= UpTime();
+//    t=  TickCount();
+      
+      t= a.lo;
+      t= t - a.hi*(NanoDiv-m);
+      t= t /       NanoDiv;
+      t= t + a.hi*v;
+                  
     #elif defined(windows32)
       t= GetTickCount()/10; /* take 100 instead of 1000 on PC */
 
