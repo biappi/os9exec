@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/10/27 23:14:59  bfo
+ *    get_mem/release_mem no longer with param <mac_asHandle>
+ *
  *    Revision 1.12  2002/10/16 20:06:29  bfo
  *    Make it compatible for gcc 3.2
  *
@@ -1747,6 +1750,38 @@ os9err pHsetFD( ushort pid, syspath_typ* spP, byte *buffer )
 /* adapt time/date of a file */
 
 
+#ifdef MACFILES
+static Boolean check_vod( short *volid, long *objid, long *dirid, char* fN )
+{
+    Boolean conv= false;
+    char    *m, *a, *b, *c, v[ 20 ];
+    
+    if (*volid==0  &&   *objid<MAXDIRS) {
+            m= dirtable[*objid-1];
+        if (m!=NULL) {
+            sprintf( v, "%c", m[ 0 ] );
+            *volid= -atoi( v );
+            
+            a= strstr( m," " ); a++;
+            b= strstr( a," " ); b++;
+            c= strstr( b," " ); c++;
+            
+            memset( v, 0, 20    );
+            memcpy( v, a, b-a-1 ); *objid=  atoi( v );
+            
+            memset( v, 0, 20    );
+            memcpy( v, b, c-b-1 ); *dirid=  atoi( v );
+            
+            strcpy( fN,c );
+            conv= true;
+        }
+    }
+    
+    return conv;
+} /* check_vod */
+#endif
+
+
 
 /* get file descriptor for file specified by "sector" */
 os9err pHgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP,
@@ -1764,12 +1799,13 @@ os9err pHgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP,
           HParamBlockRec hpb;
       } pbu;
     
-      Str255      fName;
+      Str255      fName, fN;
       short       volid;
       long        objid, dirid;
       byte        isdir;
       OSErr       oserr;
-      
+      Boolean     conv;
+          
     #elif defined win_linux
       char        name  [OS9PATHLEN];
       char        result[OS9PATHLEN];
@@ -1781,6 +1817,8 @@ os9err pHgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP,
       volid= (*fdinf >> IDSHIFT) & VOLIDMASK; if (volid != 0       ) volid |= VOLIDEXT;
       objid=  *fdinf &  IDMASK; if (objid & IDSIGN) objid |= IDEXT;
 
+      conv= check_vod( &volid,&objid,&dirid, &fN );
+      
       /* try to locate the file/dir */
       /* --- first assume that it is a file and try to resolve ID */
       pbu.hpb.fidParam.ioVRefNum= volid;
@@ -1790,16 +1828,26 @@ os9err pHgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP,
       oserr = PBResolveFileIDRefSync(&pbu.hpb);
       debugprintf(dbgFiles,dbgDetail,("# pHgetFDsect: resolving volid=%d, fileid=$%lX returned oserr=%d\n",volid,objid,oserr));
 
-      if (oserr==notAFileErr) {
-          /* it must be a directory */
-          dirid= objid;
-          isdir= true;
+      if (oserr==paramErr) {
+              isdir= !conv; /* netatalk handling */
+          if (isdir) dirid= objid;
+          else {
+              strcpy( fName,fN );
+              c2pstr( fName );
+          }
       }
       else {
-          /* it is a file */
-          if (oserr) return host2os9err(oserr,E_SEEK); /* probably because no file ID ref has been created */
-          dirid= pbu.hpb.fidParam.ioSrcDirID; /* get dir ID */
-          isdir= false;
+          if (oserr==notAFileErr) {
+              /* it must be a directory */
+              dirid= objid;
+              isdir= true;
+          }
+          else {
+              /* it is a file */
+              if (oserr) return host2os9err(oserr,E_SEEK); /* probably because no file ID ref has been created */
+              dirid= pbu.hpb.fidParam.ioSrcDirID; /* get dir ID */
+              isdir= false;
+          }
       }
       
       /* parent ID, vRefNum and (if not isdir, fName) are now set */
@@ -1940,7 +1988,30 @@ os9err pDclose( ushort pid, syspath_typ* spP )
 
 
 #ifdef macintosh
-static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP)
+static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
+{
+    dirent_typ* dEnt= NULL;
+    char hashV[ 80 ];
+    char fName[ OS9NAMELEN ];
+
+    if (objid>= IDSIGN || 
+        objid< -IDSIGN) {
+        strcpy( fName, deP->name );
+        fName[ strlen(fName)-1 ] &= 0x7f;
+        
+        sprintf( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
+        FD_ID  ( hashV, dEnt, &objid );
+        debugprintf( dbgAnomaly,dbgNorm,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
+                                           objid, -IDSIGN,IDSIGN-1, deP->name ));
+                      
+        deP->fdsect= objid; /* assign the new value */
+    } /* if */
+
+    deP->fdsect |= objid & IDMASK;
+} /* assign_fdsect */
+
+
+static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *spP )
 /* get directory entry referred to by index
  *  index=0 returns parent     ("..")
  *  index=1 returns dir itself (".")
@@ -1954,7 +2025,7 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
     char*   q;
 
     union {
-        CInfoPBRec cipb;
+        CInfoPBRec    cipb;
         HParamBlockRec hpb;
     } pbu;
 
@@ -1964,36 +2035,43 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
     /* set the vrefnum of the file or dir */
     volid= spc->vRefNum; /* get volume ID */
                                        /* (volid>VOLIDSIGN-1 || volid<-VOLIDSIGN)) */
-    if (debugcheck(dbgAnomaly,dbgNorm) && (volid>0           || volid< VOLIDMIN)) {
+    if (debugcheck(dbgAnomaly,dbgNorm) && (volid>=0          || volid< VOLIDMIN)) {
         uphe_printf("get_dir_entry: vRefnum=%hd out of 3-bit range\n",volid); 
     }
-    deP->fdsect=((volid & VOLIDMASK) << IDSHIFT);
+
+    deP->fdsect= (volid & VOLIDMASK) << IDSHIFT;
     memset(deP->name, 0,DIRNAMSZ); /* clear before using */
 
     /* now get the entry */
     if (index==0) {
         /* parent directory ist the FIRST entry (even if Dibble said it's the second!) */
         strcpy(deP->name,".\xAE");
-        objid= spc->parID; /* save to check range later */
+        
+            objid= spc->parID; /* save to check range later */
         if (objid==fsRtParID) {
             /* this points to the (nonexistant) "root of root" */
-            objid=fsRtDirID; /* let parent entry point again to the root */
+            objid= fsRtDirID; /* let parent entry point again to the root */
         }
-        deP->fdsect |= (objid & IDMASK);
-        debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='..', volid=%d, dirid=$%lX, fdsect=$%08lX\n",index,volid,objid,deP->fdsect));
+
+        dirid= objid;
+        assign_fdsect( deP, volid,objid,dirid );
+        debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='..', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
+                                           index, volid, dirid, deP->fdsect ));
     }
     else {
 		    err= getCipb( &pbu.cipb, spc );
         if (err) return err;
         
         dirid= pbu.cipb.dirInfo.ioDrDirID; /* copy the sucker */
+
         /* now check for "." */
         if (index==1) {
             /* current directory is the SECOND entry */
             strcpy(deP->name,"\xAE");
-            objid=dirid;
-            deP->fdsect |= (objid & IDMASK);
-            debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='.', volid=%d, dirid=$%lX, fdsect=$%08lX\n",index,volid,objid, deP->fdsect));
+            objid= dirid;
+            assign_fdsect( deP, volid,objid,dirid );
+            debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='.', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
+                                               index, volid, objid, deP->fdsect ));
         }
         else {
             /* some entry within this dir */
@@ -2003,50 +2081,51 @@ static os9err get_dir_entry(ushort index, os9direntry_typ *deP, syspath_typ *spP
             pbu.cipb.hFileInfo.ioVRefNum    = volid;
             pbu.cipb.hFileInfo.ioFDirIndex  = index-1;  /* use index, range 1..n */
             pbu.cipb.hFileInfo.ioDirID      = dirid;
-            oserr = PBGetCatInfoSync(&pbu.cipb);
-            if (oserr==fnfErr) return os9error(E_EOF); /* this is no error, but only no more items in the folder */
 
-            if (oserr) return host2os9err(oserr,E_READ);
+                oserr = PBGetCatInfoSync(&pbu.cipb);
+            if (oserr==fnfErr) return          os9error(E_EOF); /* this is no error, but only no more items in the folder */
+            if (oserr)         return host2os9err(oserr,E_READ);
+
+            /* there is an entry for this index */
+            n=fName[0]>DIRNAMSZ ? DIRNAMSZ : fName[0];
+            strncpy(deP->name,&fName[1], n); /* copy the name */
+                
+            q= deP->name;
+            while (true) { /* convert the spaces in the file names to underlines */
+  	  	        q= strstr( q," " ); if (q==NULL) break;
+                q[ 0 ]= '_';
+            } /* loop */
+
+                
+            if (fetchnames) {
+                /* show slashes at filename beginnings as periods (that's what Fetch FTP does on OS9->mac */
+                if (deP->name[0]=='/') deP->name[0]='.';
+            }
+            
+            deP->name[n-1] |= 0x80; /* set old-style terminator */
+            if (pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask) {
+                objid= pbu.cipb.dirInfo.ioDrDirID;
+                assign_fdsect( deP, volid,objid,dirid );
+                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: dirname='%#s', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
+                                                   index, fName, volid, objid, deP->fdsect ));
+            }
             else {
-                /* there is an entry for this index */
-                n=fName[0]>DIRNAMSZ ? DIRNAMSZ : fName[0];
-                strncpy(deP->name,&fName[1], n); /* copy the name */
+                objid= pbu.cipb.hFileInfo.ioDirID; /* get file ID, which returned in ioDirID by PBGetCatInfo */
+                /* make sure that a file ID reference exists to find the file by pHgetFDsect later */
+                pbu.hpb.fidParam.ioNamePtr  = fName;
+                pbu.hpb.fidParam.ioVRefNum  = volid;
+                pbu.hpb.fidParam.ioSrcDirID = dirid;
+                oserr= PBCreateFileIDRefSync(&pbu.hpb);
                 
-                q= deP->name;
-                while (true) { /* convert the spaces in the file names to underlines */
-  	  	            q= strstr( q," " ); if (q==NULL) break;
-                    q[ 0 ]= '_';
-                } /* loop */
-
-                
-                if (fetchnames) {
-                    /* show slashes at filename beginnings as periods (that's what Fetch FTP does on OS9->mac */
-                    if (deP->name[0]=='/') deP->name[0]='.';
-                }
-                deP->name[n-1] |= 0x80; /* set old-style terminator */
-                if (pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask) {
-                    objid=pbu.cipb.dirInfo.ioDrDirID;
-                    deP->fdsect |= (objid & IDMASK);                
-                    debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: dirname='%#s', volid=%d, dirid=$%lX, fdsect=$%08lX\n",index,fName,volid,objid,deP->fdsect));
-                }
-                else {
-                    objid=pbu.cipb.hFileInfo.ioDirID; /* get file ID, which returned in ioDirID by PBGetCatInfo */
-                    /* make sure that a file ID reference exists to find the file by pHgetFDsect later */
-                    pbu.hpb.fidParam.ioNamePtr  = fName;
-                    pbu.hpb.fidParam.ioVRefNum  = volid;
-                    pbu.hpb.fidParam.ioSrcDirID = dirid;
-                    oserr=PBCreateFileIDRefSync(&pbu.hpb);
-                    debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: PBCreateFileIDRef returns oserr=%d\n",oserr));
-                    /* now assign file id (for which a reference now should exist) */
-                    deP->fdsect |= (objid & IDMASK);
-                    debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: filename='%#s', volid=%d, fileid=$%lX, filerefid=$%lX, fdsect=$%08lX\n",index,fName,volid,objid,pbu.hpb.fidParam.ioFileID,deP->fdsect));
-                }
+                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: PBCreateFileIDRef returns oserr=%d\n",oserr));
+                /* now assign file id (for which a reference now should exist) */
+                assign_fdsect( deP, volid,objid,dirid );
+                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: filename='%#s', volid=%d, fileid=$%lX, filerefid=$%lX, fdsect=$%08lX\n",
+                                                   index, fName, volid, objid, pbu.hpb.fidParam.ioFileID, deP->fdsect));
             }
         }
-    }
-    if (objid>=IDSIGN || objid< -IDSIGN && debugcheck(dbgAnomaly,dbgNorm)) {
-        uphe_printf("get_dir_entry: object ID=%ld is out of range %ld..%ld\n",objid,-IDSIGN,IDSIGN-1); /* better: (bfo) */
-    }
+    } /* if (index==0) */
+
     return 0;
 } /* get_dir_entry */
 #endif
