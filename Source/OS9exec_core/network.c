@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/10/27 23:32:34  bfo
+ *    Release memory at pRclose done in every case
+ *    get_mem/release_mem without param <mac_asHandle>
+ *
  *    Revision 1.6  2002/09/11 16:59:19  bfo
  *    Import "os9exec_incl.h" as the first file
  *
@@ -105,6 +109,7 @@ os9err pNSOpt   ( ushort pid, syspath_typ* spP, ulong  *d1,    ulong *d2  );
 os9err pNgPCmd  ( ushort pid, syspath_typ *spP, ulong  *a0 );
 os9err pNsPCmd  ( ushort pid, syspath_typ *spP, ulong  *a0 );
 /* ------------------------------------------------------------------------- */
+
 
 
 void init_Net( fmgr_typ* f )
