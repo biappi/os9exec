@@ -218,6 +218,48 @@ resource 'DITL' (rUserAlert, purgeable) {
 };
 
 
+
+resource 'ALRT' (rVT102Alert, purgeable) {
+    {40, 20, 170, 330},
+    rVT102Alert,
+    { /* array: 4 elements */
+        /* [1] */
+        OK, visible, silent,
+        /* [2] */
+        OK, visible, silent,
+        /* [3] */
+        OK, visible, silent,
+        /* [4] */
+        OK, visible, silent
+    },
+    alertPositionParentWindowScreen
+};
+
+
+resource 'DITL' (rVT102Alert, purgeable) {
+    { /* array DITLarray: 3 elements */
+        /* [1] */
+        {80, 120, 100, 200},
+        Button {
+            enabled,
+            "Sorry"
+        },
+        /* [2] */
+        {10, 60, 70, 300},
+        StaticText {
+            disabled,
+            "'VT102 Modul' can't be found at\nthe System Extensions Folder !"
+        },
+        /* [3] */
+        {8, 8, 40, 40},
+        Icon {
+            disabled,
+            2
+        }
+    }
+};
+
+
 resource 'WIND' (rWindow, preload, purgeable) {
     {60, 40, 290, 160},
     noGrowDocProc, visible, noGoAway, 0x0, "Traffic",noAutoCenter
