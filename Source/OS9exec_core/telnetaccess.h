@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 /*      Telnet/TTY interface Routines
 **      by Beat Forster (beat.forster@ggaweb.ch)
