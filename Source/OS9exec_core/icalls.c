@@ -30,6 +30,22 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
+
 #include "os9exec_incl.h"
 
 
@@ -42,8 +58,8 @@ static os9err OS9_I_OpenCreate( regs_type *rp, ushort cpid, Boolean cre )
 /* common routine for both I$Open and I$Create, for internal use only */
 {
     os9err    err;
-    ushort    mode    = loword(rp->d[0]);
-    char*     os9_name= (char*)rp->a[0];
+    ushort    mode    = loword(rp->d[0]) & 0x00ff; /* consider only byte => bugfix for the */
+    char*     os9_name= (char*)rp->a[0];           /* poCreateMask problem */
     char      os9_path[OS9PATHLEN]; 
     char*     pastpath;
     
