@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2003/05/05 17:57:02  bfo
+ *    Activate most of the ramDisk things even without RAM_SUPPORT
+ *
  *    Revision 1.30  2003/04/25 19:31:30  bfo
  *    Handle Netatalk IDs out of range correctly now (using FD_ID)
  *
@@ -778,14 +781,8 @@ static struct _sgs init_consoleopts = {
 };
 
 /* get options from SCF device */
-os9err pSCFopt(ushort pid, syspath_typ* spP, byte* buffer)
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    memcpy( buffer,&init_consoleopts, OPTSECTSIZE );
-    return 0;
+os9err pSCFopt(ushort /* pid */, syspath_typ*, byte* buffer)
+{   memcpy( buffer, &init_consoleopts, OPTSECTSIZE ); return 0;
 } /* pSCFopt */
 
 
@@ -817,15 +814,9 @@ const byte rbfstdopts[OPTSECTSIZE]=
               0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
               0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0 };
               
-os9err pRBFopt( ushort pid, syspath_typ* spP, byte* buffer )
+os9err pRBFopt( ushort /* pid */, syspath_typ*, byte* buffer )
 /* get standard options for RBF file */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    memcpy( buffer,rbfstdopts,OPTSECTSIZE );    
-    return 0;
+{   memcpy( buffer, rbfstdopts, OPTSECTSIZE ); return 0;
 } /* pRBFopt */
 
 /* ------------------------------------------------------------------------ */
@@ -1424,12 +1415,12 @@ int stat_( const char* pathname, struct stat *buf )
 
 Boolean DirName( const char* pathname, ulong fdsect, char* result )
 {
-    #ifndef linux
-    #pragma unused(pathname,fdsect,result)
-    #endif
-
     Boolean ok= false;
 
+    #ifdef macintosh
+      #pragma unused(pathname,fdsect,result)
+    #endif
+    
     #ifdef win_linux
       DIR*        d;
       dirent_typ* dEnt;
@@ -1459,12 +1450,12 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result )
 
 ulong My_Ino( const char* pathname )
 {
-    #ifndef linux
-    #pragma unused(pathname)
-    #endif
-
     ulong ino= 0;
 
+    #ifdef macintosh
+      #pragma unused(pathname)
+    #endif
+    
     #ifdef win_linux
       char        p[OS9PATHLEN];
       char*       q;
