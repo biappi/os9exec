@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/09/01 17:54:51  bfo
+ *    some more variables of the real "procid" record used now
+ *
  *    Revision 1.12  2002/08/13 21:55:46  bfo
  *    grp,usr and prior at the real prdsc now
  *
@@ -332,18 +335,18 @@ static void AssignNewChild( ushort parentid, ushort pid )
     ushort*  idp= &procs[parentid].pd._cid;
     while  (*idp!=0) {
         if (os9_word(*idp)==pid) {            
-            *idp= procs[*idp].pd._sid;
+            *idp= procs[pid].pd._sid;
             debugprintf( dbgProcess,dbgNorm,( "# Assign new child: pid=%d\n",os9_word(*idp) ) );
             return;
         }
         
-        idp= &procs[*idp].pd._sid;
+        idp= &procs[os9_word(*idp)].pd._sid;
     } /* while */
 } /* AssignNewChild */
 
 
 
-os9err kill_process(ushort pid)
+os9err kill_process( ushort pid )
 /* kill a process
  * Note: exiterr must be set before calling kill_process (by F_Exit or F_Kill)
  */
@@ -360,7 +363,9 @@ os9err kill_process(ushort pid)
 
     /* remove some more resources */
     close_usrpaths     ( pid );
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: usrpaths closed\n" ));
     unlink_traphandlers( pid );
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: traphandlers unlinked\n" ));
     
     /* first orphan eventual children of the process */
     for (k=0; k<MAXPROCESSES; k++) {
@@ -373,9 +378,12 @@ os9err kill_process(ushort pid)
         }
     }
     if (cp->state==pDead) return os9error(E_IPRCID); /* avoid killing again, because double close is not good */
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: set to unused\n" ));
 
     /* now kill the process */
         parentid= os9_word(cp->pd._pid); /* get parent ID */
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: parentid=%d\n", parentid ));
+    
     if (parentid>0 &&
         parentid<MAXPROCESSES) {
         /* there is a parent process */
@@ -386,6 +394,7 @@ os9err kill_process(ushort pid)
     else 
         set_os9_state( pid, pUnused ); /* there's no parent => invalidate descriptor */
    
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: process killed\n" ));
 
     /* module can't be unlinked as long as process is not pDead or pUnused */
     unlink_module( cp->mid );
@@ -417,6 +426,7 @@ os9err kill_process(ushort pid)
         cp->last_mco->spP->lastwritten_pid= 0; /* disconnect CtrlC/E signal */
         cp->last_mco= NULL;
     }
+    debugprintf(dbgProcess,dbgNorm,("# kill_process: CtrlC/E signal discnnected\n" ));
     
     A_Kill  ( pid ); /* remove all alarms of this process */
     free_mem( pid ); /* IMPORTANT: use this only after all other resources are freed (because they might have memory allocated, such as traphandlers) */
