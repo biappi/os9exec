@@ -1010,6 +1010,7 @@
           02-07-01  Bfo     Carbon version now correctly running in Carbon Window, but still in MacOS9 env !?
           02-07-02  Bfo     Preparations done for /r0 RAM disk implementation.
           02-07-03  Bfo     RAM disk is now implemented (fixed to 2MB), it seems to work !!
+          02-07-06  Bfo     E_FULL problem fixed.
     3.14  02-07-??  Bfo     ...
     -------------------
 */
