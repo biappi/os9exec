@@ -31,7 +31,20 @@
 /**********************************************/
 
 
+
 #include "os9exec_incl.h"
+
+#ifdef USE_UAEMU
+#include "config.h"
+#include "options.h"
+#include "luzstuff.h"
+#include "memory.h"
+#include "readcpu.h"
+#include "newcpu.h"
+#include "compiler.h"
+#endif
+
+
 
 /* debugging support */
 /* ================= */
