@@ -30,6 +30,19 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 
 /* OS9exec/nt internal rename */
@@ -98,20 +111,20 @@ os9err int_rename(ushort cpid, int argc, char **argv)
             switch (tolower(*p)) {
                 case '?' :  usage(argv[0],cpid); return 0;
                 case 'x' :  exedir= 1; break;
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             usage(argv[0],cpid); return 1;
             }   
         }
         else {
             if (nargc>=MAXARGS) { 
-                uphe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1;
+                upe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1;
             }
             nargv[nargc++]= argv[h];
         }
     }   
         
     if (nargc!=2) {
-        uphe_printf("Error: two arguments required\n"); return 1;
+        upe_printf("Error: two arguments required\n"); return 1;
     }
 
 

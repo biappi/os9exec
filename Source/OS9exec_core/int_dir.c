@@ -30,6 +30,19 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 
 /* OS9exec/nt internal dir */
@@ -54,7 +67,7 @@
         err= call_hostcmd( "ls",  pid,argc-1,&argv[1] );
 
       #else
-        uphe_printf( "internal dir not yet implemented %%%\n" );
+        upe_printf( "internal dir not yet implemented %%%\n" );
         err= 1; /* SIGWAKE */
       #endif
       
@@ -146,17 +159,17 @@ os9err int_dir(ushort pid, int argc, char **argv)
                 case 'e' :  extlisting= true; break;
                 case 'a' :  invis=1; break;
                 case 'x' :  exedir=1; break;
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             usage(argv[0],pid); return 1;
             }   
         }
         else {
-            if (nargc>=MAXARGS) { uphe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1; }
+            if (nargc>=MAXARGS) { upe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1; }
             nargv[nargc++]=argv[h];
         }
     }       
     if (nargc>1) {
-        uphe_printf("Error: no or one argument allowed\n"); return 1;
+        upe_printf("Error: no or one argument allowed\n"); return 1;
     }
 
     #ifdef macintosh
