@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2003/01/09 21:56:45  bfo
+ *    Some F$RTE adaptions
+ *
  *    Revision 1.19  2003/01/02 14:34:22  bfo
  *    Some type castinmg things fixed
  *
@@ -661,7 +664,7 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
         
         if (cp->state==pWaitRead) { /* make the save status ready again */
                      svd=        &cp->savread; /* pointer to process' saved registers */
-            memcpy( (void*)&svd->r,     (void*)&cp->rteregs, sizeof(regs_type) );
+            memcpy( (void*)&svd->r, (void*)&cp->rteregs, sizeof(regs_type) );
                      svd->vector= cp->rtevector;
                      svd->func  = cp->rtefunc;
             
