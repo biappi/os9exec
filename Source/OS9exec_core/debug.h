@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/07/30 16:47:19  bfo
+ *    E-Mail address beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.3  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
