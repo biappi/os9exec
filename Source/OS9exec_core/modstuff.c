@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/10/02 19:03:13  bfo
+ *    Update_MDir implementation at "modstuff" (taken partly from OS9_F_GModDr)
+ *
  *    Revision 1.6  2002/09/11 17:20:30  bfo
  *    Make an internal copy of the built-in "init" module: ref to var, not to const
  *
@@ -137,35 +140,40 @@ mod_exec* Init_ptr= (mod_exec*)Init_mod;   /* ptr to Init module */
 
 
 
+// NOTE: The handles are no longer supported (bfo) !!!
+// /* get modulehandle/modulebase, indepentently of system */
+// #ifdef macintosh
+//   static Handle os9h( int k )
+//   {   
+//  	 if (k>=MAXMODULES) return NULL;
+//       return os9modules[k].modulehandle;
+//   } /* os9h */
+//    
+// #else
+//   static mod_exec* os9h( int k )
+//   {   
+//       if (k>=MAXMODULES) return NULL;
+//       return os9modules[k].modulebase;
+//   } /* os9h */   
 
-/* get modulehandle/modulebase, indepentently of system */
-#ifdef macintosh
-  static Handle os9h( int k )
-  {   
-  	  if (k>=MAXMODULES) return NULL;
-      return os9modules[k].modulehandle;
-  } /* os9h */
-    
-#else
-  static mod_exec* os9h( int k )
-  {   
-      if (k>=MAXMODULES) return NULL;
-	  return os9modules[k].modulebase;
-  } /* os9h */   
-#endif
+// #endif
 
 
 
-/* get module pointer, indepentently of system */
+// NOTE: The handles are no longer supported (bfo) !!!
+// /* get module pointer, indepentently of system */
 mod_exec* os9mod( int k )
 {
-    if (os9h(k)==NULL) return NULL;
+//  if (os9h(k)==NULL) return NULL;
+//  
+//  #ifdef macintosh
+//      return *(os9modules[k].modulehandle);
+//  #else
+
+    if (k<0 || k>=MAXMODULES) return NULL;
+    return os9modules[k].modulebase;
     
-    #ifdef macintosh
-      return *(os9modules[k].modulehandle);
-    #else
-      return   os9modules[k].modulebase;
-    #endif
+//  #endif
 } /* os9mod */     
 
 
@@ -336,11 +344,11 @@ void init_modules()
     int k;
    
     for(k=0; k<MAXMODULES; k++) {
-        #ifdef macintosh
-          os9modules[k].modulehandle= NULL; /* no modules yet */
-        #else
+//      #ifdef macintosh
+//        os9modules[k].modulehandle= NULL; /* no modules yet */
+//      #else
           os9modules[k].modulebase  = NULL; /* no modules yet */
-        #endif
+//      #endif
     
         os9modules[k].isBuiltIn= false;
         os9modules[k].linkcount= 0;
@@ -386,20 +394,33 @@ void release_module(ushort mid, Boolean modOK)
      /* special treatment for 'init' module: disconnect at the globals */
         if (ustrcmp(pNam,"init")==0) init_module= NULL;
     }
-                  
-    #ifdef macintosh
-      UnlockMemRange(mod,(unsigned long) GetHandleSize(os9modules[mid].modulehandle));
-      if (os9modules[mid].isBuiltIn)                 /* release the resource */
-          ReleaseResource(os9modules[mid].modulehandle); /* forget the block */
-      else      /* module was not loaded from a resource, just return memory */
-          DisposeHandle  (os9modules[mid].modulehandle);
-               
-      os9modules[mid].modulehandle= NULL;
 
-    #else
-      if (!os9modules[mid].isBuiltIn) free(mod); /* free only if not builtin */
-      os9modules[mid].modulebase  = NULL;
-    #endif
+
+// %%% simply forget the memory of the resources !! 
+//  #ifdef macintosh
+//    if (os9modules[mid].isBuiltIn) {
+//        UnlockMemRange(mod,(unsigned long) GetHandleSize(os9modules[mid].modulehandle));
+//        ReleaseResource(os9modules[mid].modulehandle); /* forget the block */
+//    }
+//  #endif
+
+
+// NOTE: The handle part is now invisible (bfo) !!!
+//  #ifdef macintosh
+//    UnlockMemRange(mod,(unsigned long) GetHandleSize(os9modules[mid].modulehandle));
+//    if (os9modules[mid].isBuiltIn)                 /* release the resource */
+//        ReleaseResource(os9modules[mid].modulehandle); /* forget the block */
+//    else      /* module was not loaded from a resource, just return memory */
+//        DisposeHandle  (os9modules[mid].modulehandle);
+//             
+//    os9modules[mid].modulehandle= NULL;
+//
+//  #else
+
+    if (!os9modules[mid].isBuiltIn) release_mem( mod ); /* free only if not built-in */
+    os9modules[mid].modulebase  = NULL;
+
+//  #endif
      
     os9modules[mid].isBuiltIn= false;      
     os9modules[mid].linkcount= 0;
@@ -469,7 +490,7 @@ int NextFreeModuleId( char* name )
         k= 0;
     }
     else {                             /* this one is still empty => ok */
-        for (k=1; k<MAXMODULES; k++) { if (os9h(k)==NULL) break; }
+        for (k=1; k<MAXMODULES; k++) { if (os9mod(k)==NULL) break; }
     }
     
     debugprintf(dbgModules,dbgNorm,( "# NextFreeModuleId: %3d '%s'\n", k,name ));
@@ -488,12 +509,16 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     ushort  mid, mid0, oldmid;
     ushort  linkmid;
     Boolean isBuiltIn;
-    
+
     #ifdef macintosh
-      Handle    theModuleH,theRemainH;
-    #else
-      mod_exec *theRemainP;
+      Handle hh;
     #endif
+    
+//  #ifdef macintosh
+//    Handle    theModuleH,theRemainH;
+//  #else
+      mod_exec *theRemainP;
+//  #endif
     
     mod_exec* theModuleP;
     mod_dev*  dsc;
@@ -541,9 +566,10 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
       if (name==NULL) {
           if (mid>=MAXMODULES) return os9error(E_DIRFUL); /* module directory is full */
 
-              theModuleH = GetResource('OS9C', 0);
-          if (theModuleH!=NULL) {
+              hh = GetResource('OS9C', 0);
+          if (hh!=NULL) {
               isBuiltIn= true;
+              theModuleP= *hh;
               goto modulefound;
           }
           return os9error( linkstyle ? E_MNF:E_PNNF );
@@ -593,11 +619,11 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
             	OS9exec_ptr= (mod_exec*)OS9exec_mod;
                 dsize      =     sizeof_OS9exec_mod;
            	
-            	#ifdef macintosh
-            	  theModuleH= &OS9exec_ptr;
-                #else
+//            	#ifdef macintosh
+//          	  theModuleH= &OS9exec_ptr;
+//              #else
                   theModuleP=  OS9exec_ptr;
-                #endif
+//              #endif
              
                 isBuiltIn = true;
                 break; /* found */
@@ -609,15 +635,15 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
                 dsize   =     sizeof_Init_mod;
                 
                 /* it can't be const def, because it wil be changed afterwards */
-                pp= get_mem( dsize,true );
+                pp= get_mem( dsize );
            	
-            	#ifdef macintosh
-             	           theModuleH= pp;
-                  memcpy( *theModuleH, Init_ptr, dsize );
-                #else
+//            	#ifdef macintosh
+//           	           theModuleH= pp;
+//                memcpy( *theModuleH, Init_ptr, dsize );
+//              #else
                            theModuleP= pp;
                   memcpy(  theModuleP, Init_ptr, dsize );
-                #endif
+//              #endif
              
                 isBuiltIn = true;
                 break; /* found */
@@ -706,7 +732,7 @@ openit:
             err= usrpath_getstat( pid,path,SS_Size, NULL,NULL,NULL,&dsize,NULL ); 
         if (err) return err;
         
-            pp= get_mem(dsize,true);
+            pp= get_mem( dsize );
         if (pp==NULL) {
             err= usrpath_close(pid, path); 
             return os9error(E_NORAM); /* not enough memory */
@@ -714,27 +740,27 @@ openit:
             
         loadbytes= dsize;
             
-        #ifdef macintosh
-          theModuleH= pp;
-          debugprintf(dbgModules,dbgNorm,
-            ("# load_module: allocated memory @ $%08lX\n", *theModuleH));
-            
-          HLock  (theModuleH); /* prevent moving around */
-          err= usrpath_read( pid,path, &loadbytes, *theModuleH, false ); 
-
-        #else
+//      #ifdef macintosh
+//        theModuleH= pp;
+//        debugprintf(dbgModules,dbgNorm,
+//          ("# load_module: allocated memory @ $%08lX\n", *theModuleH));
+//          
+//        HLock  (theModuleH); /* prevent moving around */
+//        err= usrpath_read( pid,path, &loadbytes, *theModuleH, false ); 
+//
+//      #else
           theModuleP= pp;
           err= usrpath_read( pid,path, &loadbytes,  theModuleP, false ); 
-        #endif
+//      #endif
 
         if (err || loadbytes<dsize) {
             err= usrpath_close(pid, path); return E_READ;
         }             
               
-        #ifdef macintosh
-          HUnlock(theModuleH); /* now move is allowed again */
+//      #ifdef macintosh
+//        HUnlock(theModuleH); /* now move is allowed again */
           isBuiltIn= false;        /* is no resource-based module */
-        #endif
+//      #endif
                         
         debugprintf(dbgModules,dbgNorm,
           ("# load_module: loaded %ld bytes from module's file\n", loadbytes));
@@ -771,7 +797,7 @@ openit:
             debugprintf(dbgModules,dbgDetail,
               ("# load_module: module file size = %ld\n",dsize));
 
-                pp= get_mem(dsize,true);
+                pp= get_mem( dsize );
             if (pp==NULL) {
                 #ifdef MACFILES
                   FSClose(refNum);
@@ -781,43 +807,50 @@ openit:
                 return os9error(E_NORAM); /* not enough memory */
             }
             
-            #ifdef macintosh
-              theModuleH= pp;
+//          #ifdef macintosh
+//            theModuleH= pp;
+//            debugprintf(dbgModules,dbgNorm,
+//              ("# load_module: allocated memory %ld @ $%08lX\n", dsize, *theModuleH));
+//
+//            HLock(theModuleH); /* prevent moving around */
+//            #ifdef MACFILES
+//              loadbytes= dsize; /* now read module */
+//                  oserr= FSRead(refNum, &loadbytes, (void*) *theModuleH);
+//              if (oserr) {
+//                  FSClose(refNum);
+//                  return host2os9err(oserr,E_READ);
+//              }
+//            #else
+//                  loadbytes= fread( *theModuleH, 1,dsize, stream );
+//              if (loadbytes==0) {
+//                  fclose(stream);
+//                  return c2os9err(errno,E_READ);
+//              }
+//            #endif
+//            
+//            HUnlock(theModuleH); /* now move is allowed again */
+//            isBuiltIn= false;    /* is no resource-based module */
+//          
+//          #else /* NOT macintosh */
+              theModuleP= pp;
               debugprintf(dbgModules,dbgNorm,
-                ("# load_module: allocated memory %ld @ $%08lX\n",
-                    dsize, *theModuleH));
-
-              HLock(theModuleH); /* prevent moving around */
+                ("# load_module: allocated memory %ld @ $%08lX\n", dsize, theModuleP));
+                
               #ifdef MACFILES
                 loadbytes= dsize; /* now read module */
-                    oserr= FSRead(refNum, &loadbytes, (void*) *theModuleH);
+                    oserr= FSRead( refNum, &loadbytes, theModuleP );
                 if (oserr) {
                     FSClose(refNum);
                     return host2os9err(oserr,E_READ);
                 }
               #else
-                    loadbytes= fread( *theModuleH, 1,dsize, stream );
+                    loadbytes= fread( theModuleP, 1,dsize, stream );
                 if (loadbytes==0) {
                     fclose(stream);
                     return c2os9err(errno,E_READ);
                 }
               #endif
-              
-              HUnlock(theModuleH); /* now move is allowed again */
-              isBuiltIn= false;    /* is no resource-based module */
-            
-            #else /* NOT macintosh */
-              theModuleP= pp;
-              debugprintf(dbgModules,dbgNorm,
-                ("# load_module: allocated memory %ld @ $%08lX\n", 
-                    dsize, theModuleP));
-                
-                  loadbytes= fread( theModuleP, 1,dsize, stream );
-              if (loadbytes==0) {
-                  fclose(stream);
-                  return c2os9err(errno,E_READ);
-              }
-            #endif /* NOT macintosh */
+//          #endif /* NOT macintosh */
 
             
             debugprintf(dbgModules,dbgNorm,
@@ -844,33 +877,33 @@ openit:
 modulefound:
     mid0= mid;     /* take the first one if using module groups */
     while (true) {
-        #ifdef macintosh
-          MoveHHi (theModuleH); /* move at highest possible location */
-          HNoPurge(theModuleH); /* prevent purging */
-          HLock   (theModuleH); /* prevent moving around */
-   
-          os9modules[mid].modulehandle= theModuleH; /* enter handle in free table entry */
-          os9modules[mid].isBuiltIn   = isBuiltIn;
-          
-          if (!isBuiltIn) { /* now make sure it stays swapped in */
-              dsize=(ulong) GetHandleSize(theModuleH);
-              LockMemRange              (*theModuleH,dsize);
-              Flush68kCodeRange         (*theModuleH,dsize);
-          }
-          theModuleP= (mod_exec*)*theModuleH;
-    
-          /* get module pointer */
-          debugprintf(dbgModules,dbgNorm,
-            ("# load_module: found: mid=%d, theModuleP=%08lX, [theModule]=%08lX\n", 
-                mid, (ulong) theModuleP,*((ulong *) theModuleP)));
-
-        #else
+//      #ifdef macintosh
+//        MoveHHi (theModuleH); /* move at highest possible location */
+//        HNoPurge(theModuleH); /* prevent purging */
+//        HLock   (theModuleH); /* prevent moving around */
+// 
+//        os9modules[mid].modulehandle= theModuleH; /* enter handle in free table entry */
+//        os9modules[mid].isBuiltIn   = isBuiltIn;
+//        
+//        if (!isBuiltIn) { /* now make sure it stays swapped in */
+//            dsize=(ulong) GetHandleSize(theModuleH);
+//            LockMemRange              (*theModuleH,dsize);
+//            Flush68kCodeRange         (*theModuleH,dsize);
+//        }
+//        theModuleP= (mod_exec*)*theModuleH;
+//  
+//        /* get module pointer */
+//        debugprintf(dbgModules,dbgNorm,
+//          ("# load_module: found: mid=%d, theModuleP=%08lX, [theModule]=%08lX\n", 
+//              mid, (ulong) theModuleP,*((ulong *) theModuleP)));
+//
+//      #else
           os9modules[mid].modulebase= theModuleP; /* enter pointer in free table entry */   
           os9modules[mid].isBuiltIn = isBuiltIn;
           debugprintf(dbgModules,dbgNorm,
             ("# load_module: (found) mid=%d, theModuleP=%08lX, ^theModuleP=%08lX\n",
                 mid, (ulong) theModuleP, os9_long(*((ulong *) theModuleP))));
-        #endif
+//      #endif
    
         os9modules[mid].linkcount= 1; /* module is loaded and linked */
    
@@ -915,20 +948,20 @@ modulefound:
           ("# load_module: Name of module loaded='%s'\n",realmodname));
 
         /* %%% replacement with higher revision number is not yet implemented */
-        #ifdef macintosh
-          os9modules[mid].modulehandle= 0; /* temporarily disable entry */
-          if ((oldmid= find_mod_id(realmodname))<MAXMODULES) {
-              /* there is already another module with the same name */
-              os9modules[oldmid].linkcount++; /* link the old one */
-              os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
-              release_module(mid, false); /* forget it again */
-              *midP=oldmid;
-              return 0; /* ... and throw away just loaded module */
-          }
-
-          os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
-
-        #else
+//      #ifdef macintosh
+//        os9modules[mid].modulehandle= 0; /* temporarily disable entry */
+//        if ((oldmid= find_mod_id(realmodname))<MAXMODULES) {
+//            /* there is already another module with the same name */
+//            os9modules[oldmid].linkcount++; /* link the old one */
+//            os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
+//            release_module(mid, false); /* forget it again */
+//            *midP=oldmid;
+//            return 0; /* ... and throw away just loaded module */
+//        }
+//
+//        os9modules[mid].modulehandle= theModuleH; /* re-enable entry */
+//
+//      #else
           os9modules[mid].modulebase=0; /* temporarily disable entry */
           if ((oldmid= find_mod_id(realmodname))<MAXMODULES) {
               /* there is already another module with the same name */
@@ -940,7 +973,7 @@ modulefound:
           }
           
           os9modules[mid].modulebase= theModuleP; /* re-enable entry */
-        #endif
+//      #endif
         
         /* special treatment for the "init" module: set version+revision 
            and connect it to the globals */
@@ -995,19 +1028,19 @@ modulefound:
             mid = NextFreeModuleId( "" ); /* name not yet available */
         if (mid>=MAXMODULES) return os9error(E_DIRFUL); /* module directory is full */
                 
-            pp= get_mem(dsize,true);                    /* get the memory */
-        if (pp==NULL)        return os9error(E_NORAM);  /* not enough memory */
+            pp= get_mem( dsize );                                 /* get the memory */
+        if (pp==NULL)        return os9error(E_NORAM);         /* not enough memory */
         
-        #ifdef macintosh
-          theRemainH= pp;
-          MoveBlk     ( (byte*)*theRemainH, (byte*)theModuleP, dsize );
-          SetHandleSize(        theModuleH, modSize ); /* adapt to new size */
-          theModuleH=           theRemainH;
-        #else
+//      #ifdef macintosh
+//        theRemainH= pp;
+//        MoveBlk     ( (byte*)*theRemainH, (byte*)theModuleP, dsize );
+//        SetHandleSize(        theModuleH, modSize ); /* adapt to new size */
+//        theModuleH=           theRemainH;
+//      #else
           theRemainP= pp;
           MoveBlk      ( (byte*)theRemainP, (byte*)theModuleP, dsize );
           theModuleP=           theRemainP;
-        #endif
+//      #endif
     } /* loop */
     
     /* --- bad module */
@@ -1061,8 +1094,8 @@ os9err link_load( ushort pid, char *name, ushort *midP )
 void unlink_module( ushort mid )
 /* unlink a module by ID */
 {
-    if (mid>=MAXMODULES) return;
-    if (os9h(mid)==NULL) return;
+    if (mid>=MAXMODULES)   return;
+    if (os9mod(mid)==NULL) return;
    
     if (os9modules[mid].linkcount>1) { /* still used by other processes */
         os9modules[mid].linkcount--; return;
