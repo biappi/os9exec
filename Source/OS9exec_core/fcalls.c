@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/08/13 21:55:47  bfo
+ *    grp,usr and prior at the real prdsc now
+ *
  *    Revision 1.10  2002/08/13 21:21:12  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -699,9 +702,9 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
  *          (a0) = Buffer pointer
  *       
  * Output:  none
- * Error:   none
+ * Error:   E$IPrcID
  *                         
- * Restrictions:This is a dummy  
+ * Restrictions: Some of the fields are not implemented
  */
 {
     procid pd; /* this is a local construction buffer for the Process descriptor */
@@ -717,9 +720,9 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
     memcpy( &pd,&cp->pd, sizeof(procid) );
     
-    pd._pid   = os9_word(cp->parentid);
-    pd._sid   = os9_word(cp->siblingid);
-    pd._cid   = os9_word(cp->childid);
+//  pd._pid   = os9_word(cp->parentid);
+//  pd._sid   = os9_word(cp->siblingid);
+//  pd._cid   = os9_word(cp->childid);
     
     pd._usp   = (byte*) os9_long( rp->a[7] );
     
@@ -1326,11 +1329,11 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
                 
         /* --- now actually cause process switch */
         if (!intCmd) {
-        	if (cp->childid!=0) np->siblingid= cp->childid;
+        	if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
 
-        	cp->childid=   newpid;  /* this is the child */
-            currentpid =   newpid;  /* continue execution in new process  */
-            set_os9_state( newpid, pActive ); /* make this process active */
+        	cp->pd._cid= os9_word(newpid);                  /* this is the child */
+            currentpid =          newpid;  /* continue execution in new process  */
+            set_os9_state       ( newpid, pActive ); /* make this process active */
         }
         
         arbitrate= true;
@@ -1407,9 +1410,9 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
         /* now chain; exe dir only, load style */
     }
     
-    grp= os9_word( cp->pd._group ); /* inherit grp.usr from the replaced process */
-    usr= os9_word( cp->pd._user  );
-    sib= cp->siblingid; /* save it */
+    grp= os9_word(cp->pd._group); /* inherit grp.usr from the replaced process */
+    usr= os9_word(cp->pd._user);
+    sib= os9_word(cp->pd._sid); /* save it */
     
         prior= loword(rp->d[4]);
     if (prior==0) prior= os9_word( cp->pd._prior );
@@ -1418,7 +1421,7 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
     if (!err) err= prepFork ( cpid, mpath,  newmid,
                               paramptr, rp->d[2], rp->d[1], 
                               numpaths, grp,usr, prior, &intCmd );
-    cp->siblingid= sib; /* restore it */
+    cp->pd._sid= os9_word(sib); /* restore it */
 
     /* return the parameter memory block, it is now allocated at the process */
     if (paramptr!=NULL) release_mem( paramptr,false );
@@ -1463,7 +1466,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
         for (k=2; k<MAXPROCESSES; k++) { /* start at process 2  */
                 cp=  &procs[k];
             if (cp->state   !=pUnused && 
-                cp->parentid==cpid) {
+                os9_word(cp->pd._pid)==cpid) {
                 
                 /* this is a child */
                 if (cp->state==pDead) {

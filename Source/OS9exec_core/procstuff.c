@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/08/13 21:55:46  bfo
+ *    grp,usr and prior at the real prdsc now
+ *
  *    Revision 1.11  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -99,10 +102,10 @@ void show_processes(void)
             upo_printf("%3s %c %3d %3s $%08lX %5d $%08lX $%08lX %-12s %s\n",
                         idstr,
                         sta,
-                        cp->parentid,
+               os9_word(cp->pd._pid),
                         mIDs,
                         (ulong) mod,
-                        os9_word(cp->pd._prior),
+               os9_word(cp->pd._prior),
                         cp->memstart,
                         cp->memtop,
                         get_syscall_name(cp->lastsyscall),
@@ -212,9 +215,9 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->pd._wbytes= 0;
             
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */          
-            cp->parentid   = parentid;     /* remember parent */
-            cp->siblingid  = 0;            /* has not yet siblings */
-            cp->childid    = 0;            /* has not yet children */
+            cp->pd._pid    = os9_word(parentid); /* remember parent */
+            cp->pd._sid    = 0;            /* has not yet siblings */
+            cp->pd._cid    = 0;            /* has not yet children */
             cp->mid        = MAXMODULES;   /* no main module yet */
             cp->memstart   = cp->memtop=0; /* no memory yet */
             cp->lastsignal = 0;            /* no signal, rteregs invalid */
@@ -223,10 +226,12 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->last_mco   = NULL;         /* last console buffer */
             cp->wakeUpTick = 0;            /* to be woken up */
             cp->pW_age     = 0;            /* sleep aging */
+
             init_mem(npid);                /* init memory block list */
             init_traphandlers(npid);       /* init traphandlers */
             init_usrpaths    (npid);       /* init user paths */
             init_exceptions  (npid);       /* init exception handlers */
+
             cp->stdoutfilter= NULL;        /* no stdout filter function yet */
             cp->filtermem   = NULL;        /* no memory allocated for filter yet */
             
@@ -324,15 +329,15 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
 
 static void AssignNewChild( ushort parentid, ushort pid )
 {
-    ushort*  idp= &procs[parentid].childid;
+    ushort*  idp= &procs[parentid].pd._cid;
     while  (*idp!=0) {
-        if (*idp==pid) {            
-            *idp= procs[*idp].siblingid;
-            debugprintf(dbgProcess,dbgNorm,("# Assign new child: pid=%d\n",*idp));
+        if (os9_word(*idp)==pid) {            
+            *idp= procs[*idp].pd._sid;
+            debugprintf( dbgProcess,dbgNorm,( "# Assign new child: pid=%d\n",os9_word(*idp) ) );
             return;
         }
         
-        idp= &procs[*idp].siblingid;
+        idp= &procs[*idp].pd._sid;
     } /* while */
 } /* AssignNewChild */
 
@@ -351,7 +356,7 @@ os9err kill_process(ushort pid)
     
     if (cp->state==pUnused) return os9error(E_IPRCID); /* process does not exist */
     debugprintf(dbgProcess,dbgNorm,("# kill_process: killing pid=%d, parentid=%d, exiterr=%d\n",
-                                       pid,cp->parentid,cp->exiterr));
+                                       pid, os9_word(cp->pd._pid),cp->exiterr));
 
     /* remove some more resources */
     close_usrpaths     ( pid );
@@ -359,24 +364,23 @@ os9err kill_process(ushort pid)
     
     /* first orphan eventual children of the process */
     for (k=0; k<MAXPROCESSES; k++) {
-    			kp= &procs[k];
-        if     (kp->state!=pUnused &&
-                kp->parentid==pid) {
-                kp->parentid=0; /* earlier: MAXPROCESSES */
-            if (kp->state==pDead) set_os9_state( k, pUnused );
-            
+    			   kp= &procs[k];
+        if        (kp->state!=pUnused &&
+          os9_word(kp->pd._pid)==pid) {
+                   kp->pd._pid= 0; /* earlier: MAXPROCESSES */
+            if    (kp->state==pDead) set_os9_state( k,pUnused );
             debugprintf(dbgProcess,dbgNorm,("# kill_process: orphaned child pid=%d\n",k));
         }
     }
     if (cp->state==pDead) return os9error(E_IPRCID); /* avoid killing again, because double close is not good */
 
     /* now kill the process */
-        parentid= cp->parentid; /* get parent ID */
+        parentid= os9_word(cp->pd._pid); /* get parent ID */
     if (parentid>0 &&
         parentid<MAXPROCESSES) {
         /* there is a parent process */
         set_os9_state( pid, pDead ); /* keep it there until parent recognizes */
-        if (pid==interactivepid) interactivepid=parentid; /* direct Cmd-'.' to parent now */
+        if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
         AssignNewChild( parentid,pid );
     }
     else 
@@ -701,7 +705,7 @@ void do_arbitrate(void)
             sprocess->state==pWaitRead) {
             /* --- search if there is a dead child of that process */
             for (pid=0; pid<MAXPROCESSES; pid++) {
-                if (procs[pid].parentid==spid && procs[pid].state==pDead) {
+                if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
                     deadpid= pid;
                     break;
                 }
@@ -853,7 +857,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     ushort       err, mty;
     mod_exec*    theModule;
     process_typ* cp= &procs[newpid];
-    process_typ* pp= &procs[cp->parentid];  
+    process_typ* pp= &procs[os9_word(cp->pd._pid)];  
     regs_type*   rp= &cp->os9regs;
 
     #ifdef INT_CMD
@@ -881,10 +885,10 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
           prepArgs( paramptr, &argc,&arguments );
           arguments[0]= (char*)mpath;  /* set module name */
           
-          if (pp->childid!=0) pp->siblingid= pp->childid;
+          if (pp->pd._cid!=0) pp->pd._sid= pp->pd._cid;
           
-          pp->childid= newpid; /* this is the child */
-          currentpid = newpid; /* use the correct identification */
+          pp->pd._cid= os9_word(newpid); /* this is the child */
+          currentpid =          newpid; /* use the correct identification */
           
           /* execute command */
           err= callcommand( mpath,newpid, argc,arguments );

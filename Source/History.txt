@@ -1070,7 +1070,8 @@
           02-08-13  Bfo     The state <dead> will be handled correctly now (state=0x9100)
           02-08-13  Bfo     Some more variables defined at the real procid struct now.
           02-08-13  Bfo     grp,usr and prior at the real prdsc now
-    3.16  02-08-??  Bfo     ...
+          02-08-14  Bfo     Some more variables of the real "procid" record used now
+    3.16  02-09-??  Bfo     ...
     -------------------
 */
 

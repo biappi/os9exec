@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.6  2002/07/30 16:47:20  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -230,7 +233,7 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
     }
     else {
         sprintf(  idstr,"%c%d", pid==currentpid ? '*':' ', pid );
-        sprintf( pidstr,  "%d", cp->parentid );
+        sprintf( pidstr,  "%d", os9_word(cp->pd._pid) );
         mod=    get_module_ptr( cp->mid );
     }       
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2002/08/13 21:55:46  bfo
+ *    grp,usr and prior at the real prdsc now
+ *
  *    Revision 1.14  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -730,10 +733,10 @@ typedef struct {
                 
                 /* general state */
                 pstate_typ state;           /* process' state */
-                ushort mid,                 /* the process' module ID */
-                       parentid,            /* the parent  process ID */
-                      siblingid,            /* the sibling process ID */
-                        childid;            /* the child   process ID */
+                ushort mid;                /* the process' module ID */
+//              ushort parentid,            /* the parent  process ID */
+//                    siblingid,            /* the sibling process ID */
+//                      childid;            /* the child   process ID */
 //              ushort _group,              /* group number */
 //                     _user,               /* user  number */
 //                     _prior;              /* the process' priority */

@@ -138,7 +138,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
             
                 case 'w' :  if (*(p+1)=='=') p+=2;
                             else {  k++; /* next arg */
-                                if (k>=argc)    { without_pid= procs[pid].parentid; break; }
+                                if (k>=argc)    { without_pid= os9_word(procs[pid].pd._pid); break; }
                                 p= argv[k];
                             }
                             if (sscanf( p,"%d",  &without_pid )<1)  without_pid= 0;
@@ -146,7 +146,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                             
                 case 'j' :  if (*(p+1)=='=') p+=2;
                             else {  k++; /* next arg */
-                                if (k>=argc)   { justthis_pid= procs[pid].parentid; break; }
+                                if (k>=argc)   { justthis_pid= os9_word(procs[pid].pd._pid); break; }
                                 p= argv[k];
                             }
                             if (sscanf( p,"%d", &justthis_pid )<1) justthis_pid= 0;
