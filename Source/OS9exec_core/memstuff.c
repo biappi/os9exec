@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/10/27 23:52:28  bfo
+ *    REUSE_MEM handling introduced
+ *
  *    Revision 1.8  2002/10/15 18:24:19  bfo
  *    memtable handling prepared
  *
@@ -179,7 +182,7 @@ ushort install_memblock(ushort pid, void *base, ulong size)
 void release_mem( void* membase )
 /* process independent part of memory deallocation */
 {
-    ulong memsz= 0;
+    ulong memsz= 1;
     int  k;
     memblock_typ* m;
     
@@ -204,6 +207,7 @@ void release_mem( void* membase )
     
     #ifdef REUSE_MEM
       if (memsz==0) printf( "STRANGE BLOCK at %08X\n", membase );
+      if (memsz==1) printf( "UNUSED  BLOCK at %08X\n", membase );
       else {
           for (k=0;k<MAX_MEMALLOC;k++) { /* do not really release the memory on Mac */
                   f= &freeinfo.f[k];
