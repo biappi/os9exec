@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2002/10/02 18:52:54  bfo
+ *    GetScreen function is now defined at "utilstuff"
+ *
  *    Revision 1.25  2002/09/22 20:54:34  bfo
  *    CutUp handling corrected /
  *    Min nr of dir entries is 2 ( ".." and "." )
@@ -1087,7 +1090,7 @@ Boolean FileFound( const char* pathname )
 
 
 
-static void CutUp( char* pathname, const char* prev )
+void CutUp( char* pathname, const char* prev )
 /* cut out /xxxx/../ sequences */
 {
     char *v, *q, *qs;

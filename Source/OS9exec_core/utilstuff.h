@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/10/02 18:52:29  bfo
+ *    GetScreen function is now defined at "utilstuff"
+ *
  *    Revision 1.12  2002/09/19 21:59:20  bfo
  *    "CutUp" invisible, "CutUp"/"Eatback" adapted for Win/Mac + OS9
  *
@@ -110,6 +113,8 @@ Boolean     OpenTDir ( const char* pathname, DIR** d );
 dirent_typ* ReadTDir                       ( DIR*  d );
 Boolean PathFound    ( const char* pathname );
 Boolean FileFound    ( const char* pathname );
+
+void    CutUp( char* pathname, const char* prev );
 void    EatBack            ( char* pathname );
 
 
