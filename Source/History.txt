@@ -1235,7 +1235,9 @@
           04-11-25  Bfo     _XXX_ things introduced
           04-11-28  Bfo     Preparations for MACH compilation (on MacOSX 10.3 Panther)
           04-11-30  Bfo     No more MACH compilation errors
-    3.26  04-??-??  Bfo     ...
+          04-12-07  Bfo     network: Zero reading correction
+          04-12-17  Bfo     Renamed to ifdef MACOS9
+    3.26  05-01-22  Bfo     SS_Opt: fdPos info for foreign file system (problem with "diff" fixed).
     -------------------    
 */
 
