@@ -1007,6 +1007,7 @@
           02-06-29  Bfo     Problems with CW5 for printer, switch it off there.
           02-06-30  Bfo     Check if KeyToBuffer overflow, seems not to be the case.
           02-06-30  Bfo     More timeout for Windows SCSI, returns E_READ/W_WRITE as errors.
+          02-07-01  Bfo     Carbon version now correctly running in Carbon Window, but still in MacOS9 env !?
     3.14  02-07-??  Bfo     ...
     -------------------
 */
