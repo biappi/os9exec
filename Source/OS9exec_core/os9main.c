@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2004/12/04 00:10:56  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.8  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -148,6 +151,12 @@ char* egetenv( const char* name )
       
       char*   rslt;
       Boolean cm= false;
+      
+      #ifdef windows32
+        Boolean isWin= true;
+      #else
+        Boolean isWin= false;
+      #endif
     #endif
 
 
@@ -182,7 +191,7 @@ char* egetenv( const char* name )
       
     #else
       /* getenv for use under MPW and for PC/Linux version */
-      rslt  =  getenv ( name );
+      rslt= getenv( name );
       
       #ifdef macintosh
         strcpy( tmp,rslt ); /* make a local copy !! */
@@ -218,12 +227,17 @@ char* egetenv( const char* name )
             }
             sv= rslt;
             
-            if (!F_Avail(rslt)) {
+            if (!F_Avail(rslt) || isWin) {
                 if (cm)  rslt= "/dd/CMDS"; /* make it suitable for RBF devices */
                 else {
                     debugprintf(dbgStartup,dbgNorm,("# startPath: '%s'\n", startPath));
                     strcpy( tmp,startPath );
                     if (*rslt!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
+                    
+                    #ifdef windows32
+                      if (*rslt==PATHDELIM && tmp[ strlen(tmp)-1 ]==PATHDELIM) rslt++;
+                    #endif
+                    
                     strcat( tmp,rslt );
                     rslt=   tmp;
                     debugprintf(dbgStartup,dbgNorm,("# startPath: '%s'\n", rslt));
@@ -266,7 +280,7 @@ void eAdvanceCursor(void)
     #else
       #error not implemented
     #endif
-}
+} /* eAdvanceCursor */
 
 
 
