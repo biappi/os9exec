@@ -510,7 +510,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x13;
+	exec_revision= 0x14;
 	#endif
 } /* getversions */
 
@@ -1058,7 +1058,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#endif
 	
 
-	#if defined MACTERMINAL && !defined USE_CARBON
+	#if defined MACTERMINAL && defined powerc && !defined USE_CARBON
 	  Install_AppleEvents(); /* do this as early as possible */
 	#endif
 
