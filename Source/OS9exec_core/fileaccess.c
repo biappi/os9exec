@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2003/04/25 19:35:47  bfo
+ *    "Netatalk" support
+ *
  *    Revision 1.13  2002/10/27 23:14:59  bfo
  *    get_mem/release_mem no longer with param <mac_asHandle>
  *
@@ -2075,12 +2078,12 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
         }
         else {
             /* some entry within this dir */
-            fName [0] = 0;
-            pbu.cipb.hFileInfo.ioCompletion = 0L;
+            fName[0]= 0;
+            pbu.cipb.hFileInfo.ioCompletion = 0;
             pbu.cipb.hFileInfo.ioNamePtr    = fName;
             pbu.cipb.hFileInfo.ioVRefNum    = volid;
-            pbu.cipb.hFileInfo.ioFDirIndex  = index-1;  /* use index, range 1..n */
             pbu.cipb.hFileInfo.ioDirID      = dirid;
+            pbu.cipb.hFileInfo.ioFDirIndex  = index-1;  /* use index, range 1..n */
 
                 oserr = PBGetCatInfoSync(&pbu.cipb);
             if (oserr==fnfErr) return          os9error(E_EOF); /* this is no error, but only no more items in the folder */

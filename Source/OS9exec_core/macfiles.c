@@ -95,6 +95,12 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
     char*   p;
     Boolean wasAliased;
     int     ii;
+    
+    union {
+        CInfoPBRec    cipb;
+        HParamBlockRec hpb;
+    } pbu;
+    Str255 fName;
 
     if (pathname==NULL) strcpy( cstr,""       );
     else                strcpy( cstr,pathname ); /* make a local copy */
@@ -108,6 +114,87 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
         strcpy( pasmac,cstr );
         c2pstr( pasmac );
         oserr= FSMakeFSSpec( volID,dirID, pasmac, fsP );
+
+        /* speciality for "netatalk": activate the directory */
+        if (oserr==fnfErr && fsP->name[0]!=0 
+                          && fsP->vRefNum!=0 
+                          && fsP->parID  !=0) {
+            ii= 0;
+            do {
+                fName[0]= 0;
+                pbu.cipb.hFileInfo.ioCompletion = 0;
+                pbu.cipb.hFileInfo.ioNamePtr    = fName;
+                pbu.cipb.hFileInfo.ioVRefNum    = fsP->vRefNum;
+                pbu.cipb.hFileInfo.ioDirID      = fsP->parID;
+                pbu.cipb.hFileInfo.ioFDirIndex  = ii++;
+                oserr = PBGetCatInfoSync(&pbu.cipb);
+            } while (!oserr);
+            if (ii>1 && oserr==fnfErr) /* and try it again */
+                        oserr= FSMakeFSSpec( volID,dirID, pasmac, fsP );
+        } /* if */
+
+        
+ /*     strcpy( tmp,cstr );
+        while ((oserr==fnfErr ||
+                oserr==nsvErr) && strstr( tmp,":" )!=NULL ) {
+            upe_printf( "==> '%s'\n", tmp );
+ 
+            ii= 0;
+            do {
+                fName[0]= 0;
+                pbu.cipb.hFileInfo.ioCompletion = 0;
+                pbu.cipb.hFileInfo.ioNamePtr    = fName;
+                pbu.cipb.hFileInfo.ioVRefNum    = fsP->vRefNum;
+                pbu.cipb.hFileInfo.ioDirID      = fsP->parID;
+                pbu.cipb.hFileInfo.ioFDirIndex  = ii++;
+                oserr = PBGetCatInfoSync(&pbu.cipb);
+                p2cstr( fName );
+                upe_printf( "yyy '%s' %d %d %d\n", fName, 
+                            pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask,
+                            pbu.cipb.dirInfo.ioDrDirID,
+                            pbu.cipb.hFileInfo.ioDirID );
+                           
+            } while (!oserr);
+            if (ii>1 && oserr==fnfErr) oserr= 0;
+            
+            for (ii=strlen(tmp); ii>0; ii--) {
+                if (tmp[ii]==':') { tmp[ii]= NUL; break; }
+            }
+                    
+            strcpy( pastmp,tmp );
+            c2pstr( pastmp ); oserr= FSMakeFSSpec( volID,dirID, pastmp, fsP );
+            if (!oserr) {
+            //  oserr= getCipb( &cipb, fsP );
+            
+            ii= 0;
+            do {
+                fName[0]= 0;
+                pbu.cipb.hFileInfo.ioCompletion = 0;
+                pbu.cipb.hFileInfo.ioNamePtr    = fName;
+                pbu.cipb.hFileInfo.ioVRefNum    = fsP->vRefNum;
+                pbu.cipb.hFileInfo.ioDirID      = fsP->parID;
+                pbu.cipb.hFileInfo.ioFDirIndex  = ii++;
+                oserr = PBGetCatInfoSync(&pbu.cipb);
+                p2cstr( fName );
+                upe_printf( "'%s' %d %d %d\n", fName, 
+                            pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask,
+                            pbu.cipb.dirInfo.ioDrDirID,
+                            pbu.cipb.hFileInfo.ioDirID );
+                           
+            } while (!oserr);
+            if (ii>1 && oserr==fnfErr) oserr= 0;
+            
+            //  fName[0]= 0;
+            //  pbu.hpb.fidParam.ioNamePtr  = fsP->fName;
+            //  pbu.hpb.fidParam.ioVRefNum  = fsP->vRefNum;
+            //  pbu.hpb.fidParam.ioSrcDirID = fsP->parID;
+            //  oserr= PBCreateFileIDRefSync(&pbu.hpb);
+            }
+            
+            if (oserr==0 || 
+                oserr==dirNFErr) oserr= FSMakeFSSpec( volID,dirID, pasmac, fsP );
+        } // while
+*/
         
         if    (!oserr) {
                 memcpy( afsP,fsP, sizeof(*fsP) );
