@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2003/05/17 10:17:21  bfo
+ *    'p2cstr' and 'c2pstr' prototype defined in the ".h" file now
+ *
  *    Revision 1.16  2003/05/05 17:56:49  bfo
  *    Activate most of the ramDisk things even without RAM_SUPPORT
  *
@@ -71,6 +74,7 @@ char* nullterm     ( char* s1,const char* s2, ushort max );
 int   ustrcmp( const char* s1,const char* s2 );
 int  pustrcmp( const char* s1,const char* s2 );
 int  ustrncmp( const char* s1,const char* s2, ushort n );
+
 
 void os9_long_inc ( unsigned int* a, ulong increment );
 void set_os9_state( ushort cpid, pstate_typ state );
