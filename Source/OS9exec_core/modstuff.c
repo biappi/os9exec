@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2003/04/20 23:08:45  bfo
+ *    "inetdb" adaptions and other manipulations
+ *
  *    Revision 1.10  2003/04/12 21:52:26  bfo
  *    "inetdb" will be adapted automatically now
  *
@@ -219,8 +222,8 @@ void Update_MDir( void )
             hiword( b )= (ushort)modK->linkcount;
             
             en->m1  = os9_long( (ulong)mod );
-            en->m2  = en->m1;                      /* %%% module groups not yet supported */
-            en->size= os9_long( mod->_mh._msize );
+            en->m2  = en->m1;               /* %%% module groups not yet supported */
+            en->size= mod->_mh._msize; /* big/little endian is already correct !!! */
             en->lnk = os9_long( b );
         }
         else {
