@@ -960,6 +960,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     if (ustrcmp( cmp,"c0")==0) dev->fProtected= false;
     if (ustrcmp( cmp,"c1")==0) dev->fProtected= false;
 
+    if (ustrcmp( cmp,"c0")==0 ||
+        ustrcmp( cmp,"hx")==0) dev->multiSct= true;
+
     do {
         err= 0;                 /* set it as default   */
         dev->installed= true;   /* now it is installed */
@@ -1839,7 +1842,10 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     int         ii;
     Boolean     done= false;               /* break condition for readln  */
     Boolean     rOK = (remain==0);         /* is true, if nothing to read */
-
+    Boolean     mlt;
+    ulong       n;
+    byte*       b;
+    
     debugprintf( dbgFiles,dbgDetail,("# >DoAccess (%s): n=%d\n", wMode ? "write":"read", *lenP ));
     sv= rbf->currPos;
     
@@ -1882,6 +1888,21 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
         }
     
         offs= rbf->currPos % dev->sctSize; /* get offset within this sector */
+
+            mlt= (dev->multiSct && sect!=0 && offs==0 && remain>=2*dev->sctSize && !wMode && false);
+        if (mlt) {
+                maxc= *rs;
+            if (maxc>remain) maxc= remain;
+            n= (maxc-1)/dev->sctSize + 1;
+            b=  buffer+boffs;
+        }
+        else {
+                maxc= dev->sctSize - offs;  /* calculate the max number of bytes to be read */
+            if (maxc>remain) maxc= remain;
+            n= 1;
+            b= spP->rw_sct;
+        } 
+        
         if (spP->rw_nr==0     /* read only if different one */
          || spP->rw_nr!=sect) {
             if (*mw!=0) {
@@ -1889,19 +1910,22 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 *mw =0; /* now it is written */
             }
 
-            err=      ReadSector( dev, sect,1, spP->rw_sct ); if (err) break;
-            spP->rw_nr= sect;
-            if (sect==0) 
-                err= ChkIntegrity( dev, spP,   spP->rw_sct,true ); if (err) break;
+            if (true) {
+                err= ReadSector( dev, sect,n, b ); if (err) break;
+            
+                if (mlt) {  spP->rw_nr= sect + n-1;
+                    memcpy( spP->rw_sct, b+maxc-dev->sctSize, dev->sctSize ); /* update rw_sct */
+                }
+                else {
+                    if (sect==0) { err= ChkIntegrity( dev, spP, b,true ); if (err) break; }
+                }
+            } /* if */  
         }   
 
         rOK = true;
         debugprintf(dbgFiles,dbgDeep,("# RBF %s: \"%s\" $%x bytes, sect: $%x, size: $%x\n", 
-                    wMode ? "write":"read", dev->name, remain, sect, *rs));
-        
-            maxc= dev->sctSize-offs;  /* calculate the max number of bytes to be read */
-        if (maxc>remain) maxc= remain;
-        
+                                         wMode ? "write":"read", dev->name, remain, sect, *rs));
+                
         if (lnmode) {       /* depends on read or write */
             if (wMode) { bb=      buffer; coff= boffs; }
             else       { bb= spP->rw_sct; coff=  offs; }
@@ -1913,7 +1937,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     
         /* copy to/from the buffer */   
         if (wMode) {
-            memcpy(spP->rw_sct+ offs, buffer+boffs, maxc);
+            memcpy(spP->rw_sct+offs, buffer+boffs, maxc);
 
             /* if sector in raw mode */
             if (spP->rawMode) {
@@ -1931,10 +1955,17 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 if (*mw!=0 && *mw!=sect) { /* if sector nr has changed */
                     err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
                 }
+                
                 *mw= sect;
+                if (mlt && false) {
+                    err= WriteSector( dev, sect,n, b ); if (err) break;
+                    sect= sect + n-1;
+                    memcpy( spP->rw_sct, b+maxc-dev->sctSize, dev->sctSize ); /* update rw_sct */
+                    *mw= 0; /* already written */
+                }
             }
         }
-        else memcpy(buffer+boffs, spP->rw_sct+ offs, maxc);
+        else if (!mlt) memcpy( buffer+boffs, spP->rw_sct+offs, maxc );
 
                       
         rbf->currPos+= maxc; /* calculate the new position */
