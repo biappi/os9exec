@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2002/10/27 23:50:41  bfo
+ *    Sibling handling of internal commands corrected ("idevs!head" bug)
+ *
  *    Revision 1.16  2002/10/16 17:50:36  bfo
  *    DevPak 68K OS-9 V1.2 _resvd1, _procstk conflict resolved
  *
@@ -149,6 +152,13 @@ void init_processes()
         pd->_task  = 0;
      // pd->_resvd1= os9_word(0xBD00); /* invisible at DevPak von 68K OS-9 V1.2 */
         pd->_deadlk= 0;                /* as in real OS-9 */
+        pd->_sigdat= (char*)os9_long((ulong)&procs[k].sigdat);
+
+        /* clear all memory segments ... */
+        for (j=0; j<32; j++) {
+            pd->_memimg[j] = NULL;
+            pd->_blksiz[j] = 0;
+        }
     
         pd->_frag  = NULL;             /* don't use OS-9 V3.0 memory method */
         pd->_fragg = NULL;
@@ -237,9 +247,9 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->pd._cid    = 0;            /* has not yet children */
             cp->mid        = MAXMODULES;   /* no main module yet */
             cp->memstart   = cp->memtop=0; /* no memory yet */
-            cp->lastsignal = 0;            /* no signal, rteregs invalid */
+            cp->pd._signal = 0;            /* no signal, rteregs invalid */
             cp->masklevel  = 0;            /* sigmask is disabled by default */
-            cp->icptroutine= 0;            /* no intercept routine installed */
+            cp->pd._sigvec = 0;            /* no intercept routine installed */
             cp->last_mco   = NULL;         /* last console buffer */
             cp->wakeUpTick = 0;            /* to be woken up */
             cp->pW_age     = 0;            /* sleep aging */
@@ -522,7 +532,7 @@ os9err send_signal(ushort spid, ushort signal)
 
     if (signal!=S_Wake) {
         /* not wake, additional processing required */
-        if (sigp->lastsignal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
+        if (sigp->pd._signal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
                   /* should never be called, because now a signal queue is implemented */
 
         if (sigp->state==pWaiting) {
@@ -533,19 +543,19 @@ os9err send_signal(ushort spid, ushort signal)
                     sigp->os9regs.sr  &= ~CARRY; /* error-free return */
         }
         else 
-            set_os9_state( spid, pActive );     /* activate for all other cases */
+            set_os9_state( spid, pActive );      /* activate for all other cases */
 
         
-        sigp->rtestate= sigp->state;     /* save it, active after signal */ 
+        sigp->rtestate= sigp->state;             /* save it, active after signal */ 
         arbitrate= false;
-        sigp->lastsignal= signal;        /* signal currently being processed */
+        sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
         /* now, check if target can catch signal */
-        if (sigp->icptroutine!=0) { /* prepare execution of intercept routine */
+        if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
             sigp->way_to_icpt = true;    /* activate both */
               cp->way_to_icpt = true;
             sigp->rteregs     = sigp->os9regs; /* save all regs */
-            sigp->os9regs.pc  = sigp->icptroutine;
+            sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
             sigp->os9regs.a[6]= sigp->icpta6;
             sigp->os9regs.d[1]= signal;
             

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2002/10/27 23:41:51  bfo
+ *    memory and module structure definitions adapted
+ *
  *    Revision 1.26  2002/10/15 21:37:29  bfo
  *    Changed to V3.20
  *
@@ -1028,8 +1031,8 @@ static void debug_return( process_typ* cp, Boolean cwti )
 	char*     p;
 	char      item[OS9NAMELEN];
 
-	Boolean msk= cp->masklevel>0;
-	Boolean hdl= cp->icptroutine!=0;
+	Boolean msk= cp->masklevel  >0;
+	Boolean hdl= cp->pd._sigvec!=0;
 	Boolean strt;
 		
 	if (cwti) {
@@ -1500,7 +1503,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 					
 					if     (cp->icpt_pid==currentpid) { /* in case of the own process */
 						if (cp->icpt_signal!=S_Wake  &&
-							cp->icptroutine!=0) crp= &cp->rteregs;
+							cp->pd._sigvec!=0) crp= &cp->rteregs;
 					}
 					else {
 						cp->way_to_icpt= false;   /* now the way to icpt changes */
@@ -1527,7 +1530,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 					if (sigp==cp &&
 					    sigp->state==pWaitRead &&
-						sigp->icptroutine!=0) {
+						sigp->pd._sigvec!=0) {
 						sigp->rtestate = sigp->state;
 						sigp->rteregs  = svd->r;      /* ignore latest d1 and carry */
 						sigp->rtevector= svd->vector;
@@ -1536,7 +1539,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				    }
 
 					if (sigp->state==pWaiting &&     /* a signalled waiting process */
-						sigp->icptroutine!=0) {        /* will be active afterwards */
+						sigp->pd._sigvec!=0) {        /* will be active afterwards */
 						set_os9_state( spid, pActive );
 						sigp->rtestate=      pActive;
 				    }
@@ -1548,7 +1551,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			if (cp->state!=pUnused   &&
 			    cp->state!=pSleeping &&
 			   (cp->state!=pDead ||
-			    cp->lastsignal==0)) {
+			    cp->pd._signal==0)) {
 			/* signal handling already done correctly */
 			/* %%% for now, fatal: current process is not pActive */
 				uphe_printf("main loop: INTERNAL ERROR, active process=%d has invalid state=%s\n",
@@ -1599,7 +1602,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				debugprintf(dbgSysCall,dbgNorm,( "%d %d %d %x\n", 
 								 				  cp->icpt_pid,currentpid,
 								 				  cp->icpt_signal,
-								 				  cp->icptroutine ));
+								 				  os9_long((ulong)cp->pd._sigvec) ));
 
 				if (cp->icpt_pid!=currentpid) {
 					cp->way_to_icpt= false;    /* reset if another process */

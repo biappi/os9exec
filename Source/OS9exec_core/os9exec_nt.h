@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2002/10/27 23:40:50  bfo
+ *    memory and module structure definitions adapted
+ *
  *    Revision 1.20  2002/10/15 18:16:46  bfo
  *    memtable included
  *
@@ -809,14 +812,14 @@ typedef struct {
                 os9err oerr;                /* OS9 error */
     
                 /* signal handling */
-                ushort lastsignal;          /* last signal received, 0 if none */
+             // ushort lastsignal;          /* last signal received, 0 if none */
                 regs_type  rteregs;         /* saved main thread registers during intercept processing, valid if lastsignal!=0 */
                 pstate_typ rtestate;        /* saved process' state */
                 ushort     rtevector;       /* saved vector */
                 ushort     rtefunc;         /* and function */
                 
                 int     masklevel;
-                ulong   icptroutine;        /* the intercept routine, NULL if none */
+             // ulong   icptroutine;        /* the intercept routine, NULL if none */
                 ulong   icpta6;             /* value to pass in A6 to intercept routine */
 
                 Boolean way_to_icpt;        /* is true on the way to icpt */
