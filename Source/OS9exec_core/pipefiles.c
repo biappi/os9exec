@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.6  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -545,6 +548,8 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
     remaining -=nn; /* calc what we've left */
     debugprintf(dbgFiles,dbgDetail,("# pReadSysTaskExe: %ld bytes read, remaining %ld (link=%d, consumers=%d)\n",
                 nn,remaining,spP->linkcount,p->consumers));
+
+    if (!rdln && p->bread>0) remaining= 0; /* don't wait in normal read mode, when got at least 1 char */
 
     /* check how things go on */
     if (remaining) {
