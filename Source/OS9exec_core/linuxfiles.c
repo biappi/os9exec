@@ -30,13 +30,22 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
-/* "macfiles.c" */
-/* specific mac file routines which are not available */
-/* on other systems */
 
-
-
+/* Linux specific file handling */
 #include "os9exec_incl.h"
 #include <utime.h>
 
@@ -116,6 +125,8 @@ os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
    ( ":2e" / ".AppleDouble" )
 */
 {
+    #define Prev  "/."
+    
     os9err  err= 0;
     int     len;
     Boolean fnd, reduS;
@@ -132,7 +143,7 @@ os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
     } /* loop */    
 
     /* cut out /xxxx/../ sequences */
-    CutUp( adname );
+    CutUp( adname, Prev );
     
     /* make some preparations first */
     len= strlen( adname );
