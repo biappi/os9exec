@@ -571,8 +571,10 @@ void do_arbitrate(void)
 {
     ushort       pid, cpid, spid;
     ushort       sleepingpid, deadpid;
-    Boolean      done;
     process_typ  *cp, *sprocess;
+    Boolean      done    = false;
+    Boolean      chkAll  = false; /* 2nd run when all sleeping */
+    Boolean      atLeast1= false; /* at least one process is sleeping */
     
     debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",currentpid,arbitrate));
     sleepingpid= MAXPROCESSES; /* assume none sleeping */
@@ -593,7 +595,6 @@ void do_arbitrate(void)
     spid    =  currentpid;
     sprocess= &procs[spid];
 
-    done= false;
     debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: after correction: current pid=%d (state=%d), arbitrate=%d\n",
                                             cpid,PStateStr(cp),      arbitrate));
     do {
@@ -621,7 +622,10 @@ void do_arbitrate(void)
                       slp_idleticks++;
                     #endif
                 } 
-                else done= true;
+                else {
+                    if (chkAll) done= true; /* don't stop if sleeping in slow mode */
+                    else { if (atLeast1) chkAll= true; }
+                }
             }
             else if (sprocess->state==pUnused) continue; /* fast forward */
         } /* if arbitrate */
@@ -643,33 +647,36 @@ void do_arbitrate(void)
         if     (sprocess->state==pActive  ||       /* process can run, if one of these states */
                 sprocess->state==pSysTask) break;
 
-        if     (sprocess->state==pWaitRead) {      /* only every nth time for this mode */
+        if     (sprocess->state==pWaitRead) {            /* only every nth time for this mode */
             if (sprocess->pW_age--<=0) { 
                 sprocess->pW_age= NewAge;  break;
             }
             done= false;
         }
 
-        if (sprocess->state==pSleeping && /* slow down also here */
-            sprocess->pW_age--<=0) {
-            sprocess->pW_age= NewAge;
-            
-        	async_area= true; 
-			if (async_pending) sigmask( spid,0 ); /* disable signal mask */
-			/* asynchronous signals are allowed here */
-			
-            wait_for_signal( spid );
-  			async_area= false; 
-			/* asynchronous signals are no longer allowed */
-                        
-            if (sprocess->wakeUpTick < GetSystemTick()) {
-                sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
-                sprocess->os9regs.sr &= ~CARRY; /* error-free return */
-                sprocess->state= pActive; break;
-            }
+        if (sprocess->state==pSleeping) {
+            atLeast1= true;              /* at least one process is sleeping -> don't break ! */
 
-            sleepingpid= spid; /* remember sleeping process */  
-        }
+            if (sprocess->pW_age--<=0 || chkAll) {                     /* slow down also here */
+                sprocess->pW_age= NewAge;
+            
+        	    async_area= true; 
+			    if (async_pending) sigmask( spid,0 ); /* disable signal mask */
+			    /* asynchronous signals are allowed here */
+			
+                wait_for_signal( spid );
+  			    async_area= false; 
+			    /* asynchronous signals are no longer allowed */
+                        
+                if (sprocess->wakeUpTick < GetSystemTick()) {
+                    sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
+                    sprocess->os9regs.sr &= ~CARRY; /* error-free return */
+                    sprocess->state= pActive; break;
+                }
+
+                sleepingpid= spid; /* remember sleeping process */ 
+            } /* if slow down */
+        } /* if sleeping */
         
         if (sprocess->way_to_icpt) break;
     
