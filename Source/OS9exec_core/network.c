@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2003/04/14 21:52:14  bfo
+ *    Release buffer (accept) at pNClose fixed
+ *
  *    Revision 1.10  2003/04/12 21:56:26  bfo
  *    Name server support
  *
@@ -117,7 +120,8 @@ os9err pNrecv   ( ushort pid, syspath_typ* spP, ulong  *d1,
                                                 ulong  *d2,    char* *a0  );
 os9err pNsend   ( ushort pid, syspath_typ* spP, ulong  *d1,    
                                                 ulong  *d2,    char* *a0  );
-os9err pNGNam   ( ushort pid, syspath_typ* spP, ulong  *d1,    char* *a0  );
+os9err pNGNam   ( ushort pid, syspath_typ* spP, ulong  *d1,
+                                                ulong  *d2,    byte* ispP );
 os9err pNSOpt   ( ushort pid, syspath_typ* spP, ulong  *d1,    ulong *d2  );
 
 os9err pNgPCmd  ( ushort pid, syspath_typ *spP, ulong  *a0 );
@@ -178,6 +182,44 @@ void init_Net( fmgr_typ* f )
 
 
 
+/*
+ * Command sequences for the network connections:
+ *
+ * ftp/telnet:   
+ * (SS_GNam)    [telnet only]
+ *  SS_Resv      -
+ *  SS_Connect   port 21/23
+ * (SS_GNam)    [ftp only]
+ *
+ *
+ * ftp DATA
+ *  SS_Resv      -
+ *  SS_Bind
+ *  SS_GNam
+ *  SS_Listen
+ *  SS_Accept
+ *
+ *-------------------------------------------------
+ *
+ * ftpd/telnetd
+ * (SS_GNam)
+ *  SS_Resv      -
+ *  SS_Bind
+ *  SS_Listen
+ *  SS_Accept    LOOP
+ *
+ *  SS_GNam     (ftpdc/telnetdc)
+ *  SS_GNam     [ftpd only]
+ *  
+ *
+ * ftpd DATA     
+ *  SS_Resv      -
+ *  SS_Opt
+ *  SS_Bind
+ *  SS_Connect   port 20
+ *
+ */
+
 
 
 /* Connection from Internet Support Package (ISP) */
@@ -187,33 +229,88 @@ static NetInstalled= false;
 enum { kTransferBufferSize = 4096 };
 // #define MAXCNT 10000
 
+
 /* definitions for ICMP (ping) */
-#ifdef powerc
-  enum { kOurMagic = 'Quin' };
+#define kOurMagic 0x5175696E /* enum { kOurMagic = 'Quin' }; */
+#define ICMP_ECHOREPLY     0
+#define ICMP_ECHO          8
+
+
+#ifdef win_linux
+  #define MAX_PACKET 1024 // Max ICMP packet size
+#endif
+
+
+typedef struct _icmphdr 
+{
+    byte   i_type;
+    byte   i_code;    // Type sub code
+    ushort i_cksum;
+    ulong  i_ISP;     /* use this instead of UInt16 pID/pSeqNum */
+    ulong  i_magic;
+} IcmpHeader;
+
+
+// #ifdef macintosh
+// struct PingPacket {
+//    UInt8   pType;
+//    UInt8   pCode;
+//    UInt16  pChecksum;
+//    ulong   pISP_ID;  /* use this instead of UInt16 pID/pSeqNum */
+//    OSType  pMagic;
+// };
+// typedef struct PingPacket PingPacket, *PingPacketPtr;
+// #endif
+
+
+#ifdef win_linux
+/* IP header structure */
+typedef struct _iphdr 
+{
+    unsigned int   h_len:4;        // Length of the header
+    unsigned int   version:4;      // Version of IP
+    unsigned char  tos;            // Type of service
+    unsigned short total_len;      // Total length of the packet
+    unsigned short ident;          // Unique identifier
+    unsigned short frag_and_flags; // Flags
+    unsigned char  ttl;            // Time to live
+    unsigned char  proto;          // Protocol (TCP, UDP etc)
+    unsigned short checksum;       // IP checksum
+
+    unsigned int   sourceIP;
+    unsigned int   destIP;
+} IpHeader;
+
+//
+// ICMP header structure
+//
+// typedef struct _icmphdr 
+// {
+//     BYTE   i_type;
+//     BYTE   i_code;                 // Type sub code
+//     USHORT i_cksum;
+//     ulong  i_id;
+//     ulong  i_seq;
+//       
+// //  USHORT i_id;
+// //  USHORT i_seq;
+//     // This is not the standard header, but we reserve space for time
+// //  ULONG  timestamp;
+// } IcmpHeader;
 #endif
 
 
 
 #ifdef macintosh
-struct PingPacket {
-    UInt8   pType;
-    UInt8   pCode;
-    UInt16  pChecksum;
-    ulong   pISP_ID;  /* use this instead of UInt16 pID/pSeqNum */
-    OSType  pMagic;
-};
-typedef struct PingPacket PingPacket, *PingPacketPtr;
-
-
 static pascal void YieldingNotifier(void* contextPtr, OTEventCode code, 
                                        OTResult result, void* cookie)
-    // This simple notifier checks for kOTSyncIdleEvent and
-    // when it gets one calls the Thread Manager routine
-    // YieldToAnyThread.  Open Transport sends kOTSyncIdleEvent
-    // whenever it's waiting for something, eg data to arrive
-    // inside a sync/blocking OTRcv call.  In such cases, we
-    // yield the processor to some other thread that might
-    // be doing useful work.
+// This simple notifier checks for kOTSyncIdleEvent and
+// when it gets one calls the Thread Manager routine
+// YieldToAnyThread.  Open Transport sends kOTSyncIdleEvent
+// whenever it's waiting for something, eg data to arrive
+// inside a sync/blocking OTRcv call.  In such cases, we
+// yield the processor to some other thread that might
+// be doing useful work.
 {
     #pragma unused(contextPtr,result,cookie)
     OSStatus junk;
@@ -226,7 +323,7 @@ static pascal void YieldingNotifier(void* contextPtr, OTEventCode code,
         default:
             // do nothing
             break;
-    }
+    } /* switch */
 }
 #endif
 
@@ -327,13 +424,14 @@ os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
     err= NetInstall(); if (err) return err;
     
     /* not yet bound, install the struct */
-    net->ls      = nil;
-    net->ep      = nil;
-    net->bound   = false;
-    net->accepted= false;
-    net->lis     = true;
-    net->check   = false;
-    net->closeIt = false;
+    net->ls       = nil;
+    net->ep       = nil;
+    net->bound    = false;
+    net->accepted = false;
+    net->connected= false;
+    net->listen   = true;
+    net->check    = false;
+    net->closeIt  = false;
     
     #ifdef powerc
       /* First allocate a buffer for storing the data as we read it. */
@@ -657,7 +755,8 @@ static os9err reUse( ushort pid, syspath_typ *spP )
 #endif
 
 
-os9err MyInetAddr( ulong *inetAddr, ulong *dns_Addr, char** domainName )
+os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
+                                    ulong *dns2Addr, char* domainName )
 {
     #ifdef powerc
       InetInterfaceInfo iinfo;
@@ -673,20 +772,34 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns_Addr, char** domainName )
       socklen_t          len;
       struct utsname     sysname= { 0 };
       struct hostent     *hostPtr;  
-      struct sockaddr_in serverName= { 0 }; 
+      struct sockaddr_in serverName= { 0 };
+      
+      FILE*   stream;
+      char*   p;
+      char    c;
+      int     cnt;
+      Boolean isEOF;
+      #define LINELEN 132
+      char    buffer[ LINELEN ];
+      char*   v;
+      int     n= 1;
+      char*   dom;
+      char    hostName[ OS9PATHLEN ];
     #endif
 
         
     OSStatus err= NetInstall(); if (err) return err;
 
-    *inetAddr= 0;
-    *dns_Addr= 0; /* default values */
+    *inetAddr= 0; /* default values */
+    *dns1Addr= 0;
+    *dns2Addr= 0;
     strcpy( domainName, "" );
 
     #ifdef powerc
       err= OTInetGetInterfaceInfo( &iinfo,0 ); if (err) return OS9_ENETDOWN;
       *inetAddr= iinfo.fAddress;
-      *dns_Addr= iinfo.fDNSAddr;
+      *dns1Addr= iinfo.fDNSAddr;
+      *dns2Addr= 0;
       strcpy( domainName, &iinfo.fDomainName );
     
     #elif defined(windows32)
@@ -702,28 +815,74 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns_Addr, char** domainName )
       if (a==NULL || *a==Unk) a= a0; /* if no other one */
 
       if (a==NULL) return OS9_ENETDOWN;       
-      *inetAddr= *a; /* the 2nd one, don't know why */
-      *dns_Addr= 0xd5a02802;
-      strcpy( domainName, "ggaweb.ch" );
- //   printf( "'%s'\n", domainName );
- //   getdomainname( domainName, 30 );
- //   printf( "'%s'\n", domainName );
+
+      *inetAddr= os9_long( *a );          /* take simply the last one */
+      *dns1Addr= 0xd5a02802;             /* %%% currently fixed value */
+      *dns2Addr= 0xd5a02822;             /* %%% currently fixed value */
+      strcpy( domainName, "ggaweb.ch" ); /* %%% currently fixed value */
       
     #elif defined linux
       err=                  uname( &sysname);
           hostPtr = gethostbyname(  sysname.nodename );
       if (hostPtr==NULL) return OS9_ENETDOWN;
 
-      (void) memset( &serverName, 0, sizeof(serverName));
-      (void) memcpy( &serverName.sin_addr, hostPtr->h_addr,
-                                           hostPtr->h_length );
+      memset( &serverName, 0, sizeof(serverName));
+      memcpy( &serverName.sin_addr, hostPtr->h_addr,
+                                    hostPtr->h_length );
 
-      *inetAddr= serverName.sin_addr.s_addr;
+      *inetAddr= os9_long( serverName.sin_addr.s_addr );
+
+          stream= fopen( "/etc/resolv.conf","r" ); /* open "resolv.conv" file */
+      if (stream!=NULL) {
+                  isEOF= false;
+          while (!isEOF) {
+              p  = buffer;
+              cnt= 0;
+          
+              while( cnt<LINELEN ) {
+                  if ((c=fgetc(stream))==EOF) { isEOF= true; break; }
+                  if ( c=='\n' ) break; /* abort on CR */
+                  
+                  *p++= c; /* save in the buffer */        
+                  cnt++;
+              } /* while */
+
+              *p++= '\0'; 
+          //  if (*buffer!='#') printf( "'%s'\n", buffer );
+              
+              v= "search ";
+              if (strstr( buffer,v )!=NULL) {
+                  v= buffer + strlen( v );
+                  strcpy( domainName, v );
+              }
+              
+              v= "nameserver ";
+              if (strstr( buffer,v )!=NULL) {
+                  v= buffer + strlen( v );
+                  if (n==1) *dns1Addr= os9_long( inet_addr( v ) );
+                  else      *dns2Addr= os9_long( inet_addr( v ) );
+                  n++;
+              }
+         } /* loop */
+          
+          fclose( stream );
+      } /* if */
+
+      hostPtr= gethostbyaddr( (void*)&serverName.sin_addr.s_addr,sizeof(ulong), AF_INET );
+      strcpy( hostName, hostPtr->h_name );
+      dom= strstr( hostName,domainName );
+      if (dom!=NULL && strlen(dom)==strlen(domainName)) {
+        dom--; if (*dom=='.') *dom= '\0';
+      }
+//    printf( "'%s'\n", hostName );
+      
+//    printf( "i12d %08X %08X %08X '%s'\n", *inetAddr, *dns1Addr, *dns2Addr, domainName );
       
     #else
       return OS9_ENETDOWN;
     #endif
-
+    
+//  printf( "inet/dns %08X %08X\n", *inetAddr,*dns_Addr );
     return 0;
 } /* MyInetAddr */
 
@@ -755,20 +914,19 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       return E_UNKSVC;
     #endif
     
-    memcpy         ( &net->ipAddress, ispP, sizeof(net->ipAddress) );
-                      net->ipAddress.fHost= my_inetaddr;
-//  err= MyInetAddr( &net->ipAddress.fHost ); if (err) return err;
-    fPort= os9_word(  net->ipAddress.fPort ); /* little/big endian change */
+    memcpy        ( &net->ipAddress, ispP, sizeof(net->ipAddress) );
+                     net->ipAddress.fHost= os9_long( my_inetaddr );
+    fPort= os9_word( net->ipAddress.fPort ); /* little/big endian change */
 
     #ifdef powerc
-      if (net->lis) kN= "tilisten,tcp";
-      else          kN= kTCPName;
+      if (net->listen) kN= "tilisten,tcp";
+      else             kN=  kTCPName;
 
       net->ls= OTOpenEndpoint( OTCreateConfiguration(kN), 0, &info, &err);                           
       if (err) return E_FNA;
 
     /* %%% the "reUse", has still no effect, don't know why ... */
-//  if (!net->lis) err= reUse( pid, spP ); if (err) return OS9_EADDRINUSE;
+//  if (!net->listen) err= reUse( pid, spP ); if (err) return OS9_EADDRINUSE;
     
     #elif defined win_linux
           net->ls= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
@@ -911,9 +1069,11 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
     #pragma unused(pid,n)
     #endif
 
+    #define CONNECT_TIMEOUT 100000
+    
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
-//  process_typ*  cp= &procs[pid];
+    process_typ*  cp= &procs[pid];
     ushort        fPort;
     
     #ifdef powerc
@@ -924,12 +1084,22 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
     #ifdef win_linux
       int          af, ty, proto; 
       SOCKADDR_IN  name;
+      
+      #ifdef linux
+        int  id, u_err;
+      #endif
     #endif
-    
-
+   
     #ifndef WITH_NETWORK
       return E_UNKSVC;
     #endif
+
+    if  (cp->state==pWaitRead) {
+         cp->state= cp->saved_state;
+         cp->wTimeOut--;
+    }
+    else cp->wTimeOut= CONNECT_TIMEOUT;
+
 
     memcpy( &net->ipRemote, ispP, sizeof(net->ipRemote) );
     fPort= os9_word(net->ipRemote.fPort); /* little/big endian change */
@@ -939,10 +1109,6 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
         net->ipRemote.fAddressType= net->fAddT;
     }
     else {
-//      if (cp->state==pWaitRead) {
-//          cp->state= cp->saved_state;
-//      }
-
         #ifdef powerc
           if (fPort==0) kN= kRawIPName;
           else          kN= kTCPName;
@@ -955,28 +1121,41 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           
         #elif defined win_linux
           af= os9_word(net->ipRemote.fAddressType);
-          if (fPort==0) { ty= SOCK_RAW;    proto= IPPROTO_IP;  }
-          else          { ty= SOCK_STREAM; proto= IPPROTO_TCP; }
+          
+          if (fPort==0) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
+          else          { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
+       // #ifdef linux
+       //   ty   = SOCK_STREAM;
+       //   proto= IPPROTO_TCP;
+       // #endif
+          
           #ifdef linux
-            ty= SOCK_STREAM; proto= IPPROTO_TCP;
+            id= getuid();        printf( "%d\n",     id    );
+            u_err= setuid(  0 ); printf( "err=%d\n", u_err );
           #endif
           
-              net->ep= socket( af, ty, proto );
-      //  upe_printf( "connectX %d %d %d %d %d\n", net->ep, af, ty, proto, fPort );
+          net->ep= socket( af, ty, proto );
+          
+          #ifdef linux
+                                 printf(  "ep=%d\n", net->ep );
+            u_err= setuid( id ); printf( "err=%d\n", u_err   );
+          #endif
+          
+          debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort ));
           if (net->ep==INVALID_SOCKET) return E_FNA;
         #endif
             
         net->bound= true;
         if (fPort==0) return 0;
     }
-    
-//  /* the domain service is currently not implemented */
+
+//  /* the domain service is now implemented */
 //  if (fPort==53) return OS9_ENETUNREACH;
     
     #ifdef powerc   
-      sndCall.addr.buf = (UInt8 *) &net->ipRemote;
-      sndCall.addr.len =     sizeof(net->ipRemote);
+      sndCall.addr.buf = (UInt8*) &net->ipRemote;
+      sndCall.addr.len =    sizeof(net->ipRemote);
       sndCall.opt.buf  = nil;       // no connection options
       sndCall.opt.len  = 0;
       sndCall.udata.buf= nil;       // no connection data
@@ -986,42 +1165,46 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
 
     #elif defined win_linux
       name.sin_family     = os9_word(net->ipRemote.fAddressType);
-      name.sin_port       = os9_word(              fPort);
+      name.sin_port       =          net->ipRemote.fPort;
       name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
 
       err= connect( net->ep, &name,sizeof(name) );
-  //  upe_printf( "connect %d %d: %d %d %x\n", err, net->ep, 
-  //                                                name.sin_family,
-  //                                       os9_word(name.sin_port),
-  //                                       os9_long(name.sin_addr.s_addr));
+    #endif
+
+    debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d: %d %d %x\n", err, net->ep, 
+                                         os9_word(net->ipRemote.fAddressType),
+                                         os9_word(net->ipRemote.fPort),
+                                         os9_long(net->ipRemote.fHost) ));
+
+    #ifdef win_linux
       #ifdef windows32
         if     (err) {
                 err= WSAGetLastError();
             if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
         }
       #endif
+
+      #ifdef linux      
+        if (err && cp->wTimeOut>0) {
+        //  pNclose( pid, spP );
+            cp->saved_state= cp->state;
+            cp->state=       pWaitRead;
+            return E_NOTRDY;
+      } /* if */
+      #endif
       
-  //  upe_printf( "connect %d %d: %d %d %x\n", err, net->ep, 
-  //                                                name.sin_family,
-  //                                       os9_word(name.sin_port),
-  //                                       os9_long(name.sin_addr.s_addr));              
-//    if (err) {
-//        pNclose( pid, spP );
-//        cp->saved_state= cp->state;
-//        cp->state=       pWaitRead;
-//        return E_NOTRDY;
-//    }
-      
-      if (err) return OS9_ECONNREFUSED; /* currently not executed */    
-    
       #ifdef windows32
-        net->hEventObj= WSACreateEvent();
-        err= WSAEventSelect( net->ep, net->hEventObj, 
-                             FD_CONNECT|FD_READ|FD_WRITE|FD_CLOSE );
+        if (!err) {
+            net->hEventObj= WSACreateEvent();
+            err= WSAEventSelect( net->ep, net->hEventObj, 
+                                 FD_CONNECT|FD_READ|FD_WRITE|FD_CLOSE );
+        }
       #endif
     #endif
 
-    if (err) return OS9_ECONNREFUSED;   
+    if (err) return OS9_ECONNREFUSED;
+    
+    net->connected= true;
     return 0;
 } /* pNconnect */
 
@@ -1129,70 +1312,81 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
 
 
+
 os9err pNrecv( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
+/* for TCP protocol, 2 additional bytes with length info will be received */
 {
     #ifndef linux
     #pragma unused(d2)
     #endif
     
-    os9err     err;
-    ulong      lenB=  2;
-    ulong      len= 512;
-    ushort     n;
+    os9err err;
+    ulong  lenB=   2;
+    ulong  len = *d2;
+    ushort n; /* the length fill be filled in here */
     
     err= netRead( pid, spP, &lenB, (char*)&n, false );
     err= netRead( pid, spP, &len,  (char*)a0, false );
-    if (!err) *d1= len;
 
+    if   (!err) *d1= len;
     return err;
 } /* pNrecv */
 
 
 os9err pNsend( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
+/* for TCP protocol, 2 additional bytes with length info must be sent */
 {
-    os9err     err;
-    ulong      lenB=   2;
-    ulong      len = *d2;
-    ushort     n= os9_word( (ushort)len );
+    os9err err;
+    ulong  lenB=   2;
+    ulong  len = *d2;
+    ushort n   = os9_word( (ushort)len );
     
     err= netWrite( pid, spP, &lenB, (char*)&n, false );
-//  upe_printf( "%d %d xx\n", err, lenB );
     err= netWrite( pid, spP, &len,  (char*)a0, false );
-//  upe_printf( "%d %d yy\n", err, len  );
-    if (!err) *d1= len;
-
+ 
+    if   (!err) *d1= len;
     return err;
 } /* pNsend */
 
 
 
-os9err pNGNam( ushort pid, syspath_typ* spP, ulong *d2, char** a0 )
+os9err pNGNam( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, byte *ispP )
+/* Still some hardcoded things here */
+/* mode will be:    accepted / connected */
+/* ftpd/telnetd:      yes         no     */
+/* ftp                no          yes    */
+/* ftp data           no          no     */
 {   
     #ifndef linux
-    #pragma unused(pid,spP)
+    #pragma unused(pid)
+    #endif
+    
+	char* c;
+    
+    net_typ* net= &spP->u.net;
+//  upe_printf( "accepted connected %d %d %8X %8X\n", net->accepted, net->connected, ispP, *d2 );
+    
+    if (net->accepted) {
+        *d1= 16; /* std */
+        memcpy( ispP, &net->ipAddress, sizeof(net->ipAddress) );
+        return 0;
+    } /* if */
+    
+    if (*d2==0) return 0;
+    
+
+  	c= (char*)ispP; /* type casting */
+    #ifdef powerc
+      strcpy( c,"bfomac" );
+    #elif defined(windows32)
+      strcpy( c,"bfowin" );
+    #elif defined linux
+      strcpy( c,"bfolinux" );
+    #else
+      strcpy( c,"unknown" );
     #endif
 
-	#ifdef linux
-	  char* c;
-    #endif
-    
-//  net_typ* net= &spP->u.net;
-    if (*d2==0) return 0; /* ftp will get troubles with the host name */
-    
-    #ifdef powerc
-      strcpy( a0,"mac" );
-    #elif defined(windows32)
-      strcpy( a0,"pc" );
-    #elif defined linux
-	          c= (char*)a0; /* type casting */
-      strcpy( c,"linux" );
-    #else
-      strcpy( a0,"unknown" );
-    #endif
-    
- /* currently no DNS support !! */
- /* *d1= 16; /* std */
- /* memcpy( ispP, &net->ipAddress, sizeof(net->ipAddress) ); */
+//  upe_printf( "gnam '%s'\n", c );
     return 0;
 } /* pNGNam */
 
@@ -1208,38 +1402,86 @@ os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2)
     net_typ* net= &spP->u.net;
 
     if (*d2==4) {
-        net->lis  = false;
-        net->check= true;
-    }
+        net->listen= false;
+        net->check = true;
+    } /* if */
 
-    *d1= 0;
+    *d1=   0;
     return 0;
 } /* pNSOpt */
 
 
 
-#ifdef macintosh
-/* checksum calculator for "ping" */
-static UInt16 ChecksumBuffer(UInt16* buf, size_t len)
-{
-    // This checksum implementation requires the buffer to be an even number of bytes long.
-    UInt32 sum;
-    size_t nwords;
-    
-    nwords = len / 2;
-    sum = 0;
-    while (nwords > 0) {
-        sum+= *buf;
-        buf++;
-        nwords-= 1;
-    }
-    
-    sum =  (sum >> 16 ) + (sum & 0xffff);
-    sum+=  (sum >> 16);
-    return ~sum;
-} /* ChecksumBuffer */
-#endif
+//  #ifdef macintosh
+//  /* checksum calculator for "ping" */
+//  static UInt16 ChecksumBuffer( UInt16* buf, size_t len )
+//  {
+//      // This checksum implementation requires the buffer to be an even number of bytes long.
+//      UInt32 sum;
+//      size_t nwords;
+//      
+//      nwords = len / 2;
+//      sum = 0;
+//      while (nwords > 0) {
+//          sum+= *buf;
+//          buf++;
+//          nwords-= 1;
+//      } /* while */
+//      
+//      sum =  (sum>>16) + (sum & 0xffff);
+//      sum+=  (sum>>16);
+//      return ~sum;
+//  } /* ChecksumBuffer */
+//  #endif
+//  
+//  
+//  
+//  #ifdef win_linux
+// 
+// Function: FillICMPData
+//
+// Description:
+//    Helper function to fill in various fields for our ICMP request
+//
+//  void FillICMPData(char *icmp_data, int datasize)
+//  {
+//      IcmpHeader *icmp_hdr = NULL;
+//      char       *datapart = NULL;
+//  
+//      icmp_hdr = (IcmpHeader*)icmp_data;
+//      icmp_hdr->i_type = ICMP_ECHO;        // Request an ICMP echo
+//      icmp_hdr->i_code = 0;
+//  //  icmp_hdr->i_id   = (USHORT)GetCurrentProcessId();
+//      icmp_hdr->i_cksum= 0;
+//  //  icmp_hdr->i_seq  = 0;
+//    
+//      datapart= icmp_data + sizeof(IcmpHeader);
+//  
+//      // Place some junk in the buffer
+//      memset( datapart,'E', datasize - sizeof(IcmpHeader));
+//  } /* FillICMPData */
+//  #endif
+//  
 
+
+
+static ushort checksum( ushort *buffer, int size) 
+/* This function calculates the 16-bit one's complement sum */
+/* of the supplied buffer (ICMP) header */
+{
+    ulong cksum= 0;
+
+    while ( size>1 ) {
+        cksum+= *buffer++;
+        size -=  sizeof(ushort);
+    } /* while */
+
+    if (size>0) cksum+= *(byte*)buffer; /* odd handling */
+    
+    cksum =         (cksum>>16) + (cksum & 0xffff);
+    cksum+=         (cksum>>16);
+    return (ushort)(~cksum);
+} /* checksum */
 
 
 
@@ -1253,64 +1495,72 @@ os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
     net_typ*   net= &spP->u.net;
     ulong*     u;
     byte*      h;
+    IcmpHeader icmp;
 
     #ifdef powerc
-      PingPacket ping_data;
-      TUnitData  udata;
+      TUnitData udata;
+      
+    #elif defined win_linux
+//    #define DEF_PACKET_SIZE  32        // Default packet size
+
+      struct sockaddr_in name;
+      
+//    char icmp_data[ MAX_PACKET ];
+//    int datasize = DEF_PACKET_SIZE + sizeof(IcmpHeader); ;
     #endif
 
     #ifndef WITH_NETWORK
       return E_UNKSVC;
     #endif
+
     
-    u= &net->ipRemote.fHost;
-    h= (byte*) u;
+              u= &net->ipRemote.fHost;
+    h= (byte*)u;
     upe_printf( "(%d.%d.%d.%d)\n", h[0],h[1],h[2],h[3] );
+
+    icmp.i_type = ICMP_ECHO;
+    icmp.i_code = 0;
+    icmp.i_cksum= 0;   // dummy checksum of 0 for purposes of checksum calculation
+    icmp.i_ISP  = *a0;
+    icmp.i_magic= kOurMagic;
+    icmp.i_cksum= checksum( (ushort*)&icmp, sizeof(icmp));
     
     #ifdef powerc
-      ping_data.pType    = 8;
-      ping_data.pCode    = 0;
-      ping_data.pChecksum= 0;   // dummy checksum of 0 for purposes of checksum calculation
-      ping_data.pISP_ID  = *a0;
-      ping_data.pMagic   = kOurMagic;
-      ping_data.pChecksum= ChecksumBuffer((UInt16 *) &ping_data, sizeof(ping_data));
-
-      udata.addr.len =     sizeof(net->ipRemote);
-      udata.addr.buf =   (byte*) &net->ipRemote;
-      udata.opt.len  = 0;
+      udata.addr.buf = (byte*)&net->ipRemote;
+      udata.addr.len =  sizeof(net->ipRemote);
       udata.opt.buf  = nil;
-      udata.udata.len=     sizeof(ping_data);
-      udata.udata.buf= (UInt8 *) &ping_data;
+      udata.opt.len  = 0;
+      udata.udata.buf= (UInt8*)&icmp;
+      udata.udata.len=   sizeof(icmp);
 
       err= OTSndUData(net->ep, &udata);
       
-    #else
-      #ifndef linux
-      #pragma unused(a0)
-      #endif
+    #elif defined win_linux
+      memset( (char*)&name, NUL, sizeof(name));
+      name.sin_family     = os9_word(net->ipRemote.fAddressType);
+      name.sin_port       =          net->ipRemote.fPort;
+      name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
+
+      err=     sendto( net->ep,   (byte*)&icmp, sizeof(icmp), 0, 
+                       (struct sockaddr*)&name, sizeof(name) );
+
+      if (err<0) {
+          err= sendto( net->ep,   (byte*)&icmp, sizeof(icmp), 0, 
+                       (struct sockaddr*)&name, sizeof(name) );
+      }
+
+      upe_printf( "wait a little bit ...\n" );
+//    upe_printf( "sendto err=%d\n", err );
+      if (err>0) err= 0;
     #endif
-    
+
+    debugprintf(dbgSpecialIO,dbgNorm, ( "NsPCmd %d=%d %d: %d %d %x\n", err,sizeof(IcmpHeader), net->ep, 
+                                         os9_word(net->ipRemote.fAddressType),
+                                         os9_word(net->ipRemote.fPort),
+                                         os9_long(net->ipRemote.fHost) ));
     return err;
-
-//  #elif defined(windows32)
-//  memset( (char *)&serverAddr,NUL, sizeof(serverAddr));
-//
-//  serverAddr.sa_family = AF_IPX;
-//  serverAddr.sa_netnum = net->ipRemote.fHost;
-//  serverAddr.sa_nodenum= 1;
-//  serverAddr.sa_socket = 0x8690;
-
-//  err= sendto( net->ep, &ping_data, sizeof(ping_data), 0, 
-//               (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-//  return err;
 } /* pNsPCmd */
 
-
-
-#ifdef macintosh
-// we use this buffer to hold incoming ICMP packets
-static UInt8 icmp_data[5000];
-#endif
 
 
 os9err pNgPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
@@ -1318,57 +1568,109 @@ os9err pNgPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
     #ifndef linux
     #pragma unused(pid)
     #endif
+    
+    OSStatus    err= 0;
+    long        start_time;
+    net_typ*    net= &spP->u.net;
+    IcmpHeader  *icmp;
 
     #ifdef powerc
-    OSStatus      err;
-    net_typ*      net= &spP->u.net;
-    TUnitData     udata;
-    InetAddress   src_addr;
-    PingPacketPtr ping_data_ptr;
-    long          start_time;
+      TUnitData   udata;
+      InetAddress src_addr;
+      OTResult    lookResult;
+  
+      // we use this buffer to hold incoming ICMP packets
+      UInt8 icmp_data[5000];
+      
+    #elif defined win_linux
+      char icmp_data[ MAX_PACKET ];
+      struct sockaddr_in   from;
+      int fromlen = sizeof(from);
+      int n;
+      IpHeader   *iphdr;
+      ushort      iphdrlen;
+    #endif
     
-    start_time = TickCount();
-    do {
-        // Set up the received...
-        udata.addr.buf    = (UInt8*) &src_addr;
-        udata.addr.maxlen =   sizeof( src_addr);
-        udata.opt.buf     = nil;
-        udata.opt.maxlen  = 0;
-        udata.udata.buf   =          icmp_data;
-        udata.udata.maxlen=   sizeof(icmp_data);
-        
-        // Look for a packet...
-        
-            err= OTRcvUData(net->ep, &udata, nil);
-        if (err==noErr) {
-        // Print out salient information from the packet...
-        //  upe_printf("¥¥¥Got ICMP!¥¥¥\n");
-        //  upe_printf("ICMP from = %d.%d.%d.%d\n", icmp_data[12], icmp_data[13], icmp_data[14], icmp_data[15]);
-
-            ping_data_ptr = (PingPacketPtr) &icmp_data[20];
-            
-        //  upe_printf("ICMP type = %d\n", ping_data_ptr->pType);
-        //  upe_printf("ICMP code = %d\n", ping_data_ptr->pCode);
-            
-            if (ping_data_ptr->pType==0
-             && ping_data_ptr->pMagic==kOurMagic) {
-                *a0= ping_data_ptr->pISP_ID; return 0;
-            }
-        } 
-        else {
-            if (err==kOTNoDataErr) err= noErr; 
-        }
-    } while (err==noErr && TickCount() < start_time + 5*60);
-
-    return OS9_ENETUNREACH;
-
-    #else
-      #ifndef linux
-      #pragma unused(spP,a0)
-      #endif
-
+    
+    #ifndef WITH_NETWORK
       return E_UNKSVC;
     #endif
+
+    
+    start_time= GetSystemTick();
+    do {
+        #ifdef powerc
+          // Set up the received...
+          udata.addr.buf    = (UInt8*) &src_addr;
+          udata.addr.maxlen =   sizeof( src_addr);
+          udata.opt.buf     = nil;
+          udata.opt.maxlen  = 0;
+          udata.udata.buf   =          icmp_data;
+          udata.udata.maxlen=   sizeof(icmp_data);
+        
+          // Look for a packet...
+        
+              err= OTRcvUData( net->ep, &udata, nil );
+          if (err==noErr) {
+                  icmp= (IcmpHeader*)&icmp_data[20];
+              if (icmp->i_type==ICMP_ECHOREPLY
+               && icmp->i_magic==kOurMagic) { *a0= icmp->i_ISP; return 0; }
+          } 
+          else {
+              if (err==kOTNoDataErr) {
+                  err= 0;
+              }
+              
+              if (err==kOTLookErr) {
+                  lookResult= OTLook(net->ep);
+                  upe_printf( "lookResult=%d\n", lookResult );
+              }
+          }
+          
+        #elif defined win_linux
+          do {   
+              err= ioctl( net->ep, FIONREAD, &n );
+          
+              debugprintf(dbgSpecialIO,dbgDetail, ( "NgPCmd err=%d n=%d\n", err,n ));
+
+              if (n>sizeof(IpHeader)+sizeof(IcmpHeader)) {
+                  err= recvfrom( net->ep, icmp_data, n, 0, 
+                                 (struct sockaddr*)&from, &fromlen);
+                  if (err<=0) break;
+              
+                  debugprintf(dbgSpecialIO,dbgNorm, ( "NgPCmd %d %d: %d %d %x\n", err, net->ep, 
+                                                         from.sin_family,
+                                               os9_word( from.sin_port ),
+                                               os9_long( from.sin_addr.s_addr )));
+              
+                  iphdr   = (IpHeader*)icmp_data; // Number of 32-bit words * 4 = bytes
+                  iphdrlen= iphdr->h_len * 4;
+                  icmp    = (IcmpHeader*)(icmp_data + iphdrlen);
+             
+
+               // upe_printf( "err=%d i_type=%d i_seq=%08X i_id=%08X\n", err,
+               //                                               icmp->i_type,
+               //                                               icmp->i_seq,
+               //                                               icmp->i_id );
+                                                           
+                  if (err>0 && icmp->i_type==0
+                            && icmp->i_magic==kOurMagic) {
+                          *a0= icmp->i_ISP; return 0;
+                   }
+              } /* if */
+              
+              #ifdef linux
+                 usleep( 1000000 ); /* sleep in milliseconds */
+              #endif
+          } while (GetSystemTick() < start_time+5*60);
+          
+        #else
+          return E_UNKSVC;
+          
+        #endif
+    } while (!err && GetSystemTick() < start_time+5*60);
+    
+    return OS9_ENETUNREACH;
 } /* pNgPCmd */
 
 
@@ -1441,8 +1743,6 @@ os9err pNready(ushort pid, syspath_typ *spP, ulong *n )
           err= OTCountDataBytes( net->ep, n );
       if (err==kOTLookErr) {
               lookResult= OTLook(net->ep);
-//        if (lookResult==T_DISCONNECT) { err= 0; *n= 1; }
-
           if (lookResult==T_DISCONNECT) {
                err= OTRcvDisconnect( net->ep, nil );
                *n= 1;
