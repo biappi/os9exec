@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2003/04/25 19:33:48  bfo
+ *    MAXDIR/MAX_PATH now visible for Macintosh version
+ *
  *    Revision 1.27  2003/04/20 23:02:55  bfo
  *    net->connected and wTimeout support
  *
@@ -167,7 +170,7 @@
 #endif
 
 /* maximum number of modules that can be linked (minus one for the main module itself */
-#define MAXMODULES      512
+#define MAXMODULES     1024
 
 /* number of "processes" OS9exec can handle. 
  * In the first versions of OS9exec "processes" are only chaining
