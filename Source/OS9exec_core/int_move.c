@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/10/09 20:47:41  bfo
+ *    uphe_printf => upe_printf, move paths for RBF under Windows corrected
+ *
  *
  */
 
@@ -346,16 +349,16 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     
     
     if (isRBF) {                                          /* access to source directory */
-        err= usrpath_open    ( cpid,&pathS, typeS, fromdir, 0x83 ); if (err) return err;
+        err= usrpath_open   ( cpid,&pathS, typeS, fromdir, 0x83 ); if (err) return err;
         a0 = (ulong) dvS;
-        err= usrpath_getstat ( cpid, pathS, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
-                                                                    if (err) return err;
+        err= usrpath_getstat( cpid, pathS, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
+                                                                   if (err) return err;
                                                           
                                                           /* access to dest   directory */
-        err= usrpath_open    ( cpid,&pathD, typeD, todir,   0x83 ); if (err) return err;
+        err= usrpath_open   ( cpid,&pathD, typeD, todir,   0x83 ); if (err) return err;
         a0 = (ulong) dvD;
-        err= usrpath_getstat ( cpid, pathD, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
-                                                                    if (err) return err;
+        err= usrpath_getstat( cpid, pathD, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
+                                                                   if (err) return err;
 
         /* files must be on the same device */
         if (strcmp( dvS,dvD )) {
@@ -364,10 +367,16 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
             return _errmsg( 1,"can't move from one device (/%s) to another (/%s)", dvS,dvD );
         }
 
-        while (true) {
+        do {
             /* create the new dest file */
             err= get_locations( cpid,typeD, nmD,true, &asDirD, &fdD,&dfdD,&dcpD ); 
-                                                                    if (err) return err;
+                                                                    if (err) return err; 
+            /* reopen in the same directory */
+            if (dfdS==dfdD) {
+                err= usrpath_close( cpid, pathS );                       if (err) return err;
+                err= usrpath_open ( cpid,&pathS, typeS, fromdir, 0x83 ); if (err) return err;
+            }
+
             /* the backwards directory connection must be done also */
             if (asDirS) {
                 err= usrpath_open ( cpid,&pathX, typeS, nmS,0x83 ); if (err) break;
@@ -392,8 +401,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
                                 len= sizeof(ulong); l= os9_long(fdS>>8);
             err= usrpath_write( cpid, pathX, &len, &l, false );     if (err) break;
             err= usrpath_seek ( cpid, pathX, 0 ); /* hold alloc */  if (err) break;
-            break;
-        } /* while (true) */
+        } while (false);
         
         cer= usrpath_close    ( cpid, pathS ); if (!err) err= cer;
         cer= usrpath_close    ( cpid, pathD ); if (!err) err= cer;  if (err) return err;
