@@ -119,7 +119,11 @@
 #endif
 
 #ifdef macintosh
-  #define TICKS_PER_SEC CLOCKS_PER_SEC 
+  #if __MWERKS__ >= CW7_MWERKS
+    #define TICKS_PER_SEC 60 /* seems to buggy in CW7 */ 
+  #else
+    #define TICKS_PER_SEC CLOCKS_PER_SEC
+  #endif 
 #endif
 
 
