@@ -61,8 +61,12 @@ struct cputbl {
 
 extern unsigned long op_illg (uae_u32) REGPARAM;
 
-
+#ifndef _os9_ll_h
 typedef char flagtype;
+#endif
+
+
+
 
 /* register context:
    !!!!!!!! must be STRUCTURALLY EQUAL to regs_type in os9_uae.h */
@@ -190,7 +194,7 @@ static __inline__ uae_u32 next_ilong (void)
 #if !defined USE_COMPILER
 static __inline__ void m68k_setpc (uaecptr newpc)
 {
-    regs.pc_p = regs.pc_oldp = get_real_address(newpc);
+    regs.pc_p = regs.pc_oldp = (char*) get_real_address(newpc);
     regs.pc = newpc;
 }
 #else
