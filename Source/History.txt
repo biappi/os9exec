@@ -1199,7 +1199,8 @@
 		  03-05-20  Bfo     Use "procid_special.h" with *except[10] instead of *_except[10]
 		  03-05-20  Bfo		#define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
 		  03-05-21	Bfo		Preparations for seteuid on Mac OS X
-		  03-05-21  bfo		Some more MACH-O adaptions, still not able to compile
+		  03-05-21  Bfo		Some more MACH-O adaptions, still not able to compile
+		  03-05-25  Bfo		<totalMem> can't be any more smaller than <memsz>
     3.22  03-??-??  Bfo
     -------------------
 */

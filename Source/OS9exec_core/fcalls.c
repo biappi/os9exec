@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2003/05/21 20:25:54  bfo
+ *    Use "procid_special.h" with *except[10] instead of *_except[10]
+ *
  *    Revision 1.21  2003/01/10 21:00:50  bfo
  *    pWaitRead problems fixed
  *
@@ -265,15 +268,14 @@ os9err OS9_F_SRqMem( regs_type *rp, ushort cpid )
     #define MxV 0xFFFFFFF0 
     void    *bp;
     ulong   memsz= rp->d[0];
-    ulong   mx   = max_mem();
     
     if (memsz==0xFFFFFFFF) { /* get max mem */
       #ifdef win_linux
         memsz= 0x00800000; /* %%% a large portion */
       #else
-        memsz= mx-15;  
+        memsz= MaxBlock()-15;  
         debugprintf(dbgMemory,dbgNorm,
-               ("# F$SRqMem : requested max blocksize : max_mem()=%ld\n",memsz));
+               ("# F$SRqMem : requested max blocksize : MaxBlock()=%ld\n",memsz));
       #endif
     }
             
@@ -837,7 +839,7 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
     #pragma unused(cpid)
     #endif
     
-    ulong **b;
+    ulong **b, memsz;
    
 //  #ifdef powerc
 //  Gestalt( gestaltPhysicalRAMSize, &totalMem ); /* not all defs visible for MPW ... */
@@ -845,9 +847,14 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
 //  #endif
 
     rp->d[0]= OS9MINSYSALLOC;
-    rp->d[1]=        0;
+    rp->d[1]= 0;
+
+    /* MaxBlock() will not be reduced on Mac OS X */
+    /* Take the larger one, to avoid > Mem 100%   */
+        memsz= max_mem();
+    if (memsz>totalMem) totalMem= memsz;
     rp->d[2]= totalMem;
-    rp->d[3]=  max_mem();
+    rp->d[3]= memsz;
    
     b= (ulong**)rp->a[0]; *b= NULL; /* no segments available */
     return 0;

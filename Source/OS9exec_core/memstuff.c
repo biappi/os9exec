@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2003/05/21 20:32:01  bfo
+ *    Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
+ *
  *    Revision 1.11  2003/05/17 10:41:39  bfo
  *    'show_mem' with <mem_unused> parameter /
  *    better deallocation strategy for the unused blocks
@@ -451,10 +454,10 @@ ulong max_mem()
     
     #ifdef macintosh
       memsz= MaxBlock();
+      
     #elif defined win_linux
-      /* bfo: is 8 megs really MUUUUCH for an OS-9 system ??? */
-      /* try it another way */     
-      memsz= 0; 
+      memsz= 0;
+      
     #else
       #error MaxBlock size must be defined here
     #endif
