@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2002/11/06 22:08:14  bfo
+ *    OS9_F_Load <mode> problem is now really fixed !
+ *
  *    Revision 1.16  2002/11/06 20:15:14  bfo
  *    Colored memory dependency at OS9_F_Load avoided.
  *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
@@ -632,6 +635,8 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
     os9err       err= 0;
     process_typ* cp = &procs[cpid];
     save_type*   svd;
+    short        pds;
+    ulong        syt;
     
     if (cp->pd._signal==0) {
         /* fatal: kill process */
@@ -643,27 +648,36 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
         /* ok, terminate processing of intercept routine */
         debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d\n",
                        cpid, os9_word(cp->pd._signal) ));
-        cp->pd._signal =     0; /* intercept done */
-        set_os9_state( cpid, cp->rtestate );
-        cp->os9regs    =     cp->rteregs; /* restore regs */
-        cp->vector     =     cp->rtevector;
-        cp->func       =     cp->rtefunc;
+        set_os9_state( cpid,   cp->rtestate );
+        memcpy( &cp->os9regs, &cp->rteregs, sizeof(regs_type) ); /* restore regs */
+                 cp->vector=   cp->rtevector;
+                 cp->func  =   cp->rtefunc;
         
         if (cp->state==pWaitRead) { /* make the save status ready again */
-            svd=            &cp->savread; /* pointer to process' saved registers */
-            svd->r     =     cp->rteregs;
-            svd->vector=     cp->rtevector;
-            svd->func  =     cp->rtefunc;
+                     svd=        &cp->savread; /* pointer to process' saved registers */
+            memcpy( &svd->r,     &cp->rteregs, sizeof(regs_type) );
+                     svd->vector= cp->rtevector;
+                     svd->func  = cp->rtefunc;
             
-            /* but the process will be woken up after intercept !!! */
-            set_os9_state( cpid, pActive );
+                  /* but the process will be woken up after intercept !!! */
+                pds= os9_word(cp->pd._signal);
+            if (pds>0 && pds<=32) {
+                cp->os9regs.d[1]= pds;
+			    cp->os9regs.sr |= CARRY;
+                set_os9_state( cpid, pActive );  /* only for some cases */
+            }
+            else arbitrate= true;
         } /* if pWaitRead */
-        
-
-        if ((cp->os9regs.sr & CARRY)==0) err= 0; /* no error */
-        else                             err= cp->os9regs.d[1];
-        
-        cp->os9regs.d[1]= 0; /* and remove the error */
+           
+            cp->pd._signal= 0; /* intercept done */
+        if (cp->os9regs.sr & CARRY) err= cp->os9regs.d[1];
+         
+        /* in case of F_Sleep, return remaining ticks */        
+        if (cp->func==F_Sleep) {
+                               syt= GetSystemTick();
+            if (cp->wakeUpTick>syt) cp->os9regs.d[0]= cp->wakeUpTick-syt;
+            else                    cp->os9regs.d[0]= 0;
+        }
     } /* if */
     
     sigmask( cpid,0 ); /* disable signal mask */
