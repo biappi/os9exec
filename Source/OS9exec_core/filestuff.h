@@ -116,8 +116,10 @@ void    ConsPutcEdit    ( char  c, Boolean alf, char eorch );
 
 /* external RBF    support routines */
 os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, 
-                             short adapt, ushort scsibus, short scsiID, ushort scsiLUN, 
-                             Boolean wProtect );
+                          short  adapt, ushort scsibus, 
+                          short scsiID, ushort scsiLUN, 
+                          int  ramSize, Boolean wProtect );
+                             
 os9err  int_mount       ( ushort pid, int argc, char **argv );
 os9err  int_unmount     ( ushort pid, int argc, char **argv );
 void    Disp_RBF_Devs   ( Boolean statistic );

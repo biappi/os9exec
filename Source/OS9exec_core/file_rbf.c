@@ -705,8 +705,11 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             }
         }
 
-        isSCSI= false; /* don't forget to set a default */
-        if (!isRAM) {
+        if (isRAM) {
+                 isSCSI= false; /* don't forget to set a default */
+            GetOS9Dev( pathname, (char*)&cmp );
+        }
+        else {
                  isSCSI= (err && mnt_scsi!=NO_SCSI);
             if  (isSCSI) {
                 scsiID   = mnt_scsi;
@@ -887,6 +890,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         dev->installed= true;   /* now it is installed */
         
         if (isRAM) {
+            upe_printf( "RAM disk: %d\n", mnt_ramSize );
             dev->totScts= 8192;
             dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
             memcpy( dev->ramBase,RAM_zero, dev->sctSize );
@@ -970,16 +974,15 @@ static void mount_usage(char* name, ushort pid )
     
     upe_printf( "    -s=scsiID  connect to SCSI ID\n" );
     
-    #ifdef windows32
     upe_printf( "    -l=lun     connect to LUN (default=0)\n" );
-    #endif
+    upe_printf( "    -r=size    create RAM disk with size (in kBytes)\n" );
 } /* mount_usage */
 
 
 
 os9err MountDev( ushort pid, char* name, char* mnt_dev, 
                              short adapt, ushort scsibus, short scsiID, ushort scsiLUN, 
-                             Boolean wProtect )
+                             int ramSize, Boolean wProtect )
 {
     os9err    err= 0;
     char      tmp[OS9NAMELEN];
@@ -994,9 +997,10 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
     /* NOTE: mnt_name is only valid within this context here */
-    if (*mnt_dev!=NUL || scsiID!=NO_SCSI) {
-        mnt_name= mnt_dev;
-        
+    if (*mnt_dev!=NUL || scsiID!=NO_SCSI || ramSize>0) {
+        mnt_name   = mnt_dev;
+        mnt_ramSize= ramSize;
+       
         if (scsiID!=NO_SCSI) {
             mnt_name= name;
             mnt_scsiAdapt = adapt;
@@ -1036,6 +1040,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     mnt_wProtect= false; /* switch them off again */
     mnt_name    = "";
     mnt_scsi    = NO_SCSI;
+    mnt_ramSize = 0;
     
     if   (!err) err= syspath_close( pid, sp );
     return err;
@@ -1056,6 +1061,7 @@ os9err int_mount( ushort pid, int argc, char **argv )
     short     scsibus = defSCSIBusNo;
     short     scsiID  = NO_SCSI;
     short     scsiLUN = 0;
+    int       ramSize = 0;
     
     Boolean   wProtect= false;
     char      *p;
@@ -1113,6 +1119,14 @@ os9err int_mount( ushort pid, int argc, char **argv )
                             }
                             sscanf( p,"%hd", &scsiLUN );
                             break;
+
+                case 'r' :  if (*(p+1)=='=') p+=2;
+                            else {  k++; /* next arg */
+                                if (k>=argc) break;
+                                p= argv[k];
+                            }
+                            sscanf( p,"%d", &ramSize );
+                            break;
                             
                 default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
                             mount_usage(argv[0],pid); return 1;
@@ -1128,8 +1142,8 @@ os9err int_mount( ushort pid, int argc, char **argv )
     } /* for */
 
     /* nargv[0] is the name of the image to be mounted */
-    /* nargv[1] the name of the mounted device */
-        err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, wProtect );
+    /* nargv[1] is the name of the mounted device */
+        err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, ramSize, wProtect );
     if (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
     return 0;
 } /* int_mount */
@@ -1152,7 +1166,8 @@ static void unmount_usage( char* name, ushort pid )
 static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
 {
     os9err            err= 0;
-    if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img ); 
+    if (!dev->isRAM &&
+        !IsSCSI(dev)) err= syspath_close( pid, dev->sp_img ); 
 
     if (!err) {       dev->installed= false;
          release_mem( dev->tmp_sct,   false );
@@ -1268,9 +1283,15 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
 
     strcpy ( s,             name         );
 //  sprintf( sc,     "%3d", rb->scsiID   );
-    strcpy ( u,             rb->img_name ); if (*u==NUL) strcpy( u," -" );
-    sprintf( w, "SCSI: %d", rb->scsiID   );
- 
+    strcpy ( u,             rb->img_name ); 
+    
+    if     (rb->isRAM || *u==NUL) strcpy( u," -" );
+    if     (rb->isRAM)  strcpy ( w, "ram" );
+    else {
+        if (IsSCSI(rb)) sprintf( w, "SCSI: %d", rb->scsiID );
+        else            strcpy ( w, "image" );
+    }
+    
                  sprintf( v, "(%1.2f%s)", r,unit );
     if (r>=  10) sprintf( v, "(%2.1f%s)", r,unit );
     if (r>= 100) sprintf( v," (%3.0f%s)", r,unit );
@@ -1285,7 +1306,7 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                      rb->wMiss, rb->wTot );
     else 
         upo_printf( "%-10s %-7s %2d %4d  %-4s %-26s %s\n", 
-                     IsSCSI(rb) ? w :"IMAGE",
+                     w,
                      "rbf", 
                      rb->nr,
                      rb->sctSize,

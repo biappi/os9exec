@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 
@@ -370,7 +373,7 @@ static void CheckH0( char* name, char* p, char** p3 )
    
       q= name + strlen( name )-2; *q= NUL; /* cut "h0" again */
       strcat          ( name,"dd" );
-      err= MountDev( 0, name,p, 0,0,NO_SCSI,0,false ); if (err) return;
+      err= MountDev( 0, name,p, 0,0,NO_SCSI,0,0,false ); if (err) return;
     
       strcpy( name,"/h0" ); *p3= name;
 

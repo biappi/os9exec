@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/07/05 22:45:54  uid82848
+ *    E_FULL problem fixed
+ *
  *    Revision 1.10  2002/07/03 21:41:47  bfo
  *    RAM disk is now operational ( currently fixed to 2MB )
  *
@@ -1658,7 +1661,7 @@ Boolean RAM_Device( const char* os9path )
     char cmp[OS9PATHLEN];
     
     GetOS9Dev( os9path, (char*)&cmp );
-    return( ustrcmp( cmp,"r0" )==0 );
+    return( ustrcmp( cmp,"r0" )==0 || mnt_ramSize>0 );
 } /* RAM_Device */
 
 
