@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2002/10/15 21:37:29  bfo
+ *    Changed to V3.20
+ *
  *    Revision 1.25  2002/10/15 18:23:43  bfo
  *    memtable included
  *
@@ -182,8 +185,13 @@ byte		devs[0x0900];
 /* the OS-9 statistics table */
 st_typ		statistics[MAX_OS9PROGS];
 
+
 /* the mem alloc table */
-ptrsize_typ memtable[MAX_MEMALLOC];
+memblock_typ memtable[MAX_MEMALLOC];
+
+#ifdef REUSE_MEM
+  free_typ   freeinfo;
+#endif
 
 
 /* the file file mgrs routine table */
@@ -375,11 +383,12 @@ static os9err prepParams(mod_exec *theModule, char **argv,int argc, char**envp, 
    paramsiz+=argsiz+argc*4+envsiz+os9envc*4+strlen(modnam); /* add module name plus pointer spaces */
    /* -- allocate buffer for it */
 
-   #ifdef MACMEM
-   pp=NewPtr(paramsiz);
-   #else
-   pp=malloc((size_t)paramsiz);
-   #endif
+// #ifdef MACMEM
+//   pp=NewPtr(paramsiz);
+// #else
+//   pp=malloc((size_t)paramsiz);
+// #endif
+       pp= get_mem( paramsiz );
    if (pp==NULL) return os9error(E_NORAM);
    
    /* -- prepare parameters shell-like */
@@ -475,7 +484,7 @@ static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulo
 	
 										  /* group/user 0.0 are set for the first process */
 	err= prepFork( newpid,toolname, mid,pap,psiz,memplus,numpaths, 0,0, prior, &intCmd );
-	release_mem( pap,false ); /* return arg buffer anyway, alloc as pointer */
+	release_mem( pap ); /* return arg buffer anyway, alloc as pointer */
 	
     if (!err) { /* make this process ready to execute */
         if (!intCmd) {     currentpid= newpid;    /* make this process current */
@@ -1069,7 +1078,7 @@ static void debug_return( process_typ* cp, Boolean cwti )
 void os9exec_globinit(void)
 {
     /* --- global environment initialisation --- */
-    totalMem= 0;               /* initialize startup memory */
+    init_all_mem  ();          /* initialize memory handling */
     init_fmgrs    ();          /* initialize all the file manager objects */
 	init_processes();          /* no processes yet */
 	init_modules  ();          /* clear module handle list */

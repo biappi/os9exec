@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2002/10/15 18:16:46  bfo
+ *    memtable included
+ *
  *    Revision 1.19  2002/10/02 18:47:25  bfo
  *    <mdir_entry> / <mdirField> structures included
  *
@@ -260,14 +263,14 @@ typedef ushort os9err;
 
 /* an (internal) module directory entry */
 typedef struct {
-            #ifdef macintosh
-              Handle modulehandle;
-            #else
-              void  *modulebase;
-            #endif
+//          #ifdef macintosh
+//            Handle modulehandle;
+//          #else
+              void* modulebase;
+//          #endif
             
-            Boolean isBuiltIn; /* set if module compiled into code (such as OS9exec module) */
-            short linkcount;
+            Boolean isBuiltIn; /* set, if module compiled into code (such as 'OS9exec' module) */
+            short   linkcount;
          } module_typ;
 
 
@@ -279,12 +282,6 @@ typedef struct {
             ulong lnk;
          } mdir_entry;
 
-/* ptr and size structure */
-typedef struct {
-            ulong ptr;
-            ulong size;
-         } ptrsize_typ;
-
 
 /* a error trap handler */
 typedef struct {
@@ -292,11 +289,20 @@ typedef struct {
             ulong handlerstack;
          } errortrap_typ;
 
+
 /* an allocated memory block */
 typedef struct {
             void* base;
             ulong size;
         } memblock_typ;
+
+#ifdef REUSE_MEM
+  typedef struct {
+            memblock_typ f[MAX_MEMALLOC];
+            int          freeN;   /* number of free segments */
+            ulong        freeMem; /* total free memory */
+        } free_typ;
+#endif
 
 
 /* OS9 simulated directory file constants */
@@ -306,6 +312,7 @@ typedef struct {
 #define IDSHIFT     21 /* bits to shift (bfo) */
 #define VOLIDMASK   0x0007
 #define VOLIDEXT    0xFFF8
+
 
 /* #define VOLIDSIGN   0x0004 */
 #define VOLIDMIN    -7
@@ -875,10 +882,15 @@ extern  char*       dirtable[MAXDIRS];
 #endif
 
 /* the OS-9 statistics table */
-extern  st_typ      statistics[MAX_OS9PROGS];
+extern  st_typ     statistics[MAX_OS9PROGS];
 
 /* the mem alloc table */
-extern  ptrsize_typ memtable[MAX_MEMALLOC];
+extern memblock_typ memtable[MAX_MEMALLOC];
+
+#ifdef REUSE_MEM
+  extern free_typ   freeinfo;
+#endif
+
 
 /* I/O device table */
 extern  byte        devs[0x0900];       
