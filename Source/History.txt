@@ -1,6 +1,6 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
-//    Copyright (C) 2002 Ê[ Lukas Zeller / Beat Forster ]
+//    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
@@ -975,6 +975,8 @@
     -------------------		(UAE must be in the same subdir, don't know why)
 
 	      02-05-11  Bfo     Problem ftp/telnet quit emulator fixed (pW_age bug all sleeping)
+	      02-05-16  Bfo     "See" mac files with spaces as files with underscores
+	      02-05-16  Bfo     Replace strange \ca charactres by spaces in all project files.
 	3.12  02-05-??  Bfo     ...
 	-------------------		
 */
