@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/10/27 23:17:46  bfo
+ *    get_mem/release_mem no longer with param <mac_asHandle>
+ *
  *    Revision 1.9  2002/09/11 17:15:13  bfo
  *    Definition changed from "ulong* dat_buf" ==> "byte* dat_buf"
  *
@@ -223,7 +226,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
     os9err err;
     char*  s;
 
-    #ifdef macintosh
+    #if defined macintosh && !defined USE_CARBON 
       #pragma unused(scsiAdapt,scsiBus,scsiLUN)
       
       OSErr  oserr, ocerr= 0;
