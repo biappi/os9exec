@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/10/27 23:20:14  bfo
+ *    module system on Mac no longer implemented with handles
+ *
  *    Revision 1.7  2002/10/02 19:03:13  bfo
  *    Update_MDir implementation at "modstuff" (taken partly from OS9_F_GModDr)
  *
@@ -272,17 +275,17 @@ void FillTemplate( mod_exec *m, short access, short tylan, short attrev )
 {
     m->_mh._msync  = os9_word(0x4AFC);  /* sync bytes ($4afc) */
     m->_mh._msysrev= os9_word(1);       /* system revision check value */
-    m->_mh._msize  = os9_long(0);       /* module size */
-    m->_mh._mowner = os9_long(0);       /* owner id */
-    m->_mh._mname  = os9_long(0);       /* offset to module name */
+    m->_mh._msize  = 0;                 /* module size */
+    m->_mh._mowner = 0;                 /* owner id */
+    m->_mh._mname  = 0;                 /* offset to module name */
     m->_mh._maccess= os9_word(access);  /* access permission */
     m->_mh._mtylan = os9_word(tylan );  /* type/lang */
     m->_mh._mattrev= os9_word(attrev);  /* rev/attr */
     m->_mh._medit  = os9_word(0x0001);  /* edition */
-    m->_mh._musage = os9_long(0);       /* comment string offset */
-    m->_mh._msymbol= os9_long(0);       /* symbol table offset */
-    m->_mh._mident = os9_word(0);       /* ident code for ident program */
-    m->_mh._mparity= os9_word(0);       /* header parity */
+    m->_mh._musage = 0;                 /* comment string offset */
+    m->_mh._msymbol= 0;                 /* symbol table offset */
+    m->_mh._mident = 0;                 /* ident code for ident program */
+    m->_mh._mparity= 0;                 /* header parity */
 }   
 
 
