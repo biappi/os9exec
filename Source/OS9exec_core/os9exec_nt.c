@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/07/21 14:35:55  bfo
+ *    Synchronise the currentTick with seconds of time/date
+ *
  *    Revision 1.10  2002/07/06 15:54:53  bfo
  *    mnt_ramSize included
  *
@@ -221,8 +224,9 @@ ulong   my_inetaddr   = os9_long(0x7F000001); /* loopback by default: 127.0.0.1 
 
 
 /* tickCount at start of the program */
-ulong  startTick;
+ulong  startTick= 0;
 ulong   lastTick= 0;
+ulong     syCorr= 0;
 
 #ifdef linux
   ulong sec0;
