@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2003/05/05 17:55:07  bfo
+ *    Activate most of the ramDisk things even without RAM_SUPPORT
+ *
  *    Revision 1.33  2002/10/27 23:31:02  bfo
  *    ReleaseBuffers at pRclose done in every case
  *    get_mem/release_mem without param <mac_asHandle>
@@ -2725,25 +2728,33 @@ os9err pRpos( ushort pid, syspath_typ* spP, ulong *posP )
 /* get options for RBF file */
 os9err pRopt(ushort pid, syspath_typ* spP, byte *buffer)
 {
-    os9err      err= pRBFopt( pid,spP, buffer );
-    rbf_typ*    rbf= &spP->u.rbf;
-    rbfdev_typ* dev= &rbfdev[rbf->devnr];
+    os9err      err = pRBFopt( pid,spP, buffer );
+    rbf_typ*    rbf = &spP->u.rbf;
+    rbfdev_typ* dev = &rbfdev[rbf->devnr];
+    ulong       sSct= dev->sctSize;
     byte*       b;
     ushort*     w;
     ulong*      l;
     char*       c;
 
+    if (sSct==0) sSct= STD_SECTSIZE;     /* the std way how to handle unknow sector sizes */
+    
     /* and fill some specific RBF path values */
     b= (byte  *)&buffer[ PD_TYP    ]; *b=          dev->pdtyp;
     w= (ushort*)&buffer[ PD_SAS    ]; *w= os9_word(dev->sas);        /* sector alloc size */
-    w= (ushort*)&buffer[ PD_SSize  ]; *w= os9_word(dev->sctSize);    /* phys sect size    */
+    w= (ushort*)&buffer[ PD_SSize  ]; *w= os9_word(sSct);            /* phys sect size    */
     b= (byte  *)&buffer[ PD_CtrlrID]; *b=          dev->scsiID;
     b= (byte  *)&buffer[ PD_ATT    ]; *b=          rbf->att;
-    l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr<<BpB); /* LSN of file       */
-    l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir<<BpB); /* LSN of its dir    */
+
+//  l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr<<BpB); /* LSN of file       */
+//  l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir<<BpB); /* LSN of its dir    */
+
+    l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr*sSct); /* pos of file       */
+    l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir*sSct); /* pos of its dir    */
+
     l= (ulong *)&buffer[ PD_DCP    ]; *l= os9_long(rbf->deptr);      /* dir entry pointer */
     l= (ulong *)&buffer[ PD_DVT    ]; 
-    l= (ulong *)&buffer[ PD_SctSiz ]; *l= os9_long(dev->sctSize);    /* logical sect size */
+    l= (ulong *)&buffer[ PD_SctSiz ]; *l= os9_long(sSct);            /* logical sect size */
     c= (char  *)&buffer[ PD_NAME   ];  strcpy( c,  spP->name );      /* name */
 
     return err;
