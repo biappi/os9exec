@@ -301,6 +301,7 @@ static void idevs_usage( char* name, ushort pid )
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Print OS9exec device table\n" );
     upe_printf( "Options:\n" );
+    upe_printf( "    -r    show RBF devices only\n" );
     upe_printf( "    -s    show statistic values\n" );
 } /* idevs_usage */
 
@@ -328,6 +329,7 @@ static os9err int_devs( ushort pid, int argc, char **argv )
     #define IDEVS_MAXARGS 0
     int     nargc=0, h;
     char*   p;
+    Boolean rbf_devs = false;
     Boolean statistic= false;
     
     int           ii;
@@ -341,6 +343,7 @@ static os9err int_devs( ushort pid, int argc, char **argv )
             p++;
             switch (tolower(*p)) {
                 case '?' :  idevs_usage( argv[0],pid ); return 0;
+                case 'r' :  rbf_devs = true; break;
                 case 's' :  statistic= true; break;
                 default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
                             idevs_usage( argv[0],pid ); return 1;
@@ -372,7 +375,7 @@ static os9err int_devs( ushort pid, int argc, char **argv )
       Disp_RBF_Devs( statistic );
     #endif
     
-    if (!statistic) {
+    if (!statistic && !rbf_devs) {
         #ifdef windows32
               tdev= &main_mco; 
           if (tdev->installed && tdev->spP!=NULL)
