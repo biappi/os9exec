@@ -30,6 +30,19 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 
 /* "serialaccess.c"
@@ -45,7 +58,7 @@
  * 00/07/13 bfo  Support for both serial lines
  * 00/07/15 bfo  RemoveConsole: installed= false at the end
  */
- 
+
 #include "Serial.h"
 #include "os9exec_incl.h"
 
