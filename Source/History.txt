@@ -1140,6 +1140,8 @@
           02-10-28  Bfo     Sibling handling of internal commands corrected ("idevs!head" bug)
           02-10-28  Bfo     REUSE_MEM handling introduced
           02-10-28  Bfo     "iunused" implemented
+          02-10-28  Bfo     network close with corrected release_mem for net->b_local
+          02-10-28  Bfo     slightly different checkpoint: STRANGE/UNUSED 
     3.20  02-10-??  Bfo     ...
     -------------------
 */
