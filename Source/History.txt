@@ -1004,6 +1004,7 @@
                             of printer (normally postScript). Tested with Apple LaserWriter on TCP/IP
                             network.
           02-06-26  Bfo     Can be compiled also for Mac.
+          02-06-29  Bfo     Problems with CW5 for printer, switch it off there.
     3.14  02-06-??  Bfo     ...
     -------------------
 */
