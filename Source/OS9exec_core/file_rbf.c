@@ -2088,9 +2088,12 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         /* take care of write protection */     
         if (cre && dev->wProtected) { err= E_WP; break; }
 
-                    p= pathname; /* that's it for raw mode */   
-        if (IsRaw  (p)) { spP->rawMode= true;
-                          strcpy( spP->name,pathname ); return 0; }
+                  p= pathname; /* that's it for raw mode */   
+        if (IsRaw(p)) { 
+        	        spP->rawMode= true;
+            strcpy( spP->name,pathname ); if (cre) { err= E_CEF; break; }
+            return 0; 
+        } /* if (IsRaw) */
 
         if (AbsPath(p)) { /* if abs path -> search from the root */                     
             err= RootLSN( dev, spP, false );   if (err) break;
@@ -2505,10 +2508,16 @@ os9err pRsetFD(ushort pid, syspath_typ* spP, byte *buffer)
 os9err pRsize( ushort pid, syspath_typ* spP, ulong *sizeP )
 /* get the size of a file */
 {
-    os9err   err;
-    rbf_typ* rbf= &spP->u.rbf;
-    byte     attr;
-    ulong    sect, totsize, sv, pref;
+    os9err      err;
+    rbf_typ*    rbf= &spP->u.rbf;
+    rbfdev_typ* dev= &rbfdev[rbf->devnr];
+    byte        attr;
+    ulong       sect, totsize, sv, pref;
+
+    if (spP->rawMode) {
+        *sizeP= dev->totScts*dev->sctSize;
+        return 0;
+	}
 
     sv = rbf->currPos;
          rbf->currPos= 0;  /* initialize position to 0 */
