@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2003/05/21 20:27:43  bfo
+ *    #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
+ *
  *    Revision 1.8  2003/05/17 10:22:59  bfo
  *    Clean Carbon import
  *
@@ -220,9 +223,7 @@ typedef struct dirent dirent_typ;
   #endif
   
   #ifdef USE_CARBON
-	#ifdef __MACH__
-	  #include <MacHeadersMach-O.h>
-	#else
+    #ifndef __MACH__
 	  #include <Carbon.h>
 	#endif
   #else
@@ -248,14 +249,18 @@ typedef struct dirent dirent_typ;
     #endif
   #endif
 
-  #include <Signal.h>
+  #ifndef __MACH__
+    #include <Signal.h>
+  #endif
 #endif
 
 #ifdef TERMINAL_CONSOLE
+  #ifndef __MACH__
     #include <unistd.h>
+  #endif
 #endif
 
-#ifdef macintosh
+#if defined macintosh && !defined __MACH__
   #ifdef MPW
         /* MPW include files */
     #pragma push
