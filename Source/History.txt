@@ -980,7 +980,11 @@
           02-05-17  Bfo     MPW version can be compiled again, fully working on CVS directory now.
           02-05-18  Bfo     Linux version checked, +-ok (has to convert sources with LF now).
           02-05-18  Bfo     Strange filedate problem (Mac) completely fixed (see also 02-04-12).
-    3.12  02-05-??  Bfo     ...
+          02-05-18  Bfo     Clean headers (not completely clean, as seen at 02/06/06)
+          02-05-18  Bfo     GetTim implementation things.
+          02-05-18  Bfo     Program is quitting the main loop again.
+          02-06-06  Bfo		Problem with larger SCSI sectorsize fixed.
+    3.12  02-06-??  Bfo     ...
     -------------------
 */
 
