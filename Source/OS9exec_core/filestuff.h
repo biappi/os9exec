@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.8  2003/07/31 14:40:04  bfo
  *    Additional parameter for sectorsize
  *
@@ -158,8 +161,8 @@ void    CheckInBufferTTY( ttydev_typ* mco );
 
 
 /* external net    support routines */
-os9err        MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
-                                           ulong *dns2Addr, char* domainName );
+/* os9err        MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
+                                           ulong *dns2Addr, char* domainName ); */
 os9err             pNask( ushort pid, syspath_typ* );
 
 /* eof */
