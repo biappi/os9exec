@@ -30,6 +30,19 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
+
 
 /* OS9exec_nt.h */
 #ifndef __os9exec_nt_h
@@ -264,7 +277,7 @@ typedef enum { sysNonExisting=0, sysStdin=1, sysStdout=2,
 typedef enum { usrStdin=0, usrStdout=1, usrStderr=2 } usrpathEnum;
 
 typedef enum { fNone, fCons,fTTY,fNIL,fVMod,fSCF, fFile,fDir, 
-                      fPipe,fPTY, fRBF, fNET,  fARRSZ } ptype_typ;
+                      fPipe,fPTY, fRBF, fNET, fPrinter, fARRSZ } ptype_typ;
 
 
 #define CRUZ_POS  0x60       /* Cruz position at RBF boot sector */
@@ -449,45 +462,48 @@ typedef struct {
 #define MIN_TMP_SCT_SIZE 2048 // minimu size of temp sector buffer (to read sector 0)
 
 typedef struct {
-            /* common for all types */
-            ptype_typ type;             /* the path's type */
-            ushort    nr;               /* the own syspath number */        
-            ushort    linkcount;        /* the link count */
-            char      name[OS9NAMELEN]; /* file name */
-            mod_exec* mh;				/* according module, if available */
-            byte      opt[OPTSECTSIZE]; /* path's option section */
-            ushort    signal_to_send;   /* send signal on data ready */
-            ushort    signal_pid;       /* signal has to be sent to this process */
-            ulong     set_evId;         /* set  event  on data ready */
-            int       lastwritten_pid;  /* connection for signal handler */
-            Boolean   rawMode;          /* raw mode /xx@ */
-            ulong     rawPos;           /* the (emulated) sector 0 position */
-                
-            byte*     fd_sct;           /* FD  sector buffer */
-            byte*     rw_sct;           /* R/W sector buffer */
-            ulong     rw_nr;            /* current R/W sector nr */
-            ulong     mustW;            /* current sector to be written */
-            Boolean   fullsearch;       /* recursive mode for "babushka" */
+    /* common for all types */
+    ptype_typ type;             /* the path's type */
+    ushort    nr;               /* the own syspath number */        
+    ushort    linkcount;        /* the link count */
+    char      name[OS9NAMELEN]; /* file name */
+    mod_exec* mh;				        /* according module, if available */
+    byte      opt[OPTSECTSIZE]; /* path's option section */
+    ushort    signal_to_send;   /* send signal on data ready */
+    ushort    signal_pid;       /* signal has to be sent to this process */
+    ulong     set_evId;         /* set  event  on data ready */
+    int       lastwritten_pid;  /* connection for signal handler */
+    Boolean   rawMode;          /* raw mode /xx@ */
+    ulong     rawPos;           /* the (emulated) sector 0 position */
+        
+    byte*     fd_sct;           /* FD  sector buffer */
+    byte*     rw_sct;           /* R/W sector buffer */
+    ulong     rw_nr;            /* current R/W sector nr */
+    ulong     mustW;            /* current sector to be written */
+    Boolean   fullsearch;       /* recursive mode for "babushka" */
 
-            #if !defined MACFILES || defined MPW
-              FILE*   stream;           /* the associated stream */
-            #endif
-                
-            #ifdef win_linux
-              char    fullName[OS9PATHLEN]; /* direct access makes life easier */
-              DIR*    dDsc;
-            #endif
-                
-            int       term_id;          /* terminal id number, console|pipe used together */
+    // %%%luz: many of these should be in the union below...
+    #if !defined MACFILES || defined MPW
+      FILE*   stream;           /* the associated stream */
+    #endif
+        
+    #ifdef win_linux
+      char    fullName[OS9PATHLEN]; /* direct access makes life easier */
+      DIR*    dDsc;
+    #endif
+        
+    int       term_id;          /* terminal/port id number, console|pipe|printer used together */
 
-            /* variants for different types */
-            union {
-                pipe_typ pipe;          /* Pipe          object */
-                disk_typ disk;          /* Disk file/dir object */
-                 rbf_typ rbf;           /* RBF  file/dir object */
-                 net_typ net;           /* Network       object */
-            } u;
-        } syspath_typ;
+    HANDLE    printerHandle;    /* handle for printer devices */
+
+    /* variants for different types */
+    union {
+        pipe_typ pipe;          /* Pipe          object */
+        disk_typ disk;          /* Disk file/dir object */
+         rbf_typ rbf;           /* RBF  file/dir object */
+         net_typ net;           /* Network       object */
+    } u;
+} syspath_typ;
 
 
 
@@ -817,7 +833,8 @@ extern  fmgr_typ    fmgr_none,
                     fmgr_pipe,
                     fmgr_pty,
                     fmgr_rbf,
-                    fmgr_net;
+                    fmgr_net,
+                    fmgr_printer;
 
 /* the events */
 extern  event_typ   events  [MAXEVENTS];
@@ -953,6 +970,7 @@ char*   egetenv( const char* name );
 void    eSpinCursor  ( short incr );
 void    eAdvanceCursor(void);
 
+// console names
 #define MainConsole "/term"
 #define SerialLineA "/ts1"
 #define SerialLineB "/ts2"
@@ -964,6 +982,13 @@ void    eAdvanceCursor(void);
 #define TTY_Base    100
 
 #define MAX_CONSOLE 100 /* half of them are VMod windows */
+
+// printer names
+#define MainPrinter "/lp"
+#define LptPrinterFamilyName "/lpt"
+
+#define MAX_PRINTER 5 /* Com0..com4 */
+
 
 #ifdef win_linux
   #define AppDo ".AppleDouble"   /* specific netatalk file names */

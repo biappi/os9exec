@@ -34,6 +34,19 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
+
 // precompilable includes (files that are not part of
 // OS9exec itself, such as platform and lib includes)
 // ==================================================
@@ -155,6 +168,8 @@
       #include <windows.h>
       // We need sockets, so include them here as well
       #include <ws2spi.h>
+      // We need printing support
+      #include <winspool.h>
     #endif
 
   #else

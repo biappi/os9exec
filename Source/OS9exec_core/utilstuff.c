@@ -30,6 +30,19 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
+
 #include "os9exec_incl.h"
 
 /* General Utility routines */
@@ -1746,6 +1759,7 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
     
         if  (ustrcmp (os9path,"/nil"   )==0) { type= fNIL;  break; }
         if  (ustrncmp(os9path,"/pipe",5)==0) { type= fPipe; break; }
+        if  (ustrncmp(os9path,"/lp",3)==0) { type= fPrinter; break; }
 
         #ifdef TERMINAL_CONSOLE
           /* there is more than one serial device possible now */

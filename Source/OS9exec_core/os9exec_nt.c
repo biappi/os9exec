@@ -30,6 +30,18 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
 
 /* Revision History
  * ================
@@ -124,7 +136,8 @@ fmgr_typ    fmgr_none,
             fmgr_pipe,
             fmgr_pty,
             fmgr_rbf,
-            fmgr_net;
+            fmgr_net,
+            fmgr_printer;
 
 /* the events */
 event_typ   events  [MAXEVENTS];

@@ -30,6 +30,18 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
 
 /* debugging aids */
 /* debug mask definitions */
@@ -48,6 +60,7 @@
 #define dbgStartup      0x0800   /* os9exec/nt startup and initial argument preparation */
 #define dbgPartial      0x1000   /* warnings for inaccurate/partial emulated functionality */
 #define dbgTerminal     0x2000   /* interactive I/O, output filtering */
+#define dbgSpecialIO    0x4000   /* special I/O such as printer */
 
 #define dbgWarnings     0x8000   /* warnings */
 

@@ -34,6 +34,18 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
 
 /* includes for all project modules */
 /* ================================ */
@@ -117,6 +129,7 @@
 #include "os9exec_nt.h"
 #include "alarms.h"
 #include "consio.h"
+#include "printer.h"
 #include "debug.h"
 #include "events.h"
 #include "funcdispatch.h"

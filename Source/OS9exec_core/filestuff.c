@@ -30,6 +30,19 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
+
 
 /* "filestuff.c"
  * Interface to the different output systems
@@ -52,6 +65,8 @@ void init_None( fmgr_typ* f );
 void init_Cons( fmgr_typ* f ); /* consio */
 void init_NIL ( fmgr_typ* f );
 void init_SCF ( fmgr_typ* f );
+
+void init_Printer( fmgr_typ* f ); /* printer */
 
 void init_File( fmgr_typ* f ); /* fileaccess */
 void init_Dir ( fmgr_typ* f );
@@ -174,6 +189,10 @@ void init_fmgrs(void)
     
     #ifdef NET_SUPPORT /* network support */
       conn_FMgr( fNET, &fmgr_net,  init_Net  ); /*    "    network          routines (network)    */
+    #endif
+    
+    #ifdef PRINTER_SUPPORT
+      conn_FMgr( fPrinter, &fmgr_printer, init_Printer  ); /*    "    printer          routines (printer)    */
     #endif
 } /* init_fmgrs */
    

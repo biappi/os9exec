@@ -30,6 +30,19 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
+
 #include "os9exec_incl.h"
 
 /* Console I/O routines */
@@ -387,7 +400,7 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
 #endif
 
 
-
+/* returns index for numbered descriptors like tty00,01,02... */
 static Boolean ConsId( char* name, char* family, int range, int offs, int *result )
 {
     int   flen= strlen(family);

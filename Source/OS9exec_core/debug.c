@@ -30,6 +30,18 @@
 /*        forsterb@dial.eunet.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ */
 
 
 #include "os9exec_incl.h"
@@ -226,6 +238,7 @@ os9err debug_help( ushort pid, int argc, char **argv )
     upho_printf("  dbgStartup      0x0800  os9exec/nt startup and initial argument preparation\n");
     upho_printf("  dbgPartial      0x1000  warnings for inaccurate/partial emulated functions\n");
     upho_printf("  dbgTerminal     0x2000  interactive I/O, output filtering\n");
+    upho_printf("  dbgSpecialIO    0x4000  special I/O, such as printer\n");
     upho_printf("  dbgWarnings     0x8000  warnings\n");
     upho_printf("\n");
     upho_printf("Debug levels\n");

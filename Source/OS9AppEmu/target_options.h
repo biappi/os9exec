@@ -37,4 +37,5 @@
    #define PIP_SUPPORT // pipes and PTYs          supported
    #define RBF_SUPPORT // RBF acesss is           supported
    #define NET_SUPPORT // TCP/IP sockets          supported
+   #define PRINTER_SUPPORT // LPT printers Win    supported   
 #endif
