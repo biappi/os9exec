@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2002/09/01 17:56:20  bfo
+ *    some more variables of the real "procid" record used now
+ *
  *    Revision 1.15  2002/08/13 21:55:46  bfo
  *    grp,usr and prior at the real prdsc now
  *
@@ -528,8 +531,8 @@ typedef struct {
         
     int       term_id;          /* terminal/port id number, console|pipe|printer used together */
 
-    /* no errors for mac definition */
-    #ifndef macintosh        
+    /* no errors for mac/linux definition */
+    #ifdef windows32        
       HANDLE    printerHandle;    /* handle for printer devices */
     #endif
 
@@ -734,12 +737,6 @@ typedef struct {
                 /* general state */
                 pstate_typ state;           /* process' state */
                 ushort mid;                /* the process' module ID */
-//              ushort parentid,            /* the parent  process ID */
-//                    siblingid,            /* the sibling process ID */
-//                      childid;            /* the child   process ID */
-//              ushort _group,              /* group number */
-//                     _user,               /* user  number */
-//                     _prior;              /* the process' priority */
 
                 os9err          exiterr;    /* process' exit OS9 error */
                 regs_type       os9regs;    /* the process' register stack */
