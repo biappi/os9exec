@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2002/09/17 00:24:09  bfo
+ *    /r0 is disabled as name, if RAM_SUPPORT is disabled.
+ *
  *    Revision 1.26  2002/09/14 23:13:38  bfo
  *    Relative paths can be mounted (again).
  *
@@ -542,7 +545,8 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
         #ifndef RAM_SUPPORT
           char* q;
           ulong lr0= strlen( R0 );
-          
+          if (ustrcmp( mnt_name, "r0" )==0) return E_UNIT;
+         
           len= strlen( pathname );
           if (ustrcmp( pathname, "r0" )==0 || len<lr0) return E_UNIT;
           q=           pathname + len-lr0;
@@ -1098,6 +1102,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     ushort    sp;
 
     /* it might come as Mac or DOS path name ... --> OS-9 notation */
+    /* commented out: wil be done at "filestuff.c" */
 //  MakeOS9Path( name );
 
     /* Is there a different name for the mount device ? */
@@ -2601,7 +2606,7 @@ os9err pRchd( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
         strcpy( curpath,PSEP_STR  ); /* get a str staring with dev->name instead of dev->img_name */
         strcat( curpath,dev->name );
         strcat( curpath,&tmp[n]   );
-    }     
+    }
     EatBack( curpath );
     
     err= usrpath_close( pid, path ); if (err) return err;
