@@ -1005,7 +1005,9 @@
                             network.
           02-06-26  Bfo     Can be compiled also for Mac.
           02-06-29  Bfo     Problems with CW5 for printer, switch it off there.
-    3.14  02-06-??  Bfo     ...
+          02-06-30  Bfo     Check if KeyToBuffer overflow, seems not to be the case.
+          02-06-30  Bfo     More timeout for Windows SCSI, returns E_READ/W_WRITE as errors.
+    3.14  02-07-??  Bfo     ...
     -------------------
 */
 
