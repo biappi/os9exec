@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2004/12/10 10:58:06  bfo
+ *    zero reading correction
+ *
  *    Revision 1.28  2004/12/04 00:15:37  bfo
  *    a lot of adaptions for MACH kernel
  *
@@ -126,7 +129,7 @@
 
 
 /* specific network definitions */
-#ifdef MAC_NOTX
+#ifdef MACOS9
   #ifdef USE_CARBON
     OTNotifyUPP gYieldingNotifierUPP= NULL;
   #else
@@ -332,7 +335,8 @@ typedef struct _iphdr
 
 
 
-#if defined powerc && !defined __MACH__ && __MWERKS__ >= CW7_MWERKS
+
+#if defined MACOS9 && __MWERKS__ >= CW7_MWERKS
 static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 /* Input: ep - endpointref on which to negotiate the option
    enableReuseIPMode - desired option setting - true/false
@@ -391,7 +395,7 @@ static void OTAssert( _txt_, Boolean cond )
 #endif
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
 static pascal void YieldingNotifier( void* /* contextPtr */, OTEventCode code, 
                                      OTResult /* result */, void* /* cookie */ )
 // This simple notifier checks for kOTSyncIdleEvent and
@@ -474,13 +478,9 @@ static void SetDefaultEndpointModes( SOCKET s )
 static os9err GetBuffers( net_typ* net )
 /* Get the transfer buffers for the net devices */
 {
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
       /* First allocate a buffer for storing the data as we read it. */
-      #ifdef USE_CARBON
-          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, nil );
-      #else
-          net->transferBuffer= OTAllocMem         ( kTransferBufferSize );
-      #endif    
+          net->transferBuffer= OTAllocMem_( kTransferBufferSize );
       if (net->transferBuffer==nil)  return E_NORAM;
 
     #elif defined win_linux
@@ -677,13 +677,14 @@ os9err pNwrite( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netWrite( pid,spP, lenP,buffer, false );
 } /* pNwrite */
 
+
 os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netWrite( pid,spP, lenP,buffer, true  );
 } /* pNwriteln */
 
 
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
 static os9err reUse( _pid_, syspath_typ *spP )
 {
     net_typ* net= &spP->u.net;
@@ -748,16 +749,11 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
                      net->ipAddress.fHost= os9_long( my_inetaddr );
     fPort= os9_word( net->ipAddress.fPort ); /* little/big endian change */
 
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
       if (net->listen) kN= "tilisten,tcp";
       else             kN=  kTCPName;
 
-      #ifdef USE_CARBON
-        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, nil );                           
-      #else
-        net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0, &info, &err );
-      #endif
-                               
+      net->ep= OTOpenEndpoint_( OTCreateConfiguration(kN), 0, &info, &err );                           
       if (err) return E_FNA;
       
 //    #if __MWERKS__ >= CW7_MWERKS
@@ -949,24 +945,20 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
         net->ipRemote.fAddressType= net->fAddT;
     }
     else {
-        #if defined powerc && !defined __MACH__
+        #ifdef MACOS9
           if (isRaw) kN= kRawIPName;
           else       kN= kTCPName;
         
-          #ifdef USE_CARBON
-       //   if (isRaw) {
-       //       id= geteuid();        // printf( "%d\n",     id    );
-       //       u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
-       //   }
+     //   if (isRaw) {
+     //       id= geteuid();        // printf( "%d\n",     id    );
+     //       u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
+     //   }
        
-            net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0,nil, &err, nil );
+          net->ep= OTOpenEndpoint_( OTCreateConfiguration(kN), 0,nil, &err );
 
-       //   if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
-       //       u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
-       //   }
-          #else
-            net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0,nil, &err );
-          #endif
+     //   if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
+     //       u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
+     //   }
           
           if (err==kEPERMErr) return E_PERMIT;
           if (err)            return E_FNA;
@@ -1095,7 +1087,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
     if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
               state= OTGetEndpointState( net->ep );
       switch (state) {
           case T_IDLE:      err= pNlisten( pid, spP ); 
@@ -1111,15 +1103,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           return E_NOTRDY;
       } /* if */
     
-    
-      #ifdef USE_CARBON
-        epNew= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 
-                                        0, nil, &err, nil );
-      #else
-        epNew= OTOpenEndpoint         ( OTCreateConfiguration(kTCPName),
-                                        0, nil, &err );
-      #endif
-      
+      epNew= OTOpenEndpoint_( OTCreateConfiguration(kTCPName), 0, nil, &err );      
       if (err) return E_FNA;
     
       SetDefaultEndpointModes   ( epNew );
