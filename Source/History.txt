@@ -1203,6 +1203,9 @@
 		  03-05-25  Bfo		<totalMem> can't be any more smaller than <memsz>
 		  03-05-25  Bfo		"double" big/little endian problem module sizes fixed
 		  03-05-25	Bfo		buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
+		  
+		  03-06-09	Bfo		Maximum number of modules changed from 512 -> 1024
+		  03-06-09	Bfo		Signals can be sent only to process ids < MAXPROCESSES
     3.22  03-??-??  Bfo
     -------------------
 */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2003/05/26 08:27:02  bfo
+ *    buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
+ *
  *    Revision 1.23  2003/01/10 21:01:09  bfo
  *    pWaitRead problems fixed
  *
@@ -483,7 +486,7 @@ os9err kill_process( ushort pid )
 os9err send_signal(ushort spid, ushort signal)
 {
     process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
-    process_typ* sigp= &procs[      spid]; /* ptr to procs dsc to which the signal will be sent */
+    process_typ* sigp;                     /* ptr to procs dsc to which the signal will be sent */
     sig_typ*     s   = &sig_queue;
     save_type*   svd;
 	int          k;
@@ -501,6 +504,8 @@ os9err send_signal(ushort spid, ushort signal)
 		return 0;
 	} /* if */
 
+	if (spid>=MAXPROCESSES) return E_IPRCID;         /* check the validity of <spid> first */
+    sigp= &procs[spid];               /* ptr to procs dsc to which the signal will be sent */
 
     if (currentpid==0) cp= sigp;
     debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d (%s) from currentpid=%d\n",
