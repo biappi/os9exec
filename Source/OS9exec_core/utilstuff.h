@@ -1,7 +1,7 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
-//	  Available under http://www.synthesis.ch/os9exec
+//    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
 //    modify it under the terms of the GNU General Public License as 
@@ -101,10 +101,9 @@ void    MakeOS9Path  (       char* pathname );
 Boolean SamePathBegin( const char* pathname, const char* cmp );
 Boolean InstalledDev ( const char* os9path,  
                        const char* curpath,  Boolean fullsearch, ushort *cdv );
-Boolean SCSI_Device( const char* os9path,
-                     short *scsiAdapt, short *scsiBus, int *scsiId, short *scsiLUN,
-                     ushort *scsiSsize, ushort *scsiSas,
-                     ptype_typ *typeP );
+Boolean SCSI_Device  ( const char* os9path,
+                       short  *scsiAdapt, short  *scsiBus, int  *scsiId,    short   *scsiLUN,
+                       ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp, ptype_typ *typeP );
 
 #ifdef windows32
   os9err AdjustPath ( const char* pathname, char* adname, Boolean creFile );
