@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2002/09/14 23:11:39  bfo
+ *    Adapted for V3.18
+ *
  *    Revision 1.22  2002/09/11 17:32:38  bfo
  *    Up to date for V3.17
  *
@@ -138,6 +141,7 @@
 module_typ 	os9modules[MAXMODULES];
 mod_exec*   init_module;
 ulong       totalMem;
+mdir_entry  mdirField [MAXMODULES];
 
 /* the system paths */
 syspath_typ syspaths[MAXSYSPATHS];
@@ -571,7 +575,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x18;
+	exec_revision= 0x19;
 	#endif
 } /* getversions */
 
