@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2002/08/06 07:59:45  luz
+ *    Fixed "Retry/Abort" pop-up dialog
+ *
  *    Revision 1.15  2002/07/30 21:30:15  bfo
  *    Updated for OS9EXEC V3.15
  *
@@ -550,7 +553,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x15;
+	exec_revision= 0x16;
 	#endif
 } /* getversions */
 

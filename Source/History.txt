@@ -1048,8 +1048,11 @@
                             this is kind of a hack because many of the helper functions
                             don't have error code return, but just boolean. Needs rework some
                             time.
-
-    3.15  02-08-??  Bfo     ???
+    3.15  02-08-06  Bfo     Version V3.15 released for the customer.
+    -------------------
+    
+          02-08-06  Bfo     Changed to the new version !
+    3.16  02-08-??  Bfo     ...
     -------------------
 */
 
