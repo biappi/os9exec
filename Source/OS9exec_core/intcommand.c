@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/10/27 23:54:30  bfo
+ *    "iunused" implemented
+ *
  *    Revision 1.9  2002/10/09 20:43:48  bfo
  *    uphe_printf => upe_printf
  *
@@ -295,6 +298,21 @@ static os9err int_paths( ushort pid, int argc, char **argv )
 
 
 
+static void imem_usage( char* name, ushort pid )
+{
+    #ifndef linux
+    #pragma unused(pid)
+    #endif
+
+    upe_printf( "Syntax:   %s [<opts>]\n", name );
+    upe_printf( "Function: Print OS9exec memory segments\n" );
+    upe_printf( "Options:\n" );
+    upe_printf( "    -i=<pid> show memory of <pid>\n" );
+    upe_printf( "    -u       show unused memory\n" );
+} /* imem_usage */
+
+
+
 static os9err int_mem( ushort pid, int argc, char **argv)
 /* "imem": OS9exec internal allocated memory */
 {
@@ -302,7 +320,42 @@ static os9err int_mem( ushort pid, int argc, char **argv)
     #pragma unused(pid,argc,argv)
     #endif
 
-    show_mem(MAXPROCESSES); return 0;
+    #define IMEM_MAXARGS 0
+    int     nargc=0, h;
+    char*   p;
+	Boolean mem_unused= false;
+	int     my_pid= MAXPROCESSES;
+
+    for (h=1; h<argc; h++) {
+        p= argv[h];    
+        if (*p=='-') { 
+            p++;
+            switch (tolower(*p)) {
+                case '?' :  imem_usage( argv[0],pid ); return 0;
+                
+                case 'i' :  if (*(p+1)=='=') p+=2;
+                            else {  h++; /* next arg */
+                                if (h>=argc) { my_pid= MAXPROCESSES; break; }
+                                p= argv[h];
+                            }
+
+                            if (sscanf( p,"%d", &my_pid )<1) my_pid= MAXPROCESSES;
+                            break;
+                            
+                case 'u' :  mem_unused= true; break;
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
+                            imem_usage( argv[0],pid ); return 1;
+            }   
+        }
+        else {
+            if (nargc>=IMEM_MAXARGS) { 
+                upe_printf("Error: no arguments allowed\n"); return 1;
+            }
+            nargc++;
+        }
+    } /* for */
+
+    show_mem( my_pid,mem_unused ); return 0;
 } /* int_mem */
 
 
