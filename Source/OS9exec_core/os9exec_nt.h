@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 
@@ -494,7 +497,11 @@ typedef struct {
         
     int       term_id;          /* terminal/port id number, console|pipe|printer used together */
 
-    HANDLE    printerHandle;    /* handle for printer devices */
+    /* no errors for mac definition */
+    #ifndef macintosh        
+      HANDLE    printerHandle;    /* handle for printer devices */
+    #endif
+
 
     /* variants for different types */
     union {

@@ -41,9 +41,20 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 #include "os9exec_incl.h"
+
+
+#ifdef macintosh
+  void init_Printer( fmgr_typ* f )
+  {
+  }
+#endif
+
 
 #ifdef windows32
 
@@ -365,6 +376,8 @@ os9err pPrReady( ushort pid, syspath_typ *spP, ulong *n )
     return 0;
 } /* pPrReady */
 
+#elif defined macintosh
+  /* do nothing */
 #else
   #error "not yet implemented for other platforms than win32"
 #endif
