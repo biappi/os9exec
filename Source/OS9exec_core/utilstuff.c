@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/06/30 10:41:56  bfo
+ *    check, if KeyToBuffer might cause an overflow -> seems not to be the case
+ *
  *    Revision 1.6  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -482,12 +485,29 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, Boolean asGregorian )
 #ifdef USE_CARBON
   char* p2cstr( unsigned char* s )
   {
+      int ii;
+      int n= (int)s[0];
+      
+      for  (ii=0;  ii<n; ii++) {
+          s[ii]= s[ii+1];
+      }
+      s[n]= 0;
+      
       return s;
   } /* p2cstr */
 
 
   unsigned char* c2pstr( char* s )
   {
+      int ii;
+      int n= 0;
+      
+      while (s[n]!=0) n++;
+      for  (ii=n;  ii>0; ii--) {
+          s[ii]= s[ii-1];
+      }
+      s[0]= (char)n;
+      
       return s;
   } /* c2pstr */
 #endif
