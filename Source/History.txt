@@ -1096,6 +1096,9 @@
           02-09-15  Bfo     fpp.c FPU bug (FMOVE) fixed: Brian King's code included.
           02-09-15  Bfo     Relative paths can be mounted (again).
           02-09-17  Bfo     /r0 is disabled as name, if RAM_SUPPORT is disabled.
+          02-09-19  Bfo     "CutUp" invisible, "CutUp"/"Eatback" adapted for Win/Mac + OS9
+          02-09-19  Bfo     Disabling "r0" more specific now
+          02-09-19  Bfo     "/h0" can be mounted again
     3.18  02-09-??  Bfo     ...
     -------------------
 */
