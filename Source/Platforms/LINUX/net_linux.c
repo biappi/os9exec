@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2004/11/27 12:19:49  bfo
+ *    "net_platform" introduced
+ *
  *
  */
 
@@ -178,29 +181,33 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
 
 
 OSStatus netReadBlock( _pid_, net_typ* net, ulong *nBytes )
+// platform specific reading
 {
   OSStatus err;
   int      flags= 0;
       
-      err= recv( net->ep, net->transferBuffer, nBytes, flags );
+      err= recv( net->ep, net->transferBuffer, *nBytes, flags );
   if (err==0)    net->closeIt= true;
-  if (err>=0) *nBytes= err;
-  else        *nBytes= 0;
-  return err;
+  if (err< 0) { *nBytes= 0; return err; } 
+  
+  *nBytes= (ulong)err;
+  return 0;
 } /* netReadBlock */
 
 
 
 OSStatus netWriteBlock( _pid_, net_typ* net, ulong *nBytes )
+// platform specific reading
 {
   OSStatus err;
   int flags= 0;
   
       err= send( net->ep, net->transferBuffer, *nBytes, flags );
   if (err==0)    net->closeIt= true;
-  if (err>=0) *nBytes= err;
-  else        *nBytes= 0;
-  return err;
+  if (err< 0) { *nBytes= 0; return err; } 
+  
+  *nBytes= (ulong)err;
+  return 0;
 } /* netWriteBlock */
 
 
