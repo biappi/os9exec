@@ -4,9 +4,25 @@
 **      by Joseph J. Strout (jstrout@ucsd.edu)
 **      based on console.stubs.c by Metrowerks
 **
-**      Last revision: 7/23/96
 **      Adapted by LuZ/Bfo for the OS9exec project
 */
+
+
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 
 #ifndef __CONSOLE__
 #include <console.h>
