@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2003/04/12 21:56:03  bfo
+ *    SS_Send, SS_Recv adaptions
+ *
  *    Revision 1.25  2003/01/09 21:58:28  bfo
  *    Max number of signals increased
  *
@@ -533,9 +536,10 @@ typedef struct {
               WSAEVENT  hEventObj;
             #endif
                 
-            Boolean     bound;          /* true, if binding was successful */
-            Boolean     accepted;       /* true, if connection is accepted */
-            Boolean     lis;            /* net listener */
+            Boolean     bound;          /* true, if binding was successful  */
+            Boolean     accepted;       /* true, if connection is accepted  */
+            Boolean     connected;      /* true, if connection is connected */
+            Boolean     listen;         /* net listener */
             Boolean     check;          /* check if ready */
             Boolean     closeIt;        /* ready to be closed */
         } net_typ;
@@ -798,6 +802,7 @@ typedef struct {
                 void      *systaskdataP;    /* system task data pointer */
                 ulong      systask_offs;    /* offset for rewrite call (from tty/pty) */
                 ushort      lastsyscall;    /* last system call issued by this process */
+                int            wTimeOut;    /* timeout counter for pWaitRead */
 
                 /* statistics */
                 ulong            fticks;    /* number of ticks at fcalls */
