@@ -965,6 +965,7 @@
                             at os9exec.sourceforge.net.
                     luz     detabbed History file (again), removed strange chars
                             in title text (as first test for CVS commit)
+                    luz     checkout tests with WinCVS and MacCVS successful!
 */
 
 
