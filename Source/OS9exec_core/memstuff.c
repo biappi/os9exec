@@ -153,7 +153,9 @@ ulong max_mem()
     #ifdef macintosh
       memsz= MaxBlock();
     #elif defined win_linux
-      memsz= 0x00800000; /* 8 megs is MUUUUCH for an OS-9 system */
+      /* bfo: is 8 megs really MUUUUCH for an OS-9 system ??? */
+      /* try it another way */     
+      memsz= 0; 
     #else
       #error MaxBlock size must be defined here
     #endif
