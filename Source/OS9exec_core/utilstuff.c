@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2002/09/19 21:59:39  bfo
+ *    "CutUp" invisible, "CutUp"/"Eatback" adapted for Win/Mac + OS9
+ *
  *    Revision 1.23  2002/09/11 17:22:51  bfo
  *    os9_long_inc with unsigned int* param
  *
@@ -1310,7 +1313,8 @@ ulong DirSize( syspath_typ* spP )
       seekdir( spP->dDsc,sv );
     #endif
     
-    if    (cnt==0) cnt= 2; /* at least two entries are there !!! */
+                                      /* avoid also 1 entry !!! */
+    if    (cnt<2) cnt= 2; /* at least two entries are there !!! */
     return cnt*DIRENTRYSZ;
 } /* DirSize */
 #endif
