@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2003/08/01 11:16:28  bfo
+ *    do not create file w/o existing subdir
+ *
  *    Revision 1.35  2003/07/31 14:38:56  bfo
  *    Change calculation of PD_FD/PD_DFD (sector size instead of 256)
  *
@@ -2411,6 +2414,9 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
             err= ReadFD( spP ); if (err) break;
             if (root)   { 
                 strcpy( spP->name,pathname+1 );
+                err= FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref ); if (err) break;
+                rbf->lastPos= size;                   /* last pos is the filesize */
+                rbf->att    = attr;                   /* save attributes */
                 return 0; 
             }
                            

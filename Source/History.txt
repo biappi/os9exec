@@ -1214,7 +1214,11 @@
           03-07-31  Bfo     /L2 getstat & 'Blue' support
           03-07-31  Bfo     do not create file w/o existing subdir
           03-09-17  Bfo     Ugly tab things removed
-    3.22  03-??-??  Bfo
+          
+          04-01-04  Bfo     #define MAXPROCESSES 129 => this allows processes with id 1..128, id=0 is not used
+          04-01-04  Bfo     F$UnLink returns ok, as long as module found
+          04-01-04  Bfo     Assign rbf->lastPos & rbf->att also in case of root dir ("rename" directory cut bug)
+    3.22  04-??-??  Bfo
     -------------------
 */
 
