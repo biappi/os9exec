@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2003/05/17 10:45:03  bfo
+ *    'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
+ *
  *    Revision 1.10  2002/10/27 23:54:30  bfo
  *    "iunused" implemented
  *
@@ -323,7 +326,8 @@ static os9err int_mem( ushort pid, int argc, char **argv)
     #define IMEM_MAXARGS 0
     int     nargc=0, h;
     char*   p;
-	Boolean mem_unused= false;
+	Boolean mem_unused  = false;
+	Boolean mem_fulldisp= false;
 	int     my_pid= MAXPROCESSES;
 
     for (h=1; h<argc; h++) {
@@ -342,7 +346,8 @@ static os9err int_mem( ushort pid, int argc, char **argv)
                             if (sscanf( p,"%d", &my_pid )<1) my_pid= MAXPROCESSES;
                             break;
                             
-                case 'u' :  mem_unused= true; break;
+                case 'u' :  mem_unused  = true; break;
+                case 'f' :  mem_fulldisp= true; break;
                 default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             imem_usage( argv[0],pid ); return 1;
             }   
@@ -355,7 +360,7 @@ static os9err int_mem( ushort pid, int argc, char **argv)
         }
     } /* for */
 
-    show_mem( my_pid,mem_unused ); return 0;
+    show_mem( my_pid,mem_unused,mem_fulldisp ); return 0;
 } /* int_mem */
 
 

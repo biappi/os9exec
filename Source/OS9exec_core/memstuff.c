@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2003/05/17 10:41:39  bfo
+ *    'show_mem' with <mem_unused> parameter /
+ *    better deallocation strategy for the unused blocks
+ *
  *    Revision 1.10  2002/10/28 22:19:21  bfo
  *    slightly different checkpoint:  STRANGE/UNUSED
  *
@@ -119,16 +123,62 @@ static void MemLine( int *k, ulong value, const char* s  )
     
 
 /* show memory blocks */
-void show_mem( ushort npid, Boolean mem_unused )
+void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
 {
     memblock_typ *m;
     int k,pid;
     
+    #ifdef REUSE_MEM
+      #define UpL 0xffffffff
+      void *nx, *nxMin;
+      ulong nxSiz, svSiz;
+      memblock_typ* f;
+      int diff, i;
+    #endif
+      
     #ifdef macintosh
     upo_printf("Macintosh Heap: MemFree=%ld, MaxBlock=%ld\n\n",FreeMem(),MaxBlock());
     #endif
     
     if (mem_unused) {
+    	if (mem_fulldisp) {
+   			upo_printf("  #     start       end      size   to next\n");
+    		upo_printf("---  --------  --------  --------  --------\n");
+    		
+    	    #ifdef REUSE_MEM
+    		  nxMin= 0; 
+    		  nx   = 0; 
+    		  i    = 0;
+    		  
+    		  while (true) {
+   				  if (nx>(char*)0) { /* not for the first time */
+   				  	  diff= (int)((char*)nxMin-(char*)nx) - svSiz;
+   				  	  upe_printf( "%3d  %08X  %08X  %8d", i-1, nx, (char*)nx+svSiz, svSiz );
+   				  	  if (nxMin==(char*)UpL) { upe_printf( "\n" ); break; }
+   				  	  upe_printf( "%8d  %08X\n", diff, nxMin );
+   				  } /* if */
+   				  	  
+   				  nx   = nxMin;
+   				  svSiz= nxSiz;
+    			  nxMin= (char*)UpL;
+    			
+    			  for (k=0; k<MAX_MEMALLOC; k++) {
+		                  f= &freeinfo.f[k];
+                      if (f->base==NULL) break;
+                      if (f->base>nx && 
+                          f->base<nxMin) {
+                          nxMin= f->base;
+                          nxSiz= f->size;
+                      }
+   				  } /* for */
+   				  
+   				  i++;
+    		  } /* while */
+    		#endif
+    		
+    		return;
+    	}
+    	
    		upo_printf("   size     #      total\n");
     	upo_printf("-------  ----  ---------\n");
     	
@@ -155,7 +205,7 @@ void show_mem( ushort npid, Boolean mem_unused )
    	    #endif
     	
     	return;
-    }
+    } /* if mem_unused */
     
     upo_printf("Pid  Block   Start      Size       End (+1)\n");
     upo_printf("---  -----  ---------  ---------  ---------\n");
@@ -426,11 +476,8 @@ void *get_mem( ulong memsz )
     
     #define MBlk 64
     
-    #ifdef MACMEM
-      char *n;
-    #endif
-    
     #ifdef REUSE_MEM
+      #define FullBlk 524288
       memblock_typ* f;
       void* qq;
       ulong sv_size;
@@ -455,8 +502,8 @@ void *get_mem( ulong memsz )
               sv_size= f->size; /* save it before overwritten */            
               MoveBlk( f,&freeinfo.f[k+1], (freeinfo.freeN-k)*sizeof(memblock_typ) );
               if (sv_size>memsz) {
-                              qq= (char*)pp+memsz;
-                  release_ok( qq,   sv_size-memsz );
+                              qq= (char*)pp + memsz;
+                  release_ok( qq,   sv_size - memsz );
               }
                   
               #ifdef win_linux
@@ -472,19 +519,24 @@ void *get_mem( ulong memsz )
           } /* if */
       } /* for */
     #endif
-    
-//  if (pp==NULL) printf( "%8X\n", memsz );
-    
+        
     if (pp==NULL) { /* not yet found */
       #ifdef MACMEM
-//      if (mac_asHandle) { pp= NewHandle  (memsz); n= "NewHandle";   }
-//      else { 
-          pp= NewPtrClear(memsz); n= "NewPtrClear"; 
-//      }
-      
+      	#ifdef REUSE_MEM
+      	  if (memsz>FullBlk)
+          	  pp= NewPtrClear(memsz);
+          else {
+      	      pp= NewPtrClear( FullBlk );
+                          qq= (char*)pp + memsz;
+              release_ok( qq,  FullBlk  - memsz );
+          }
+        #else
+          pp= NewPtrClear(memsz);
+        #endif    
+            
         if (pp==NULL) {
           debugprintf(dbgMemory,dbgNorm,("# get_mem: %s returned MacOS MemError=%d\n",
-                                        n, MemError()));
+                                         "NewPtrClear", MemError()));
         }
       #else
         pp= calloc( (size_t)memsz, (size_t)1 ); /* get memory block, cleared to 0 */

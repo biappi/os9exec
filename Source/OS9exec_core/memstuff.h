@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2003/05/17 10:38:13  bfo
+ *    'show_mem' with <mem_unused> parameter
+ *
  *    Revision 1.5  2002/10/27 23:12:39  bfo
  *    get_mem/release_mem no longer with param <mac_asHandle>
  *
@@ -51,7 +54,7 @@
 /* Memory management for OS9 processes */
 void init_all_mem(void);
 
-void show_mem( ushort pid, Boolean mem_unused );
+void show_mem( ushort pid, Boolean mem_unused, Boolean mem_fulldisp );
 void show_unused   ( void );
 
 void init_mem( ushort pid );

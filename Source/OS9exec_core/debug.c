@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2003/05/17 10:43:38  bfo
+ *    'show_mem' with <mem_unused> parameter
+ *
  *    Revision 1.8  2003/04/20 23:00:37  bfo
  *    SpecialIO text: idbg for printing and networking
  *
@@ -402,7 +405,7 @@ ushort debugwait( void )
                        dumpregs    ( temp ); break;
                        
             case 'v' : if      (sscanf(&inp[1],"%hd", &temp)<1) temp= MAXPROCESSES;
-                       show_mem    ( temp, false ); break;
+                       show_mem    ( temp, false,false ); break;
                        
             case 'p' : show_processes();     break;
 
