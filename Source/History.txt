@@ -952,11 +952,11 @@
     3.09  02-03-31  Bfo     GNU GPL texts included everywhere.
     -------------------     
 
-          02-03-31  Bfo     Last preparations for RUAG delivery
+          02-03-31  Bfo     Last preparations for the delivery
           02-03-31  Bfo     'other progs' problem (F$Fork internal commands) fixed.
           02-03-31  Bfo     EOF problem (p->consumers<=0) in pipefiles fixed.
           02-04-01  Bfo     Child/Sibling problem of internal commands fixed.
-    3.10  02-04-01  Bfo >>> FINAL RELEASE V3.10 FOR RUAG <<<
+    3.10  02-04-01  Bfo >>> FINAL RELEASE V3.10 FOR DELIVERY <<<
     ===================     
 
 	
@@ -967,11 +967,14 @@
                     luz     checkout tests with WinCVS and MacCVS successful!
 
           02-04-30  Bfo     Bring the update to sourceforge:
-          02-04-12  Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
-          02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
-          02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
-          02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
-    3.11  02-04-??  Bfo
+		  02-04-12	Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
+		  02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
+		  02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
+		  02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
+		  02-05-05  Bfo     Prepare the Carbon implementation for Mac OS X
+		  02-05-10  Bfo     First Carbon version without compile/link errors, but not yet running.
+		                    (UAE must be in the same subdir, don't know why)
+	3.11  02-05-??  Bfo     ...
 	-------------------		
 */
 
@@ -1007,7 +1010,7 @@
     -   RBF disk cache not yet implemented.
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
-    -   "ping" for Windows & Linux
+    -   "ping" for Windows & Linux, ping of ISP.
     -   socket close not done in every case
     -   nameserver support for network
     -   direct line editing on linux (over network)
