@@ -26,9 +26,17 @@
 /*             luz@zep.ch                  */
 /*******************************************/
 
-#define _in_uae_c
+#define  _in_uae_c
 #include "os9exec_incl.h"
-#undef _in_uae_c
+
+#include "config.h"
+#include "options.h"
+#include "luzstuff.h"
+#include "memory.h"
+#include "readcpu.h"
+#include "newcpu.h"
+#include "compiler.h"
+#undef   _in_uae_c
 
 /* universal interface to 68k low level magic */
 /* ========================================== */
