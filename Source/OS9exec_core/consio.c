@@ -41,16 +41,19 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/07/30 16:47:19  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.3  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
  */
 
-#include "os9exec_incl.h"
 
 /* Console I/O routines */
 /* ==================== */
 
+#include "os9exec_incl.h"
 
 
 /* --- local procedure definitions for object definition ------------------- */
@@ -300,8 +303,8 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
     clearerr(stdin);    /* make sure we are not stuck with a Cmd-. */
     
     if (cp->state==pWaitRead) {
-        cp->state= cp->saved_state;
-        cnt=       cp->saved_cnt;
+        set_os9_state( pid, cp->saved_state );
+        cnt=                cp->saved_cnt;
     }
 
     while (cnt<*maxlenP) {
@@ -314,9 +317,9 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
                     err= E_EOF; break; /* pipe is broken */
                 }
                     
-                cp->saved_state= cp->state;
-                cp->state      = pWaitRead;
                 cp->saved_cnt  = cnt;
+                cp->saved_state= cp->state;
+                set_os9_state  ( pid, pWaitRead );
                 arbitrate= true;
             }
             break; 

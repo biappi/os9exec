@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2002/08/06 07:59:45  luz
+ *    Fixed "Retry/Abort" pop-up dialog
+ *
  *    Revision 1.18  2002/07/30 16:45:37  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -165,7 +168,7 @@ int pustrcmp( const char *s1,const char *s2 )
 
 
 
-int ustrncmp( const char *s1,const char *s2, ushort n )
+int ustrncmp( const char *s1, const char *s2, ushort n )
 /* case insensitive version of strcmp
  *  Input  : *s1,*s2 = strings to be compared
  *  Result : -1:s1<s2, 0:s1=s2, 1:s1>s2
@@ -182,6 +185,28 @@ int ustrncmp( const char *s1,const char *s2, ushort n )
    
     return 0; /* equal */
 } /* ustrncmp */
+
+
+
+void set_os9_state( ushort cpid, pstate_typ state )
+/* convert the state into OS-9 notation */
+{
+    process_typ* cp= &procs[cpid];
+    procid*      pd= &cp->pd;
+    
+            cp->state= state;
+    switch (cp->state) {
+        case pUnused   : pd->_state = os9_word(0);      pd->_queueid = '-'; break;
+        case pActive   : pd->_state = os9_word(0x8800); pd->_queueid = 'a'; break;
+        case pDead     : pd->_state = os9_word(0x9000); pd->_queueid = 'd'; break;
+        case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
+        case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
+        case pIntUtil  : pd->_state = os9_word(0);      pd->_queueid = 'i'; break;
+        case pSysTask  : pd->_state = os9_word(0);      pd->_queueid = 't'; break;
+        case pWaitRead : pd->_state = os9_word(0xA000); pd->_queueid = 'r'; break;
+        default        : pd->_state = os9_word(0);      pd->_queueid = '?';
+    }
+} /* set_os9_state */
 
 
 

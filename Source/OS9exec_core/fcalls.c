@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2002/08/08 21:53:57  bfo
+ *    F$SetSys extended with D_PrcDBT support
+ *
  *    Revision 1.6  2002/08/08 20:42:04  bfo
  *    sleep 0 bug for 1/256th sec fixed
  *
@@ -413,12 +416,12 @@ os9err OS9_F_Event( regs_type *rp, ushort cpid )
                         maxV= rp->d[3];
                         
                         if (cp->state==pWaitRead)
-                            cp->state= cp->saved_state;
+                            set_os9_state( cpid, cp->saved_state );
                         
                             err= evWait( evId, minV,maxV, &evValue );
                         if (err) {
                             cp->saved_state= cp->state;
-                            cp->state      = pWaitRead;
+                            set_os9_state( cpid, pWaitRead );
                         }
                         
                         rp->d[1]= evValue;
@@ -607,21 +610,21 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
     else {
         /* ok, terminate processing of intercept routine */
         debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d\n",
-                    cpid,cp->lastsignal));
+                       cpid, cp->lastsignal ));
         cp->lastsignal = 0; /* intercept done */
-        cp->state      = cp->rtestate;
-        cp->os9regs    = cp->rteregs; /* restore regs */
-        cp->vector     = cp->rtevector;
-        cp->func       = cp->rtefunc;
+        set_os9_state( cpid, cp->rtestate );
+        cp->os9regs    =     cp->rteregs; /* restore regs */
+        cp->vector     =     cp->rtevector;
+        cp->func       =     cp->rtefunc;
         
         if (cp->state==pWaitRead) { /* make the save status ready again */
-            svd=        &cp->savread; /* pointer to process' saved registers */
-            svd->r     = cp->rteregs;
-            svd->vector= cp->rtevector;
-            svd->func  = cp->rtefunc;
+            svd=            &cp->savread; /* pointer to process' saved registers */
+            svd->r     =     cp->rteregs;
+            svd->vector=     cp->rtevector;
+            svd->func  =     cp->rtefunc;
             
             /* but the process will be woken up after intercept !!! */
-            cp->state= pActive;
+            set_os9_state( cpid, pActive );
         } /* if pWaitRead */
         
 
@@ -702,6 +705,8 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
     if (cp->state==pUnused) return E_IPRCID; /* this is not a valid process */
 
+    memcpy( &pd,&cp->pd, sizeof(procid) );
+    
     pd._id    = os9_word(id);
     pd._pid   = os9_word(cp->parentid);
     pd._sid   = os9_word(cp->siblingid);
@@ -717,18 +722,18 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     pd._age   = os9_word(128); /* as in real OS-9 */
     pd._task  = 0;
     
-    /* convert the state into OS-9 notation */
-    switch (cp->state) {
-        case pUnused   : pd._state = os9_word(0);      pd._queueid = '-'; break;
-        case pActive   : pd._state = os9_word(0x8800); pd._queueid = 'a'; break;
-        case pDead     : pd._state = os9_word(0x9000); pd._queueid = 'd'; break;
-        case pSleeping : pd._state = os9_word(0xA000); pd._queueid = 's'; break;
-        case pWaiting  : pd._state = os9_word(0x8000); pd._queueid = 'w'; break;
-        case pIntUtil  : pd._state = os9_word(0);      pd._queueid = 'i'; break;
-        case pSysTask  : pd._state = os9_word(0);      pd._queueid = 't'; break;
-        case pWaitRead : pd._state = os9_word(0xA000); pd._queueid = 'r'; break;
-        default        : pd._state = os9_word(0);      pd._queueid = '?';
-    }
+//  /* convert the state into OS-9 notation */
+//  switch (cp->state) {
+//      case pUnused   : pd._state = os9_word(0);      pd._queueid = '-'; break;
+//      case pActive   : pd._state = os9_word(0x8800); pd._queueid = 'a'; break;
+//      case pDead     : pd._state = os9_word(0x9000); pd._queueid = 'd'; break;
+//      case pSleeping : pd._state = os9_word(0xA000); pd._queueid = 's'; break;
+//      case pWaiting  : pd._state = os9_word(0x8000); pd._queueid = 'w'; break;
+//      case pIntUtil  : pd._state = os9_word(0);      pd._queueid = 'i'; break;
+//      case pSysTask  : pd._state = os9_word(0);      pd._queueid = 't'; break;
+//      case pWaitRead : pd._state = os9_word(0xA000); pd._queueid = 'r'; break;
+//      default        : pd._state = os9_word(0);      pd._queueid = '?';
+//  }
     if (id==cpid) pd._queueid = '*';
     
     pd._scall = os9_byte(cp->lastsyscall);
@@ -934,18 +939,18 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
          
       case D_ModDir  : v=  b;                        break;
       case D_ModDir_L: v=  b + MAXMODULES*MDirEntry; break;
-      case D_PrcDBT  : v=  (ulong)       &prDBT [0];
+      case D_PrcDBT  : v= (ulong)prDBT;
       
-                       ptr= (ulong*)v;                                /* start with process nr 2 */
+                       ptr= &prDBT[1];                           /* start with process nr 1 */
                        for (k=1; k<MAXPROCESSES; k++ ) {
                            if (procs[k].state==pUnused)
-                                { *ptr= 0; }
-                           else { *ptr= os9_long((ulong) &procs[k]); } /* not the right ptr, but ... */
+                                *ptr= 0;
+                           else *ptr= os9_long( (ulong) &procs[k] ); /* is now the right ptr, but ... */
       
                            ptr++;
                        }                             break; /* prc table image */
                        
-      case D_PthDBT  : v=  (ulong)       &syspth[0]; break; /* pth table image */
+      case D_PthDBT  : v=  (ulong)           syspth; break; /* pth table image */
       case D_Ticks   : v=           GetSystemTick(); break; /* system heartbeat */
       case D_MinBlk  : v=                        16; break; /* as on real OS-9 systems */
       case D_BlkSiz  : v=            OS9MINSYSALLOC; break; /* as on real OS-9 systems */
@@ -1347,9 +1352,9 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
         if (!intCmd) {
         	if (cp->childid!=0) np->siblingid= cp->childid;
 
-        	cp->childid= newpid; /* this is the child */
-            currentpid = newpid;  /* continue execution in new process  */
-            np->state  = pActive; /* make this process active */
+        	cp->childid=   newpid;  /* this is the child */
+            currentpid =   newpid;  /* continue execution in new process  */
+            set_os9_state( newpid, pActive ); /* make this process active */
         }
         
         arbitrate= true;
@@ -1357,9 +1362,9 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
     
     if  (err) {
         /* -- save exit code */
-        close_usrpaths(newpid);
+        close_usrpaths( newpid );
+        set_os9_state ( newpid, pUnused ); /* unused again because of error */
         np->exiterr= err;
-        np->state  = pUnused; /* unused again because of error */
     }
             
     return err;
@@ -1490,7 +1495,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
                     retword(rp->d[0])= k; /* ID of dead child */
                     retword(rp->d[1])= procs[k].exiterr; /* exit error of child */
                     debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
-                    cp->state= pUnused;
+                    set_os9_state( k, pUnused );
                     return 0; /* process already died, no need to wait */
                 }
                 else {
@@ -1506,7 +1511,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
             retword(rp->d[1])= 0; /* no error */
                         
             debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
-            procs[cpid].state= pWaiting; /* put myself to wait state */
+            set_os9_state( cpid, pWaiting ); /* put myself to wait state */
             currentpid= activeChild; /* activate that child */
         	arbitrate= true;
             return 0; /* continue execution with another process */
@@ -1544,7 +1549,7 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     CheckInputBuffers(); /* make shure that special chars like
                             CtrlC/CtrlE/XOn/XOff will be handled */         
 
-    cp->state= pSleeping; /* status is sleeping now */
+    set_os9_state( cpid, pSleeping ); /* status is sleeping now */
 
     if (sleep_x==0) {
         /* --- put process to indefinite sleep */

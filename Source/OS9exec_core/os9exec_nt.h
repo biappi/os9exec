@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/08/08 21:54:30  bfo
+ *    F$SetSys extended with D_PrcDBT support
+ *
  *    Revision 1.11  2002/07/30 16:46:14  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -717,6 +720,8 @@ typedef struct {
 
 /* the process descriptor */
 typedef struct {
+                procid pd;                  /* this is the 1:1 process descriptor image */
+                
                 /* general state */
                 pstate_typ state;           /* process' state */
                 ushort mid,                 /* the process' module ID */
@@ -828,8 +833,8 @@ extern  ttydev_typ  ttydev[MAXTTYDEV];
 
 
 /* the processes */
-extern  process_typ  procs[MAXPROCESSES];
-extern  process_typ* prDBT[MAXPROCESSES]; 
+extern  process_typ procs[MAXPROCESSES];
+extern  ulong       prDBT[MAXPROCESSES]; /* os9_long(process_typ*) */
 
 /* the signal queue */
 extern  sig_typ     sig_queue;

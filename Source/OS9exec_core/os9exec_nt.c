@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2002/08/08 21:54:13  bfo
+ *    F$SetSys extended with D_PrcDBT support
+ *
  *    Revision 1.17  2002/08/06 21:03:14  bfo
  *    Version changed to V3.16
  *
@@ -136,7 +139,7 @@ ttydev_typ  ttydev[MAXTTYDEV];
 
 /* the processes */
 process_typ  procs[MAXPROCESSES];
-process_typ* prDBT[MAXPROCESSES]; 
+ulong        prDBT[MAXPROCESSES]; /* os9_long(process_typ*) */
 
 /* the signal queue */
 sig_typ     sig_queue;
@@ -450,9 +453,8 @@ static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulo
 	release_mem( pap,false ); /* return arg buffer anyway, alloc as pointer */
 	
     if (!err) { /* make this process ready to execute */
-        if (!intCmd) {
-   		    currentpid= newpid; /* make this process current */
-            procs[currentpid].state= pActive; /* now active */
+        if (!intCmd) {     currentpid= newpid;    /* make this process current */
+   		    set_os9_state( currentpid, pActive ); /* now active */
         }
 	}
 	
@@ -1057,7 +1059,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 {
 	#define      ARB_RATE 10
 
-	ushort       cpid;
+	ushort       cpid, spid;
 	process_typ* cp;
 	regs_type*   crp;
 	save_type*   svd;
@@ -1086,21 +1088,21 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	OSErr    oserr;		/* Mac error */
 
 
-	/* ---- win32 specific global init ------------------------------ */
+	/* ---- win32 specific global init ------------------------------- */
   #ifdef windows32
     // Avoid error popup (Retry/Abort)
     SetErrorMode(SEM_NOOPENFILEERRORBOX + SEM_FAILCRITICALERRORS);
   #endif
 
-	/* ---- create the kernel process ------------------------------- */
+	/* ---- create the kernel process -------------------------------- */
 	new_process( 0,&cpid, 0 ); /* get the kernel process */
 	cp=      &procs[cpid];
-	cp->state = pSleeping;     /* to be compliant to real OS-9 */
-	cp->_prior= 0xFFFF;        /* "  "      "     "    "    "  */
-	cp->mid   = 0;             /* take "OS9exec" as the kernel module */
+	set_os9_state ( cpid, pSleeping ); /* to be compliant to real OS-9 */
+	cp->_prior= 0xFFFF;                /* "  "      "     "    "    "  */
+	cp->mid   = 0;              /* take "OS9exec" as the kernel module */
 
 	
-	/* ---- assign startVolID/dirID --------------------------------- */
+	/* ---- assign startVolID/dirID ---------------------------------- */
 	#ifdef macintosh
 			  fs.vRefNum= 0; /* default path is my own path */
 			  fs.parID  = 0;
@@ -1355,7 +1357,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 			/* --- execute system task function */
 				cp->oerr=   (cp->systask)(cpid,cp->systaskdataP,crp);
-			if (cp->oerr!=0) cp->state= pActive; /* on error, continue with task execution anyway */
+			if (cp->oerr!=0) set_os9_state( cpid, pActive ); /* on error, continue with task execution anyway */
 			if (cp->state==pActive) {
 				/* process gets active again, report errors to OS9 programm */
 				if (debugcheck(dbgSysCall,dbgNorm)) 
@@ -1454,7 +1456,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			       must be stored (must not override values of "send_signal" */
 			    	cwti= cp->way_to_icpt;
 				if (cwti) {
-					sigp= &procs[cp->icpt_pid];
+				    spid= cp->icpt_pid;
+					sigp=  &procs[spid];
 					
 					if     (cp->icpt_pid==currentpid) { /* in case of the own process */
 						if (cp->icpt_signal!=S_Wake  &&
@@ -1490,13 +1493,13 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 						sigp->rteregs  = svd->r;      /* ignore latest d1 and carry */
 						sigp->rtevector= svd->vector;
 						sigp->rtefunc  = svd->func;
-				    	sigp->state    = pActive;
+						set_os9_state( spid, pActive );
 				    }
 
 					if (sigp->state==pWaiting &&     /* a signalled waiting process */
 						sigp->icptroutine!=0) {        /* will be active afterwards */
-				    	sigp->state    = pActive;
-						sigp->rtestate = pActive;
+						set_os9_state( spid, pActive );
+						sigp->rtestate=      pActive;
 				    }
 				} /* if (cwti) */
 			}

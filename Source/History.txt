@@ -1065,6 +1065,8 @@
           02-08-07  Bfo     idevs: added option -r
           02-08-08  Bfo     sleep 0 bug for 1/256th fixed.
           02-08-08  Bfo     F$SetSys extended with D_PrcDBT support.
+          02-08-09  Bfo     The "real" process descriptor prepared due to problems with "time" and "ps"
+          02-08-09  Bfo     New procedure set_os9_state introduced and adapted everywhere.
     3.16  02-08-??  Bfo     ...
     -------------------
 */

@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 
 #ifdef macintosh
@@ -380,9 +394,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
     #endif
     
     if (net->bsize==0) {
-        if (cp->state==pWaitRead) {
-            cp->state= cp->saved_state;
-        }
+        if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
         
         #ifdef powerc
           /* keep interface fast for at least one minute */
@@ -422,7 +434,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
             if (net->closeIt) return E_EOF;
             
             cp->saved_state= cp->state;
-            cp->state      = pWaitRead;
+            set_os9_state( pid, pWaitRead );
             return E_NOTRDY;
         }
                 
@@ -807,9 +819,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
       return E_UNKSVC;
     #endif
     
-    if (cp->state==pWaitRead) {
-        cp->state= cp->saved_state;
-    }
+    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
     #ifdef powerc
       OTMemzero( &net->call,   sizeof(TCall) );
@@ -825,7 +835,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
 
     if (err) {
         cp->saved_state= cp->state;
-        cp->state=       pWaitRead;
+        set_os9_state( pid, pWaitRead );
         return E_NOTRDY;
     }
     
@@ -971,9 +981,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     #endif
     
 
-    if (cp->state==pWaitRead) {
-        cp->state= cp->saved_state;
-    }
+    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
 
     #ifdef powerc
               state= OTGetEndpointState( net->ls );
@@ -987,7 +995,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
       if (state!=T_INCON) {
           cp->saved_state= cp->state;
-          cp->state=       pWaitRead;
+          set_os9_state( pid, pWaitRead );
           return E_NOTRDY;
       }
     
@@ -1021,7 +1029,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           net->ep= accept( net->ls, &name,&len );
       if (net->ep==INVALID_SOCKET) {
           cp->saved_state= cp->state;
-          cp->state=       pWaitRead;
+          set_os9_state( pid, pWaitRead );
           return E_NOTRDY;
       }
           

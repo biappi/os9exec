@@ -37,9 +37,11 @@ int   ustrcmp( const char* s1,const char* s2 );
 int  pustrcmp( const char* s1,const char* s2 );
 int  ustrncmp( const char* s1,const char* s2, ushort n );
 
-os9err host2os9err(OSErr hosterr,ushort suggestion);
-os9err c2os9err(int cliberr,ushort suggestion);
-os9err os9error(os9err err);
+void set_os9_state( ushort cpid, pstate_typ state );
+
+os9err host2os9err( OSErr hosterr, ushort suggestion );
+os9err c2os9err   ( int   cliberr, ushort suggestion );
+os9err os9error   ( os9err    err );
 
 
 ulong  j_date  (            int  d,  int  m,  int  y  );

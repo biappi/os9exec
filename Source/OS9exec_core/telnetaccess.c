@@ -30,16 +30,24 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
-
-
-/* "telnetaccess.c"
- * Support for the telnet socket interface
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
  *
- *
- * 00/07/15 bfo  Initial version (plus/minus empty so far)
- * 01/02/18 bfo  In fact this an interface to tty/pty system
  */
- 
+
+
+/* Telnet socket interface */
+/* ======================= */
+
 #include "os9exec_incl.h"
 
 #ifdef MACTERMINAL
@@ -99,14 +107,14 @@ long WriteCharsToPTY( char* buffer, long n, int consoleID, Boolean do_lf )
       ttydev_typ*  mco= &ttydev[consoleID-TTY_Base];
 
       if (cp->state==pWaitRead) {
-          cp->state= cp->saved_state;
-          n=         cp->saved_cnt;
+          set_os9_state( pid, cp->saved_state );
+          n=                  cp->saved_cnt;
       }
 
 	  if (mco->holdScreen) {
-          cp->saved_state= cp->state;
-          cp->state      = pWaitRead;
           cp->saved_cnt  = n;
+          cp->saved_state= cp->state;
+          set_os9_state( pid, pWaitRead );
           return n;
 	  }
 	  

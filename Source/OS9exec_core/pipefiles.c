@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 #include "os9exec_incl.h"
 
@@ -373,13 +387,13 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
         if (spP->linkcount<2 && spP->name[0]==0) {
             /* ...but no one else will read it, so end things now (unnamed pipes only) */
             debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: aborting pipe write with %ld total bytes written and E_WRITE\n",p->bwritten));
-            cp->state= pActive; /* re-activate */
-            return os9error(E_WRITE); /* pipe is broken */
+            set_os9_state( pid, pActive ); /* re-activate */
+            return os9error(E_WRITE);   /* pipe is broken */
         }
         else {
             /* ...so wait for some consumer to empty buffer */
             if (cp->state!=pSysTask) {
-                cp->state= pSysTask; /* goto systask */
+                set_os9_state( pid, pSysTask ); /* goto systask */
                 cp->systask_offs= 0; /* by default */
             }
                 
@@ -392,7 +406,7 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
         /* done, return to caller */
         if (cp->state!=pWaitRead &&
             cp->state!=pWaiting)
-        	cp->state= pActive; /* re-activate */
+            set_os9_state( pid, pActive ); /* re-activate */
         
         *lenP= p->bwritten; /* number of bytes written to pipe in that I/O call */
         debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: pipe write successful, %ld total bytes written\n",p->bwritten));
@@ -507,7 +521,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
             /* ...but no one else will deliver, so end things now */
             debugprintf(dbgFiles,dbgDetail,("# pReadSysTaskExe: aborting pipe read with %ld total bytes read%s\n",
                                                p->bread, p->bread==0 ? " and E_EOF" : ""));
-            cp->state= pActive; /* re-activate, finish I$Read(Ln) now */
+            set_os9_state( pid, pActive ); /* re-activate, finish I$Read(Ln) now */
             p->consumers--; /* One waiting consumer less */
             if    (p->bread==0) return os9error(E_EOF); /* pipe is empty */
             *lenP= p->bread; /* there was still something in the pipe */
@@ -515,7 +529,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
         }
         else {
             /* ...so wait for writing end of pipe to send more data */
-            cp->state       = pSysTask; /* stay in (or enter) systask */
+            set_os9_state( pid, pSysTask ); /* stay in (or enter) systask */
             cp->systask     = rd_func;
             cp->systaskdataP= (void*)spP;
             /* leave it as systask and as consumer */
@@ -525,7 +539,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
         /* done, return to caller */
         if (cp->state!=pWaitRead && /* this statement costed me 2 days debugging !! */
             cp->state!=pWaiting)    /* and this one another 1.5 days !!! */
-        	cp->state= pActive;     /* re-activate */
+            set_os9_state( pid, pActive ); /* re-activate */
         
         *lenP= p->bread; /* number of bytes read from pipe in that I/O call */
         p->consumers--;  /* We are not a waiting consumer any more */
