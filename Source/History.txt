@@ -1014,6 +1014,7 @@
           02-07-07  Bfo     RamDisk can be activated with "mount", -r=<size> prepared, but not yet active
           02-07-07  Bfo     RamDisk(s) can be created with any size now.
           02-07-07  Bfo     RBF device full inconsistency fixed now.
+          02-07-08  Bfo     The RAM disk size will be taken from descriptor, if available
     3.14  02-07-??  Bfo     ...
     -------------------
 */
