@@ -30,25 +30,21 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
-/*                                                                          */
-/* ******** Edition History *********************************************** */
-/*                                                                          */
-/*  #      Date         Comments                                        by  */
-/* ----  --------  ---------------------------------------------------- --- */
-/*   01  ../../..   ....                                                LuZ */
-/*   02  96/10/11   The trap table is now available at F$GPrDsc.        bfo */
-/*   03  96/10/11   F$Permit is implemented as a dummy.                 bfo */
-/*   04  96/10/11   "return err" for F$TLink in 'release' mode also.    bfo */
-/*   05  96/10/11   Dbg out for F$TLink in 'release' mode disabled.     bfo */
-/*   06  96/10/14   Improved F$PrsNam & F$CmpNam (i.e. had a close          */
-/*                  look at how it should be)                           LuZ */
-/*   07  96/10/17   F$GModDr and F$CpyMem included.                     bfo */
-/*   08  96/10/17   Some more functionality to F$SetSys.                bfo */
-/*   09  96/12/03   F$GPrDBT included.                                  bfo */
-/*   10  96/12/04   D_PthDBT implemented (F$SetSys) / _paths (F$GPrDsc. bfo */
-/*   11  96/12/06   Wildcard bug fixed.                                 bfo */
-/*   12  00/04/24   F$GBlkMp implemented                                bfo */
-/*                                                                          */
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 
 
 #include "os9exec_incl.h"
@@ -1521,19 +1517,20 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     os9err       err      = sigmask( cpid,0 ); /* disable signal mask */
     process_typ* cp       = &procs [ cpid ];
     int          sleeptime= rp->d[0];
+    int          sleep_x  = sleeptime & 0x7fffffff;
     int          ticks;
 
     if (cp->way_to_icpt) return 0; /* don't sleep if signaled */
     
-    arbitrate= true;      /* allow next process to run */
-    if (sleeptime==1) return 0; /* do not really sleeping */
+    arbitrate= true;          /* allow next process to run */
+    if (sleep_x==1) return 0; /* do not really sleep */
     
     CheckInputBuffers(); /* make shure that special chars like
                             CtrlC/CtrlE/XOn/XOff will be handled */         
 
     cp->state= pSleeping; /* status is sleeping now */
 
-    if (sleeptime==0) {
+    if (sleep_x==0) {
         /* --- put process to indefinite sleep */
         debugprintf(dbgProcess,dbgNorm,
                    ("# F$Sleep: put pid=%d to indefinite sleep!\n",cpid));
@@ -1542,9 +1539,9 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     else {
         /* --- timed sleep */
         
-        if          (sleeptime<0)
-             ticks= (sleeptime & 0x7fffffff)*TICKS_PER_SEC/256;
-        else ticks=  sleeptime;
+        if (sleeptime<0)
+             ticks= sleep_x*TICKS_PER_SEC/256;
+        else ticks= sleep_x;
         
         debugprintf(dbgPartial,dbgNorm,
                    ("# F$Sleep: pid=%d sleep for %d ticks\n", cpid,ticks));
