@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2003/05/12 16:30:48  bfo
+ *    Define OT variable as static
+ *
  *    Revision 1.16  2003/05/08 23:12:40  bfo
  *    MacOSX: Network activated for Carbon
  *
@@ -89,12 +92,12 @@
 
 /* specific network definitions */
 #ifdef macintosh
-  #include <OTDebug.h>
-  #include <Threads.h>
-#endif
-
-#ifdef USE_CARBON
-  static OTClientContextPtr *otContext;
+  #ifdef USE_CARBON
+    OTNotifyUPP gYieldingNotifierUPP= NULL;
+  #else
+    #include <OTDebug.h>
+    #include <Threads.h>
+  #endif
 #endif
 
 #ifdef windows32
@@ -270,17 +273,6 @@ typedef struct _icmphdr
 } IcmpHeader;
 
 
-// #ifdef macintosh
-// struct PingPacket {
-//    UInt8   pType;
-//    UInt8   pCode;
-//    UInt16  pChecksum;
-//    ulong   pISP_ID;  /* use this instead of UInt16 pID/pSeqNum */
-//    OSType  pMagic;
-// };
-// typedef struct PingPacket PingPacket, *PingPacketPtr;
-// #endif
-
 
 #ifdef win_linux
 /* IP header structure */
@@ -299,25 +291,70 @@ typedef struct _iphdr
     unsigned int   sourceIP;
     unsigned int   destIP;
 } IpHeader;
-
-//
-// ICMP header structure
-//
-// typedef struct _icmphdr 
-// {
-//     BYTE   i_type;
-//     BYTE   i_code;                 // Type sub code
-//     USHORT i_cksum;
-//     ulong  i_id;
-//     ulong  i_seq;
-//       
-// //  USHORT i_id;
-// //  USHORT i_seq;
-//     // This is not the standard header, but we reserve space for time
-// //  ULONG  timestamp;
-// } IcmpHeader;
 #endif
 
+
+
+#ifdef powerc
+static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
+/* Input: ep - endpointref on which to negotiate the option
+   enableReuseIPMode - desired option setting - true/false
+   Return: kOTNoError indicates that the option was successfully negotiated
+      OSStatus is an error if < 0, otherwise, the status field is
+      returned and is > 0.
+    
+    IMPORTANT NOTE: The endpoint is assumed to be in synchronous more, otherwise
+      this code will not function as desired
+*/
+{
+	UInt8  buf[kOTFourByteOptionSize]; // define buffer for fourByte Option size
+	TOption* opt;      // option ptr to make items easier to access
+	TOptMgmt req;
+	TOptMgmt ret;
+	OSStatus err;
+ 
+	if (!OTIsSynchronous(ep)) return -1;
+
+	opt= (TOption*)buf;     // set option ptr to buffer
+	req.opt.buf = buf;
+	req.opt.len = sizeof(buf);
+	req.flags = T_NEGOTIATE;    // negotiate for option
+
+	ret.opt.buf = buf;
+	ret.opt.maxlen = kOTFourByteOptionSize;
+
+	opt->level = INET_IP;     // dealing with an IP Level function
+	opt->name = kIP_REUSEADDR;
+	opt->len = kOTFourByteOptionSize;
+	opt->status = 0;
+	*(UInt32*)opt->value = enableReuseIPMode;  // set the desired option level, true or false
+
+	err= OTOptionManagement(ep, &req, &ret);
+ 
+	// if no error then return the option status value
+	if (err==kOTNoError)
+	{
+  		if (opt->status != T_SUCCESS)
+   			err= opt->status;
+  		else
+   			err= kOTNoError;
+ 	}
+    
+	return err;
+} /* DoNegotiateIPReuseAddrOption */
+#endif
+
+
+
+
+#ifdef USE_CARBON
+static void OTAssert( char* txt, Boolean cond ) 
+{
+    #pragma unused(txt)
+
+    if (!cond) DebugStr( "\pOT: Assertion failure." );
+} 
+#endif
 
 
 #ifdef macintosh
@@ -336,8 +373,9 @@ static pascal void YieldingNotifier(void* contextPtr, OTEventCode code,
     
     switch (code) {
         case kOTSyncIdleEvent:
-            junk = YieldToAnyThread();
+            junk= YieldToAnyThread();
             OTAssert("YieldingNotifier: YieldToAnyThread failed", junk == noErr);
+            
             break;
         default:
             // do nothing
@@ -364,14 +402,24 @@ static void SetDefaultEndpointModes( SOCKET s )
     #ifdef powerc
       OSStatus junk;
     
-      junk = OTSetNonBlocking   ( s);
-//    junk = OTSetBlocking      ( s);
+      junk= OTSetNonBlocking   ( s );
+//    junk= OTSetBlocking      ( s );
       OTAssert("SetDefaultEndpointModes: Could not set blocking",         junk==noErr);
-      junk = OTSetSynchronous   ( s);
+
+      junk= OTSetSynchronous   ( s );
       OTAssert("SetDefaultEndpointModes: Could not set synchronous",      junk==noErr);
-      junk = OTInstallNotifier  ( s, &YieldingNotifier, nil);
+      
+      #ifdef USE_CARBON
+ 		if (gYieldingNotifierUPP==NULL)
+            gYieldingNotifierUPP= NewOTNotifyUPP( (OTNotifyProcPtr)YieldingNotifier );
+
+        junk= OTInstallNotifier( s, gYieldingNotifierUPP, s );
+      #else 
+        junk= OTInstallNotifier( s, &YieldingNotifier, nil );
+      #endif
       OTAssert("SetDefaultEndpointModes: Could not install notifier",     junk==noErr);
-      junk = OTUseSyncIdleEvents( s, true );
+      
+      junk= OTUseSyncIdleEvents( s, true );
       OTAssert("SetDefaultEndpointModes: Could not use sync idle events", junk==noErr);
     
     #elif defined win_linux
@@ -402,7 +450,7 @@ static os9err NetInstall(void)
     
     #ifdef powerc
       #ifdef USE_CARBON
-          err= InitOpenTransportInContext( kInitOTForApplicationMask, &otContext );
+          err= InitOpenTransportInContext( kInitOTForApplicationMask, nil );
       #else
           err= InitOpenTransport();
       #endif
@@ -410,14 +458,14 @@ static os9err NetInstall(void)
       if (err) return E_UNIT;
       
       #ifdef USE_CARBON
-        inet_services= OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0,&err, otContext );
+        inet_services= OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0,&err, nil );
       #else
         inet_services= OTOpenInternetServices         ( kDefaultInternetServicesPath, 0,&err );
       #endif
           
       if (err) { 
           #ifdef USE_CARBON
-            CloseOpenTransportInContext( otContext ); 
+            CloseOpenTransportInContext( nil ); 
           #else
             CloseOpenTransport(); 
           #endif
@@ -471,7 +519,7 @@ os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
     #ifdef powerc
       /* First allocate a buffer for storing the data as we read it. */
       #ifdef USE_CARBON
-          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, otContext );
+          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, nil );
       #else
           net->transferBuffer= OTAllocMem         ( kTransferBufferSize );
       #endif    
@@ -943,6 +991,7 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       TEndpointInfo info;
       TBind         bindReq;
       char*         kN;
+      OSStatus      junk;
     #endif
     
     #ifdef win_linux
@@ -963,13 +1012,15 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       else             kN=  kTCPName;
 
       #ifdef USE_CARBON
-        net->ls= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, otContext );                           
+        net->ls= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, nil );                           
       #else
         net->ls= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0, &info, &err );
       #endif
                                
       if (err) return E_FNA;
-
+      
+	  junk= DoNegotiateIPReuseAddrOption( net->ls, true );
+	  
     /* %%% the "reUse", has still no effect, don't know why ... */
 //  if (!net->listen) err= reUse( pid, spP ); if (err) return OS9_EADDRINUSE;
     
@@ -978,7 +1029,7 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       if (net->ls==INVALID_SOCKET) return E_FNA;
     #endif
 
-    SetDefaultEndpointModes(net->ls);
+    SetDefaultEndpointModes( net->ls );
     
     /* do it the same way as OS-9: first free port is 1025 */
     if (net->ipAddress.fAddressType==0) fPort= ALLOC_PORT;
@@ -992,9 +1043,11 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
     while (true) {
         #ifdef powerc
           net->ipAddress.fPort= os9_word(fPort); /* don't forget to save it back */
-               
-               err= OTBind( net->ls, &bindReq,nil ); if (!err) break;
-          if  (err==kEADDRINUSEErr  ||
+                         
+               err= OTBind( net->ls, &bindReq,nil );
+          if (!err ||
+		       err==kEACCESErr) break;         
+		  if  (err==kEADDRINUSEErr  ||
                err==kOTNoAddressErr ||
                net->ipAddress.fAddressType==0) ; /* do nothing */
           else break;
@@ -1017,10 +1070,10 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
             }
           #endif
           
-      //  upe_printf( "bind %d %d: %d %d %x\n", err, net->ls, 
-      //                                             name.sin_family,
-      //                                    os9_word(name.sin_port),
-      //                                    os9_long(name.sin_addr.s_addr));
+        // upe_printf( "bind %d %d: %d %d %x\n", err, net->ls, 
+        //                                           name.sin_family,
+        //                                  os9_word(name.sin_port),
+        //                                  os9_long(name.sin_addr.s_addr));
           if (!err) break;
         #endif
     
@@ -1050,6 +1103,7 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
     
     #ifdef powerc   
       if (err==kEADDRNOTAVAILErr) return OS9_ENETUNREACH;
+      if (err==kEACCESErr)        return E_PERMIT;
       if (err)                    return OS9_EADDRINUSE;
     #elif defined(windows32)
       SetDefaultEndpointModes(net->ls);
@@ -1159,12 +1213,13 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           else          kN= kTCPName;
         
           #ifdef USE_CARBON
-            net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0,nil, &err, otContext );
+            net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0,nil, &err, nil );
           #else
             net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0,nil, &err );
           #endif
           
-          if (err) return E_FNA;
+          if (err==kEPERMErr) return E_PERMIT;
+          if (err)            return E_FNA;
         
           SetDefaultEndpointModes( net->ep );
           err= OTBind( net->ep, nil,nil ); if (err) return OS9_ECONNREFUSED;
@@ -1302,8 +1357,9 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           return E_NOTRDY;
       }
     
+    
       #ifdef USE_CARBON
-        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 0, nil, &err, otContext );
+        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 0, nil, &err, nil );
       #else
         net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kTCPName), 0, nil, &err );
       #endif
@@ -1627,8 +1683,11 @@ os9err pNgPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
     OSStatus    err= 0;
     long        start_time;
     net_typ*    net= &spP->u.net;
-    IcmpHeader  *icmp;
-
+    
+    #ifdef WITH_NETWORK
+      IcmpHeader  *icmp;
+    #endif
+    
     #ifdef powerc
       TUnitData   udata;
       InetAddress src_addr;
@@ -1648,6 +1707,7 @@ os9err pNgPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
     
     
     #ifndef WITH_NETWORK
+      #pragma unused(a0)
       return E_UNKSVC;
     #endif
 
