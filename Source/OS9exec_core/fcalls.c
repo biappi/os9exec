@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/08/08 20:42:04  bfo
+ *    sleep 0 bug for 1/256th sec fixed
+ *
  *
  */
 
@@ -661,7 +664,7 @@ os9err OS9_F_GPrDBT( regs_type *rp, ushort cpid )
     if ( s<sl ) { *s= os9_word(MAXPROCESSES-1); s++; }; /* no process 0 */
     if ( s<sl ) { *s= os9_word(2048);           s++; }; /* the size of the real descriptor */
     
-    ptr= (ulong *)s;                                /* start with process nr 2 */
+    ptr= (ulong *)s;                                    /* start with process nr 1 */
     for (k=1; ( k<MAXPROCESSES ) && ( ptr<lim ); k++ )
     {
       if (procs[k].state==pUnused)
@@ -878,7 +881,8 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 	#define D_68881    0x002F
 	#define D_ModDir   0x003C
 	#define D_ModDir_L 0x0040
-	#define D_PthDBT   0x0048
+	#define D_PrcDBT   0x0044   /* process descriptor block table pointer */
+	#define D_PthDBT   0x0048   /* path    descriptor block table pointer */
 	#define D_Ticks    0x0054   /* current tick count                     */
 	#define D_MinBlk   0x0070   /* process minimum allocatable block size */
 	#define D_BlkSiz   0x007C   /* system  minimum allocatable block size */
@@ -898,9 +902,10 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     #pragma unused(cpid)
     #endif
     
-    ulong v;
-    ulong offs, b;
-    int   size;
+    ulong  v;
+    ulong  offs, b;
+    ulong* ptr;
+    int    size, k;
     
     offs=loword(rp->d[0]);
     size=(int)  rp->d[1];
@@ -929,6 +934,17 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
          
       case D_ModDir  : v=  b;                        break;
       case D_ModDir_L: v=  b + MAXMODULES*MDirEntry; break;
+      case D_PrcDBT  : v=  (ulong)       &prDBT [0];
+      
+                       ptr= (ulong*)v;                                /* start with process nr 2 */
+                       for (k=1; k<MAXPROCESSES; k++ ) {
+                           if (procs[k].state==pUnused)
+                                { *ptr= 0; }
+                           else { *ptr= os9_long((ulong) &procs[k]); } /* not the right ptr, but ... */
+      
+                           ptr++;
+                       }                             break; /* prc table image */
+                       
       case D_PthDBT  : v=  (ulong)       &syspth[0]; break; /* pth table image */
       case D_Ticks   : v=           GetSystemTick(); break; /* system heartbeat */
       case D_MinBlk  : v=                        16; break; /* as on real OS-9 systems */
@@ -970,7 +986,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
       case D_ScreenH1: v= screenH;          break; /* -y option of OS9exec  */
       case D_UserOpt : v= userOpt;          break; /* -u option of OS9exec  */
       
-      default        : v= 0;
+      default        : v= 0; upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
     }
     
     debugprintf(dbgPartial,dbgNorm,("# F$SetSys: %04lX %x %d\n", offs, size, v));

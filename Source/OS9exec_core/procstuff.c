@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 #include "os9exec_incl.h"
 
@@ -92,8 +106,18 @@ void show_processes(void)
 void init_processes()
 /* initialize process descriptors */
 {
+    short* s;
+    
     int  k;
-    for (k=0; k<MAXPROCESSES; k++) procs[k].state= pUnused; /* invalidate this process */
+    for (k=0; k<MAXPROCESSES; k++) {
+        procs[k].state= pUnused; /* invalidate this process  */
+        prDBT[k]      = NULL;    /* and also the table entry */
+    } /* for */
+    
+                                  s= (short*)prDBT;
+    *s= os9_word(MAXPROCESSES-1); s++; /* no process 0 */
+    *s= os9_word(2048);           s++; /* the size of the real descriptor */
+    
     currentpid= 0; /* earlier: MAXPROCESSES; no process is running */
 } /* init_processes */
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2002/08/06 21:03:14  bfo
+ *    Version changed to V3.16
+ *
  *    Revision 1.16  2002/08/06 07:59:45  luz
  *    Fixed "Retry/Abort" pop-up dialog
  *
@@ -126,13 +129,14 @@ syspath_typ syspaths[MAXSYSPATHS];
 ulong       syspth  [MAXSYSPATHS];
 
 /* the SCSI devices */
-scsi_typ    scsi    [MAXSCSI];
+scsi_typ    scsi[MAXSCSI];
 
 /* definitions for TTY */
-ttydev_typ  ttydev  [MAXTTYDEV];		
+ttydev_typ  ttydev[MAXTTYDEV];		
 
 /* the processes */
-process_typ procs   [MAXPROCESSES];
+process_typ  procs[MAXPROCESSES];
+process_typ* prDBT[MAXPROCESSES]; 
 
 /* the signal queue */
 sig_typ     sig_queue;

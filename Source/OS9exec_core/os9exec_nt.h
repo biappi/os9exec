@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/07/30 16:46:14  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.10  2002/07/24 22:33:28  bfo
  *    Timer synchronisation enhanced
  *
@@ -809,7 +812,7 @@ typedef struct {
 
 /* the "module directory" */
 extern  module_typ  os9modules[MAXMODULES];
-extern  mod_exec    *init_module;
+extern  mod_exec*   init_module;
 extern  ulong       totalMem;
 
 /* the system paths */
@@ -818,14 +821,15 @@ extern  ulong       syspth  [MAXSYSPATHS];
 
 
 /* the RBF and SCSI devices */
-extern  scsi_typ    scsi    [MAXSCSI];
+extern  scsi_typ    scsi[MAXSCSI];
 
 /* definitions for TTY */
-extern  ttydev_typ  ttydev  [MAXTTYDEV];
+extern  ttydev_typ  ttydev[MAXTTYDEV];
 
 
 /* the processes */
-extern  process_typ procs   [MAXPROCESSES];
+extern  process_typ  procs[MAXPROCESSES];
+extern  process_typ* prDBT[MAXPROCESSES]; 
 
 /* the signal queue */
 extern  sig_typ     sig_queue;

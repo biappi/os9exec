@@ -55,7 +55,13 @@
                     LuZ     made fetchnames a command line option (-fe)
                     LuZ/Bfo included Beat's F$GetPrDsc
     2.01  96-10-02  LuZ/Bfo Minor modifications (in Discussion with Beat Forster)
-          96-10-11  Bfo     F$Permit included.
+          96-10-11  Bfo     The trap table is now available at F$GPrDsc.
+          96-10-11  Bfo     F$Permit is implemented as a dummy.
+          96-10-11  Bfo     "return err" for F$TLink in 'release' mode also.
+          96-10-11  Bfo     Dbg out for F$TLink in 'release' mode disabled.
+          96-10-14  LuZ     Improved F$PrsNam & F$CmpNam (i.e. had a close look at how it should be)
+          96-10-17  Bfo     F$GModDr and F$CpyMem included. 
+          96-10-17  Bfo     Some more functionality to F$SetSys.
           96-10-21  LuZ/Bfo Added more of Beat's Fcalls. Fixed various little bugs. Made working PPC Version.
     2.02  96-10-23  LuZ     Revised os9_llm.a to allow open IRQ operation
           96-10-24  LuZ     Fixed case sesitive "/dd" check, fixed F$CmpNam case sensitivity and "xxx.*" failure.
@@ -73,11 +79,14 @@
                     LuZ     Added checks for bounds in all I$Read(Ln) and I$Write(Ln) when dbgWarning & >=dbgDetail
                     LuZ     Found and fixed hyperstupid bug in stdwrite that caused crash with console output
                             lines longer than 300 chars.
-    2.04  96-11-11  LuZ     Added correct handling of uninitialized TCalls (that is, calling the exception entry
+          96-11-11  LuZ     Added correct handling of uninitialized TCalls (that is, calling the exception entry
                             point of the program's main module). Fixed bug in Traphandler stack frame (Offset 6
                             does NOT contain vector NUMBER, bug vector OFFSET, altough OS9 docs say it's the vector
                             number; r68020 proves them wrong!)
+          96-12-03  Bfo     F$GPrDBT included.
+          96-12-04  Bfo     D_PthDBT implemented (F$SetSys) / _paths (F$GPrDsc.
     2.04  96-12-05  Bfo     Procs stuff included.
+          96-12-06  Bfo     Wildcard bug fixed.
     2.05  96-12-13  Bfo     Added many improvements made by Bfo which fixes numerous bugs.
     2.06  96-12-13  LuZ     Implemented User mode, works fine on PPC but totally fails on 68k -> This is
                             no releasable version (User mode must be made work ok with 68k or separate
@@ -1047,14 +1056,15 @@
                             fixed. There is a Win32 SetErrorMode() function which allows to
                             disable this popup globally. Also made it to return E_NotRdy, but
                             this is kind of a hack because many of the helper functions
-                            don't have error code return, but just boolean. Needs rework some
-                            time.
+                            don't have error code return, but just boolean. Needs rework some time.
     3.15  02-08-06  Bfo     Version V3.15 released for the customer.
     -------------------
     
           02-08-06  Bfo     Changed to the new version !
           02-08-07  Bfo     Mounting RBF partition problem fixed (isRAM on wrong level)
           02-08-07  Bfo     idevs: added option -r
+          02-08-08  Bfo     sleep 0 bug for 1/256th fixed.
+          02-08-08  Bfo     F$SetSys extended with D_PrcDBT support.
     3.16  02-08-??  Bfo     ...
     -------------------
 */
