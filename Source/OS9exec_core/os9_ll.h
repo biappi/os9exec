@@ -36,19 +36,9 @@
 #define _os9_ll_h
 
 #ifdef USE_UAEMU
-/* include file os9_uae.h */
+    /* include file os9_uae.h */
     #include "sysconfig.h"
     #include "sysdeps.h"
-    #include "config.h"
-
-    #include "memory.h"
-
-    #include "readcpu.h"
-    #include "newcpu.h"
-    #include "options.h"
-    #include "compiler.h"
-
-    #include "luzstuff.h"
 
     #ifdef _in_uae_c
     #define extern
@@ -183,6 +173,12 @@ typedef  struct {
 #define FLAGS_UM  0x0004   /* Mac context runs in user mode */
 
 
+#ifdef USE_UAEMU
+  #ifndef flagtype
+    typedef char flagtype;
+  #endif
+#endif
+
 /* register context:
    !!!!!!!! must be STRUCTURALLY EQUAL to regstruct in newcpu.h */
 #ifdef USE_UAEMU
@@ -190,13 +186,14 @@ typedef  struct {
 #else
   typedef volatile struct {
 #endif
+
     /* common in UAE and os9exec */
     ulong d[8]; /* data registers */
     ulong a[8]; /* address registers */
 
     #ifdef USE_UAEMU
-    /* UAE only */
-    uae_u32 usp,isp,msp;
+      /* UAE only */
+      uae_u32 usp,isp,msp;
     #endif
     
     /* common */
@@ -204,14 +201,14 @@ typedef  struct {
     unsigned short flags;/* divs OS9exec specific flags */
 
     #ifdef USE_UAEMU
-    /* UAE only */
-    flagtype t1;
-    flagtype t0;
-    flagtype s;
-    flagtype m;
-    flagtype x;
-    flagtype stopped;
-    int intmask;
+      /* UAE only */
+      flagtype t1;
+      flagtype t0;
+      flagtype s;
+      flagtype m;
+      flagtype x;
+      flagtype stopped;
+      int intmask;
     #endif
 
     /* common */
