@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2002/07/30 21:30:15  bfo
+ *    Updated for OS9EXEC V3.15
+ *
  *    Revision 1.14  2002/07/30 16:46:14  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -1069,11 +1072,18 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#else
 	  char   *p, title[255];
 	#endif
+
 		
 	ulong      res;	    /* llm_os9_go result */
     ushort     err= 0;  /* MPW Error */
 	OSErr    oserr;		/* Mac error */
 
+
+	/* ---- win32 specific global init ------------------------------ */
+  #ifdef windows32
+    // Avoid error popup (Retry/Abort)
+    SetErrorMode(SEM_NOOPENFILEERRORBOX + SEM_FAILCRITICALERRORS);
+  #endif
 
 	/* ---- create the kernel process ------------------------------- */
 	new_process( 0,&cpid, 0 ); /* get the kernel process */

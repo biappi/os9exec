@@ -872,6 +872,9 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
           /* --- create */
           /* check if file exists */
           if (FileFound( pp )) return os9error(E_CEF); /* create existing file not allowed */
+          #ifdef windows32
+          if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+          #endif
 
               stream= fopen( pp,"wb+" ); /* create for update, use binary mode (bfo) ! */
           if (stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
@@ -880,7 +883,13 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
           /* --- open */
           #ifdef win_linux
             /* object exists, but make sure it is not a directory */
+            #ifdef windows32
+            SetLastError(ERROR_SUCCESS);
+            #endif
             if (PathFound( pp )) return os9error(E_FNA);
+            #ifdef windows32
+            if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+            #endif
           #endif
         
               stream= fopen( pp,"rb" ); /* try to open for read, use binary mode */
@@ -1805,7 +1814,6 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
       Boolean ok;
     #endif
 
-
  /* if (strlen(pathname)>DIRNAMSZ) return os9error(E_BPNAM); */
 
     strcpy  ( ploc,pathname );
@@ -1834,7 +1842,12 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
       pp = adapted;
 
            ok= OpenTDir( pp, &d );
-      if (!ok) return E_FNA;
+      if (!ok) {
+        #ifdef windows32
+        if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+        #endif
+        return E_FNA;
+      }
       
               spP->dDsc= d;
       strcpy( spP->fullName, adapted ); /* for later use with stat function */

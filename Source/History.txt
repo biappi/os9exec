@@ -1042,6 +1042,13 @@
     -------------------
 
           02-07-30  Bfo     Changed to the new version !
+          02-08-06  luz     "Aufklapp" (pop-up when accessing not-ready device such as floppy)
+                            fixed. There is a Win32 SetErrorMode() function which allows to
+                            disable this popup globally. Also made it to return E_NotRdy, but
+                            this is kind of a hack because many of the helper functions
+                            don't have error code return, but just boolean. Needs rework some
+                            time.
+
     3.15  02-08-??  Bfo     ???
     -------------------
 */

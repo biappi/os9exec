@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2002/07/30 16:45:37  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.17  2002/07/24 22:33:53  bfo
  *    Timer synchronisation enhanced
  *
@@ -968,12 +971,18 @@ Boolean PathFound( const char* pathname )
 Boolean FileFound( const char* pathname )
 /* Check if this entry is a file */
 {
+    #ifdef windows32
+    DWORD winerr;
+    #endif
     FILE*        f= fopen( pathname,"rb" ); /* try to open for read */
     Boolean ok= (f!=NULL);
     if     (ok) fclose( f ); /* don't use it any more */
 
     #ifdef windows32
-      if (!ok && GetLastError()==ERROR_SHARING_VIOLATION) ok= true;
+      if (!ok) {
+        winerr=GetLastError();
+        if (winerr==ERROR_SHARING_VIOLATION) ok= true;
+      }
     #endif
     
     debugprintf( dbgFiles,dbgNorm,("# FileFound %s '%s'\n", 
@@ -1561,8 +1570,17 @@ Boolean SCSI_Device( const char* os9path,
       EatBack( adname );
       
       if (!creFile) { /* can't be here, if file not yet exists */
-          if (!FileFound( adname ) &&
-              !PathFound( adname )) return E_PNNF;
+          if (!FileFound( adname )) {
+            #ifdef windows32
+            if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+            #endif
+            if (!PathFound( adname )) {
+              #ifdef windows32
+              if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+              #endif
+              return E_PNNF;
+            }
+          }
       }
       
       return 0;
