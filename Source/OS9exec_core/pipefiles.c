@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *
  */
 
@@ -156,11 +159,12 @@ os9err getPipe( ushort pid, syspath_typ* spP, ulong buffsize )
     #pragma unused(pid)
     #endif
 
-    pipechan_typ* p  = get_mem( sizeof(pipechan_typ),false );
-    byte*         buf= get_mem( buffsize,            false );
+    pipechan_typ* p  = get_mem( sizeof(pipechan_typ) );
+    byte*         buf= get_mem( buffsize             );
     if (buf==NULL) return os9error(E_NORAM);
 
     spP->u.pipe.pchP= p; /* assign pipe structure */
+//  printf( "GET     PIPE     %08X %08X %d\n", p,spP->u.pipe.i_svd_pchP, buffsize );
 
     p->size      = buffsize; /* assign it */
     p->buf       = buf;
@@ -202,11 +206,13 @@ os9err releasePipe( ushort pid, syspath_typ* spP )
         } /* if */
     } /* for */
 
+//  printf( "RELEASE PIPE OK  %08X %08X\n", p,spP->u.pipe.i_svd_pchP );
         spK= get_syspathd( pid, p->sp_lock );
     if (spK!=NULL && 
         spP->u.pipe.i_svd_pchP==NULL) { /* don't break if temporary pipe */
         spK->u.pipe.pchP->sp_lock= p->sp_lock;
         spK->u.pipe.pchP->broken = true;
+    //  printf( "SEND %d %d\n", spK->signal_pid, spK->signal_to_send );
 
         if                               (spK->signal_to_send!=0) {
             send_signal( spK->signal_pid, spK->signal_to_send );
@@ -214,14 +220,30 @@ os9err releasePipe( ushort pid, syspath_typ* spP )
         }
     }
 
-    release_mem( p->buf,false );
+    release_mem( p->buf );
     debugprintf( dbgFiles,dbgDetail,("# releasePipe: (name='%s') @ $%lX\n",
                  spP->name, p->buf ));
 
-    release_mem( p,     false );
+    release_mem( p );
     spP->u.pipe.pchP= NULL; /* and make it invisible */
     return 0;
 } /* releasePipe */
+
+
+
+static void releasePipe_svd( ushort pid, syspath_typ* spP, Boolean forced )
+{
+    pipe_typ*     pp= &spP->u.pipe;
+    pipechan_typ* p =  pp->pchP;
+//  printf( "RELEASE PIPE_SVD %08X %08X %d %d\n", p,spP->u.pipe.i_svd_pchP, p->pwp-p->prp, forced );
+    
+    if (pp->i_svd_pchP!=NULL && (forced || p->pwp==p->prp)) { /* svd buff empty */
+//      printf( "RELEASE PIPE_SVD %08X %08X\n", p,spP->u.pipe.i_svd_pchP );
+        releasePipe( pid, spP );          /* release and restore it */
+        pp->pchP      = pp->i_svd_pchP;
+        pp->i_svd_pchP= NULL; 
+    }
+} /* releasePipe_svd */
 
 
 
@@ -288,6 +310,7 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char* name)
     }
     
     /* allocate buffer */
+                        spP->u.pipe.i_svd_pchP= NULL; /* initialize */
     err=     pPopt( pid,spP, (byte*)&spP->opt ); /* no err returned */
     return getPipe( pid,spP, pipesz );
 } /* pPopen */
@@ -296,7 +319,11 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char* name)
 
 os9err pPclose( ushort pid, syspath_typ* spP )
 /* close pipe */
-{   releasePipe( pid,spP ); return 0;
+{       
+    pipe_typ* pp= &spP->u.pipe;
+    
+    if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, true );    
+    releasePipe( pid,spP ); return 0;
 } /* pPclose */
 
 
@@ -473,8 +500,11 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
 {
     ulong         numready,remaining,bytes,nn;
     byte*         buf;
-    pipechan_typ* p= spP->u.pipe.pchP;
+    pipe_typ*     pp= &spP->u.pipe;
+    pipechan_typ* p =  pp->pchP;
     process_typ*  cp= &procs[pid];
+    
+    if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, false );    
     
     /* find out how many bytes are here to be read */
     if (p->prp>p->pwp) numready= p->pwp-p->prp + p->size;
@@ -666,8 +696,8 @@ os9err pPeof( ushort pid, syspath_typ *spP )
 /* check ready */
 os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
 {
-//  #pragma unused(pid)
-    pipechan_typ* p= spP->u.pipe.pchP;
+    pipe_typ*     pp= &spP->u.pipe;
+    pipechan_typ* p =  pp->pchP;
     
     *n= p->pwp-p->prp;
     if (p->pwp<p->prp) *n+= p->size; /* wrapper */
@@ -677,14 +707,9 @@ os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
     /* do not cross over for reading */
     if (spP->type==fPTY) {
         if (p->broken) { *n= 1; return 0; } /* handle broken half-pipe correctly */
-    
-        if (spP->u.pipe.i_svd_pchP!=NULL) {
-            releasePipe( pid, spP );    /* release and restore it */
-            spP->u.pipe.pchP= spP->u.pipe.i_svd_pchP;
-                              spP->u.pipe.i_svd_pchP= NULL; 
-        }
     }
-    
+        
+    if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, false );    
     return os9error(E_NOTRDY);
 } /* pPready */
 
@@ -737,7 +762,7 @@ os9err pKopen( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
     pipechan_typ* k;
     int           n;
     char          tty_cmp[OS9NAMELEN];
-    
+        
     strcpy( spP->name,&pathname[1] );
     strcpy( tty_cmp, spP->name );
             tty_cmp[0]= 't';
