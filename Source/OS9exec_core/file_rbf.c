@@ -196,14 +196,16 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
 
     debugprintf(dbgFiles,dbgDetail,("# RBF read  sectorNr: $%06X (n=%d) @ $%08X\n",
                                        sectorNr, nSectors, pos));
-    if (sectorNr>0 &&
-        sectorNr+nSectors>dev->totScts) return E_EOF; /* out of valid range */
-    
+    if (sectorNr>0) {
+        if (dev->totScts==0)                return E_NOTRDY;
+        if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
+    }
+   
     do {    
         if (IsSCSI(dev)) {
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
             if (err) {
-                err= Set_SSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, dev->sctSize ); if (err) break;    /* adjust sector size */
+                err= Set_SSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize ); if (err) break; /* adjust sector size */
                 err= Get_DSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, &dev->totScts ); if (err) break; /* and get new info back */
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer );
             }
@@ -247,8 +249,10 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
 
     debugprintf(dbgFiles,dbgDetail,("# RBF write sectorNr: $%06X (n=%d) @ $%08X\n",
                                        sectorNr, nSectors, pos));
-    if (sectorNr>0 &&
-        sectorNr+nSectors>dev->totScts) return E_EOF; /* out of valid range */
+    if (sectorNr>0) {
+        if (dev->totScts==0)                return E_NOTRDY;
+        if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
+    }
         
     do {
         if (IsSCSI(dev))
@@ -399,6 +403,7 @@ static os9err ChkIntegrity( rbfdev_typ* dev, syspath_typ* spP,
 
         spP->u.rbf.fd_nr= 0; /* do not access any more this fd */
         spP->mustW      = 0; /* don't write this sector */
+        DevSize( dev );      /* get new device size */
         return E_DIDC;
     }
     
