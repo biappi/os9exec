@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2003/01/10 21:00:50  bfo
+ *    pWaitRead problems fixed
+ *
  *    Revision 1.20  2003/01/09 21:56:45  bfo
  *    Some F$RTE adaptions
  *
@@ -784,7 +787,13 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     /* get the list of the currently installed error trap handlers (LuZ) */ 
     for (k=0; k<NUMEXCEPTIONS; k++) {
         ep = &cp->ErrorTraps[k];
-        pd._except[k]= (byte*)os9_long((ulong)ep->handleraddr);
+        
+        #if defined(windows32) && __MWERKS__ >= CW8_MWERKS
+           pd.except[k]= (byte*)os9_long((ulong)ep->handleraddr);
+        #else
+          pd._except[k]= (byte*)os9_long((ulong)ep->handleraddr);
+        #endif
+        
         pd._exstk [k]= (byte*)os9_long((ulong)ep->handlerstack);
     }
 

@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/09/11 17:32:04  bfo
+ *    Import all os9defs files from here / adapt it for "errno_adapted.h"
+ *
  *    Revision 1.5  2002/09/03 18:39:38  bfo
  *    include "errno_adapted.h"
  *
@@ -84,9 +87,16 @@
   #include ":os9defs:procid.h"
   #include ":os9defs:sgstat.h"
   #include ":os9defs:errno_adapted.h"
-#else  
+
+#else
   #include "module.h"
-  #include "procid.h"
+  
+  #if defined(windows32) && __MWERKS__ >= CW8_MWERKS
+    #include "procid_special.h"
+  #else
+    #include "procid.h"
+  #endif
+   
   #include "sgstat.h"
   #include "errno_adapted.h"
 #endif
