@@ -62,7 +62,7 @@
 #define CB_SizeExt    10
 #define SizeCmd       12
 
-#define NTries        10
+#define NTries        30
 
 
 
@@ -600,7 +600,8 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
                     cb[5]= 0;
 
             err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, false ); 
-        if (err!=E_UNIT) break;     
+        if (err) printf( "Read  %008X %d %d\n", sectorNr,ii,err );
+        if (err!=E_UNIT && err!=E_SEEK) break;     
         
         #ifdef windows32
           Sleep( 100 );
@@ -630,7 +631,8 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
                     cb[5]= 0;
 
             err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, true ); 
-        if (err!=E_UNIT) break;     
+        if (err) printf( "Write %008X %d %d\n", sectorNr,ii,err );
+        if (err!=E_UNIT && err!=E_SEEK) break;     
         
         #ifdef windows32
           Sleep( 100 );
