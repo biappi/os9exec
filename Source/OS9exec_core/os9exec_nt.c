@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/07/06 15:54:53  bfo
+ *    mnt_ramSize included
+ *
  *    Revision 1.9  2002/07/01 21:29:23  bfo
  *    Slightly adapted for Carbon -> It is running now correctly in Carbon window.
  *    But still running in Mac OS9 environment. Don't know why.
@@ -218,7 +221,7 @@ ulong   my_inetaddr   = os9_long(0x7F000001); /* loopback by default: 127.0.0.1 
 
 
 /* tickCount at start of the program */
-ulong  startTick= 0; /* Initialize to 0, because subtracted in "GetSystemTick" */
+ulong  startTick;
 ulong   lastTick= 0;
 
 #ifdef linux

@@ -349,6 +349,25 @@ static void os9_usage(char *name)
 
 
 
+static void GetStartTick()
+{
+    struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
+    int    old_sec;
+    
+    GetTim( &tim );
+    old_sec= tim.tm_sec;
+    
+    do { /* this loop can take up to 1 second of time !! */
+        GetTim( &tim );
+    } while     (tim.tm_sec==old_sec);
+    
+    startTick= 0; /* Initialize to 0, because subtracted in "GetSystemTick" */
+    startTick= GetSystemTick();
+    /* now the tick counter is synchronised to the second changing, as in OS-9 */
+} /* GetStartTick */
+
+
+
 /* main program */
 void os9_main( int argc, char **argv, char **envp )
 {
@@ -389,8 +408,8 @@ void os9_main( int argc, char **argv, char **envp )
     
     // set up global init stuff, so user path output will work
     os9exec_globinit();
-    startTick= GetSystemTick();
-
+    GetStartTick();
+    
     /* start the logging system */
     init_syscalltimers();
     
