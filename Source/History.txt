@@ -1201,6 +1201,8 @@
 		  03-05-21	Bfo		Preparations for seteuid on Mac OS X
 		  03-05-21  Bfo		Some more MACH-O adaptions, still not able to compile
 		  03-05-25  Bfo		<totalMem> can't be any more smaller than <memsz>
+		  03-05-25  Bfo		"double" big/little endian problem module sizes fixed
+		  03-05-25	Bfo		buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
     3.22  03-??-??  Bfo
     -------------------
 */
