@@ -983,8 +983,8 @@
           02-05-18  Bfo     Clean headers (not completely clean, as seen at 02/06/06)
           02-05-18  Bfo     GetTim implementation things.
           02-05-18  Bfo     Program is quitting the main loop again.
-          02-06-06  Bfo		Problem with larger SCSI sectorsize fixed.
-    3.12  02-06-??  Bfo     ...
+          02-06-06  Bfo     Problem with larger SCSI sectorsize fixed (get_mem too small)
+    3.12  02-06-06  Bfo     The descriptors' PD_TYP flag will be copied into the opt section of RBF devices.
     -------------------
 */
 
