@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2002/09/21 20:02:52  bfo
+ *    E_DIDC problem fixed.
+ *
  *    Revision 1.28  2002/09/19 22:00:18  bfo
  *    Disabling "r0" more specific now
  *
@@ -1243,7 +1246,7 @@ os9err int_mount( ushort pid, int argc, char **argv )
                             break;
                             
                 default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
-                            mount_usage(argv[0],pid); return 1;
+                            mount_usage( argv[0],pid ); return 1;
             }   
         }
         else {
@@ -1254,6 +1257,11 @@ os9err int_mount( ushort pid, int argc, char **argv )
             nargv[nargc++]= argv[k];
         }
     } /* for */
+
+    if (nargc==0) { /* no param is not really allowed: exception is ramDisk with size>0 */
+        if (ramSize>0) { nargv[0]= "/r0"; nargc= 1; }
+        else return _errmsg( E_BPNAM, "can't mount device \"\".\n" );
+    }
 
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
