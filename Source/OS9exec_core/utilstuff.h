@@ -102,6 +102,7 @@ void    MakeOS9Path  (       char* pathname );
 Boolean SamePathBegin( const char* pathname, const char* cmp );
 Boolean InstalledDev ( const char* os9path,  
                        const char* curpath,  Boolean fullsearch, ushort *cdv );
+Boolean IsDesc       ( const char* dvn,      mod_dev** mod, char** p );
 Boolean SCSI_Device  ( const char* os9path,
                        short  *scsiAdapt, short  *scsiBus, int  *scsiId,    short   *scsiLUN,
                        ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp, ptype_typ *typeP );

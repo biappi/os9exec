@@ -628,16 +628,29 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     #define A_Base      0x100
     #define MaxScts     0x00fffffc
     
-    ulong   allocSize, allocN, allocScts;
-    ulong*  u;
-    ushort* w;
-    byte*   b;
-    ulong   f, r, fN, rN;
-    int     ii, v;
-    byte    p;
+    ulong    allocSize, allocN, allocScts;
+    ulong*   u;
+    ushort*  w;
+    byte*    b;
+    ulong    f, r, fN, rN;
+    int      ii, v;
+    byte     pt;
+    mod_dev* mod;
+    char*    p;
     
         dev->totScts= mnt_ramSize*KByte/dev->sctSize; /* adapt to KBytes */
-    if (dev->totScts     ==0) dev->totScts= DefaultScts;
+    if (dev->totScts==0) dev->totScts= DefaultScts;
+    
+    if ( mnt_ramSize==0 
+      && IsDesc( cmp, &mod, &p )  
+      && ustrcmp( p,"RBF" )==0 ) {
+        p= (char*)mod + os9_word(mod->_mpdev);
+        if (ustrcmp( p,"ram" )==0) {
+            w= (ushort*)(&mod->_mdtype + PD_SCT);
+            dev->totScts= *w;
+        }
+    } /* if */
+
     if (dev->totScts>MaxScts) dev->totScts= MaxScts;
     
     allocSize= (dev->totScts-1)/(dev->sctSize*BpB) + 1; /* round up */
@@ -649,14 +662,14 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     
     memcpy( dev->ramBase,RAM_zero, dev->sctSize );
     
-    p= 0x80;
+    pt= 0x80;
     for (ii=0; ii<allocN; ii++) {
         if  (ii<allocScts || ii>=dev->totScts) {
           v= ii/BpB;
-          b= &dev->ramBase[A_Base+v]; *b |= p;
+          b= &dev->ramBase[A_Base+v]; *b |= pt;
         }
         
-        p= p/2; if (p==0) p= 0x80; /* prepare the next pattern */
+        pt= pt/2; if (pt==0) pt= 0x80; /* prepare the next pattern */
     } /* for */
     
     f=  1 + allocSize; fN= f*dev->sctSize;

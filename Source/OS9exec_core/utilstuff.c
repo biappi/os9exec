@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/07/06 15:56:42  bfo
+ *    ram disks (also other names than /r0) can be mounted/unmounted with "mount"
+ *    the size -r=<size> is prepared, but not yet active
+ *
  *    Revision 1.11  2002/07/05 22:45:54  uid82848
  *    E_FULL problem fixed
  *
@@ -1370,6 +1374,23 @@ Boolean SamePathBegin( const char* pathname, const char* cmp )
 
 
 
+Boolean IsDesc( const char* dvn, mod_dev** mod, char** p )
+{
+    int    mid= find_mod_id( dvn );
+    ushort mty;
+    
+    if (mid==MAXMODULES) return false; /* no such module found */
+    
+       *mod= (mod_dev*)os9mod( mid );      
+        mty= os9_word( (*mod)->_mh._mtylan )>>BpB;
+    if (mty!=MT_DEVDESC) return false; /* not the right type */
+
+    *p= (char*)*mod + os9_word((*mod)->_mfmgr);
+    return true;    
+} /* IsDesc */
+
+
+
 Boolean SCSI_Device( const char* os9path,
                      short *scsiAdapt, short *scsiBus, int *scsiID, short *scsiLUN,
                      ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp,
@@ -1378,9 +1399,8 @@ Boolean SCSI_Device( const char* os9path,
 {
     char      tmp[OS9PATHLEN];
     char      *p, *dvn;
-    int       ii, mid;
+    int       ii;
     mod_dev*  mod;
-    ushort    mty;
     byte      lun;
     byte      id;
     ushort    *ssize, *sas;
@@ -1412,19 +1432,21 @@ Boolean SCSI_Device( const char* os9path,
             *typeP    = fRBF;
             return true;
         }
-    }
+    } /* for */
 
-        mid= find_mod_id( dvn );           /* no such module found */
-    if (mid==MAXMODULES) return false;
+    if (!IsDesc( dvn, &mod, &p )) return false;
     
-        mod= (mod_dev*)os9mod( mid );      /* not the right type */
-        mty= os9_word( mod->_mh._mtylan )>>BpB;
-    if (mty!=MT_DEVDESC) return false;
-
-    p= (char *)mod + os9_word(mod->_mfmgr);         
+//        mid= find_mod_id( dvn );           /* no such module found */
+//    if (mid==MAXMODULES) return false;
+//    
+//        mod= (mod_dev*)os9mod( mid );      /* not the right type */
+//        mty= os9_word( mod->_mh._mtylan )>>BpB;
+//    if (mty!=MT_DEVDESC) return false;
+//
+//    p= (char *)mod + os9_word(mod->_mfmgr);         
     if (ustrcmp( p,"RBF" )==0) {
-        id   = *((byte  *)(&mod->_mdtype + PD_CtrlID));
-        lun  = *((byte  *)(&mod->_mdtype + PD_LUN));
+        id   = *((byte*)(&mod->_mdtype + PD_CtrlID));
+        lun  = *((byte*)(&mod->_mdtype + PD_LUN));
 
         // full SCSI address
         *scsiID   = id;
@@ -1658,10 +1680,20 @@ Boolean SCSI_Device( const char* os9path,
 Boolean RAM_Device( const char* os9path )
 /* check, if it is a RAM device */
 {
-    char cmp[OS9PATHLEN];
+    char     cmp[OS9PATHLEN];
+    mod_dev* mod;
+    char*    p;
     
     GetOS9Dev( os9path, (char*)&cmp );
-    return( ustrcmp( cmp,"r0" )==0 || mnt_ramSize>0 );
+//  if (ustrcmp( cmp,"r0" )==0) return true;
+    if (mnt_ramSize>0)          return true;
+    
+    if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
+        p= (char*)mod + os9_word(mod->_mpdev);
+        return ustrcmp( p,"ram" )==0;
+    }
+    
+    return false;
 } /* RAM_Device */
 
 
