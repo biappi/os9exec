@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/10/02 19:19:48  bfo
+ *    Create the real mdir structure for OS9_F_SetSys D_ModDir
+ *
  *    Revision 1.12  2002/09/01 17:57:40  bfo
  *    some more variables of the real "procid" record used now
  *
@@ -979,7 +982,7 @@ os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
     ulong mx = sizeof(mdirField); if (cnt>mx) cnt= mx;
 
     Update_MDir();
-    MoveBlk( b, &mdirField, cnt );
+    MoveBlk( b, (byte*)&mdirField, cnt );
         
     debugprintf(dbgProcess,dbgNorm,("# F$GModDr: get module directory\n"));
     
@@ -1662,10 +1665,10 @@ os9err OS9_F_CmpNam( regs_type *rp, ushort cpid )
     Boolean match;
     
     /* get pointers */
-    pat=(char *)rp->a[0];
-    targ=(char *)rp->a[1];
-    patend=pat+rp->d[1];
-    spat=NULL;
+    pat   =       (char*)rp->a[0];
+    targ  =       (char*)rp->a[1];
+    patend= pat + loword(rp->d[1]); /* attention, high word can be <> 0 */
+    spat  = NULL;
     
     /* start comparison */
     match=true;
