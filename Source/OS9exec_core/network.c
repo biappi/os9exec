@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/10/28 22:18:30  bfo
+ *    network close with corrected release_mem for net->b_local
+ *
  *    Revision 1.8  2002/10/27 23:39:02  bfo
  *    Release memory at pNclose done in every case
  *    get_mem/release_mem without param <mac_asHandle>
@@ -107,6 +110,10 @@ os9err pNbind   ( ushort pid, syspath_typ* spP, ulong  *n,     byte* ispP );
 os9err pNlisten ( ushort pid, syspath_typ* spP );
 os9err pNconnect( ushort pid, syspath_typ* spP, ulong  *n,     byte* ispP );
 os9err pNaccept ( ushort pid, syspath_typ* spP, ulong  *d1 );
+os9err pNrecv   ( ushort pid, syspath_typ* spP, ulong  *d1,    
+                                                ulong  *d2,    char* *a0  );
+os9err pNsend   ( ushort pid, syspath_typ* spP, ulong  *d1,    
+                                                ulong  *d2,    char* *a0  );
 os9err pNGNam   ( ushort pid, syspath_typ* spP, ulong  *d1,    char* *a0  );
 os9err pNSOpt   ( ushort pid, syspath_typ* spP, ulong  *d1,    ulong *d2  );
 
@@ -154,8 +161,11 @@ void init_Net( fmgr_typ* f )
     ss->_SS_Listen = (pathopfunc_typ)pNlisten;
     ss->_SS_Connect= (pathopfunc_typ)pNconnect;
     ss->_SS_Accept = (pathopfunc_typ)pNaccept;
+    ss->_SS_Recv   = (pathopfunc_typ)pNrecv;
+    ss->_SS_Send   = (pathopfunc_typ)pNsend;
     ss->_SS_GNam   = (pathopfunc_typ)pNGNam;
     ss->_SS_SOpt   = (pathopfunc_typ)pNSOpt;
+    ss->_SS_SendTo = (pathopfunc_typ)pNsend;
     ss->_SS_PCmd   = (pathopfunc_typ)pNsPCmd;
 
     ss->_SS_Undef  = (pathopfunc_typ)pNop;         /* ignored, if any other function */
@@ -236,6 +246,7 @@ static void SetDefaultEndpointModes( SOCKET s )
       OSStatus junk;
     
       junk = OTSetNonBlocking   ( s);
+//    junk = OTSetBlocking      ( s);
       OTAssert("SetDefaultEndpointModes: Could not set blocking",         junk==noErr);
       junk = OTSetSynchronous   ( s);
       OTAssert("SetDefaultEndpointModes: Could not set synchronous",      junk==noErr);
@@ -504,6 +515,11 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
     #ifdef powerc
       OTResult   lookResult;
     #endif
+    
+    #ifdef windows32
+      Boolean    ok;
+      int        loopit;   
+    #endif
 
 
     #ifndef WITH_NETWORK
@@ -556,19 +572,30 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
               if (err>=0) break;
             
               #ifdef windows32
-                if     (err) {
-                        err= WSAGetLastError();
-                    if (err==WSAECONNABORTED) {
-                        *lenP= 0;
-                        return 0;
-                    }
-
-                    if (err==WSAECONNRESET) {
-                        send_signal( pid, S_HangUp);
-                        *lenP= 0;
-                        return E_WRITE;
-                    }
-                }
+                ok= false;
+                              
+                loopit= 10;
+                while (true) {
+                    err= WSAGetLastError();
+                    
+                //  upe_printf( "%d %d\n", err, blk ); 
+                    if (!err) { ok= true; break; }
+                    if (loopit<=0)        break;
+                    Sleep( 1 );
+                        
+                        err= send( net->ep, net->transferBuffer, blk, flags );
+                //  upe_printf( "%d %d --\n", err, blk );
+                    if (err>=0) { ok= true; break; }
+                    loopit--;
+                } /* while */
+                if (ok) break;
+                
+                switch (err) {
+                    case WSAECONNABORTED: *lenP= 0; return 0;
+                    case WSAECONNRESET  :
+                    case WSAENOTCONN    : *lenP= 0; send_signal( pid, S_HangUp);
+                                                    return E_WRITE;
+                } /* switch */
               #endif
             #endif          
         } /* while */
@@ -627,15 +654,16 @@ static os9err reUse( ushort pid, syspath_typ *spP )
 #endif
 
 
-os9err MyInetAddr( ulong *inetAddr )
+os9err MyInetAddr( ulong *inetAddr, ulong *dns_Addr, char** domainName )
 {
     #ifdef powerc
       InetInterfaceInfo iinfo;
 
     #elif defined(windows32)
+      #define     Unk 0x7f7f7f7f
       HOSTENT*    h;
       ulong       *a, *a0, *a1, *a2;
-
+      
     #elif defined linux
       SOCKADDR_IN        a;
       int                af, s;
@@ -648,9 +676,15 @@ os9err MyInetAddr( ulong *inetAddr )
         
     OSStatus err= NetInstall(); if (err) return err;
 
+    *inetAddr= 0;
+    *dns_Addr= 0; /* default values */
+    strcpy( domainName, "" );
+
     #ifdef powerc
       err= OTInetGetInterfaceInfo( &iinfo,0 ); if (err) return OS9_ENETDOWN;
       *inetAddr= iinfo.fAddress;
+      *dns_Addr= iinfo.fDNSAddr;
+      strcpy( domainName, &iinfo.fDomainName );
     
     #elif defined(windows32)
           h= gethostbyname( "" ); /* my own host */
@@ -660,13 +694,15 @@ os9err MyInetAddr( ulong *inetAddr )
           a2= h->h_addr_list[2]; 
 
       /* Windows allows more than one host address */   
-                   a= a2; /* e.g. PPP under Win2000 */
-      if (a==NULL) a= a1; /* e.g. LAN */
-      if (a==NULL) a= a0; /* if no other one */
+                              a= a2; /* e.g. PPP under Win2000 */
+      if (a==NULL || *a==Unk) a= a1; /* e.g. LAN */
+      if (a==NULL || *a==Unk) a= a0; /* if no other one */
 
       if (a==NULL) return OS9_ENETDOWN;       
       *inetAddr= *a; /* the 2nd one, don't know why */
-
+      *dns_Addr= 0xd5a02802;
+      strcpy( domainName, "ggaweb.ch" );
+      
     #elif defined linux
       err=                  uname( &sysname);
           hostPtr = gethostbyname(  sysname.nodename );
@@ -679,7 +715,6 @@ os9err MyInetAddr( ulong *inetAddr )
       *inetAddr= serverName.sin_addr.s_addr;
       
     #else
-      *inetAddr= 0;
       return OS9_ENETDOWN;
     #endif
 
@@ -722,6 +757,7 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
     #ifdef powerc
       if (net->lis) kN= "tilisten,tcp";
       else          kN= kTCPName;
+
       net->ls= OTOpenEndpoint( OTCreateConfiguration(kN), 0, &info, &err);                           
       if (err) return E_FNA;
 
@@ -765,11 +801,6 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
           name.sin_addr.s_addr=          net->ipAddress.fHost;  /* my own address */
         
           err= bind( net->ls, &name,sizeof(name) );
-       // printf( "bind %d %d: %d %d %x\n", err, net->ls, 
-       //                                   os9_word(name.sin_family),
-       //                                   os9_word(name.sin_port),
-       //                                   os9_long(name.sin_addr.s_addr));
-      
           #ifdef windows32
             if     (err) {
                     err= WSAGetLastError();
@@ -777,6 +808,10 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
             }
           #endif
           
+      //  upe_printf( "bind %d %d: %d %d %x\n", err, net->ls, 
+      //                                             name.sin_family,
+      //                                    os9_word(name.sin_port),
+      //                                    os9_long(name.sin_addr.s_addr));
           if (!err) break;
         #endif
     
@@ -917,7 +952,12 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           if (fPort==0) { ty= SOCK_RAW;    proto= IPPROTO_IP;  }
           else          { ty= SOCK_STREAM; proto= IPPROTO_TCP; }
 
+          #ifdef linux
+            ty= SOCK_STREAM; proto= IPPROTO_TCP;
+          #endif
+          
               net->ep= socket( af, ty, proto );
+      //  upe_printf( "connectX %d %d %d %d %d\n", net->ep, af, ty, proto, fPort );
           if (net->ep==INVALID_SOCKET) return E_FNA;
         #endif
             
@@ -925,8 +965,8 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
         if (fPort==0) return 0;
     }
     
-    /* the domain service is currently not implemented */
-    if (fPort==53) return OS9_ENETUNREACH;
+//  /* the domain service is currently not implemented */
+//  if (fPort==53) return OS9_ENETUNREACH;
     
     #ifdef powerc   
       sndCall.addr.buf = (UInt8 *) &net->ipRemote;
@@ -939,23 +979,26 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
       err= OTConnect( net->ep, &sndCall, nil ); 
 
     #elif defined win_linux
-      name.sin_family     = os9_word(net->ipRemote.fAddressType); 
+      name.sin_family     = os9_word(net->ipRemote.fAddressType);
       name.sin_port       = os9_word(              fPort);
-      name.sin_addr.s_addr=          net->ipRemote.fHost; /* no big/little endian change */
+      name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
 
       err= connect( net->ep, &name,sizeof(name) );
-  //  printf( "connect %d %d: %d %d %x\n", err, net->ep, 
-  //                                       os9_word(name.sin_family),
+  //  upe_printf( "connect %d %d: %d %d %x\n", err, net->ep, 
+  //                                                name.sin_family,
   //                                       os9_word(name.sin_port),
   //                                       os9_long(name.sin_addr.s_addr));
-    
       #ifdef windows32
-      if     (err) {
-              err= WSAGetLastError();
-          if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
-      }
+        if     (err) {
+                err= WSAGetLastError();
+            if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
+        }
       #endif
-          
+      
+  //  upe_printf( "connect %d %d: %d %d %x\n", err, net->ep, 
+  //                                                name.sin_family,
+  //                                       os9_word(name.sin_port),
+  //                                       os9_long(name.sin_addr.s_addr));              
 //    if (err) {
 //        pNclose( pid, spP );
 //        cp->saved_state= cp->state;
@@ -1026,8 +1069,8 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
       SetDefaultEndpointModes( net->ep );
           err= OTAccept( net->ls, net->ep, &net->call);
       if (err==kOTLookErr) {
-              lookResult=  OTLook(net->ls);
-          if (lookResult==1) {
+              lookResult= OTLook(net->ls);
+          if (lookResult==T_LISTEN) {
               OTMemzero( &net->call,sizeof(TCall) );
               net->call.addr.buf = (UInt8 *) &net->ipRemote;
               net->call.addr.maxlen =  sizeof(net->ipRemote);
@@ -1077,6 +1120,43 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
     return err;
 } /* pNaccept */
+
+
+
+os9err pNrecv( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
+{
+    #ifndef linux
+    #pragma unused(d2)
+    #endif
+    
+    os9err     err;
+    ulong      lenB=  2;
+    ulong      len= 512;
+    ushort     n;
+    
+    err= netRead( pid, spP, &lenB, (char*)&n, false );
+    err= netRead( pid, spP, &len,  (char*)a0, false );
+    if (!err) *d1= len;
+
+    return err;
+} /* pNrecv */
+
+
+os9err pNsend( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
+{
+    os9err     err;
+    ulong      lenB=   2;
+    ulong      len = *d2;
+    ushort     n= os9_word( (ushort)len );
+    
+    err= netWrite( pid, spP, &lenB, (char*)&n, false );
+//  upe_printf( "%d %d xx\n", err, lenB );
+    err= netWrite( pid, spP, &len,  (char*)a0, false );
+//  upe_printf( "%d %d yy\n", err, len  );
+    if (!err) *d1= len;
+
+    return err;
+} /* pNsend */
 
 
 
@@ -1156,6 +1236,7 @@ static UInt16 ChecksumBuffer(UInt16* buf, size_t len)
 
 
 
+
 os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
 {   
     #ifndef linux
@@ -1164,6 +1245,8 @@ os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
     
     OSStatus   err= 0;
     net_typ*   net= &spP->u.net;
+    ulong*     u;
+    byte*      h;
 
     #ifdef powerc
       PingPacket ping_data;
@@ -1174,6 +1257,9 @@ os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
       return E_UNKSVC;
     #endif
     
+    u= &net->ipRemote.fHost;
+    h= (byte*) u;
+    upe_printf( "(%d.%d.%d.%d)\n", h[0],h[1],h[2],h[3] );
     
     #ifdef powerc
       ping_data.pType    = 8;
@@ -1338,18 +1424,38 @@ os9err pNready(ushort pid, syspath_typ *spP, ulong *n )
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
 
+//  #ifdef windows32
+//    WSANETWORKEVENTS ev;
+//  #endif
+
+
     #ifdef powerc
-      err= OTCountDataBytes( net->ep,           n );
+      OTResult lookResult;
+      
+          err= OTCountDataBytes( net->ep, n );
+      if (err==kOTLookErr) {
+              lookResult= OTLook(net->ep);
+//        if (lookResult==T_DISCONNECT) { err= 0; *n= 1; }
+
+          if (lookResult==T_DISCONNECT) {
+               err= OTRcvDisconnect( net->ep, nil );
+               *n= 1;
+          }
+      }
 
     #elif defined win_linux
-      err=            ioctl( net->ep, FIONREAD, n );
-      if (*n==0) err= -1;
+      err= ioctl( net->ep, FIONREAD, n );
+      if (*n==0) {
+      //       err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
+      //  if (!err && (ev.lNetworkEvents & FD_CLOSE)!=0)
+      //  if (ev.lNetworkEvents) upe_printf( "ready %d %x\n", err, ev.lNetworkEvents );
+          err= -1;
+      }
      
     #else
       return E_UNKSVC;
     #endif
 
-    
     if (err) *n= 0; /* nothing in buffer if error ! */
     
         *n+= net->bsize; /* still something in buffer ? */
@@ -1367,7 +1473,6 @@ os9err pNask( ushort pid, syspath_typ* spP )
     os9err   sig, err;
     ulong    n;
     Boolean  ok;
-
 
     #ifndef WITH_NETWORK
       return E_UNKSVC;
