@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.5  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -69,7 +72,7 @@ void releasefilter( void **memoryPP )
 /* no filters available */
 /* get pointer to filter function for module name returns NULL if no filter found
  */
-filterfunc initfilterfunc( char* /* modname */, char* /*argline */, void** /* memoryPP */ )
+filterfunc initfilterfunc( _txt_, _txt2_, _memPP_ )
 {   return NULL; /* no filters */
 } /* getfilterfunc */
 
@@ -94,7 +97,7 @@ typedef struct {
 } omega_record;
 
 
-static void* omega_init( char* /* argline */ )
+static void* omega_init( _txt_ )
 {
     omega_record *fm;
     char *p,*p2;

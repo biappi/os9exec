@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.13  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -99,7 +102,7 @@ ulong   icall_num [NUMICALLS+1];  /* number of I$xxx calls */
 
 
 
-static os9err OS9_TCP_Select( regs_type *rp, ushort /* pid */ )
+static os9err OS9_TCP_Select( regs_type *rp, _pid_ )
 /* OS9TCP specific select */
 /* currently not in use, because the only the ISP system is supported */
 {
@@ -770,7 +773,7 @@ ulong show_timing( ushort mode, int ticksLim )
 
 /* internal command for timing management */
 
-static void usage( char *name, ushort /* pid */ )
+static void usage( char *name, _pid_ )
 {
     upe_printf("Usage:    %s [options]\n",name);
     upe_printf("Function: OS9exec emulator timing utility\n");

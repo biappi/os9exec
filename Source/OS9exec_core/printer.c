@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -293,7 +296,7 @@ BOOL ClosePrinterRaw(HANDLE hPrinter)
 
 
 
-os9err pPrOpen(ushort pid, syspath_typ* spP, ushort* /* modeP */, char* name)
+os9err pPrOpen(ushort pid, syspath_typ* spP, _modeP_, char* name)
 /* routine for opening printer devices */
 {
     os9err err; 
@@ -403,14 +406,14 @@ os9err pPrOutLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer)
 
 
 
-os9err pPrReady( ushort /* pid */, syspath_typ*, ulong *n )
+os9err pPrReady( _pid_, syspath_typ*, ulong *n )
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
 {   return 0;
 } /* pPrReady */
 
 #elif defined(windows32) || defined macintosh || defined linux
-  void init_Printer( fmgr_typ* ) { } /* do nothing */
+  void init_Printer( _fmgr_ ) { } /* do nothing */
 #else
   #error "not yet implemented for other platforms than win32"
 #endif

@@ -50,9 +50,9 @@ static Boolean usesusermode;
 
 
 /* dummies for UAE */
-void Flush68kCodeRange( void* /* address */, ulong /* size */ ) { }
-void LockMemRange     ( void* /* address */, ulong /* size */ ) { }
-void UnlockMemRange   ( void* /* address */, ulong /* size */ ) { }
+void Flush68kCodeRange( _bufferV_, _size_ ) { }
+void LockMemRange     ( _bufferV_, _size_ ) { }
+void UnlockMemRange   ( _bufferV_, _size_ ) { }
 
 
 /* current regs as per last call of llm_os9_go */
@@ -159,7 +159,7 @@ ulong llm_os9_go(regs_type *rp)
 
 
 /* Flush code range in 68k (real one or emulator, especially DR emulator needs it!!) */
-static void llm_cache_rf( void* /* addr */, ulong /* size */ ) { }
+static void llm_cache_rf( _bufferV_, _size_ ) { }
 
 
 #ifdef macintosh

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2004/11/20 11:44:06  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.26  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -211,7 +214,7 @@ os9err OS9_F_Link( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_UnLink( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_UnLink( regs_type *rp, _pid_ )
 /* F$UnLink:
  * Input:   (a2)=pointer to module
  * Output:  none
@@ -234,7 +237,7 @@ os9err OS9_F_UnLink( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_UnLoad( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_UnLoad( regs_type *rp, _pid_ )
 /* F$UnLoad:
  * Input:   d0.w=type/language
  *              (a0)=module name pointer
@@ -361,7 +364,7 @@ os9err OS9_F_STrap( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Time( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_Time( regs_type *rp, _pid_ )
 /* F$Time:
  * Input:   d0.w=time format (0=gregorian, 1=julian, 2/3=same with ticks)
  * Output:  d0.l=current time
@@ -488,7 +491,7 @@ os9err OS9_F_Event( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Julian( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_Julian( regs_type *rp, _pid_ )
 /* F$Julian:
  * Input:   d0.l=current time (00hhmmss)
  *          d1.l=current date (yyyymmdd)
@@ -512,7 +515,7 @@ os9err OS9_F_Julian( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_Gregor( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_Gregor( regs_type *rp, _pid_ )
 /* F$Gregor:
  * Input:   d0.l=time (seconds since midnight)
  *          d1.l=julian date (days since january 1st, 4713 BC)
@@ -624,7 +627,7 @@ os9err OS9_F_Icpt( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_RTE( regs_type*, ushort cpid )
+os9err OS9_F_RTE( _rp_, ushort cpid )
 /* F$RTE:
  * Input:   none
  *       
@@ -688,7 +691,7 @@ os9err OS9_F_RTE( regs_type*, ushort cpid )
 
 
 
-os9err OS9_F_GPrDBT( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_GPrDBT( regs_type *rp, _pid_ )
 /* F$GPrDBT:
  * Input:   d1.l = maximum number of bytes to copy
  *          (a0) = Buffer pointer 
@@ -805,7 +808,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_GBlkMp( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_GBlkMp( regs_type *rp, _pid_ )
 /* F$GBlkMp:
  * Input:   d0.l= address to begin reporting segments
  *          d1.l= size of buffer in bytes
@@ -842,7 +845,7 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_SetSys( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_SetSys( regs_type *rp, _pid_ )
 /* F$SetSys:
  * Input:   d0.w=offset
  *          d1.l=size (1,2 or 4 bytes, negative if read, positive if write)
@@ -973,12 +976,12 @@ os9err OS9_F_SetSys( regs_type *rp, ushort /* cpid */ )
     switch (size) {
       case          -1 : rp->d[2]=v<<24; break; /* two different ways to read them */
       case          -2 : rp->d[2]=v<<16; break;
-      case          -4 : ;
-      case           1 : ;
-      case           2 : ;
-      case           4 : ;
-      case  0x80000001 : ;
-      case  0x80000002 : ;
+      case          -4 :
+      case           1 :
+      case           2 :
+      case           4 :
+      case  0x80000001 :
+      case  0x80000002 :
       case  0x80000004 : rp->d[2]=v;     break;
     }
     
@@ -987,7 +990,7 @@ os9err OS9_F_SetSys( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_GModDr( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_GModDr( regs_type *rp, _pid_ )
 /* F$GModDr:
  * Input:   d1.l = Maximum number of bytes to copy
             (a0) = Buffer pointer
@@ -1010,7 +1013,7 @@ os9err OS9_F_GModDr( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_CpyMem( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_CpyMem( regs_type *rp, _pid_ )
 /* F$CpyMem:
  * Input:   d0.w = process ID of external memory's owner
             d1.l = number of bytes to copy
@@ -1092,7 +1095,7 @@ os9err OS9_F_TLink( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_DatMod( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_DatMod( regs_type *rp, _pid_ )
 /* F$DatMod:
  * Input:   d0.l=size of data reuired (not including header or CRC)
  *          d1.w=desired attr/revision
@@ -1566,7 +1569,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_CRC( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_CRC( regs_type *rp, _pid_ )
 /* F$CRC
  * Input:   d0.l=Data byte count
  *          d1.l=CRC accumulator
@@ -1588,7 +1591,7 @@ os9err OS9_F_CRC( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_SetCRC( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_SetCRC( regs_type *rp, _pid_ )
 /* F$SetCRC
  * Input:   (a0)=Pointer to module image
  * Output:  module image with updated CRC
@@ -1612,7 +1615,7 @@ os9err OS9_F_SetCRC( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_PrsNam( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_PrsNam( regs_type *rp, _pid_ )
 /* F$PrsNam
  * Input:   (a0)=pointer to path string to be parsed
  * Output:  d0.b=path element delimiter (=[a0])
@@ -1645,7 +1648,7 @@ os9err OS9_F_PrsNam( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_CmpNam( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_CmpNam( regs_type *rp, _pid_ )
 /* F$CmpNam
  * Input:   d1.w-length of pattern string
  *              (a0)=pointer to pattern string
@@ -1715,7 +1718,7 @@ os9err OS9_F_CmpNam( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_PErr( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_PErr( regs_type *rp, _pid_ )
 /* F$PErr
  * Input:   d0.w=Error message path number (0=none)
  *          d1.w=Error number
@@ -1738,7 +1741,7 @@ os9err OS9_F_PErr( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_SysDbg( regs_type*, ushort /* cpid */ )
+os9err OS9_F_SysDbg( _rp_, _pid_ )
 /* F$SysDbg
  * Input : none
  * Output: none
@@ -1751,7 +1754,7 @@ os9err OS9_F_SysDbg( regs_type*, ushort /* cpid */ )
 
 
 
-os9err OS9_F_Panic( regs_type*, ushort cpid )
+os9err OS9_F_Panic( _rp_, ushort cpid )
 /* F$Panic
  * Input : none
  * Output: none
@@ -1764,7 +1767,7 @@ os9err OS9_F_Panic( regs_type*, ushort cpid )
 
 
 
-os9err OS9_F_SSvc( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_SSvc( regs_type *rp, _pid_ )
 /* F$SSvc
  * Input:   (a1)=pointer to service request initislization table
  *          (a3)=user defined
@@ -1779,7 +1782,7 @@ os9err OS9_F_SSvc( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_F_Permit( regs_type*, ushort /* cpid */ )
+os9err OS9_F_Permit( _rp_, _pid_ )
 /* F$Permit:
  * Input:   ?
  * Output:  none
@@ -1795,7 +1798,7 @@ os9err OS9_F_Permit( regs_type*, ushort /* cpid */ )
 
 
 
-os9err OS9_F_SPrior( regs_type *rp, ushort /* cpid */ )
+os9err OS9_F_SPrior( regs_type *rp, _pid_ )
 /* F$SPrior:
  * Input:   d0.w=process ID
  *          d1.w=new priority
@@ -1809,7 +1812,7 @@ os9err OS9_F_SPrior( regs_type *rp, ushort /* cpid */ )
 
 
 /* --------------------------------------------------------- */
-os9err OS9_F_Dummy( regs_type*, ushort cpid )
+os9err OS9_F_Dummy( _rp_, ushort cpid )
 /* F$Dummy:
  * Returns no error, but a debug warning
  */
@@ -1821,7 +1824,7 @@ os9err OS9_F_Dummy( regs_type*, ushort cpid )
 
 
 
-os9err OS9_F_SDummy( regs_type*, ushort cpid )
+os9err OS9_F_SDummy( _rp_, ushort cpid )
 /* F$SDummy:
  * Silent dummy, does not warn except when dbgPartial is on
  */
@@ -1833,7 +1836,7 @@ os9err OS9_F_SDummy( regs_type*, ushort cpid )
 
 
 
-os9err OS9_F_UnImp( regs_type*, ushort cpid )
+os9err OS9_F_UnImp( _rp_, ushort cpid )
 /* F$UnImp
  * Unimplemented system call, returns E_UNKSVC and a debug message
  */
@@ -1845,7 +1848,7 @@ os9err OS9_F_UnImp( regs_type*, ushort cpid )
 
 
 
-os9err OS9_F_SUnImp( regs_type*, ushort cpid )
+os9err OS9_F_SUnImp( _rp_, ushort cpid )
 /* F$SUnImp
  * Silent Unimplemented system call, returns E_UNKSVC
  */

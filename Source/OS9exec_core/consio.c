@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:06  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -435,7 +438,7 @@ static Boolean ConsId( char* name, char* family, int range, int offs, int *resul
 
 
 
-os9err pCopen(ushort pid, syspath_typ* spP, ushort* /* modeP */, char* name)
+os9err pCopen( ushort pid, syspath_typ* spP, _modeP_, char* name )
 /* routine for opening serial devices */
 {
     os9err err; 
@@ -476,7 +479,7 @@ os9err pCopen(ushort pid, syspath_typ* spP, ushort* /* modeP */, char* name)
 
 
 
-os9err pSopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* name )
+os9err pSopen( _pid_, syspath_typ* spP, _modeP_, char* name )
 /* routine for opening SCF devices */
 {   
 	int k;
@@ -492,7 +495,7 @@ os9err pSopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* na
 
 
 
-os9err pSBlink( ushort /* pid */, syspath_typ*, ulong *d2 )
+os9err pSBlink( _pid_, _spP_, ulong *d2 )
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
      byte*   bb= (byte  *)*d2;
@@ -506,7 +509,7 @@ os9err pSBlink( ushort /* pid */, syspath_typ*, ulong *d2 )
 } /* pSBlink */
 
 
-os9err pGBlink( ushort /* pid */, syspath_typ*, ulong *d2 )
+os9err pGBlink( _pid_, _spP_, ulong *d2 )
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
      byte*   bb= (byte  *)*d2;
@@ -642,8 +645,8 @@ os9err pConsInLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer )
 
 
 
-os9err pEOF( ushort /* pid */, syspath_typ*, ulong* /* maxlenP */, char* /* buffer */ )
-/* read operation for the nil device */
+os9err pEOF( _pid_, _spP_, _maxlenP_, _buffer_ )
+/* read operation for the nil device is alway EOF */
 {   return E_EOF;
 } /* pEOF */
 
@@ -681,7 +684,7 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                     break;
                 }
             } /* while */
-        }
+        } /* if */
 
         cnt=  WriteCharsToPTY( buffer,*maxlenP, gConsoleID, do_lf );
         if (cp->state==pSysTask) cnt= *maxlenP;
@@ -704,7 +707,7 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                   if (ot->_sgs_alf) ConsPutc( LF );
                   break;
               }
-          }
+          } /* while */
 
         #else   
           cnt= stdwrite(pid,buffer,*maxlenP,spP->stream,false);
@@ -719,14 +722,14 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
 } /* ConsoleOut */
 
 
-/* output to console */
 os9err pConsOut  ( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer )
-{   return    ConsoleOut( pid,spP, maxlenP, buffer, false );    
+/* output to console */
+{ return ConsoleOut( pid,spP, maxlenP, buffer, false );    
 } /* pConsOut */
 
 
-/* output line to console */
 os9err pConsOutLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer)
+/* output line to console */
 {   
 	os9err err= ConsoleOut( pid,spP, maxlenP, buffer, true );
 	arbitrate= true; /* create smoother output */
@@ -735,33 +738,31 @@ os9err pConsOutLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer)
 
 
 
+os9err pCopt( _pid_, syspath_typ* spP, byte* buffer )
 /* get options from console */
-os9err pCopt(ushort /* pid */, syspath_typ* spP, byte* buffer)
 {
-    memcpy( buffer,&spP->opt, OPTSECTSIZE);
-    return 0;
+  memcpy( buffer,&spP->opt, OPTSECTSIZE);
+  return 0;
 } /* pCopt */
 
 
 
+os9err pCsetopt( _pid_, syspath_typ* spP, byte* buffer )
 /* set console options */
-os9err pCsetopt(ushort /* pid */, syspath_typ* spP, byte* buffer)
 {
-    memcpy( &spP->opt,buffer, OPTSECTSIZE );
-    return 0;
+  memcpy( &spP->opt,buffer, OPTSECTSIZE );
+  return 0;
 } /* pCsetopt */
 
 
 
-os9err pCpos(ushort /* pid */, syspath_typ*, ulong *posP )
-{
-    *posP= 0;
-    return 0;
+os9err pCpos( _pid_, _spP_, ulong *posP )
+{ *posP= 0; return 0;
 } /* pCpos */
 
 
 
-os9err pCready( ushort /* pid */, syspath_typ* spP, ulong *n )
+os9err pCready( _pid_, syspath_typ* spP, ulong *n )
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
 {
@@ -773,7 +774,7 @@ os9err pCready( ushort /* pid */, syspath_typ* spP, ulong *n )
     }
     else { 
         #ifdef TERMINAL_CONSOLE
-          if (DevReady ( n ))             return 0;
+          if (DevReady ( n )) return 0;
         #endif
     }
     

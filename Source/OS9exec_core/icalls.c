@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -587,7 +590,7 @@ os9err OS9_I_Dup( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_I_Attach( regs_type *rp, ushort /* cpid */ )
+os9err OS9_I_Attach( regs_type *rp, _pid_ )
 /* I$Attach:
  * Input:   d0.b=Access mode
  *          (a0)=device name
@@ -611,7 +614,7 @@ os9err OS9_I_Attach( regs_type *rp, ushort /* cpid */ )
 
 
 
-os9err OS9_I_Detach( regs_type *rp, ushort /* cpid */ )
+os9err OS9_I_Detach( regs_type *rp, _pid_ )
 /* I$Detach:
  * Input:   (a2)=pointer to device table entry
  * Output:  None

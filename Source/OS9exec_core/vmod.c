@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.5  2004/10/22 22:36:31  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -71,7 +74,7 @@
 #endif
 
 
-os9err pVMod( ushort pid, syspath_typ*, ulong *d1,ulong *d2 )
+os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {

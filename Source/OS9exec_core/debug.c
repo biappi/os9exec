@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2004/11/20 11:44:06  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.11  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -239,7 +242,7 @@ void debug_prep()
 } /* debug_prep */
 
 
-os9err debug_help( ushort pid, int /* argc */, char** /* argv */ )
+os9err debug_help( ushort pid, _argc_, _argv_ )
 /* display debug help, allow internal and external access */
 {
     upho_printf("Debug and Stop masks:\n");

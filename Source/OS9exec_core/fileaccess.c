@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.17  2004/10/22 22:51:11  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -205,7 +208,7 @@ void init_Dir( fmgr_typ* f )
 
 
 /* input from file */
-os9err pFread( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     long cnt, k;
     
@@ -270,7 +273,7 @@ os9err pFread( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
 
 
 /* input line from file */
-os9err pFreadln( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     long cnt;
 
@@ -401,7 +404,7 @@ os9err pFreadln( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
 
 #ifdef MACFILES
 /* output to file */
-os9err pFwrite( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     OSErr oserr;
     long  cnt, effpos, k;
@@ -432,7 +435,7 @@ os9err pFwrite( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
 
 #else
 /* output to file */
-os9err pFwrite( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     long  cnt;
 
@@ -452,7 +455,7 @@ os9err pFwrite( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
 
 #ifdef MACFILES
 /* output to file */
-os9err pFwriteln( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     long cnt,effpos,k;
     OSErr oserr;
@@ -484,7 +487,7 @@ os9err pFwriteln( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
 } /* pFwriteln */
 
 #else
-os9err pFwriteln( ushort /* pid */, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
     long cnt,ii;
 
@@ -531,13 +534,13 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 
 
 /* check ready */
-os9err pFready( ushort /* pid */, syspath_typ*, ulong *n )
+os9err pFready( _pid_, _spP_, ulong *n )
 {   *n= 1; return 0;
 } /* pFready */
 
 
 /* get device name from HFS object */
-os9err pHvolnam( ushort /* pid */, syspath_typ* spP, char* volname )
+os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 {
     #ifdef macintosh
       long  free= 0;
@@ -927,7 +930,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
 
 /* close a file */
-os9err pFclose( ushort /* pid */, syspath_typ* spP )
+os9err pFclose( _pid_, syspath_typ* spP )
 {
     #ifdef MACFILES
       OSErr      oserr;
@@ -970,7 +973,7 @@ os9err pFclose( ushort /* pid */, syspath_typ* spP )
 } /* pFclose */
 
 
-os9err pFseek( ushort /* pid */, syspath_typ* spP, ulong *posP )
+os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
 /* seek within a file */
 {
     #ifdef MACFILES
@@ -1055,7 +1058,7 @@ os9err pFseek( ushort /* pid */, syspath_typ* spP, ulong *posP )
 
 
 
-os9err pFdelete( ushort pid, syspath_typ*, ushort *modeP, char* pathname )
+os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
 {
     os9err  err;    
     OSErr   oserr= 0;
@@ -1124,7 +1127,7 @@ os9err pFdelete( ushort pid, syspath_typ*, ushort *modeP, char* pathname )
 
 
 /* get file position */
-os9err pFpos( ushort /* pid */, syspath_typ* spP, ulong *posP )
+os9err pFpos( _pid_, syspath_typ* spP, ulong *posP )
 {   
     #ifdef MACFILES
       return host2os9err( GetFPos(spP->u.disk.u.file.refnum, (long *)posP),E_SEEK );
@@ -1137,7 +1140,7 @@ os9err pFpos( ushort /* pid */, syspath_typ* spP, ulong *posP )
 
 
 /* get file size */
-os9err pFsize( ushort /* pid */, syspath_typ* spP, ulong* sizeP )
+os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
     os9err err= 0;
     
@@ -1171,7 +1174,7 @@ os9err pFsize( ushort /* pid */, syspath_typ* spP, ulong* sizeP )
 
 
 /* set file size */
-os9err pFsetsz( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
+os9err pFsetsz( _pid_, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
 
@@ -1253,7 +1256,7 @@ os9err pFsetsz( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
 
 
 
-os9err pFeof( ushort /* pid */, syspath_typ* spP )
+os9err pFeof( _pid_, syspath_typ* spP )
 /* check for EOF */
 {
     #ifdef MACFILES
@@ -1614,7 +1617,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
 
 
 /* get file descriptor for HFS object */
-os9err pHgetFD( ushort /* pid */, syspath_typ* spP, ulong *maxbytP, byte *buffer )
+os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 {
     void* fdl;
 
@@ -1643,7 +1646,7 @@ os9err pHgetFD( ushort /* pid */, syspath_typ* spP, ulong *maxbytP, byte *buffer
 
 /* set file descriptor for HFS object */
 /* %%% currently only the file date will be set */
-os9err pHsetFD( ushort /* pid */, syspath_typ* spP, byte *buffer )
+os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
 {
     os9err err= 0;
     void*  fdl;
@@ -1719,8 +1722,8 @@ static Boolean check_vod( short *volid, long *objid, long *dirid, char* fN )
 
 
 /* get file descriptor for file specified by "sector" */
-os9err pHgetFDInf(ushort /* pid */, syspath_typ* spP, ulong *maxbytP,
-                                                      ulong *fdinf, byte *buffer)
+os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
+                                            ulong *fdinf, byte *buffer)
 {
     void* fdl;
     
@@ -1898,7 +1901,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
 
 /* not used for Mac */
-os9err pDclose( ushort /* pid */, syspath_typ* spP )
+os9err pDclose( _pid_, syspath_typ* spP )
 {
     os9err err= 0;
 
@@ -2063,7 +2066,7 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
 
 
 /* read from (simulated) directory file */
-os9err pDread( ushort /* pid */, syspath_typ *spP, ulong *n, char* buffer )
+os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
 {
     os9err err;
     
@@ -2199,7 +2202,7 @@ os9err pDread( ushort /* pid */, syspath_typ *spP, ulong *n, char* buffer )
 
 
 /* get pointer position */
-os9err pDpos( ushort /* pid */, syspath_typ* spP, ulong *posP )
+os9err pDpos( _pid_, syspath_typ* spP, ulong *posP )
 {
     *posP= spP->u.disk.u.dir.pos;
     return 0;
@@ -2208,7 +2211,7 @@ os9err pDpos( ushort /* pid */, syspath_typ* spP, ulong *posP )
 
 
 /* get size of directory file */
-os9err pDsize( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
+os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
     
@@ -2280,7 +2283,7 @@ os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
 
 
 
-os9err pDchd( ushort pid, syspath_typ*, ushort *modeP, char* pathname )
+os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
 {
     os9err       err= 0;
     char*        pastpath;
@@ -2344,7 +2347,7 @@ os9err pDchd( ushort pid, syspath_typ*, ushort *modeP, char* pathname )
 
 
 
-os9err pDmakdir( ushort pid, syspath_typ*, ushort *modeP, char* pathname )
+os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 {
     os9err       err;
     OSErr        oserr= 0;

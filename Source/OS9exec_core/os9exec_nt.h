@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.31  2004/01/04 02:03:12  bfo
  *    #define MAXPROCESSES 129
  *    => this allows processes with id 1..128, id=0 is not used.
@@ -295,6 +298,51 @@
 #endif
 
 
+// omitted parameters
+#ifdef linux
+  #define _modeP_   ushort*      modeP
+  #define _rp_      regs_type*   rp
+  #define _pid_     ushort       pid
+  #define _spP_     syspath_typ* spP
+  #define _rbf_     rbfdev_typ*  rbf
+  #define _fmgr_    fmgr_typ*    f
+  #define _maxlenP_ ulong*       maxlenP
+  #define _buffer_  char*        buffer
+  #define _bufferV_ void*        buffer
+  #define _size_    ulong        size
+  #define _txt_     char*        txt
+  #define _txt2_    char*        txt2
+  #define _argc_    int          argc
+  #define _argv_    char**       argv
+  #define _memPP_   void**       memoryPP
+  #define _a1_      ulong*       a1
+  #define _d0_      ulong*       d0
+  #define _d2_      ulong*       d2
+  #define _d3_      ulong*       d3
+#else
+  #define _modeP_   ushort*
+  #define _rp_      regs_type*
+  #define _pid_     ushort
+  #define _spP_     syspath_typ*
+  #define _rbf_     rbfdev_typ*
+  #define _fmgr_    fmgr_typ*
+  #define _maxlenP_ ulong*
+  #define _buffer_  char*
+  #define _bufferV_ void*
+  #define _size_    ulong
+  #define _txt_     char*
+  #define _txt2_    char*
+  #define _argc_    int
+  #define _argv_    char**
+  #define _memPP_   void**
+  #define _a1_      ulong*
+  #define _d0_      ulong*
+  #define _d2_      ulong*
+  #define _d3_      ulong*
+#endif
+
+
+
 /* global types */
 /* ============ */
 
@@ -537,6 +585,8 @@ typedef struct {
 
   typedef struct InetAddress InetAddress;
 #endif
+
+enum { kTransferBufferSize = 4096 };
 
 
 /* variant for network objects */

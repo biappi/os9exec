@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 17:52:29  bfo
+ *    ReadLn modified
+ *
  *    Revision 1.7  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -162,7 +165,7 @@ void init_PTY( fmgr_typ* f )
 
 
 
-os9err getPipe( ushort /* pid */, syspath_typ* spP, ulong buffsize )
+os9err getPipe( _pid_, syspath_typ* spP, ulong buffsize )
 {
     pipechan_typ* p  = get_mem( sizeof(pipechan_typ) );
     byte*         buf= get_mem( buffsize             );
@@ -664,7 +667,7 @@ const byte pipestdopts[OPTSECTSIZE]=
            0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0 };
 
 
-os9err pPopt( ushort /* pid */, syspath_typ*, byte* buffer )
+os9err pPopt( _pid_, _spP_, byte* buffer )
 /* get options from console */
 {   memcpy( buffer, pipestdopts, OPTSECTSIZE ); return 0;
 } /* pPopt */
@@ -672,7 +675,7 @@ os9err pPopt( ushort /* pid */, syspath_typ*, byte* buffer )
 
 
 /* check for EOF in pipe */
-os9err pPeof( ushort /* pid */, syspath_typ *spP )
+os9err pPeof( _pid_, syspath_typ *spP )
 {
     ulong numready;
     pipechan_typ* p= spP->u.pipe.pchP;
@@ -713,7 +716,7 @@ os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
 
 
 /* get pipe size */
-os9err pPsize( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
+os9err pPsize( _pid_, syspath_typ* spP, ulong *sizeP )
 {
     *sizeP= spP->u.pipe.pchP->size-1; /* return max available size of pipe buffer */
     return 0;
@@ -722,7 +725,7 @@ os9err pPsize( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
 
 
 /* set pipe size */
-os9err pPsetsz( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
+os9err pPsetsz( _pid_, syspath_typ* spP, ulong *sizeP )
 {
     pipechan_typ* p= spP->u.pipe.pchP;
 
@@ -740,7 +743,7 @@ os9err pPsetsz( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
 
 /* ------------------------- packet manager routines --------- */
 
-os9err pKopen( ushort pid, syspath_typ* spP, ushort* /* modeP */, char* pathname )
+os9err pKopen( ushort pid, syspath_typ* spP, _modeP_, char* pathname )
 {
     os9err        err;  
     syspath_typ*  spK;
@@ -887,13 +890,13 @@ const byte pkstdopts[OPTSECTSIZE]=
 
 
 
-os9err pKopt( ushort /* pid */, syspath_typ*, byte *buffer )
+os9err pKopt( _pid_, _spP_, byte *buffer )
 /* get options from console */
 {   memcpy( buffer, pkstdopts, OPTSECTSIZE ); return 0;
 } /* pKopt */
 
 
-os9err pKpos( ushort /* pid */, syspath_typ*, ulong *posP )
+os9err pKpos( _pid_, _spP_, ulong *posP )
 /* get current file position */
 {   *posP= 0; return 0;
 } /* pKpos */
@@ -907,7 +910,7 @@ os9err pKready( ushort pid, syspath_typ *spP, ulong *n )
 
 
 
-os9err pKlock( ushort pid, syspath_typ*, ulong *d0, ulong *d1)
+os9err pKlock( ushort pid, _spP_, ulong *d0, ulong *d1)
 /* creates tty/pty system paths and locks them together */
 /* they are named tty0,tty1,... and pty0,pty1,... */
 /* the lowest free name will be taken */ 

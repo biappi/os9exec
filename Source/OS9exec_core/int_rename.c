@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -65,7 +68,7 @@
 
 
 
-static void usage( char* name, ushort /* pid */ )
+static void usage( char* name, _pid_ )
 {
     upe_printf( "Syntax:   %s [<opts>] <path> <name> [<opts>]\n", name );
     upe_printf( "Function: rename a file or directory\n" );

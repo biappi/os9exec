@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.32  2004/10/22 23:00:25  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -784,7 +787,7 @@ static struct _sgs init_consoleopts = {
 };
 
 /* get options from SCF device */
-os9err pSCFopt(ushort /* pid */, syspath_typ*, byte* buffer)
+os9err pSCFopt( _pid_, _spP_, byte* buffer )
 {   memcpy( buffer, &init_consoleopts, OPTSECTSIZE ); return 0;
 } /* pSCFopt */
 
@@ -817,7 +820,7 @@ const byte rbfstdopts[OPTSECTSIZE]=
               0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
               0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0 };
               
-os9err pRBFopt( ushort /* pid */, syspath_typ*, byte* buffer )
+os9err pRBFopt( _pid_, _spP_, byte* buffer )
 /* get standard options for RBF file */
 {   memcpy( buffer, rbfstdopts, OPTSECTSIZE ); return 0;
 } /* pRBFopt */

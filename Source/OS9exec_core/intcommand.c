@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.13  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -77,7 +80,7 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 #ifdef macintosh
-  static os9err int_debugger( ushort /* pid */, int /* argc */, char** /* argv */ )
+  static os9err int_debugger( _pid_, _argc_, _argv_ )
   /* internal debugger command */
   {
       uphe_printf("debugger internal command calls Mac OS debugger\n");
@@ -226,14 +229,14 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
 
 
 /* show procs */
-static os9err int_procs( ushort /* pid */, int /* argc */, char** /* argv */ )
+static os9err int_procs( _pid_, _argc_, _argv_ )
 {   show_processes(); return 0;
 } /* int_procs */
 
 
 
 /* show modules */
-static os9err int_mdir( ushort /* pid */, int argc, char **argv )
+static os9err int_mdir( _pid_, int argc, char **argv )
 {
     char*         cmp= NULL;
     if (argc>1)   cmp= argv[1];
@@ -242,7 +245,7 @@ static os9err int_mdir( ushort /* pid */, int argc, char **argv )
 
 
 
-static void ipaths_usage( char* name, ushort /* pid */ )
+static void ipaths_usage( char* name, _pid_ )
 {
     upe_printf( "Syntax:   %s [<pid>]\n", name );
     upe_printf( "Function: Print OS9exec system paths\n" );
@@ -284,7 +287,7 @@ static os9err int_paths( ushort pid, int argc, char **argv )
 
 
 
-static void imem_usage( char* name, ushort /* pid */ )
+static void imem_usage( char* name, _pid_ )
 {
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Print OS9exec memory segments\n" );
@@ -341,14 +344,14 @@ static os9err int_mem( ushort pid, int argc, char** argv )
 
 
 
-static os9err int_unused( ushort /* pid */, int /* argc */, char** /* argv */ )
+static os9err int_unused( _pid_, _argc_, _argv_ )
 /* "imem": OS9exec internal allocated memory */
 {   show_unused(); return 0;
 } /* int_unused */
 
 
 
-static void idevs_usage( char* name, ushort /* pid */ )
+static void idevs_usage( char* name, _pid_ )
 {
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Print OS9exec device table\n" );
@@ -453,14 +456,14 @@ static os9err int_devs( ushort pid, int argc, char** argv )
 
 
 
-static os9err int_quit( ushort /* pid */, int /* argc */, char** /* argv */ )
+static os9err int_quit( _pid_, _argc_, _argv_ )
 {   quitFlag= true; return 0;
 } /* int_quit */
 
 
 
-static os9err int_ignored( ushort /* pid */, int /* argc */, char** /* argv */ )
-{   return 0;    /* do nothing */
+static os9err int_ignored( _pid_, _argc_, _argv_ )
+{   return 0; /* do nothing */
 } /* int_ignored */
 
 
@@ -522,7 +525,7 @@ cmdtable_typ commandtable[] =
 
 
 /* show available internal commands */
-os9err int_help( ushort pid, int /* argc */, char** /* argv */ )
+os9err int_help( ushort pid, _argc_, _argv_ )
 {
     int k;
         
@@ -594,7 +597,7 @@ os9err _errmsg(os9err err, char* format, ...)
 
 
 
-os9err prepArgs(char *arglist, ushort *argcP, char*** argP)
+os9err prepArgs( char *arglist, ushort *argcP, char*** argP )
 /* prepare arguments for internal commands
  * will return a allocated block of memory with argv[] and args
  * Note: only simple arg checking is used (argv[] is built from space
