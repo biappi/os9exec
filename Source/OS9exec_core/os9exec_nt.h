@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2002/11/06 20:12:12  bfo
+ *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+ *
  *    Revision 1.21  2002/10/27 23:40:50  bfo
  *    memory and module structure definitions adapted
  *
@@ -157,7 +160,7 @@
 #define MAXPROCESSES    128
 
 /* number of active events */
-#define MAXEVENTS       100
+#define MAXEVENTS       512
 
 /* max length of signal queue */
 #define MAXSIGNALS       50
