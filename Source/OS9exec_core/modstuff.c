@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2004/11/27 12:14:37  bfo
+ *    "net_platform" used
+ *
  *    Revision 1.15  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -773,7 +776,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     Boolean isBuiltIn;
     ulong   dns1= 0, dns2= 0;
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       Handle hh;
     #endif
 
@@ -816,7 +819,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     mid= NextFreeModuleId( name );
    
     /* check for default loading of 'OS9C' 0 */
-    #ifdef macintosh    
+    #ifdef MAC_NOTX
       if (name==NULL) {
           if (mid>=MAXMODULES) return os9error(E_DIRFUL); /* module directory is full */
 
@@ -919,7 +922,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
             
             /* 2: Assume loading from the {OS9MDIR} directory */
             /* %%% this part is not yet adapted for access through filestuff interface */
-            #ifdef macintosh
+            #ifdef MAC_NOTX
         //    upe_printf( "mdir.volID %d %s\n", mdir.volID, name );
               if (mdir.volID!=0) {
                   debugprintf(dbgModules,dbgNorm,("# load_module: trying to load from {OS9MDIR}\n"));

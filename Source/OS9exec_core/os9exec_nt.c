@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.38  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -258,7 +261,7 @@ dir_type mdir;	         /* current module dir */
 char     startPath[OS9PATHLEN];   /* start path */
 char     strtUPath[OS9PATHLEN];   /* next higher than start path */
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   /* the MPW-level default directory */
   short  startVolID;	          /* startup dir's volume id    */
   long   startDirID;	          /* startup dir's directory id */
@@ -281,10 +284,10 @@ char     strtUPath[OS9PATHLEN];   /* next higher than start path */
 #ifdef win_linux
   ttydev_typ   main_mco;
   short	       gConsoleNLExpand  = true;
-  int   	   gConsoleID        =    0;
+  int   	     gConsoleID        =    0;
   syspath_typ* g_spP             = NULL;
-  int   	   gLastwritten_pid  =    0;
-  int		   gConsoleQuickInput= true;
+  int   	     gLastwritten_pid  =    0;
+  int		       gConsoleQuickInput= true;
   char         gTitle[OS9NAMELEN];
 #endif
 
@@ -581,7 +584,7 @@ static void cleanup(void)
     free_modules(); /* unlink the OS9 module resources */
 	fflush(stdout);
 
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  debugprintf(dbgStartup,dbgNorm,("# cleanup: restoring MPW current directory\n"));
 	  HSetVol(NULL,startVolID,startDirID); /* restore the original directory */
 	#endif
@@ -598,7 +601,7 @@ static void cleanup(void)
 void getversions()
 /* obtain tool and package (os9exec) version */
 {
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	Handle versH;
 	#endif
 	
@@ -607,7 +610,7 @@ void getversions()
 	exec_version = 0; 
 	exec_revision= 0;
 	
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	/* obtain tool's version */
 	if ((versH=GetResource('vers',1))!=NULL) {
 		appl_version = *((byte*)*versH+0);
@@ -690,7 +693,7 @@ void StartDir( char* pathname )
 
 static os9err GetStartPath( char* pathname )
 {
-	#ifdef macintosh     
+	#ifdef MAC_NOTX
 	  os9err err;
 	  Str255 rel, tmp;
 	  FSSpec spec; /* the HFS object's FSSpec */
@@ -744,7 +747,7 @@ static void PathUp( char* p )
 		}
 		
 		q--;
-	}
+	} /* while */
 } /* PathUp */
 
 
@@ -754,7 +757,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	os9err err;
 	char   tmp[OS9PATHLEN];
 
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  char svPath[OS9PATHLEN];
 	#endif
 	
@@ -769,9 +772,9 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 		return;
 	}
 	
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  p++;
-	#elif defined(windows32)
+	#elif defined windows32
 	  if (p[0]==PSEP && 
 		  p[2]==PSEP) { /* adapt for windows notation */
 		  p[0]= p[1];
@@ -791,7 +794,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	/* do this before the recursive loop */
 	strncpy( drP->path,p, OS9PATHLEN );
 			
-	#ifdef macintosh     
+	#ifdef MAC_NOTX
 	  get_dirid( &drP->volID, &drP->dirID, tmp );
 	  
 	  if (recursive && drP->volID==0 &&
@@ -1161,9 +1164,13 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	
 	#ifdef MACFILES
 	  FSSpec     fs;
-      CInfoPBRec cipb;
+    CInfoPBRec cipb;
 	#else
-	  char   *p, title[255];
+	  char* p;
+	  
+	  #ifdef windows32
+	    char title[255];
+	  #endif
 	#endif
 
 		
@@ -1187,7 +1194,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 	
 	/* ---- assign startVolID/dirID ---------------------------------- */
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 			  fs.vRefNum= 0; /* default path is my own path */
 			  fs.parID  = 0;
 	  strcpy( fs.name,"" );
@@ -1216,14 +1223,14 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	interactivepid=  0;        /* send aborts to first process by default */
 	sig_queue.cnt =  0;        /* no signal pending at the beginning */
 	
-    #if defined(windows32) || defined macintosh
+    #if defined windows32 || defined macintosh
       for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
 	#endif
 	
 	debug_prep();
 	debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
     
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  GetStartPath( callPath );
 
 	  applVolID= 0;
@@ -1299,7 +1306,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	PathUp( strtUPath );
 //	upo_printf( "'%s' '%s'\n", startPath, strtUPath ); 
 	
-	#ifdef macintosh	
+	#ifdef MAC_NOTX	
 	  /* save current default directory */
 	  startVolID= fs.vRefNum;
 	  startDirID= fs.parID; /* get default dir */
@@ -1325,7 +1332,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	drP->dev = 0;
 	drP->lsn = 0;
 
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  drP->volID= 0;
 	  drP->dirID= 0;
 	#endif
@@ -1340,20 +1347,20 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	drP->dev = 0;
 	drP->lsn = 0;
 
-	#ifdef macintosh
+	#ifdef MAC_NOTX
 	  drP->volID= 0;
 	  drP->dirID= 0;
 	#endif
 	
 	GetCurPaths( "OS9MDIR", 0x80, &mdir, true );
 	
-	#ifdef macintosh  
+	#ifdef MAC_NOTX
 	  debugprintf(dbgStartup,dbgNorm,("# main startup: (mdir) mdir.volID=%d, mdir.dirID=%ld\n",
 									     mdir.volID,mdir.dirID));
 	#endif
 
 	
-	#if defined win_linux
+	#if defined win_linux || defined __MACH__
 	  /* establish the virtual mdir (dir used to load modules from by default) */
 	      p= egetenv("OS9MDIR");    /* get path for default module loading dir */
 	      strcpy( mdirPath,p );

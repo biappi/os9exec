@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2003/05/17 10:32:15  bfo
  *    UserOpt activated for Carbon (gs_ready problem, same as Linux version)
  *
@@ -137,11 +140,13 @@ char* egetenv( const char* name )
                                           "OS9MDIR=OS9MDIR:",
                                            NULL };
     #else
-      Boolean u_disk, u_cmds, u_mdir;
-      char*   rslt;
+      #ifndef __MACH__ 
+        Boolean u_disk, u_cmds, u_mdir;
+        char*   q;
+        char*   sv;
+      #endif
       
-      char*   q;
-      char*   sv;
+      char*   rslt;
       Boolean cm= false;
     #endif
 

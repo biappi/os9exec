@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.18  2004/10/22 23:35:07  bfo
  *    Up to date (for test)
  *
@@ -175,11 +178,12 @@ Boolean SCSI_Device  ( const char* os9path,
   void   GetEntry( dirent_typ* dEnt, char* name, Boolean do_2e_conv );
 #endif
 
-#ifdef macintosh
+#if defined macintosh && !defined __MACH__
   os9err RBF_Rsc   ( FSSpec  *fs );
   os9err GetRBFName( char* os9path, ushort mode, Boolean *isFolder, 
                      FSSpec  *fs, FSSpec *afs );
-#elif defined linux
+#endif
+#if defined linux || defined __MACH__
   os9err GetRBFName( char* os9path, ushort mdoe, Boolean *isFolder, 
                      char* rbfname );
 #endif

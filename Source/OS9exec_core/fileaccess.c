@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2004/11/27 12:05:34  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.18  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -282,13 +285,13 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       OSErr oserr;
       #define READCHUNKSZ 200
     #else
-      #ifndef macintosh
+      #ifndef MAC_NOTX
         byte *p;
         char c;
       #endif
     #endif
       
-    #if defined(windows32)
+    #ifdef windows32
       fpos_t tmp_pos;
     #endif
 
@@ -346,7 +349,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       
     #else
       /* input not more than one line from a FILE */
-      #ifdef macintosh
+      #ifdef MAC_NOTX
         if     (*n <2) {
             if (*n!=0) {
                 /* single char only */
@@ -509,7 +512,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 {
     os9err err= pRBFopt( pid,spP, buffer );
     
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       FSSpec*    spc= &spP->u.disk.spec;
       CInfoPBRec cipb;
     
@@ -542,7 +545,7 @@ os9err pFready( _pid_, _spP_, ulong *n )
 /* get device name from HFS object */
 os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 {
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       long  free= 0;
       short volid= spP->u.disk.spec.vRefNum;
       
@@ -779,7 +782,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     #else
       FILE* stream;
       
-      #ifdef win_linux
+      #if defined win_linux || defined __MACH__
         char adapted[OS9PATHLEN];
       #endif
     #endif
@@ -1077,7 +1080,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       char cmd[OS9PATHLEN];
     #endif
         
-    #ifdef win_linux
+    #if defined win_linux || defined __MACH__
       char adapted[OS9PATHLEN];
     #endif
     
@@ -1104,7 +1107,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
           HandleEvent();
       }
     
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       err     = AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname= adapted;
       
@@ -1144,7 +1147,7 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
     os9err err= 0;
     
-    #ifdef win_linux
+    #if defined win_linux || defined __MACH__
       int    fd= fileno( spP->stream );
       struct stat info;
     #endif
@@ -1154,7 +1157,7 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
       OSErr oserr= GetEOF( spP->u.disk.u.file.refnum, (long*)sizeP );
       err= host2os9err( oserr,E_SEEK );
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
           err= fstat( fd,&info );
       if (err) return E_SEEK;
       *sizeP= info.st_size;
@@ -1294,10 +1297,10 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     ulong     u       = 0;
     struct tm tim;
         
-    #ifdef macintosh
+    #if defined MAC_NOTX
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       char*       pathname;
       struct stat info;
       syspath_typ spRec;
@@ -1310,6 +1313,8 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         // LPWIN32_FIND_DATA data;
         WIN32_FIND_DATA data;
         FILETIME cr, lastA, lastW, lastL;        
+          mode_t v;
+      #elif defined __MACH__
           mode_t v;
       #else
         __mode_t v;
@@ -1404,12 +1409,12 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     /* fill in constants */
     *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       /* now get info from CInfoPBRec */
       isFolder= cipbP->hFileInfo.ioFlAttrib & ioDirMask; /* is it a folder */
       if (cipbP->hFileInfo.ioFlAttrib & 0x01) *att &= 0xED; /* clear write attrs */
       
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       pathname= (char*)fdl;
             
       #ifdef windows32
@@ -1446,7 +1451,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     fdbeg[2] =0; /* owner = superuser */
 
     /* file dates */
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       u= cipbP->hFileInfo.ioFlMdDat + OFFS_1904; /* get modification time */
     
     #elif defined win_linux
@@ -1496,9 +1501,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     debugprintf(dbgFiles,dbgNorm,("# getFD: %02d/%02d/%02d %02d:%02d\n", 
                 tim.tm_year % 100,tim.tm_mon+1,tim.tm_mday, tim.tm_hour,tim.tm_min));
     
-    #ifdef macintosh
+    #if defined MAC_NOTX
       u= cipbP->hFileInfo.ioFlCrDat + OFFS_1904; /* get creation time */
-    #elif defined linux
+    #elif defined linux || defined __MACH__
       #ifdef windows32
         if (isFolder) info.st_ctime= 0;
       #endif
@@ -1519,7 +1524,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #endif // NEW_LUZ_FD_IMPL
 
         
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
           *sizeP= (ulong)(cipbP->dirInfo.ioDrNmFls+2)*DIRENTRYSZ;
       }
@@ -1527,7 +1532,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
           *sizeP= (ulong) cipbP->hFileInfo.ioFlLgLen;
       }
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       if (isFolder) {
           *sizeP= 0; /* by default */
           
@@ -1621,7 +1626,7 @@ os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 {
     void* fdl;
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       os9err err;
       CInfoPBRec cipb;  
 
@@ -1854,7 +1859,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     err     = parsepath( pid, &pastpath,hostpath, exedir ); if (err) return err;
     pp      = hostpath;
     
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       /* make an FSSpec for the directory */
                                    defdir= exedir ?_exe:_data;  
            err= getFSSpec( pid,pp, defdir, spc );
@@ -1920,7 +1925,7 @@ os9err pDclose( _pid_, syspath_typ* spP )
 
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
 static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
 {
     dirent_typ* dEnt= NULL;
@@ -2292,17 +2297,17 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
     process_typ* cp= &procs[pid];
     char*        defDir_s;
     
-    #ifdef MACFILES
+    #if defined MACFILES
       short   vref;
       long    dirID;
       long*   xD;
       short*  xV;
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       char    adapted[OS9PATHLEN];
       
     #else
-    #error I_Chgdir not yet implemented
+      #error I_Chgdir not yet implemented
     #endif
     
     /* now obtain volume and directory of new path */
@@ -2330,7 +2335,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
       debugprintf( dbgFiles,dbgNorm,("# I$ChgDir: ch%c: volID=%d, dirID=%ld (of new defdir)\n",
                    exedir ? 'x':'d', *xV,*xD ));
     
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       /* now do a OS changedir to "resolve" (and verify) location */
       err= AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname=                 adapted;
@@ -2356,11 +2361,11 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
     Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
     process_typ* cp= &procs[pid];
 
-    #ifdef macintosh
+    #if defined MAC_NOTX
       FSSpec     localFSSpec;
       defdir_typ defdir;
       long       newdirid;
-    #elif defined linux
+    #elif defined linux || defined __MACH__
       char adapted[OS9PATHLEN];
     #endif
 
@@ -2368,7 +2373,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
     err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
     pathname= p;
     
-    #ifdef macintosh
+    #if defined MAC_NOTX
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Mac path=%s\n",pathname));
 
       /* --- create FSSpec, use default volume/dir */
@@ -2384,11 +2389,11 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
                                              oserr,newdirid));
       }
 
-    #elif defined(windows32)
+    #elif defined windows32
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Win path=%s\n",pathname));
       if (!CreateDirectory( pathname,NULL )) oserr=GetLastError();
 
-    #elif defined linux
+    #elif defined linux || defined __MACH__
           err= AdjustPath( pathname,adapted, true );
       if (err) return err;
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
@@ -2414,14 +2419,14 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     OSErr  oserr= 0;
     ushort mode;
       
-    #ifdef macintosh
+    #if defined MAC_NOTX
       int    k;
       char*  pp= spP->name;
       char*  sv;
       char   pathname[OS9PATHLEN]; 
       FSSpec delSpec;
         
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       char*  pp= spP->fullName;
       
       #ifdef windows32
@@ -2445,7 +2450,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     /* But remove and recreate as file is possible */
     pDclose( pid, spP );
       
-    #ifdef macintosh
+    #if defined MAC_NOTX
       sv   = pp; /* 'parsepath' will change <pp> */
       err  = parsepath( pid,&pp, pathname, false); if (err) return err;
       oserr= getFSSpec( pid,     pathname, _data, &delSpec );
@@ -2459,7 +2464,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
         HandleEvent();
       }
 
-    #elif defined(windows32)
+    #elif defined windows32
 //    spP->dDsc= opendir( spP->fullName );
 //    while (true) {
 //        dEnt= readdir( spP->dDsc ); if (dEnt==NULL) break;
@@ -2479,7 +2484,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       sprintf( cmd, "rmdir %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
-    #elif defined linux
+    #elif defined linux || defined __MACH__
       oserr=  remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
     #endif
       

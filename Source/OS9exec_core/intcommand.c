@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2004/11/27 12:08:24  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.14  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -585,7 +588,7 @@ int isintcommand(char *name)
 os9err _errmsg(os9err err, char* format, ...)
 {
     char obuf[300];
-    va_list vp;
+    va_list vp= NULL;
     va_start(vp,format);
     upe_printf("%s: ",icmname);
     vsprintf(obuf,format,vp);

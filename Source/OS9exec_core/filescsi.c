@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.11  2003/05/08 23:12:14  bfo
  *    MacOSX: RBF activated for Carbon
  *
@@ -58,7 +61,7 @@
 #include "os9exec_incl.h"
 #include "filescsi.h"
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   #include <Scsi.h>
 #elif defined(windows32)
   // NT DDK includes (extracted from NT4DDK)

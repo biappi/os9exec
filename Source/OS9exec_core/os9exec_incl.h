@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2003/05/21 20:23:39  bfo
  *    Use "procid_special.h" with *except[10] instead of *_except[10]
  *
@@ -92,9 +95,13 @@
   #include ":os9defs:errno_adapted.h"
 
 #else
-  #include "module.h"
+  #if defined __MACH__
+    #include "module_special.h"
+  #else
+    #include "module.h"
+  #endif
   
-  #if defined(windows32) && __MWERKS__ >= CW8_MWERKS
+  #if defined windows32 && __MWERKS__ >= CW8_MWERKS
     #include "procid_special.h"
   #else
     #include "procid.h"
@@ -145,35 +152,35 @@
 
 // Note: These have been renamed to OS9_Exxx to avoid potential clashes
 //       with host (MSL) codes.
-#define OS9_EWOULDBLOCK		0x701	/* I/O operation would block */
-#define OS9_EINPROGRESS		0x702	/* I/O operation now in progress */
-#define OS9_EALREADY		0x703	/* operation already in progress */
-#define OS9_EDESTADDRREQ	0x704	/* destination address required */
-#define OS9_EMSGSIZE		0x705	/* message too long */
-#define OS9_EPROTOTYPE		0x706	/* protocol wrong type for socket */
-#define OS9_ENOPROTOOPT		0x707	/* bad protocol option */
+#define OS9_EWOULDBLOCK		  0x701	/* I/O operation would block */
+#define OS9_EINPROGRESS		  0x702	/* I/O operation now in progress */
+#define OS9_EALREADY		    0x703	/* operation already in progress */
+#define OS9_EDESTADDRREQ	  0x704	/* destination address required */
+#define OS9_EMSGSIZE		    0x705	/* message too long */
+#define OS9_EPROTOTYPE		  0x706	/* protocol wrong type for socket */
+#define OS9_ENOPROTOOPT		  0x707	/* bad protocol option */
 #define OS9_EPROTONOSUPPORT 0x708	/* protocol not supported */
 #define OS9_ESOCKNOSUPPORT	0x709	/* socket type not supported */
-#define OS9_EOPNOTSUPP		0x70a	/* operation not supported on socket */
-#define OS9_EPFNOSUPPORT	0x70b	/* protocol family not supported */
-#define OS9_EAFNOSUPPORT	0x70c	/* address family not supported by protocol */
-#define OS9_EADDRINUSE		0x70d	/* address already in use */
-#define OS9_EADDRNOTAVAIL	0x70e	/* can't assign requested address */
-#define OS9_ENETDOWN		0x70f	/* network is down */
-#define OS9_ENETUNREACH		0x710	/* network is unreachable */
-#define OS9_ENETRESET		0x711	/* network dropped connection on reset */
-#define OS9_ECONNABORTED	0x712	/* software caused connection abort */
-#define OS9_ECONNRESET		0x713	/* connection reset by peer */
-#define OS9_ENOBUFS			0x714	/* no buffer space available */
-#define OS9_EISCONN			0x715	/* socket is already connected */
-#define OS9_ENOTCONN		0x716	/* socket is not connected */
-#define OS9_ESHUTDOWN		0x717	/* can't send after socket shutdown */
-#define OS9_ETOOMANYREFS	0x718	/* too many references */
-#define OS9_ETIMEDOUT		0x719	/* connection timed out */
-#define OS9_ECONNREFUSED	0x71a	/* connection refused by target */
-#define OS9_EBUFTOOSMALL	0x71b	/* mbuf too small for mbuf operation */
-#define OS9_ESMODEXISTS		0x71c	/* socket module already attached */
-#define OS9_ENOTSOCK		0x71d	/* path is not a socket	*/
+#define OS9_EOPNOTSUPP		  0x70a	/* operation not supported on socket */
+#define OS9_EPFNOSUPPORT	  0x70b	/* protocol family not supported */
+#define OS9_EAFNOSUPPORT	  0x70c	/* address family not supported by protocol */
+#define OS9_EADDRINUSE		  0x70d	/* address already in use */
+#define OS9_EADDRNOTAVAIL	  0x70e	/* can't assign requested address */
+#define OS9_ENETDOWN		    0x70f	/* network is down */
+#define OS9_ENETUNREACH		  0x710	/* network is unreachable */
+#define OS9_ENETRESET		    0x711	/* network dropped connection on reset */
+#define OS9_ECONNABORTED	  0x712	/* software caused connection abort */
+#define OS9_ECONNRESET		  0x713	/* connection reset by peer */
+#define OS9_ENOBUFS			    0x714	/* no buffer space available */
+#define OS9_EISCONN			    0x715	/* socket is already connected */
+#define OS9_ENOTCONN		    0x716	/* socket is not connected */
+#define OS9_ESHUTDOWN		    0x717	/* can't send after socket shutdown */
+#define OS9_ETOOMANYREFS	  0x718	/* too many references */
+#define OS9_ETIMEDOUT		    0x719	/* connection timed out */
+#define OS9_ECONNREFUSED	  0x71a	/* connection refused by target */
+#define OS9_EBUFTOOSMALL	  0x71b	/* mbuf too small for mbuf operation */
+#define OS9_ESMODEXISTS		  0x71c	/* socket module already attached */
+#define OS9_ENOTSOCK		    0x71d	/* path is not a socket	*/
 
 // this is a badie, but seemed to work for earlier CWs. For CW7 and
 // up we don't want it here any more!
@@ -214,7 +221,7 @@
 #include "vmod.h"
 #include "utilstuff.h"
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   #include "macfiles.h"
 #elif defined linux
   #include "linuxfiles.h"

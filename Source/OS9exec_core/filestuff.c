@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2004/11/27 12:12:52  bfo
+ *    _XXX_ implemented
+ *
  *    Revision 1.18  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -307,7 +310,7 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
 
         default:
             if (fsspecflag) {               
-                #ifdef macintosh
+                #ifdef MAC_NOTX
                   upo_printf(" %8d %3d",spP->u.disk.spec.parID, /* path has FSSpec to show */
                                         spP->u.disk.spec.vRefNum );
                   memcpy( &theName,     spP->u.disk.spec.name, OS9NAMELEN );
@@ -514,7 +517,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     process_typ* cp= &procs[pid];
     int          k;
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       OSErr     oserr;
       dir_type* r;
       char*     ptx;
@@ -533,7 +536,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         uphe_printf("parsepathext  Input: '%s'\n", tmp );
     }
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
     /* --- first set the process' default dir */
     if (exedir) { r= &cp->x; ptx= "exec"; c= 'x'; }
     else        { r= &cp->d; ptx= "data"; c= 'd'; }
@@ -1464,7 +1467,7 @@ void usrpath_printf( ushort pid, ushort up, const char* format, ... )
 /* printf to OS9 user path */
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1476,7 +1479,7 @@ void usrpath_printf( ushort pid, ushort up, const char* format, ... )
 void upo_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1491,7 +1494,7 @@ void upho_printf( const char* format, ... )
     char  buffer[MAXPRINTFLEN];
     char* b= &buffer[ 2 ];
     
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(b,     format,vp);
     va_end                (vp);
@@ -1505,7 +1508,7 @@ void upho_printf( const char* format, ... )
 void upe_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1520,7 +1523,7 @@ void uphe_printf( const char* format, ... )
     char  buffer[MAXPRINTFLEN];
     char* b= &buffer[ 2 ];
     
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(b,     format,vp);
     va_end                (vp);
@@ -1536,7 +1539,7 @@ void main_printf( const char* format, ... )
 /* main path error output printing */
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp;
+    va_list vp= NULL;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);

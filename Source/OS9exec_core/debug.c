@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2004/11/27 12:01:31  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.12  2004/11/20 11:44:06  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -74,13 +77,13 @@
 #include "os9exec_incl.h"
 
 #ifdef USE_UAEMU
-#include "config.h"
-#include "options.h"
-#include "luzstuff.h"
-#include "memory.h"
-#include "readcpu.h"
-#include "newcpu.h"
-#include "compiler.h"
+  #include "config.h"
+  #include "options.h"
+  #include "luzstuff.h"
+  #include "memory.h"
+  #include "readcpu.h"
+  #include "newcpu.h"
+  #include "compiler.h"
 #endif
 
 
@@ -207,7 +210,7 @@ void trigcheck(char *message, char *name)
 void _debugprintf(char *format, ...)
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp;
+    va_list vp= NULL;
     
     /* message enabled for that level */
     va_start    (vp,format);
@@ -332,7 +335,7 @@ static void dumpmem(ulong *memptrP,int numlines)
 /* show regs in debugger */
 static void regs_in_debugger( regs_type *rp )
 {
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       Str255 message;
     
       sprintf( &message[1], "%s called debugger, OS9 PC=%08lX, OS9 A7=%08lX\n",

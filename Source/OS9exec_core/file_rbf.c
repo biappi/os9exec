@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2004/11/27 12:04:28  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.39  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -788,7 +791,11 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     rbfdev_typ*  dev;
     ptype_typ    type;
     int          ii, n;
-    Boolean      abs, isSCSI, isRAMDisk= false, isFolder, wProtect;
+    Boolean      abs, isSCSI, isRAMDisk= false, wProtect;
+    
+    #ifndef __MACH__
+      Boolean    isFolder;
+    #endif
     
     process_typ* cp    = &procs[pid];
     
@@ -806,7 +813,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         
     #ifdef MACFILES
       FSSpec fs, afs;
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       char rbfname[OS9PATHLEN];
     #endif
 
@@ -898,7 +905,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                       p2cstr    ( cmp );
                       if (strcmp( cmp,ali )==0) strcpy( ali,"" );
             
-                    #elif defined win_linux
+                    #elif defined win_linux || defined __MACH__
                       if (err) return E_UNIT; /* GetRBFName called earlier */
                       strcpy( cmp,rbfname );
               

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.6  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -59,7 +62,7 @@
 
 
 
-#ifndef macintosh
+#ifndef MAC_NOTX
   os9err int_dir(ushort pid, int argc, char **argv)
   /* internal "dir" command for OS9exec/nt */
   {
@@ -174,10 +177,10 @@ os9err int_dir(ushort pid, int argc, char **argv)
         upe_printf("Error: no or one argument allowed\n"); return 1;
     }
 
-    #ifdef macintosh
-    /* set right base dir */
-    if (exedir) { volid= procs[pid].x.volID; dirid=procs[pid].x.dirID; }
-    else        { volid= procs[pid].d.volID; dirid=procs[pid].d.dirID; }
+    #ifdef MAC_NOTX
+      /* set right base dir */
+      if (exedir) { volid= procs[pid].x.volID; dirid=procs[pid].x.dirID; }
+      else        { volid= procs[pid].d.volID; dirid=procs[pid].d.dirID; }
     #endif
     
     debugprintf(dbgUtils,dbgNorm,("# int_dir: volid=%d, dirid=%ld\n",volid,dirid));

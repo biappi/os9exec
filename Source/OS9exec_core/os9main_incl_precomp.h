@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2004/11/20 13:31:00  bfo
+ *    Compileable for Mac Classic again
+ *
  *    Revision 1.11  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -96,17 +99,22 @@
 
 /* make sure that this can also be compiled for MPW */
 /* when "macintosh" is not defined */
-#if !defined(macintosh) && !defined(__INTEL__) && !defined(linux)
+#if !defined macintosh && !defined __INTEL__ && !defined linux
   #define macintosh
 #endif
 
+/* define a special label for 68k/MacOS9/Carbon software */
+/* which is not compiled for the MACH kernel */
+#if defined macintosh && !defined __MACH__
+  #define MAC_NOTX
+#endif
 
 #ifndef TERMINAL_CONSOLE
   #define MPW
 #endif
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   /* global feature switches */
   // #define PARTIALRETURNREGS /* returning 16/8-bit values only affects loword/lobyte of register */
   // #define NODEBUG /* cause all debug statements to be omitted (but debugwait() still exists) */
@@ -222,16 +230,29 @@
 
 typedef struct dirent dirent_typ;
 
-#ifndef linux
+#ifdef __MACH__
+//#include <stdarg.h>
+//#include <stddef.h> // %%% added luz 2002-02-04
+//#include <StdIO.h>
+//#include <StdLib.h>
+//#include <Time.h>
+//#include <String.h>
+//#include <cstdarg>
+
+  #define _STDARG_H
+  #include <va_list.h>
+  #include <stdarg.h>    // N.B. Not cdstarg!
+  #include <cstdio>
+//#include <cstdlib>
+  #include <stat.h>
+#endif
+
+#if !defined linux && !defined __MACH__
   /* C library include files */
-  #ifndef __MACH__
-    #include <CType.h>
-  #endif
+  #include <CType.h>
   
   #ifdef USE_CARBON
-    #ifndef __MACH__
 	  #include <Carbon.h>
-	#endif
   #else
     #include <Types.h>
     #include <stdarg.h>
@@ -255,9 +276,7 @@ typedef struct dirent dirent_typ;
     #endif
   #endif
 
-  #ifndef __MACH__
-    #include <Signal.h>
-  #endif
+  #include <Signal.h>
 #endif
 
 #ifdef TERMINAL_CONSOLE
@@ -266,7 +285,7 @@ typedef struct dirent dirent_typ;
   #endif
 #endif
 
-#if defined macintosh && !defined __MACH__
+#ifdef MAC_NOTX
   #ifdef MPW
         /* MPW include files */
     #pragma push
@@ -290,7 +309,7 @@ typedef struct dirent dirent_typ;
 #endif
 
 
-#ifdef __INTEL__
+#if defined __INTEL__ || defined __MACH__
   typedef short Boolean;
   #define true  1
   #define false 0
@@ -300,8 +319,11 @@ typedef struct dirent dirent_typ;
 
 
 // define type shortcuts
-#ifndef linux
-  typedef unsigned int      uint;
+#if !defined linux && !defined __MACH__
+  typedef unsigned int uint;
+#endif
+
+#if !defined linux
   typedef unsigned long int ulong;
 #endif
 
