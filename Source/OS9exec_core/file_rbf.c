@@ -1197,10 +1197,11 @@ static Boolean Mega( long long size, float *r )
 
 static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
 {
-    char  sc[20];
+//  char  sc[20];
     char  s [OS9NAMELEN];
     char  u [OS9PATHLEN];
     char  v [20];
+    char  w [20];
     char* unit;
     long long size= (long long)rb->totScts * rb->sctSize;
     float r;
@@ -1208,9 +1209,10 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                          unit= "kB";
     if (Mega( size,&r )) unit= "MB";
 
-    strcpy ( s,         name         );
-    sprintf( sc, "%3d", rb->scsiID   );
-    strcpy ( u,         rb->img_name ); if (*u==NUL) strcpy( u," -" );
+    strcpy ( s,             name         );
+//  sprintf( sc,     "%3d", rb->scsiID   );
+    strcpy ( u,             rb->img_name ); if (*u==NUL) strcpy( u," -" );
+    sprintf( w, "SCSI: %d", rb->scsiID   );
  
                  sprintf( v, "(%1.2f%s)", r,unit );
     if (r>=  10) sprintf( v, "(%2.1f%s)", r,unit );
@@ -1225,11 +1227,11 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                      rb->rMiss, rb->rTot,
                      rb->wMiss, rb->wTot );
     else 
-        upo_printf( "%-10s %-7s %2d %3s  %-5s %-26s %s\n", 
-                     IsSCSI(rb) ? "scsi":"image",
+        upo_printf( "%-10s %-7s %2d %4d  %-4s %-26s %s\n", 
+                     IsSCSI(rb) ? w :"IMAGE",
                      "rbf", 
                      rb->nr,
-                     IsSCSI(rb) ? sc:"",
+                     rb->sctSize,
                      rb->wProtected ? "yes":"no",
                      StrBlk_Pt( u,26 ),
                      v );

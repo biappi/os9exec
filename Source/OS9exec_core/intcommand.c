@@ -360,11 +360,11 @@ static os9err int_devs( ushort pid, int argc, char **argv )
     
     
     if (statistic) {
-        upo_printf( "  Device   read: miss /     total  write: miss /     total\n" );
+        upo_printf( "Device     read: miss /     total  write: miss /     total\n" );
         upo_printf( "---------- ----------------------  -----------------------\n" );
     }
     else {
-        upo_printf( "  Device     Driver   FileMgr nr SCSI wProt Image\n" );
+        upo_printf( "Device     Driver     FileMgr nr sect wProt Image\n" );
         upo_printf( "---------- ---------- ------- -- ---- ----- -----------------------------------\n" );
     }
     
