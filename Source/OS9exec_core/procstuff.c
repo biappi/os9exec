@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/09/01 20:15:39  bfo
+ *    big/little endian bug with *idp fixed
+ *
  *    Revision 1.13  2002/09/01 17:54:51  bfo
  *    some more variables of the real "procid" record used now
  *
@@ -126,7 +129,7 @@ void init_processes()
     int     j, k;
 
     for (k=0; k<MAXPROCESSES; k++) {   /* assign all the constant values which never change */
-        pd= &procs[k]; 
+        pd= &procs[k].pd; 
         pd->_id    = os9_word(k);
         pd->_sp    = 0;                /* just to be sure */
         
