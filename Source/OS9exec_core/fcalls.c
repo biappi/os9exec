@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2003/05/25 10:35:04  bfo
+ *    <totalMem> can't be any more smaller than <memsz>
+ *
  *    Revision 1.22  2003/05/21 20:25:54  bfo
  *    Use "procid_special.h" with *except[10] instead of *_except[10]
  *
@@ -215,13 +218,13 @@ os9err OS9_F_UnLink( regs_type *rp, ushort cpid )
     ushort mid= get_mid( (void*)rp->a[2] );
     debugprintf    (dbgModules,dbgNorm,("# F$Unlink: Module at $%08lX has mid=%d%s\n",
                                            rp->a[2],mid,mid<MAXMODULES ? "" : "=MAXMODULES" ));
-    if (mid<MAXMODULES) {
-        unlink_module(mid);
-        debugprintf(dbgModules,dbgNorm,("# F$Unlink: module found at mdir entry #%d at $%08lX, newlink=%d\n",
-                                           mid, rp->a[2], os9modules[mid].linkcount ));
-    }
-
-    return 0; /* always return ok, even if no module found */
+                                           
+    if (mid>=MAXMODULES) return E_MNF;
+    
+    unlink_module( mid );
+    debugprintf(dbgModules,dbgNorm,("# F$Unlink: module found at mdir entry #%d at $%08lX, newlink=%d\n",
+                                       mid, rp->a[2], os9modules[mid].linkcount ));
+    return 0; /* returns ok, as long as module found */
 } /* OS9_F_UnLink */
 
 
