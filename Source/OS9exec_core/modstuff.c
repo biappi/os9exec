@@ -347,7 +347,7 @@ int get_mid( void *modptr )
 } /* get_mid */
 
 
-int find_mod_id( char *name )
+int find_mod_id( const char* name )
 /* find module by name, return mid or MAXMODULES if not found */
 {
     char     *p;

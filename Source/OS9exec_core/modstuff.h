@@ -50,7 +50,7 @@ void   release_module ( ushort mid, Boolean modOK );
 mod_exec*  get_module_ptr( int   mid     );
 int        get_mid       ( void *modptr );
 
-int       find_mod_id                  ( char* name );
+int       find_mod_id            ( const char* name );
 int       link_mod_id                  ( char* name );
 os9err    load_module( ushort pid,       char* name, ushort *midP, Boolean exedir, Boolean linkstyle );
 os9err    link_module( ushort pid, const char* name, ushort *midP );
