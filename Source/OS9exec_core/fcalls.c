@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2002/11/06 20:15:14  bfo
+ *    Colored memory dependency at OS9_F_Load avoided.
+ *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+ *
  *    Revision 1.15  2002/10/27 23:25:13  bfo
  *    module system on Mac no longer implemented with handles
  *    get_mem/release_mem without param <mac_asHandle>
@@ -106,14 +110,15 @@ os9err OS9_F_Load( regs_type *rp, ushort cpid )
     char     mpath[OS9PATHLEN],*p;
     ushort   mid;
     ushort   mode  = loword(rp->d[0]); /* attributes */
-    Boolean  exedir= IsExec(mode) || (mode & 0x7f==0); /* mode=0 is a strange default, */
+    Boolean  exedir= IsExec(mode) || (mode==0) || (mode==0x80); 
+                                                       /* mode=0 is a strange default, */
                             /* but seems to be correct as default for exedir in 'load' */
-                            /* Attention !!! Colored memory (bit 7) is NOT supported.  */ 
+                               /* Attention !!! Colored memory (bit 7) is %%% ignored. */ 
                                     
            
     p= nullterm(mpath,(char*)rp->a[0],OS9PATHLEN);
     debugprintf(dbgModules,dbgNorm,
-      ("# F$Load: requested link to '%s', mode=$%04X\n", mpath,mode ));
+      ("# F$Load: requested %sload of '%s', mode=$%04X\n", exedir ? "exec ":"", mpath,mode ));
 
     /* --- really load module, anyway */
     err= load_module( cpid,mpath,&mid, exedir,false); if (err) return err;

@@ -1145,6 +1145,7 @@
           02-11-06  Bfo     zero is zero for os9_word/os9_long (modstuff.c/utilstuff.c)
           02-11-06  Bfo     lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
           02-11-06  Bfo     Colored memory dependency at OS9_F_Load avoided.
+          02-11-06  Bfo     OS9_F_Load <mode> problem is now really fixed !
     3.20  02-11-??  Bfo     ...
     -------------------
 */
