@@ -213,18 +213,20 @@ os9err OS9_F_SRqMem( regs_type *rp, ushort cpid )
  *             E$NORAM: no memory free
  */
 {
-    void *bp;
+    void  *bp;
     ulong memsz;
- 
+    ulong mx= max_mem();
+    if   (mx==0) mx= 0xFFFFFFFF;
+    
         memsz= rp->d[0];
     if (memsz==0xFFFFFFFF) {
-        memsz= max_mem()-15; /* prevent rounding up over available blocksize */
+        memsz= mx-15; /* prevent rounding up over available blocksize */
         
         debugprintf(dbgMemory,dbgNorm,
                    ("# F$SRqMem : requested max blocksize : MaxBlock()-16=%ld\n",memsz));
     }
 
-    if (memsz>max_mem()) return os9error(E_NORAM);
+    if (memsz>mx) return os9error(E_NORAM);
     
     memsz= (memsz+15) & 0xFFFFFFF0; /* round up to next 16-byte boundary */
     bp   = os9malloc(cpid,memsz);

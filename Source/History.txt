@@ -992,6 +992,11 @@
           02-06-12  Bfo     dev->totScts will be recalculated at disk ID change
     3.13  02-06-12  Bfo     Return E_NOTRDY (instead E_EOF), if RBF device is not inserted.
     -------------------
+ 
+          02-06-14  Bfo     "mnt" is now also an incompatible OS9exec program.
+          02-06-14  Bfo     The 8MB limit is no longer existing.
+    3.14  02-06-??  Bfo     ...
+    -------------------
 */
 
 
