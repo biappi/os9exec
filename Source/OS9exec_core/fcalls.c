@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2003/01/02 14:34:22  bfo
+ *    Some type castinmg things fixed
+ *
  *    Revision 1.18  2003/01/02 12:19:17  bfo
  *    RTE registers correctly saved and restored; remaining ticks (F$Sleep)
  *
@@ -649,9 +652,9 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
     }
     else {
         /* ok, terminate processing of intercept routine */
-        debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d\n",
-                       cpid, os9_word(cp->pd._signal) ));
         set_os9_state( cpid,   cp->rtestate );
+        debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d; state=%s\n",
+                       cpid, os9_word(cp->pd._signal), PStateStr(cp) ));
         memcpy( (void*)&cp->os9regs, (void*)&cp->rteregs, sizeof(regs_type) ); /* restore regs */
                  cp->vector=   cp->rtevector;
                  cp->func  =   cp->rtefunc;
