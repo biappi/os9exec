@@ -33,24 +33,28 @@
 
 /* Low level SCSI interface */
 
-os9err Set_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong sctSize );
-os9err Get_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong *sctSize );
+os9err Set_SSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong sctSize );
+os9err Get_SSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong *sctSize );
 
-os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong *totScts );
+os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong *totScts,  ulong *sctSize );
+
+os9err Get_DSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong *totScts );
 
 os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong sectorNr, ulong nSectors,
-                     ulong len, byte* buffer );
+                     ulong sectorNr,  ulong nSectors,
+                     ulong len,       byte* buffer );
 
-os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                    ulong sectorNr, ulong nSectors,
-                    ulong len,      byte* buffer );
+os9err WriteToSCSI ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong sectorNr,  ulong nSectors,
+                     ulong len,       byte* buffer );
+
 
 #ifdef windows32
-void scsiadaptor_help(void);
+void scsiadaptor_help (void);
 void scsi_finddefaults(void);
 #endif
 /* eof */

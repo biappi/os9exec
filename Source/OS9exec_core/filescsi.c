@@ -52,13 +52,15 @@
 #endif
 
 
-#define CmdRead  0x08
-#define CmdWrite 0x0a
-#define CmdSel   0x15
-#define CmdSense 0x1a
+#define CmdRead     0x08
+#define CmdWrite    0x0a
+#define CmdSel      0x15
+#define CmdSense    0x1a
+#define CmdCapacity 0x25
 
-#define CB_Size   6
-#define SizeCmd  12
+#define CB_Size        6
+#define CB_SizeExt    10
+#define SizeCmd       12
 
 
 
@@ -197,7 +199,7 @@ void scsi_finddefaults(void)
 
 /* the SCSI lowlevel call */
 static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                        byte* cb, byte*  buffer, ulong len, Boolean doWrite )
+                        byte* cb, ulong  cb_size, ulong* dat_buf, ulong len, Boolean doWrite )
 {
     os9err err;
     char*  s;
@@ -205,15 +207,15 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
     #ifdef macintosh
       #pragma unused(scsiAdapt,scsiBus,scsiLUN)
       
-      OSErr  oserr, ocerr;
+      OSErr  oserr, ocerr= 0;
       ushort tib[10];
       ulong  *l;
-      short  stat,message;
+      short  stat, message= 0;
       int    wait= 200;
 
           tib[0]=     os9_word( scInc  ); /* fill the tibPtr structure */
-      l= &tib[1]; *l= os9_long( (ulong)buffer );
-      l= &tib[3]; *l= os9_long( len           );
+      l= &tib[1]; *l= os9_long( (ulong)dat_buf );
+      l= &tib[3]; *l= os9_long( len            );
           tib[5]=     os9_word( scStop );
       l= &tib[6]; *l= os9_long( NULL   );
       l= &tib[8]; *l= os9_long( NULL   );
@@ -222,11 +224,14 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
           if (!oserr) oserr= SCSISelect( scsiID );
           if  (oserr) { err= host2os9err(oserr,E_UNIT); break; }
 
-               oserr= SCSICmd( cb,CB_Size );
+               oserr= SCSICmd( cb,cb_size );
           if (!oserr) {
               if (doWrite) oserr= SCSIWrite( tib );
               else         oserr= SCSIRead ( tib );
           }
+
+          if (oserr==5 && *cb==CmdCapacity && dat_buf[1]!=0) oserr= 0; /* workaround */
+
                       /* it's done */
                       ocerr= SCSIComplete( &stat,&message, wait );
           if (!oserr) oserr= ocerr;
@@ -306,13 +311,13 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
         goto closeandexit;        
       }
       // check capabilities
-      bufptr=buffer; // assume we can use the passed buffer directly
+      bufptr= dat_buf; // assume we can use the passed buffer directly
       // - check alignment
       align=capabilities.AlignmentMask;
-      if ((align & (ULONG)buffer)!=0) {
+      if ((align & (ULONG)dat_buf)!=0) {
           debugprintf(dbgFiles,dbgNorm,(
               "# SCSI subsystem: Passed buffer (@ $%0lX) does not meet alignment requirement of SCSI hardware: $%0lX\n",
-              (ULONG)buffer,
+              (ULONG)dat_buf,
               align
           ));
           // we need an aligned temp buffer
@@ -326,7 +331,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
           // - determine aligned starting point in new buffer
           bufptr = (byte *)(((ULONG)dataBuffer + align) & ~align);
           // - copy data to buffer if writing
-          if (doWrite) CopyMemory(bufptr,buffer,len);
+          if (doWrite) CopyMemory(bufptr,dat_buf,len);
       }   
       // - check max transfer size
       if (len>capabilities.MaximumTransferLength) {
@@ -357,9 +362,9 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
       spti_desc.sptd.SenseInfoOffset =
          offsetof(SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER,ucSenseBuf);
       // - set up command itself       
-      spti_desc.sptd.CdbLength = CB_Size; // size of command block
+      spti_desc.sptd.CdbLength = cb_size; // size of command block
       // - copy command bytes
-      for (k=0; k<CB_Size; k++) spti_desc.sptd.Cdb[k]=cb[k];
+      for (k=0; k<cb_size; k++) spti_desc.sptd.Cdb[k]=cb[k];
       // - issue now
       length = sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER);
       if (!DeviceIoControl(
@@ -434,7 +439,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
       // if aligned buffer was allocated, copy back (on read) and deallocate it
       if (dataBuffer) {
           // copy back to original buffer on read
-          if (!doWrite) CopyMemory(buffer,bufptr,len);
+          if (!doWrite) CopyMemory(dat_buf,bufptr,len);
           // anyway, get rid of buffer
           release_mem(dataBuffer,false);
       }
@@ -449,11 +454,12 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
 
     if (debugcheck(dbgFiles,dbgDetail)) {
         switch (cb[0]) {
-            case CmdSel  : s= "CmdSel";   break;
-            case CmdSense: s= "CmdSense"; break;
-            case CmdRead : s= "CmdRead";  break;
-            case CmdWrite: s= "CmdWrite"; break;
-            default      : s= "<none>";
+            case CmdSel     : s= "CmdSel";      break;
+            case CmdSense   : s= "CmdSense";    break;
+            case CmdRead    : s= "CmdRead";     break;
+            case CmdWrite   : s= "CmdWrite";    break;
+            case CmdCapacity: s= "CmdCapacity"; break;
+            default         : s= "<none>";
         }
 
         upe_printf("# SCSIcall: %s (err=%d)\n", s, err );
@@ -482,7 +488,8 @@ os9err Set_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     dat_buf[1]= os9_long( 0 );
     dat_buf[2]= os9_long( sctSize );
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb, (byte*)&dat_buf,sizeof(dat_buf), true );
+    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+                     (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), true );
 } /* Set_SSize */
 
 
@@ -501,10 +508,46 @@ os9err Get_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     cb[4]= SizeCmd;
     cb[5]= 0;
 
-    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb, (byte*)&dat_buf,sizeof(dat_buf), false );
+    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+                   (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), false );
     *sctSize = os9_long( dat_buf[2] );
     return err;
 } /* Set_SSize */
+
+
+
+os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
+                     ulong *totScts, ulong *sctSize )
+/* Get the SCSI device size */
+{
+    os9err err;
+    byte   cb     [CB_SizeExt];
+    ulong  dat_buf[3];
+    
+    dat_buf[0]= 0; 
+    dat_buf[1]= 0; 
+    dat_buf[2]= 0; 
+
+    cb[0]= CmdCapacity;
+    cb[1]= ((scsiLUN & 0x07)<<5);
+    cb[2]= 0;
+    cb[3]= 0;
+    cb[4]= 0;
+    cb[5]= 0;
+    cb[6]= 0;
+    cb[7]= 0;
+    cb[8]= 0;
+    cb[9]= 0;
+
+    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+                   (byte*)&cb,CB_SizeExt, (byte*)&dat_buf,sizeof(dat_buf), false );
+
+    *totScts= os9_long( dat_buf[0] )+1; /* +1, because capacity returns latest sector */
+    *sctSize= os9_long( dat_buf[1] );
+    
+    return err;
+} /* ReadCapacity */
+
 
 
 os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
@@ -514,6 +557,7 @@ os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     os9err err;
     byte   cb     [CB_Size];
     ulong  dat_buf[3];
+    ulong  sctSize;
     
     cb[0]= CmdSense;
     cb[1]= ((scsiLUN & 0x07)<<5);
@@ -522,8 +566,16 @@ os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     cb[4]= SizeCmd;
     cb[5]= 0;
 
-    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb, (byte*)&dat_buf,sizeof(dat_buf), false );
+    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+                   (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), false );
     *totScts= os9_long( dat_buf[1] );
+     sctSize= os9_long( dat_buf[2] );
+    
+    /* Iomega JAZ does not support the mode sense command */
+    if (*totScts==0) {
+        err= ReadCapacity( scsiAdapt, scsiBus, scsiID, scsiLUN, totScts,&sctSize );
+    }
+    
     return err;
 } /* Get_DSize */
 
@@ -542,7 +594,8 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
                 cb[4]= nSectors;
                 cb[5]= 0;
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb, buffer,len, false );
+    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+                     (byte*)&cb,CB_Size, buffer,len, false );
 } /* ReadFromSCSI */
 
 
@@ -560,7 +613,8 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
                 cb[4]= nSectors;
                 cb[5]= 0;
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb, buffer,len, true );
+    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN,
+                     (byte*)&cb,CB_Size, buffer,len, true );
 } /* WriteToSCSI */
 
 
