@@ -923,7 +923,7 @@ void RemoveConsole(void)
         for (h=0;  h<MAX_PICTS; h++) {
                  hdl= &mco->pict_hdl[ h ];
             if (*hdl!=NULL) {
-                release_mem( *hdl,true );
+                DisposeHandle( *hdl );
                 *hdl= NULL;
             }
         }
@@ -1081,9 +1081,11 @@ void UpdatePrms( ulong  wPtr,   ulong  wStore, ulong wSize,
                 tw->fTermEnvirons.textRows= 1;
                 tw->fTermEnvirons.textCols= 1;
                        
-                if      (*hq!=NULL) release_mem( *hq,true );
-                         *hq= get_mem( wSize,true );
-                memcpy( **hq, *ph,     wSize );
+//              if      (*hq!=NULL) release_mem( *hq,  true );
+//                       *hq=           get_mem( wSize,true );
+                if      (*hq!=NULL) DisposeHandle( *hq   );
+                         *hq=           NewHandle( wSize );
+                memcpy( **hq, *ph, wSize );
                 return;
             }
         }
