@@ -994,7 +994,8 @@
     -------------------
  
           02-06-14  Bfo     "mnt" is now also an incompatible OS9exec program.
-          02-06-14  Bfo     The 8MB limit is no longer existing.
+          02-06-14  Bfo     The 8MB memory limit is no longer existing.
+          02-06-22  Bfo     "format" of RBF devices recognizes the correct size now.
     3.14  02-06-??  Bfo     ...
     -------------------
 */
