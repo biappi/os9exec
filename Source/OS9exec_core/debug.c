@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/09/22 20:46:48  bfo
+ *    SS_206 (unused setstat call) included.
+ *
  *    Revision 1.5  2002/07/30 16:47:19  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -646,8 +649,11 @@ char* get_stat_name(ushort stat)
         case SS_Connect: name="SS_Connect";    break;
         case SS_Resv:    name="SS_Resv";       break;
         case SS_Accept:  name="SS_Accept";     break;
+        case SS_Recv:    name="SS_Recv";       break;
+        case SS_Send:    name="SS_Send";       break;
         case SS_GNam:    name="SS_GNam";       break;
         case SS_SOpt:    name="SS_SOpt";       break;
+        case SS_SendTo:  name="SS_SendTo";     break;
         case SS_PCmd:    name="SS_PCmd";       break;
         
         case SS_201:     name="SS_201";        break;
