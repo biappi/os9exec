@@ -550,12 +550,17 @@ os9err pHvolnam(ushort pid, syspath_typ* spP, char* volname)
 
     
     #ifdef macintosh
-      long  free;
+      long  free= 0;
       short volid= spP->u.disk.spec.vRefNum;
-      OSErr oserr= GetVInfo(0, volname, &volid, &free);
-      if   (oserr) return host2os9err(oserr,E_BPNUM);
-    
-      p2cstr(volname);
+      
+      #ifdef USE_CARBON
+        strcpy( volname,"" );
+      #else
+        OSErr oserr= GetVInfo(0, volname, &volid, &free);
+        if   (oserr) return host2os9err(oserr,E_BPNUM);
+        p2cstr( volname );
+      #endif
+      
       debugprintf(dbgFiles,dbgDetail,("# pFvolnam: name='%s', free bytes=%ld\n",volname,free));
 
     #elif defined(windows32)
