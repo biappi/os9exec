@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/09/11 17:03:59  bfo
+ *    Adapted for the Linux version
+ *
  *    Revision 1.5  2002/09/04 12:23:29  luz
  *    Implemented auto-linefeed for /lp (allowing direct printing of text files)
  *
@@ -287,13 +290,9 @@ BOOL ClosePrinterRaw(HANDLE hPrinter)
 
 
 
-os9err pPrOpen(ushort pid, syspath_typ* spP, ushort *modeP, char* name)
+os9err pPrOpen(ushort pid, syspath_typ* spP, ushort* /* modeP */, char* name)
 /* routine for opening printer devices */
 {
-    #ifndef linux
-    #pragma unused(modeP)
-    #endif
-
     os9err err; 
     int    id = -1;
     const int maxnamelen=200;
@@ -401,27 +400,14 @@ os9err pPrOutLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer)
 
 
 
-os9err pPrReady( ushort pid, syspath_typ *spP, ulong *n )
+os9err pPrReady( ushort /* pid */, syspath_typ*, ulong *n )
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-          
-    return 0;
+{   return 0;
 } /* pPrReady */
 
-
 #elif defined(windows32) || defined macintosh || defined linux
-  void init_Printer( fmgr_typ* f )
-  {
-    #ifndef linux
-    #pragma unused(f)
-    #endif
-    /* do nothing */
-  }
-
+  void init_Printer( fmgr_typ* ) { } /* do nothing */
 #else
   #error "not yet implemented for other platforms than win32"
 #endif

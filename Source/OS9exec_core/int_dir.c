@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/10/09 20:45:06  bfo
+ *    uphe_printf => upe_printf
+ *
  *
  */
 
@@ -79,12 +82,8 @@
   #include <Finder.h>
 
 
-static void usage( char *name, ushort pid )
+static void usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     upe_printf("Usage:    %s [options] [dirname]\n",name);
     upe_printf("Function: Displays directory\n");
     upe_printf("Options:  -x       relative to execution dir\n");

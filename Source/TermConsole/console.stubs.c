@@ -19,6 +19,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2003/05/17 10:50:26  bfo
+ *    Some parts for carbon disabled
+ *
  *    Revision 1.6  2002/10/27 23:08:08  bfo
  *    get_mem/release_mem no longer with param "mac_asHandle"
  *
@@ -450,10 +453,8 @@ void HandleKey( char key )
 
 /* ----- this part is nor yet really working ----- */
 
-static OSErr DoOpenDocument( AppleEvent *ae, AppleEvent *reply, long refcon )
+static OSErr DoOpenDocument( AppleEvent *ae, AppleEvent* /* reply */, long /* refcon */ )
 {
-    #pragma unused(reply,refcon)
-    
     OSErr       anErr;
     AEDescList  docList; /* list of docs passed in */
     long        index, itemsInList;
@@ -788,10 +789,8 @@ static void GetVModDyn_ID()
  *  returns short:  0 no error occurred, anything else error.
  */
 #ifndef USE_CARBON
-short InstallConsole(short fd)
+short InstallConsole( short )
 {
-    #pragma unused(fd)
-    
     TermWindowPtr tw;
     static int    main_installed= false;
     Rect          windowRect;
@@ -1193,18 +1192,15 @@ long ReadCharsFromConsole(char *buffer, long n)
  *                  or NULL if the stream is not valid.
  */
 #ifndef USE_CARBON
-extern char *__ttyname(long fildes)
+extern char* __ttyname( long fildes )
 {
-    #pragma unused(fildes)
-    
     /* all streams have the same name */
     static char *__devicename = "null device";
 
-    if (fildes >= 0 && fildes <= 2)
-        return   __devicename;
-
-    return 0L;
+    if ( fildes>=0 && fildes<=2 ) return __devicename;
+    return NULL;
 }
 #endif
 
 
+/* eof */

@@ -49,27 +49,10 @@ static Boolean fullcache;
 static Boolean usesusermode;
 
 
-/* dummies %%% */
-void Flush68kCodeRange( void *address, ulong size ) 
-{
-    #ifndef linux
-    #pragma unused(address,size)
-    #endif
-}
-
-void LockMemRange     ( void *address, ulong size )
-{
-    #ifndef linux
-    #pragma unused(address,size)
-    #endif
-}
-
-void UnlockMemRange   ( void *address, ulong size )
-{
-    #ifndef linux
-    #pragma unused(address,size)
-    #endif
-}
+/* dummies for UAE */
+void Flush68kCodeRange( void* /* address */, ulong /* size */ ) { }
+void LockMemRange     ( void* /* address */, ulong /* size */ ) { }
+void UnlockMemRange   ( void* /* address */, ulong /* size */ ) { }
 
 
 /* current regs as per last call of llm_os9_go */
@@ -176,54 +159,39 @@ ulong llm_os9_go(regs_type *rp)
 
 
 /* Flush code range in 68k (real one or emulator, especially DR emulator needs it!!) */
-static void llm_cache_rf(void *addr, ulong size)
-{
-    #ifndef linux
-    #pragma unused(addr,size)
-    #endif
-} /* llm_cache_rf */
-
+static void llm_cache_rf( void* /* addr */, ulong /* size */ ) { }
 
 
 #ifdef macintosh
 /* enter debugger with (most of) OS9 context in registers */
-void llm_os9_debug(regs_type *rp, ConstStr255Param debuggerMsg)
-{
-    #ifndef linux
-    #pragma unused(rp,debuggerMsg)
-    #endif
-
-    upe_printf("# Using UAE-68k-emulator, can't go to debugger\n");
+void llm_os9_debug( regs_type*, ConstStr255Param /* debuggerMsg */ )
+{   upe_printf("# Using UAE-68k-emulator, can't go to debugger\n" );
 } /* llm_os9_debug */
 #endif
 
 
 /* returns if FPU present */
 Boolean llm_has_cache(void)
-{
-    return needsflush;
+{   return needsflush;
 } /* llm_fpu_present */
 
 
 /* returns if FPU present */
 Boolean llm_fpu_present(void)
-{
-    return hasfpu;
+{   return hasfpu;
 } /* llm_fpu_present */
 
 
 /* returns if virtual memory is enabled */
 Boolean llm_vm_enabled(void)
-{
-    return vmenabled;
+{   return vmenabled;
 } /* llm_fpu_present */
 
 
 /* returns if 68k Mac Context runs in usermode */
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
 Boolean llm_runs_in_usermode(void)
-{
-    return usesusermode;
+{   return usesusermode;
 } /* llm_runs_in_usermode */
 
 

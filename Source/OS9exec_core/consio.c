@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2003/08/01 11:12:44  bfo
+ *    /L2 getstat support
+ *
  *    Revision 1.5  2002/08/09 22:38:53  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -429,13 +432,9 @@ static Boolean ConsId( char* name, char* family, int range, int offs, int *resul
 
 
 
-os9err pCopen(ushort pid, syspath_typ* spP, ushort *modeP, char* name)
+os9err pCopen(ushort pid, syspath_typ* spP, ushort* /* modeP */, char* name)
 /* routine for opening serial devices */
 {
-    #ifndef linux
-    #pragma unused(modeP)
-    #endif
-
     os9err err; 
     int    id;
 
@@ -474,33 +473,25 @@ os9err pCopen(ushort pid, syspath_typ* spP, ushort *modeP, char* name)
 
 
 
-os9err pSopen( ushort pid, syspath_typ* spP, ushort *modeP, char* name )
+os9err pSopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* name )
 /* routine for opening SCF devices */
 {   
-    #ifndef linux
-    #pragma unused(pid,modeP)
-    #endif
-    
 	int k;
 
     if (*name!=NUL) {
     	strcpy            ( spP->name,&name[1] );
     	    k= link_mod_id( spP->name );
     	if (k!=MAXMODULES)  spP->mh= os9mod( k );
-    }
+    } /* if */
     
     return 0;
 } /* pSopen */
 
 
 
-os9err pSBlink( ushort pid, syspath_typ* spP, ulong *d2 )
+os9err pSBlink( ushort /* pid */, syspath_typ*, ulong *d2 )
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
      byte*   bb= (byte  *)*d2;
      ushort* ww= (ushort*)*d2;
         	
@@ -512,13 +503,9 @@ os9err pSBlink( ushort pid, syspath_typ* spP, ulong *d2 )
 } /* pSBlink */
 
 
-os9err pGBlink( ushort pid, syspath_typ* spP, ulong *d2 )
+os9err pGBlink( ushort /* pid */, syspath_typ*, ulong *d2 )
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
      byte*   bb= (byte  *)*d2;
      ushort* ww= (ushort*)*d2;
         	
@@ -652,14 +639,9 @@ os9err pConsInLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer )
 
 
 
-os9err pEOF( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer )
+os9err pEOF( ushort /* pid */, syspath_typ*, ulong* /* maxlenP */, char* /* buffer */ )
 /* read operation for the nil device */
-{   
-    #ifndef linux
-    #pragma unused(pid,spP,maxlenP,buffer)
-    #endif
-    
-    return E_EOF;
+{   return E_EOF;
 } /* pEOF */
 
 
@@ -751,12 +733,8 @@ os9err pConsOutLn( ushort pid, syspath_typ* spP, ulong *maxlenP, char* buffer)
 
 
 /* get options from console */
-os9err pCopt(ushort pid, syspath_typ* spP, byte* buffer)
+os9err pCopt(ushort /* pid */, syspath_typ* spP, byte* buffer)
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     memcpy( buffer,&spP->opt, OPTSECTSIZE);
     return 0;
 } /* pCopt */
@@ -764,38 +742,26 @@ os9err pCopt(ushort pid, syspath_typ* spP, byte* buffer)
 
 
 /* set console options */
-os9err pCsetopt(ushort pid, syspath_typ* spP, byte* buffer)
+os9err pCsetopt(ushort /* pid */, syspath_typ* spP, byte* buffer)
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     memcpy( &spP->opt,buffer, OPTSECTSIZE );
     return 0;
 } /* pCsetopt */
 
 
 
-os9err pCpos(ushort pid, syspath_typ* spP, ulong *posP )
+os9err pCpos(ushort /* pid */, syspath_typ*, ulong *posP )
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
     *posP= 0;
     return 0;
 } /* pCpos */
 
 
 
-os9err pCready( ushort pid, syspath_typ *spP, ulong *n )
+os9err pCready( ushort /* pid */, syspath_typ* spP, ulong *n )
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-          
     gConsoleID= spP->term_id;
     g_spP     = spP;
 

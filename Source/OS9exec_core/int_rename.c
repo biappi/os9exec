@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2003/07/31 14:42:02  bfo
+ *    "get_locations": Additional parameter for sectorsize
+ *
  *    Revision 1.5  2003/05/17 21:36:31  bfo
  *    rename to the same file name on RBF is no longer possible now
  *
@@ -59,12 +62,8 @@
 
 
 
-static void usage(char *name, ushort pid)
+static void usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     upe_printf( "Syntax:   %s [<opts>] <path> <name> [<opts>]\n", name );
     upe_printf( "Function: rename a file or directory\n" );
     upe_printf( "Options:\n" );

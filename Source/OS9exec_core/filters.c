@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/10/27 23:22:34  bfo
+ *    use get_mem/release_mem
+ *
  *
  */
 
@@ -63,22 +66,15 @@ void releasefilter( void **memoryPP )
 /* no filters available */
 /* get pointer to filter function for module name returns NULL if no filter found
  */
-filterfunc initfilterfunc(char *modname, char *argline, void **memoryPP)
-{
-    #ifndef linux
-    #pragma unused(modname,argline,memoryPP)
-    #endif
-    
-    /* no filters */
-    return NULL;
+filterfunc initfilterfunc( char* /* modname */, char* /*argline */, void** /* memoryPP */ )
+{   return NULL; /* no filters */
 } /* getfilterfunc */
 
 
 
 /* show available filters from outside command line */
-void printfilters(void)
-{
-    uphe_printf("No compiler output filters available\n");
+void printfilters( void )
+{   uphe_printf("No compiler output filters available\n");
 } /* printfilters */
 
 
@@ -95,10 +91,8 @@ typedef struct {
 } omega_record;
 
 
-static void* omega_init(char *argline)
+static void* omega_init( char* /* argline */ )
 {
-    #pragma unused(argline)
-    
     omega_record *fm;
     char *p,*p2;
     int srchspac;
@@ -129,6 +123,7 @@ static void* omega_init(char *argline)
             }
         }
     }
+
     /* now we should have a copy of the filename in fm->filepath */
     return (void*)fm;
 }
@@ -168,10 +163,8 @@ typedef struct {
 } icc_record;
 
 
-static void* icc_init(char *argline)
+static void* icc_init( char* /* argline */ )
 {
-    #pragma unused(argline)
-    
     icc_record *fm;
     
     (void*)fm= get_mem(sizeof(icc_record),false);
@@ -248,10 +241,8 @@ typedef struct {
 } c_record;
 
 
-static void* c_init(char *argline)
+static void* c_init( char* /* argline */ )
 {
-    #pragma unused(argline)
-    
     c_record *fm;
     
     (void*)fm= get_mem(sizeof(c_record),false);
@@ -263,10 +254,10 @@ static void* c_init(char *argline)
 
     fm->state=0; /* begin without state */
     return (void*)fm;
-}
+} /* c_init */
 
 
-static void c_filter(char *linebuf, FILE *stream, void *fmv)
+static void c_filter( char *linebuf, FILE *stream, void *fmv )
 {
     char *p,*p2;
     int dispit; /* set if error message can be displayed */
@@ -332,10 +323,8 @@ typedef struct {
 } r68_record;
 
 
-static void* r68_init(char *argline)
+static void* r68_init( char* /* argline */ )
 {
-    #pragma unused(argline)
-    
     r68_record *fm;
     
     (void*)fm= get_mem(sizeof(r68_record),false);
@@ -348,7 +337,7 @@ static void* r68_init(char *argline)
     fm->state  =0; /* begin without state */
     fm->outline=0; /* no line written yet */
     return (void*)fm;
-}
+} /* r68_init */
 
 
 static void r68_filter(char *linebuf, FILE *stream, void *fmv)

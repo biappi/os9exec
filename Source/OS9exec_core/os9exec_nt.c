@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2004/09/15 19:56:19  bfo
+ *    changed to V3.24
+ *
  *    Revision 1.36  2004/01/04 19:53:17  bfo
  *    Changed to new version
  *
@@ -538,9 +541,7 @@ static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulo
 
   /* MPW signal handler */
   static void mpwSignalHandler(int signum)
-  {
-	#pragma unused(signum)
-	mpwsignal=signum;
+  {   mpwsignal= signum;
 	/* signal(signum,SIG_IGN); %%% *//* de-activate */
   } /* mpwSignalHandler */
 #endif

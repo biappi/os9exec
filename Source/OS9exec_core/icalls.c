@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2003/05/17 10:26:09  bfo
+ *    Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
+ *
  *    Revision 1.5  2002/10/15 18:36:39  bfo
  *    Consider only lobyte at OS9_I_Delete
  *
@@ -581,7 +584,7 @@ os9err OS9_I_Dup( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_I_Attach( regs_type *rp, ushort cpid )
+os9err OS9_I_Attach( regs_type *rp, ushort /* cpid */ )
 /* I$Attach:
  * Input:   d0.b=Access mode
  *          (a0)=device name
@@ -591,16 +594,12 @@ os9err OS9_I_Attach( regs_type *rp, ushort cpid )
  * Restrictions:- Is only a dummy. Always returns 0xFF00FF00 for the device table entry
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
 	char* name= (char*) rp->a[0];
 	
 	if (ustrcmp( name,"/L2" )==0) {
 		rp->a[2]= 0x22002200; /* %%% /L2 identifier */
 		return 0;
-	}
+	} /* if */
 
     debugprintf((dbgPartial+dbgFiles),dbgNorm,("# I$Attach, simply returned dummy pointer\n"));
     rp->a[2]= 0xFF00FF00; /* dummy return pointer */
@@ -609,7 +608,7 @@ os9err OS9_I_Attach( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_I_Detach( regs_type *rp, ushort cpid )
+os9err OS9_I_Detach( regs_type *rp, ushort /* cpid */ )
 /* I$Detach:
  * Input:   (a2)=pointer to device table entry
  * Output:  None
@@ -620,17 +619,12 @@ os9err OS9_I_Detach( regs_type *rp, ushort cpid )
  *                input to any I$Detach call.
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     /* special handling for "/L2" */
     if (rp->a[2]==0x22002200) {
     	init_L2(); /* switch off /L2 completely */
 	    return 0;
-    }
+    } /* if */
 
-    
     debugprintf((dbgPartial+dbgFiles),dbgNorm,("# I$Detach, expects dummy pointer\n"));
     if (rp->a[2]!=0xFF00FF00) return os9error(E_DAMAGE); /* bad dummy pointer value */
     

@@ -193,12 +193,8 @@ static __inline__ uae_u8 *get_real_address(uaecptr addr)
     return (uae_u8 *)addr; /* no translation ever %%% */
 }
 
-static __inline__ int valid_address(uaecptr addr, uae_u32 size)
+static __inline__ int valid_address( uaecptr /* addr */, uae_u32 /* size */ )
 {
-	#ifndef linux
- 	#pragma unused(addr,size)
- 	#endif
- 	
  /* return get_mem_bank(addr).check(addr, size); */
     return 1; /* all addresses can be translated (as there is no translation! %%% */
 }

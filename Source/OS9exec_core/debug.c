@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2003/05/21 20:32:30  bfo
+ *    Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
+ *
  *    Revision 1.9  2003/05/17 10:43:38  bfo
  *    'show_mem' with <mem_unused> parameter
  *
@@ -233,13 +236,9 @@ void debug_prep()
 } /* debug_prep */
 
 
-os9err debug_help( ushort pid, int argc, char **argv )
+os9err debug_help( ushort pid, int /* argc */, char** /* argv */ )
 /* display debug help, allow internal and external access */
 {
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-    
     upho_printf("Debug and Stop masks:\n");
     upho_printf("\n");
     upho_printf("  dbgAnomaly      0x0001  anomalies such as unimplemented/dummy system calls\n");
@@ -325,22 +324,22 @@ static void dumpmem(ulong *memptrP,int numlines)
 
 
 /* show regs in debugger */
-static void regs_in_debugger(regs_type *rp)
+static void regs_in_debugger( regs_type *rp )
 {
     #ifdef macintosh
-    Str255 message;
+      Str255 message;
     
-    sprintf( &message[1], "%s called debugger, OS9 PC=%08lX, OS9 A7=%08lX\n",
-                           OS9exec_Name(), rp->pc, rp->a[7]);
-    message[0]=strlen(&message[1]);
-    llm_os9_debug(rp,message);
+      sprintf( &message[1], "%s called debugger, OS9 PC=%08lX, OS9 A7=%08lX\n",
+                             OS9exec_Name(), rp->pc, rp->a[7]);
+      message[0]=strlen(&message[1]);
+      llm_os9_debug( rp, message );
 
     #else
-    #ifndef linux
-    #pragma unused(rp)
-    #endif
+      #ifndef linux
+      #pragma unused(rp)
+      #endif
     
-    uphe_printf("Non-Macintosh: No low level debugger\n");  
+      uphe_printf("Non-Macintosh: No low level debugger\n");  
     #endif
 } /* regs_in_debugger */
 

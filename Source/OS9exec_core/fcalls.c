@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2004/09/15 19:57:13  bfo
+ *    Up to date
+ *
  *    Revision 1.24  2004/01/04 02:07:52  bfo
  *    F$UnLink returns ok, as long as module found
  *
@@ -205,7 +208,7 @@ os9err OS9_F_Link( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_UnLink( regs_type *rp, ushort cpid )
+os9err OS9_F_UnLink( regs_type *rp, ushort /* cpid */ )
 /* F$UnLink:
  * Input:   (a2)=pointer to module
  * Output:  none
@@ -214,10 +217,6 @@ os9err OS9_F_UnLink( regs_type *rp, ushort cpid )
  *             none possible
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-   
     ushort mid= get_mid( (void*)rp->a[2] );
     debugprintf    (dbgModules,dbgNorm,("# F$Unlink: Module at $%08lX has mid=%d%s\n",
                                            rp->a[2],mid,mid<MAXMODULES ? "" : "=MAXMODULES" ));
@@ -232,7 +231,7 @@ os9err OS9_F_UnLink( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_UnLoad( regs_type *rp, ushort cpid )
+os9err OS9_F_UnLoad( regs_type *rp, ushort /* cpid */ )
 /* F$UnLoad:
  * Input:   d0.w=type/language
  *              (a0)=module name pointer
@@ -242,10 +241,6 @@ os9err OS9_F_UnLoad( regs_type *rp, ushort cpid )
  *             none possible
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     char  mname[OS9NAMELEN];
 
     char* p  = nullterm   ( mname,(char*)rp->a[0],OS9NAMELEN );
@@ -363,7 +358,7 @@ os9err OS9_F_STrap( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Time(regs_type *rp, ushort cpid)
+os9err OS9_F_Time( regs_type *rp, ushort /* cpid */ )
 /* F$Time:
  * Input:   d0.w=time format (0=gregorian, 1=julian, 2/3=same with ticks)
  * Output:  d0.l=current time
@@ -376,10 +371,6 @@ os9err OS9_F_Time(regs_type *rp, ushort cpid)
  *               - other restrictions that apply to Mac ticks (lost ticks, etc.)
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     ushort  mode       = loword(rp->d[0]);
     Boolean asGregorian= (mode & 0x1)==0;
     Boolean withTicks  = (mode & 0x2);
@@ -494,7 +485,7 @@ os9err OS9_F_Event( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Julian( regs_type *rp, ushort cpid )
+os9err OS9_F_Julian( regs_type *rp, ushort /* cpid */ )
 /* F$Julian:
  * Input:   d0.l=current time (00hhmmss)
  *          d1.l=current date (yyyymmdd)
@@ -504,10 +495,6 @@ os9err OS9_F_Julian( regs_type *rp, ushort cpid )
  *          d1.w = error
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     byte   tc[4];
     ulong* tcp= (ulong*)&tc[0];
     
@@ -522,7 +509,7 @@ os9err OS9_F_Julian( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Gregor( regs_type *rp, ushort cpid )
+os9err OS9_F_Gregor( regs_type *rp, ushort /* cpid */ )
 /* F$Gregor:
  * Input:   d0.l=time (seconds since midnight)
  *          d1.l=julian date (days since january 1st, 4713 BC)
@@ -532,10 +519,6 @@ os9err OS9_F_Gregor( regs_type *rp, ushort cpid )
  *          d1.w = error
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     byte   tc[4];
     ulong* tcp= (ulong*)&tc[0];
     int  d, m, y;
@@ -638,7 +621,7 @@ os9err OS9_F_Icpt( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_RTE( regs_type *rp, ushort cpid )
+os9err OS9_F_RTE( regs_type*, ushort cpid )
 /* F$RTE:
  * Input:   none
  *       
@@ -648,10 +631,6 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
  * Restrictions: will kill process if called when procs[].lastsignal==0 
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-
     os9err       err= 0;
     process_typ* cp = &procs[cpid];
     save_type*   svd;
@@ -706,7 +685,7 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_GPrDBT( regs_type *rp, ushort cpid )
+os9err OS9_F_GPrDBT( regs_type *rp, ushort /* cpid */ )
 /* F$GPrDBT:
  * Input:   d1.l = maximum number of bytes to copy
  *          (a0) = Buffer pointer 
@@ -716,10 +695,6 @@ os9err OS9_F_GPrDBT( regs_type *rp, ushort cpid )
  *             
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     int k;
     ulong *ptr,*lim;
     short *s,  *sl;
@@ -827,7 +802,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
+os9err OS9_F_GBlkMp( regs_type *rp, ushort /* cpid */ )
 /* F$GBlkMp:
  * Input:   d0.l= address to begin reporting segments
  *          d1.l= size of buffer in bytes
@@ -841,10 +816,6 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
  *          d1.w = error
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     ulong **b, memsz;
    
 //  #ifdef powerc
@@ -868,7 +839,7 @@ os9err OS9_F_GBlkMp( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
+os9err OS9_F_SetSys( regs_type *rp, ushort /* cpid */ )
 /* F$SetSys:
  * Input:   d0.w=offset
  *          d1.l=size (1,2 or 4 bytes, negative if read, positive if write)
@@ -880,10 +851,6 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
  * Restrictions: This is a half-dummy, nearly always returns 0 
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
 	#define D_ID       0x0000   /* set to modsync code after coldboot has finished */
 	#define D_Init     0x0020   /* pointer to 'init' module */
 	#define D_TckSec   0x0028   /* ticks per second */
@@ -1017,7 +984,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 
 
 
-os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
+os9err OS9_F_GModDr( regs_type *rp, ushort /* cpid */ )
 /* F$GModDr:
  * Input:   d1.l = Maximum number of bytes to copy
             (a0) = Buffer pointer
@@ -1025,10 +992,6 @@ os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
  *                   
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     byte* b  = (byte*)rp->a[0];
     ulong cnt=        rp->d[1];
     ulong mx = sizeof(mdirField); if (cnt>mx) cnt= mx;
@@ -1044,7 +1007,7 @@ os9err OS9_F_GModDr( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_CpyMem( regs_type *rp, ushort cpid )
+os9err OS9_F_CpyMem( regs_type *rp, ushort /* cpid */ )
 /* F$CpyMem:
  * Input:   d0.w = process ID of external memory's owner
             d1.l = number of bytes to copy
@@ -1054,10 +1017,6 @@ os9err OS9_F_CpyMem( regs_type *rp, ushort cpid )
  *                   
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     byte* src= (byte*)rp->a[0];
     byte* dst= (byte*)rp->a[1];
     ulong cnt= (ulong)rp->d[1];
@@ -1130,7 +1089,7 @@ os9err OS9_F_TLink( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
+os9err OS9_F_DatMod( regs_type *rp, ushort /* cpid */ )
 /* F$DatMod:
  * Input:   d0.l=size of data reuired (not including header or CRC)
  *          d1.w=desired attr/revision
@@ -1147,10 +1106,6 @@ os9err OS9_F_DatMod( regs_type *rp, ushort cpid )
  *          d1.w = error
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
 //  #ifdef macintosh
 //    Handle    theModuleH;
 //    ulong     hsize;
@@ -1608,7 +1563,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_CRC( regs_type *rp, ushort cpid )
+os9err OS9_F_CRC( regs_type *rp, ushort /* cpid */ )
 /* F$CRC
  * Input:   d0.l=Data byte count
  *          d1.l=CRC accumulator
@@ -1616,10 +1571,6 @@ os9err OS9_F_CRC( regs_type *rp, ushort cpid )
  * Output:  d1.l=updated CRC accumulator
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     if (rp->a[0]==0) {
         /* add single 0 byte to CRC */
         rp->d[1]=calc_crc("\0",1,rp->d[1]); /* update with one additional 0 byte */
@@ -1634,16 +1585,12 @@ os9err OS9_F_CRC( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_SetCRC( regs_type *rp, ushort cpid )
+os9err OS9_F_SetCRC( regs_type *rp, ushort /* cpid */ )
 /* F$SetCRC
  * Input:   (a0)=Pointer to module image
  * Output:  module image with updated CRC
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     mod_exec* m= (mod_exec*)rp->a[0];
     ulong     modsize;
     ushort    hpar;
@@ -1662,7 +1609,7 @@ os9err OS9_F_SetCRC( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_PrsNam( regs_type *rp, ushort cpid )
+os9err OS9_F_PrsNam( regs_type *rp, ushort /* cpid */ )
 /* F$PrsNam
  * Input:   (a0)=pointer to path string to be parsed
  * Output:  d0.b=path element delimiter (=[a0])
@@ -1675,10 +1622,6 @@ os9err OS9_F_PrsNam( regs_type *rp, ushort cpid )
  *       substitution.
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     char *p;
     ushort n;
     
@@ -1699,7 +1642,7 @@ os9err OS9_F_PrsNam( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_CmpNam( regs_type *rp, ushort cpid )
+os9err OS9_F_CmpNam( regs_type *rp, ushort /* cpid */ )
 /* F$CmpNam
  * Input:   d1.w-length of pattern string
  *              (a0)=pointer to pattern string
@@ -1710,10 +1653,6 @@ os9err OS9_F_CmpNam( regs_type *rp, ushort cpid )
  * Note: Only does simple, non-recursive pattern match
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
     char *pat, *targ, *spat, *starg, *patend;
     Boolean match;
     
@@ -1773,7 +1712,7 @@ os9err OS9_F_CmpNam( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_PErr( regs_type *rp, ushort cpid )
+os9err OS9_F_PErr( regs_type *rp, ushort /* cpid */ )
 /* F$PErr
  * Input:   d0.w=Error message path number (0=none)
  *          d1.w=Error number
@@ -1782,10 +1721,6 @@ os9err OS9_F_PErr( regs_type *rp, ushort cpid )
  * Restriction: Error message path is not used
  */
 {
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-    
     os9err err;
     char   *nam,*desc;
     char   msgbuffer[255];
@@ -1800,42 +1735,33 @@ os9err OS9_F_PErr( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_SysDbg( regs_type *rp, ushort cpid )
+os9err OS9_F_SysDbg( regs_type*, ushort /* cpid */ )
 /* F$SysDbg
  * Input : none
  * Output: none
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
     if (quitFlag) stop_os9exec(); /* --- and never come back */
-    
     debugwait();
     return 0;
 } /* OS9_F_SysDbg */
 
 
 
-os9err OS9_F_Panic( regs_type *rp, ushort cpid )
+os9err OS9_F_Panic( regs_type*, ushort cpid )
 /* F$Panic
  * Input : none
  * Output: none
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
-    uphe_printf("PANIC: F$Panic called by pid=%d\n",cpid);
+    uphe_printf( "PANIC: F$Panic called by pid=%d\n", cpid );
     debugwait();
     return 0;
 } /* OS9_F_Panic */
 
 
 
-os9err OS9_F_SSvc( regs_type *rp, ushort cpid )
+os9err OS9_F_SSvc( regs_type *rp, ushort /* cpid */ )
 /* F$SSvc
  * Input:   (a1)=pointer to service request initislization table
  *          (a3)=user defined
@@ -1843,10 +1769,6 @@ os9err OS9_F_SSvc( regs_type *rp, ushort cpid )
  * Restrictions: system-state system call
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
     ulong sqtab= rp->a[1]; /* %%% no nothing at the moment: 0x61 hardwired */
     ulong suser= rp->a[3];
     return 0;
@@ -1854,7 +1776,7 @@ os9err OS9_F_SSvc( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_Permit( regs_type *rp, ushort cpid )
+os9err OS9_F_Permit( regs_type*, ushort /* cpid */ )
 /* F$Permit:
  * Input:   ?
  * Output:  none
@@ -1863,10 +1785,6 @@ os9err OS9_F_Permit( regs_type *rp, ushort cpid )
  * Restrictions: This is a dummy. 
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-
     debugprintf(dbgPartial,dbgNorm,("# F$Permit, dummy only\n"));
     arbitrate= true;
     return 0;
@@ -1874,18 +1792,13 @@ os9err OS9_F_Permit( regs_type *rp, ushort cpid )
 
 
 
-os9err OS9_F_SPrior( regs_type *rp, ushort cpid )
+os9err OS9_F_SPrior( regs_type *rp, ushort /* cpid */ )
 /* F$SPrior:
  * Input:   d0.w=process ID
  *          d1.w=new priority
  * Output:  none
  */
-{
-    #ifndef linux
-    #pragma unused(cpid)
-    #endif
-
-    return setprior(loword(rp->d[0]),loword(rp->d[1]));
+{   return setprior(loword(rp->d[0]),loword(rp->d[1]));
 } /* OS9_F_SPrior */
 
 
@@ -1893,65 +1806,52 @@ os9err OS9_F_SPrior( regs_type *rp, ushort cpid )
 
 
 /* --------------------------------------------------------- */
-os9err OS9_F_Dummy( regs_type *rp, ushort cpid )
+os9err OS9_F_Dummy( regs_type*, ushort cpid )
 /* F$Dummy:
- *  returns no error, but a debug warning
+ * Returns no error, but a debug warning
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
-    debugprintf(dbgAnomaly,dbgNorm,("# Dummy implementation of %s called by pid=%d\n",get_syscall_name(lastsyscall),cpid));
+    debugprintf(dbgAnomaly,dbgNorm,( "# dummy implementation of %s called by pid=%d\n",
+                                        get_syscall_name(lastsyscall), cpid ));
     return 0;
 } /* OS9_F_Dummy */
 
 
 
-os9err OS9_F_SDummy( regs_type *rp, ushort cpid )
+os9err OS9_F_SDummy( regs_type*, ushort cpid )
 /* F$SDummy:
- *  Silent dummy, does not warn except when dbgPartial is on
+ * Silent dummy, does not warn except when dbgPartial is on
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
-    debugprintf(dbgPartial,dbgNorm,("# (Silent) dummy implementation of %s called by pid=%d\n",get_syscall_name(lastsyscall),cpid));
+    debugprintf(dbgPartial,dbgNorm,( "# (silent) dummy implementation of %s called by pid=%d\n",
+                                        get_syscall_name(lastsyscall), cpid ));
     return 0;
 } /* OS9_F_SDummy */
 
 
 
-os9err OS9_F_UnImp( regs_type *rp, ushort cpid )
+os9err OS9_F_UnImp( regs_type*, ushort cpid )
 /* F$UnImp
- *  Unimplemented system call, returns E_UNKSVC and a debug message
+ * Unimplemented system call, returns E_UNKSVC and a debug message
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
-    debugprintf(dbgAnomaly,dbgNorm,("# Unimplemented %s called by pid=%d\n",get_syscall_name(lastsyscall),cpid));
+    debugprintf(dbgAnomaly,dbgNorm,( "# unimplemented %s called by pid=%d\n",
+                                        get_syscall_name(lastsyscall),cpid ));
     return E_UNKSVC;
 } /* OS9_F_Unimp */
 
 
 
-os9err OS9_F_SUnImp( regs_type *rp, ushort cpid )
+os9err OS9_F_SUnImp( regs_type*, ushort cpid )
 /* F$SUnImp
- *  Silent Unimplemented system call, returns E_UNKSVC
+ * Silent Unimplemented system call, returns E_UNKSVC
  */
 {
-    #ifndef linux
-    #pragma unused(rp,cpid)
-    #endif
-    
-    debugprintf(dbgPartial,dbgNorm,("# (silent) unimplemented %s called by pid=%d\n",get_syscall_name(lastsyscall),cpid));
+    debugprintf(dbgPartial,dbgNorm,( "# (silent) unimplemented %s called by pid=%d\n",
+                                      get_syscall_name(lastsyscall),cpid ));
     return E_UNKSVC;
 } /* OS9_F_SUnImp */
 
 
 
 /* eof */
-

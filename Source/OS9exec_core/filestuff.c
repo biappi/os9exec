@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2003/08/01 11:14:38  bfo
+ *    /L2 getstat support
+ *
  *    Revision 1.15  2003/07/31 14:40:48  bfo
  *    Additional parameter for sectorsize
  *
@@ -884,69 +887,40 @@ os9err parsepath(ushort pid, char **inp, char *out, Boolean exedir)
 /* -------------------- */
 
 /* unimplemented function */
-os9err pUnimp( ushort pid, syspath_typ* spP )
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    return os9error(E_UNKSVC);
+os9err pUnimp( ushort /* pid */, syspath_typ* )
+{   return os9error(E_UNKSVC);
 } /* pUnimp */
 
 
 /* unimplemented function, but that's OS9-conformant and therefore not to be alerted */
-os9err pUnimpOk( ushort pid, syspath_typ* spP )
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    return E_UNKSVC+E_OKFLAG;
+os9err pUnimpOk( ushort /* pid */, syspath_typ* )
+{   return E_UNKSVC+E_OKFLAG;
 } /* pUnimpOk */
 
 
 /* bad mode */
-os9err pBadMode( ushort pid, syspath_typ* spP )
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    return os9error(E_BMODE);
+os9err pBadMode( ushort /* pid */, syspath_typ* )
+{   return os9error(E_BMODE);
 } /* pBadMode */
 
 
 /* no operation (allowed, but useless) */
-os9err pNop( ushort pid, syspath_typ* spP )
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    return 0;
+os9err pNop( ushort /* pid */, syspath_typ* )
+{   return 0;
 } /* pNop */
 
 
 
 /* unavailable 'open' function, as in OS-9 */
-os9err pNoModule( ushort pid, syspath_typ* spP )
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    return os9error(E_MNF);
+os9err pNoModule( ushort /* pid */, syspath_typ* )
+{   return os9error(E_MNF);
 } /* pNoModule */
 
 
 
 /* get SCF device name from file */
-os9err pSCFnam( ushort pid, syspath_typ* spP, char* volname )
+os9err pSCFnam( ushort /* pid */, syspath_typ* spP, char* volname )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     char *p;
     
     switch (spP->type) {
@@ -1636,13 +1610,9 @@ os9err usrpath_seek(ushort pid,ushort up, ulong pos)
 
 
 
-static os9err etc_path( ushort pid, syspath_typ* spP, ulong *d2, byte* a0 )
+static os9err etc_path( ushort /* pid */, syspath_typ*, ulong* /* d2 */, byte* a0 )
 /* %%% this is a very straight forward implementation for OS9TCP/inetd */
 {
-    #ifndef linux
-    #pragma unused(pid,spP,d2)
-    #endif
-
     ulong* u;
     char*  p;
 
@@ -1661,13 +1631,9 @@ static os9err etc_path( ushort pid, syspath_typ* spP, ulong *d2, byte* a0 )
 
 
 os9err syspath_getstat( ushort pid, ushort sp, ushort func,
-                        ulong  *a0, ulong *d0, ulong *d1, ulong *d2, ulong *d3 )
+                        ulong* a0, ulong* /* d0 */, ulong* d1, ulong* d2, ulong* d3 )
 /* GetStat from syspath */
 {
-    #ifndef linux
-    #pragma unused(d0)
-    #endif
-
     os9err        err;
     fmgr_typ*     f;
     gs_typ*       g;
@@ -1732,7 +1698,7 @@ os9err syspath_gs_ready( ushort pid, ushort sp, ulong *cnt )
 
    
 os9err usrpath_getstat( ushort pid, ushort up, ushort func,
-                        ulong *a0, ulong *d0,ulong *d1,ulong *d2,ulong *d3)
+                        ulong* a0,  ulong* d0, ulong* d1, ulong* d2,ulong* d3)
 /* GetStat from usrpath */
 {
     if (up>=MAXUSRPATHS) return os9error(E_BPNUM);
@@ -1743,18 +1709,14 @@ os9err usrpath_getstat( ushort pid, ushort up, ushort func,
 
 /* SetStat from syspath */
 os9err syspath_setstat( ushort pid, ushort path, ushort func,
-                        ulong *a0,ulong *a1, 
-                        ulong *d0,ulong *d1,ulong *d2,ulong *d3 )
+                        ulong* a0, ulong* /* a1 */, 
+                        ulong* d0, ulong* d1,ulong* d2,ulong* /* d3 */ )
 {
-    #ifndef linux
-    #pragma unused(a1,d3)
-    #endif
-
-    os9err        err;
-    fmgr_typ*     f;
-    ss_typ*       s;
-    byte**        a;
-    ulong         n;
+    os9err    err;
+    fmgr_typ* f;
+    ss_typ*   s;
+    byte**    a;
+    ulong     n;
 	
     syspath_typ*  spP= get_syspathd( pid,path ); 
     if           (spP==NULL) return os9error(E_BPNUM);

@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2004/01/04 02:11:00  bfo
+ *    Assign rbf->lastPos & rbf->att also in case of root dir
+ *    ("rename" directory cut bug)
+ *
  *    Revision 1.36  2003/08/01 11:16:28  bfo
  *    do not create file w/o existing subdir
  *
@@ -405,12 +409,8 @@ static os9err CutOS9Path( char** p, char* cmp_entry )
 
 
 
-static void GetBuffers( rbfdev_typ* dev, syspath_typ* spP )
+static void GetBuffers( rbfdev_typ*, syspath_typ* spP )
 {
-    #ifndef linux
-    #pragma unused(dev)
-    #endif
-
     Boolean pp= spP->fd_sct==NULL || spP->rw_sct==NULL;
     
 //  if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
@@ -1093,12 +1093,8 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
 
 
-static void mount_usage(char* name, ushort pid )
+static void mount_usage(char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     upe_printf( "Syntax:   %s <image_file> [<device>]\n", name );
     upe_printf( "Function: mount an RBF image file\n" );
     upe_printf( "Options:  \n" );
@@ -1187,13 +1183,9 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
 
 
 
-os9err int_mount( ushort pid, int argc, char **argv )
+os9err int_mount( ushort pid, int argc, char** argv )
 /* mount an RBF image partition file */
 {
-    #ifndef linux
-    #pragma unused( pid,argc,argv )
-    #endif
-
     os9err    err     = 0;
     int       nargc   = 0;
     short     adapt   = defSCSIAdaptNo;
@@ -1215,7 +1207,7 @@ os9err int_mount( ushort pid, int argc, char **argv )
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
-                case '?' :  mount_usage(argv[0],pid); return 0;
+                case '?' :  mount_usage( argv[0], pid ); return 0;
 
                 case 'w' :  wProtect= true; break;
 
@@ -1295,12 +1287,8 @@ os9err int_mount( ushort pid, int argc, char **argv )
 
 
 
-static void unmount_usage( char* name, ushort pid )
+static void unmount_usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     upe_printf( "Syntax:   %s <device>\n", name );
     upe_printf( "Function: unmount an RBF image file\n" );
     upe_printf( "Options:  None\n" );
@@ -1330,13 +1318,9 @@ static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
 } /* ReleaseIt */
 
 
-os9err int_unmount( ushort pid, int argc, char **argv )
+os9err int_unmount( ushort pid, int argc, char** argv )
 /* unmount an RBF image partition file */
 {
-    #ifndef linux
-    #pragma unused( pid,argc,argv )
-    #endif
-
     os9err err= 0;
     int nargc=0, h;
     char *p, *name;
@@ -1353,9 +1337,9 @@ os9err int_unmount( ushort pid, int argc, char **argv )
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
-                case '?' :  unmount_usage(argv[0],pid); return 0;
+                case '?' :  unmount_usage( argv[0], pid ); return 0;
                 default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            unmount_usage(argv[0],pid); return 1;
+                            unmount_usage( argv[0], pid ); return 1;
             }   
         }
         else {
@@ -2558,56 +2542,31 @@ os9err pRclose( ushort pid, syspath_typ* spP )
 
 
 
-os9err pRread( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
-{   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
-    return DoAccess( spP, lenP,buffer, false,false );
+os9err pRread( ushort /* pid */, syspath_typ* spP, ulong *lenP, char* buffer )
+{   return DoAccess( spP, lenP,buffer, false,false );
 } /* pRread */
 
 
-os9err pRreadln ( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
-{   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
-    return DoAccess( spP, lenP,buffer, true,false );
+os9err pRreadln ( ushort /* pid */, syspath_typ* spP, ulong *lenP, char* buffer )
+{   return DoAccess( spP, lenP,buffer, true, false );
 } /* pRreadln */
 
 
-os9err pRwrite  ( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
-{   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
-    return DoAccess( spP, lenP,buffer, false,true );
+os9err pRwrite  ( ushort /* pid */, syspath_typ* spP, ulong *lenP, char* buffer )
+{   return DoAccess( spP, lenP,buffer, false,true );
 } /* pRwrite */
 
 
-os9err pRwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
-{   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
-    return DoAccess( spP, lenP,buffer, true,true );
+os9err pRwriteln( ushort /* pid */, syspath_typ* spP, ulong *lenP, char* buffer )
+{   return DoAccess( spP, lenP,buffer, true, true );
 } /* pRwriteln */
 
 
 
-os9err pRseek( ushort pid, syspath_typ* spP, ulong *posP )
+os9err pRseek( ushort /* pid */, syspath_typ* spP, ulong *posP )
 /* seek to new file position <posP> */
 {   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    
     debugprintf(dbgFiles,dbgNorm,("# RBF seek: dev='%s' file='%s' pos: %x\n", 
                                      dev->name, spP->name, *posP));
     spP->u.rbf.currPos= *posP;
@@ -2687,12 +2646,8 @@ os9err pRdelete( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
 
 
 
-os9err pRmakdir( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
+os9err pRmakdir( ushort pid, syspath_typ* spP, ushort* /* modeP */, char* pathname )
 {
-    #ifndef linux
-    #pragma unused(modeP)
-    #endif
-
     os9err err;
     ulong  size= 2*DIRENTRYSZ;
     os9direntry_typ dirblk[ 2 ];
@@ -2717,13 +2672,9 @@ os9err pRmakdir( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
 
 
 
-os9err pRpos( ushort pid, syspath_typ* spP, ulong *posP )
+os9err pRpos( ushort /* pid */, syspath_typ* spP, ulong *posP )
 /* get current file position <posP> */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     rbf_typ*    rbf= &spP->u.rbf;
     rbfdev_typ* dev= &rbfdev[rbf->devnr];
     
@@ -2771,26 +2722,17 @@ os9err pRopt(ushort pid, syspath_typ* spP, byte *buffer)
 
 
 
-os9err pRready( ushort pid, syspath_typ* spP, ulong *n )
+os9err pRready( ushort /* pid */, syspath_typ*, ulong *n )
 /* check ready */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    *n= 1; return 0;
+{   *n= 1; return 0;
 } /* pRready */
 
 
 
 
-os9err pRgetFD(ushort pid, syspath_typ* spP, ulong *maxbytP, byte *buffer)
+os9err pRgetFD( ushort /* pid */, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 /* get the current FD sector of the opened path */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     debugprintf(dbgFiles,dbgNorm,("# RBF getFD (fd/bytes): $%x %d\n", 
                                      spP->u.rbf.fd_nr, *maxbytP ));
 
@@ -2800,14 +2742,10 @@ os9err pRgetFD(ushort pid, syspath_typ* spP, ulong *maxbytP, byte *buffer)
 
 
 
-os9err pRgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP, 
-                                                ulong *fdinf, byte *buffer)
+os9err pRgetFDInf( ushort /* pid */, syspath_typ* spP, ulong *maxbytP, 
+                                                       ulong *fdinf, byte *buffer )
 /* get any FD sector ( using variable <fdinf> ) */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     os9err      err;
     rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
 
@@ -2821,13 +2759,9 @@ os9err pRgetFDInf(ushort pid, syspath_typ* spP, ulong *maxbytP,
 
 
 
-os9err pRsetFD(ushort pid, syspath_typ* spP, byte *buffer)
+os9err pRsetFD( ushort /* pid */, syspath_typ* spP, byte *buffer )
 /* set the current FD sector */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     ulong maxbyt= 16;
     debugprintf(dbgFiles,dbgNorm,("# RBF setFD (fd/bytes): $%x %d\n", 
                                      spP->u.rbf.fd_nr, maxbyt ));
@@ -2883,13 +2817,9 @@ os9err pRdsize(ushort pid, syspath_typ* spP, ulong* size, ulong* dtype )
 
 
 
-os9err pRsetsz( ushort pid, syspath_typ* spP, ulong *size )
+os9err pRsetsz( ushort /* pid */, syspath_typ* spP, ulong *size )
 /* set the size of a file */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     rbf_typ* rbf= &spP->u.rbf;
     
         rbf->lastPos= *size; /* set position      to new max */
@@ -2902,13 +2832,9 @@ os9err pRsetsz( ushort pid, syspath_typ* spP, ulong *size )
 
 
 
-os9err pRsetatt( ushort pid, syspath_typ* spP, ulong *attr )
+os9err pRsetatt( ushort /* pid */, syspath_typ* spP, ulong *attr )
 /* set the attributes of a file */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     Set_FDAtt     ( spP, (byte)*attr ); /* byte ordering is already correct */
     return WriteFD( spP );
 } /* pRsetatt */

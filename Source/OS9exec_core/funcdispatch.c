@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2003/08/01 11:13:42  bfo
+ *    /L2 'Blue' support
+ *
  *    Revision 1.11  2003/07/08 15:41:05  bfo
  *    Print hw name additionally
  *
@@ -93,14 +96,10 @@ ulong   icall_num [NUMICALLS+1];  /* number of I$xxx calls */
 
 
 
-static os9err OS9_TCP_Select( regs_type *rp, ushort pid )
+static os9err OS9_TCP_Select( regs_type *rp, ushort /* pid */ )
 /* OS9TCP specific select */
 /* currently not in use, because the only the ISP system is supported */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
- 
     upe_printf( "select\n" );
  
     rp->d[0]= 0;
@@ -768,12 +767,8 @@ ulong show_timing( ushort mode, int ticksLim )
 
 /* internal command for timing management */
 
-static void usage( char *name,ushort pid )
+static void usage( char *name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     upe_printf("Usage:    %s [options]\n",name);
     upe_printf("Function: OS9exec emulator timing utility\n");
     upe_printf("Options:  -r          switch on timing measurement & reset counters\n");

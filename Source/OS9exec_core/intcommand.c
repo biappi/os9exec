@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2003/05/21 20:33:12  bfo
+ *    Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
+ *
  *    Revision 1.11  2003/05/17 10:45:03  bfo
  *    'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
  *
@@ -71,11 +74,9 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 #ifdef macintosh
-  static os9err int_debugger(ushort pid, int argc, char **argv)
+  static os9err int_debugger( ushort /* pid */, int /* argc */, char** /* argv */ )
   /* internal debugger command */
   {
-      #pragma unused(pid, argc, argv)
-    
       uphe_printf("debugger internal command calls Mac OS debugger\n");
       DebugStr("\pDebugger entered from OS9exec/NT's debugger command");
       return 0;
@@ -84,13 +85,9 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 
-static os9err int_debughalt(ushort pid, int argc, char **argv)
+static os9err int_debughalt( ushort pid, int argc, char** argv )
 /* OS9exec debug halt */
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     ushort k;
     Boolean opt;
     Boolean fullScreen= false;
@@ -226,24 +223,15 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
 
 
 /* show procs */
-static os9err int_procs( ushort pid, int argc, char **argv )
-{
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-    
-    show_processes(); return 0;
+static os9err int_procs( ushort /* pid */, int /* argc */, char** /* argv */ )
+{   show_processes(); return 0;
 } /* int_procs */
 
 
 
 /* show modules */
-static os9err int_mdir( ushort pid, int argc, char **argv )
+static os9err int_mdir( ushort /* pid */, int argc, char **argv )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     char*         cmp= NULL;
     if (argc>1)   cmp= argv[1];
     show_modules( cmp ); return 0;
@@ -251,12 +239,8 @@ static os9err int_mdir( ushort pid, int argc, char **argv )
 
 
 
-static void ipaths_usage( char* name, ushort pid )
+static void ipaths_usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     upe_printf( "Syntax:   %s [<pid>]\n", name );
     upe_printf( "Function: Print OS9exec system paths\n" );
     upe_printf( "Options:  None.\n" );
@@ -267,10 +251,6 @@ static void ipaths_usage( char* name, ushort pid )
 /* OS9exec internal path list */
 static os9err int_paths( ushort pid, int argc, char **argv )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
 	#define IPATHS_MAXARGS 1
     int     nargc=0, h;
     char*   p;
@@ -281,9 +261,9 @@ static os9err int_paths( ushort pid, int argc, char **argv )
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
-                case '?' :  ipaths_usage( argv[0],pid ); return 0;
+                case '?' :  ipaths_usage( argv[0], pid ); return 0;
                 default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            ipaths_usage( argv[0],pid ); return 1;
+                            ipaths_usage( argv[0], pid ); return 1;
             }   
         }
         else {
@@ -301,12 +281,8 @@ static os9err int_paths( ushort pid, int argc, char **argv )
 
 
 
-static void imem_usage( char* name, ushort pid )
+static void imem_usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Print OS9exec memory segments\n" );
     upe_printf( "Options:\n" );
@@ -316,13 +292,9 @@ static void imem_usage( char* name, ushort pid )
 
 
 
-static os9err int_mem( ushort pid, int argc, char **argv)
+static os9err int_mem( ushort pid, int argc, char** argv )
 /* "imem": OS9exec internal allocated memory */
 {
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-
     #define IMEM_MAXARGS 0
     int     nargc=0, h;
     char*   p;
@@ -331,7 +303,8 @@ static os9err int_mem( ushort pid, int argc, char **argv)
 	int     my_pid= MAXPROCESSES;
 
     for (h=1; h<argc; h++) {
-        p= argv[h];    
+        p=      argv[ h ];
+            
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
@@ -365,24 +338,15 @@ static os9err int_mem( ushort pid, int argc, char **argv)
 
 
 
-static os9err int_unused( ushort pid, int argc, char **argv)
+static os9err int_unused( ushort /* pid */, int /* argc */, char** /* argv */ )
 /* "imem": OS9exec internal allocated memory */
-{
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-
-    show_unused(); return 0;
+{   show_unused(); return 0;
 } /* int_unused */
 
 
 
-static void idevs_usage( char* name, ushort pid )
+static void idevs_usage( char* name, ushort /* pid */ )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Print OS9exec device table\n" );
     upe_printf( "Options:\n" );
@@ -404,13 +368,9 @@ static void devs_printf( syspath_typ* spP, char* driv, char* fmgr )
 
 
 
-static os9err int_devs( ushort pid, int argc, char **argv )
+static os9err int_devs( ushort pid, int argc, char** argv )
 /* idevs": OS9exec internal devices */
 {
-    #ifndef linux
-    #pragma unused( pid,argc,argv )
-    #endif
-
     #define IDEVS_MAXARGS 0
     int     nargc=0, h;
     char*   p;
@@ -423,7 +383,8 @@ static os9err int_devs( ushort pid, int argc, char **argv )
     syspath_typ*  spP;
 
     for (h=1; h<argc; h++) {
-        p= argv[h];    
+        p=      argv[ h ];
+        
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
@@ -441,11 +402,9 @@ static os9err int_devs( ushort pid, int argc, char **argv )
             nargc++;
         }
     } /* for */
-           
             
     upo_printf( "%s  %s\n", hw_name,sw_name );
     upo_printf( "\n" );
-    
     
     if (statistic) {
         upo_printf( "Device     read: miss /     total  write: miss /     total\n" );
@@ -491,25 +450,14 @@ static os9err int_devs( ushort pid, int argc, char **argv )
 
 
 
-static os9err int_quit( ushort pid, int argc, char **argv )
-{
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-
-    quitFlag= true; return 0;
+static os9err int_quit( ushort /* pid */, int /* argc */, char** /* argv */ )
+{   quitFlag= true; return 0;
 } /* int_quit */
 
 
 
-static os9err int_ignored( ushort pid, int argc, char **argv )
-{
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-
-    /* do nothing */
-    return 0;
+static os9err int_ignored( ushort /* pid */, int /* argc */, char** /* argv */ )
+{   return 0;    /* do nothing */
 } /* int_ignored */
 
 
@@ -571,12 +519,8 @@ cmdtable_typ commandtable[] =
 
 
 /* show available internal commands */
-os9err int_help(ushort pid, int argc, char **argv)
+os9err int_help( ushort pid, int /* argc */, char** /* argv */ )
 {
-    #ifndef linux
-    #pragma unused(pid,argc,argv)
-    #endif
-
     int k;
         
     upho_printf("%s internal commands:\n", OS9exec_Name() );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/10/27 23:46:47  bfo
+ *    Release of pipes implemented more consistently
+ *
  *    Revision 1.4  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -153,12 +156,8 @@ void init_PTY( fmgr_typ* f )
 
 
 
-os9err getPipe( ushort pid, syspath_typ* spP, ulong buffsize )
+os9err getPipe( ushort /* pid */, syspath_typ* spP, ulong buffsize )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     pipechan_typ* p  = get_mem( sizeof(pipechan_typ) );
     byte*         buf= get_mem( buffsize             );
     if (buf==NULL) return os9error(E_NORAM);
@@ -657,26 +656,16 @@ const byte pipestdopts[OPTSECTSIZE]=
            0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0 };
 
 
-os9err pPopt( ushort pid, syspath_typ* spP, byte* buffer )
+os9err pPopt( ushort /* pid */, syspath_typ*, byte* buffer )
 /* get options from console */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    memcpy(buffer,pipestdopts,OPTSECTSIZE);
-    return 0;
+{   memcpy( buffer, pipestdopts, OPTSECTSIZE ); return 0;
 } /* pPopt */
 
 
 
 /* check for EOF in pipe */
-os9err pPeof( ushort pid, syspath_typ *spP )
+os9err pPeof( ushort /* pid */, syspath_typ *spP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     ulong numready;
     pipechan_typ* p= spP->u.pipe.pchP;
     
@@ -716,12 +705,8 @@ os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
 
 
 /* get pipe size */
-os9err pPsize(ushort pid, syspath_typ* spP, ulong *sizeP )
+os9err pPsize( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-     
     *sizeP= spP->u.pipe.pchP->size-1; /* return max available size of pipe buffer */
     return 0;
 } /* pPsize */
@@ -729,19 +714,15 @@ os9err pPsize(ushort pid, syspath_typ* spP, ulong *sizeP )
 
 
 /* set pipe size */
-os9err pPsetsz(ushort pid, syspath_typ* spP, ulong *sizeP )
+os9err pPsetsz( ushort /* pid */, syspath_typ* spP, ulong *sizeP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     pipechan_typ* p= spP->u.pipe.pchP;
 
     if (*sizeP==0) {
         /* clear pipe buffer */
         p->pwp= p->buf;
         p->prp= p->buf;
-    }
+    } /* if */
 
     return 0;
 } /* pPsetsz */
@@ -751,12 +732,8 @@ os9err pPsetsz(ushort pid, syspath_typ* spP, ulong *sizeP )
 
 /* ------------------------- packet manager routines --------- */
 
-os9err pKopen( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
+os9err pKopen( ushort pid, syspath_typ* spP, ushort* /* modeP */, char* pathname )
 {
-    #ifndef linux
-    #pragma unused(modeP)
-    #endif
-
     os9err        err;  
     syspath_typ*  spK;
     pipechan_typ* k;
@@ -793,10 +770,6 @@ os9err pKopen( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
 
 os9err pKclose( ushort pid, syspath_typ* spP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     syspath_typ*  spK;
     pipechan_typ* p= spP->u.pipe.pchP;
     pipechan_typ* k;
@@ -906,26 +879,15 @@ const byte pkstdopts[OPTSECTSIZE]=
 
 
 
-os9err pKopt( ushort pid, syspath_typ *spP, byte *buffer )
+os9err pKopt( ushort /* pid */, syspath_typ*, byte *buffer )
 /* get options from console */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-    
-    memcpy( buffer,pkstdopts,OPTSECTSIZE );
-    return 0;
+{   memcpy( buffer, pkstdopts, OPTSECTSIZE ); return 0;
 } /* pKopt */
 
 
-os9err pKpos( ushort pid, syspath_typ* spP, ulong *posP )
+os9err pKpos( ushort /* pid */, syspath_typ*, ulong *posP )
 /* get current file position */
-{   
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    *posP= 0; return 0;
+{   *posP= 0; return 0;
 } /* pKpos */
 
 
@@ -937,15 +899,11 @@ os9err pKready( ushort pid, syspath_typ *spP, ulong *n )
 
 
 
-os9err pKlock( ushort pid, syspath_typ* spP, ulong *d0, ulong *d1)
+os9err pKlock( ushort pid, syspath_typ*, ulong *d0, ulong *d1)
 /* creates tty/pty system paths and locks them together */
 /* they are named tty0,tty1,... and pty0,pty1,... */
 /* the lowest free name will be taken */ 
 {
-    #ifndef linux
-    #pragma unused(spP)
-    #endif
-
     os9err       err;
     ushort       spX,  spY,  up;
     syspath_typ* spPX;

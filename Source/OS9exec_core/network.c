@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2004/09/15 19:51:58  bfo
+ *    Newer socket library types introduced
+ *
  *    Revision 1.21  2004/02/19 19:50:02  bfo
  *    Network IP address bugfix for Windows XP (seems to be the only problem with XP :-))
  *
@@ -370,18 +373,15 @@ static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuse
 
 
 #ifdef USE_CARBON
-static void OTAssert( char* txt, Boolean cond ) 
-{
-    #pragma unused(txt)
-
-    if (!cond) DebugStr( "\pOT: Assertion failure." );
+static void OTAssert( char* /* txt */, Boolean cond ) 
+{   if (!cond) DebugStr( "\pOT: Assertion failure." );
 } 
 #endif
 
 
 #ifdef macintosh
-static pascal void YieldingNotifier(void* contextPtr, OTEventCode code, 
-                                       OTResult result, void* cookie)
+static pascal void YieldingNotifier( void* /* contextPtr */, OTEventCode code, 
+                                     OTResult /* result */, void* /* cookie */ )
 // This simple notifier checks for kOTSyncIdleEvent and
 // when it gets one calls the Thread Manager routine
 // YieldToAnyThread.  Open Transport sends kOTSyncIdleEvent
@@ -390,7 +390,6 @@ static pascal void YieldingNotifier(void* contextPtr, OTEventCode code,
 // yield the processor to some other thread that might
 // be doing useful work.
 {
-    #pragma unused(contextPtr,result,cookie)
     OSStatus junk;
     
     switch (code) {
@@ -517,12 +516,8 @@ static os9err NetInstall(void)
 
 
 
-os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
+os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pathname)
 {
-    #ifndef linux
-    #pragma unused(pid,modeP)
-    #endif
-    
     OSStatus err;
     net_typ* net= &spP->u.net;
     
@@ -567,12 +562,8 @@ os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
 
 
 
-os9err pNclose( ushort pid, syspath_typ* spP )
+os9err pNclose( ushort /* pid */, syspath_typ* spP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
     
@@ -716,20 +707,20 @@ os9err pNreadln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 
 
 static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP, 
-                                    char* buffer, Boolean lnmode )
+                        char* buffer, Boolean lnmode )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     OSStatus     err= 0;
     net_typ*     net= &spP->u.net;
     ulong        remain, blk;
     int          ii;
     int          flags= 0;
 
-    #ifdef powerc
-      OTResult   lookResult;
+    #ifdef macintosh
+      #pragma unused(pid)
+      
+      #ifdef powerc
+        OTResult   lookResult;
+      #endif
     #endif
     
     #ifdef windows32
@@ -835,10 +826,8 @@ os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 
 
 #ifdef macintosh
-static os9err reUse( ushort pid, syspath_typ *spP )
+static os9err reUse( ushort /* pid */, syspath_typ *spP )
 {
-    #pragma unused(pid)
-
     net_typ* net= &spP->u.net;
 
     UInt8       buf[kOTFourByteOptionSize]; // define buffer for fourByte Option size
@@ -1017,12 +1006,8 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
 
 
 
-os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
+os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
 {
-    #ifndef linux
-    #pragma unused(pid,nn)
-    #endif
-
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
     ushort   fPort;
@@ -1162,10 +1147,6 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
 
 os9err pNlisten( ushort pid, syspath_typ* spP )
 {
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-
     OSStatus err;
     net_typ* net= &spP->u.net;
     process_typ*  cp= &procs[pid];
@@ -1197,19 +1178,15 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
         cp->saved_state= cp->state;
         set_os9_state( pid, pWaitRead );
         return E_NOTRDY;
-    }
+    } /* if */
     
     return 0;
 } /* pNlisten */
 
 
 
-os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
+os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
 {
-    #ifndef linux
-    #pragma unused(pid,n)
-    #endif
-
     #define CONNECT_TIMEOUT 100000
     
     OSStatus err= 0;
@@ -1476,13 +1453,9 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
 
 
-os9err pNrecv( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
+os9err pNrecv( ushort pid, syspath_typ* spP, ulong* d1, ulong* d2, char** a0 )
 /* for TCP protocol, 2 additional bytes with length info will be received */
 {
-    #ifndef linux
-    #pragma unused(d2)
-    #endif
-    
     os9err err;
     ulong  lenB=   2;
     ulong  len = *d2;
@@ -1513,19 +1486,14 @@ os9err pNsend( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
 
 
 
-os9err pNGNam( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, byte *ispP )
+os9err pNGNam( ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2, byte* ispP )
 /* Still some hardcoded things here */
 /* mode will be:    accepted / connected */
 /* ftpd/telnetd:      yes         no     */
 /* ftp                no          yes    */
 /* ftp data           no          no     */
 {   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
-	char* c;
-    
+	char* c;   
     net_typ* net= &spP->u.net;
 //  upe_printf( "accepted connected %d %d %8X %8X\n", net->accepted, net->connected, ispP, *d2 );
     
@@ -1555,13 +1523,9 @@ os9err pNGNam( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, byte *ispP )
 
 
 
-os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2)
+os9err pNSOpt(ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2)
 /* don't know what this is really good for (bfo) */
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
     net_typ* net= &spP->u.net;
 
     if (*d2==4) {
@@ -1648,12 +1612,8 @@ static ushort checksum( ushort *buffer, int size)
 
 
 
-os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
+os9err pNsPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
 {   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     OSStatus   err= 0;
     net_typ*   net= &spP->u.net;
     ulong*     u;
@@ -1726,12 +1686,8 @@ os9err pNsPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
 
 
 
-os9err pNgPCmd( ushort pid, syspath_typ *spP, ulong *a0 )
+os9err pNgPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
 {   
-    #ifndef linux
-    #pragma unused(pid)
-    #endif
-    
     OSStatus    err= 0;
     long        start_time;
     net_typ*    net= &spP->u.net;
@@ -1867,35 +1823,23 @@ const byte netstdopts[OPTSECTSIZE]=
 
 
 /* get options from console */
-os9err pNopt(ushort pid, syspath_typ *spP, byte *buffer)
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    memcpy(buffer,netstdopts,OPTSECTSIZE);
-    return 0;
+os9err pNopt(ushort /* pid */, syspath_typ*, byte *buffer)
+{   memcpy( buffer, netstdopts, OPTSECTSIZE ); return 0;
 } /* pNopt */
 
 
-os9err pNpos(ushort pid, syspath_typ* spP, ulong *posP )
+os9err pNpos(ushort /* pid */, syspath_typ*, ulong *posP )
 /* get current file position */
-{
-    #ifndef linux
-    #pragma unused(pid,spP)
-    #endif
-
-    *posP= 0;
-    return 0;
+{   *posP= 0; return 0;
 } /* pRpos */
 
 
-os9err pNready(ushort pid, syspath_typ *spP, ulong *n )
+os9err pNready(ushort /* pid */, syspath_typ* spP, ulong *n )
 {
-    #ifndef linux
-    #pragma unused(pid,spP)
+    #ifdef powerc
+      OTResult lookResult;
     #endif
-
+    
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
 
@@ -1903,18 +1847,15 @@ os9err pNready(ushort pid, syspath_typ *spP, ulong *n )
 //    WSANETWORKEVENTS ev;
 //  #endif
 
-
     #ifdef powerc
-      OTResult lookResult;
-      
           err= OTCountDataBytes( net->ep, n );
       if (err==kOTLookErr) {
               lookResult= OTLook(net->ep);
           if (lookResult==T_DISCONNECT) {
                err= OTRcvDisconnect( net->ep, nil );
                *n= 1;
-          }
-      }
+          } /* if */
+      } /* if */
 
     #elif defined win_linux
       err= ioctl( net->ep, FIONREAD, n );
@@ -1941,8 +1882,11 @@ os9err pNready(ushort pid, syspath_typ *spP, ulong *n )
 
 os9err pNask( ushort pid, syspath_typ* spP )
 {
+    #ifdef powerc
+      OSStatus state;
+    #endif
+
     net_typ* net= &spP->u.net;
-    OSStatus state;
     os9err   sig, err;
     ulong    n;
     Boolean  ok;
@@ -1957,10 +1901,6 @@ os9err pNask( ushort pid, syspath_typ* spP )
           ok= (state==T_INCON);
 
         #else
-          #ifndef linux
-          #pragma unused(state)
-          #endif
-          
           ok= true;
         #endif
     }

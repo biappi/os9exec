@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2003/05/17 11:03:20  bfo
+ *    (CVS header included)
+ *
  *
  */
 
@@ -167,13 +170,9 @@ void A_Kill( ushort pid )
 
 /* ------------------------------------------------------------------ */
 
-static os9err Alarm_Delete( ushort pid, ulong aId )
+static os9err Alarm_Delete( ushort /* pid */, ulong aId )
 /* A$Delete call: 0 */
 {
-	#ifndef linux
-	#pragma unused(pid)
-	#endif
-
 	alarm_typ* aa;
 	int        k;
 	
