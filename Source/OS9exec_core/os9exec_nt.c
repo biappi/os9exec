@@ -510,7 +510,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x10;
+	exec_revision= 0x11;
 	#endif
 } /* getversions */
 
@@ -1118,6 +1118,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
  	  #endif
 	#endif
 
+
 	/* include 'startup' as default parameter */
 	/* will be eliminated again later, if no 'startup' file is available */
     if (argc==0 && ustrcmp( my_toolname,"" )==0) {
@@ -1131,10 +1132,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
     /* Sign-on message */
      upo_printf( "\n" );
-    upho_printf( "%s:       OS-9  User Runtime Emulator\n", OS9exec_Name() );
-    upho_printf( "Copyright (C) 2002 [ Lukas Zeller / Beat Forster ]\n" );
-    upho_printf( "This program is distributed under the terms of the\n" ); 
-    upho_printf( "          GNU General Public License.\n" );
+    upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
+    upho_printf( "Copyright (C) 2002 Lukas Zeller / Beat Forster\n" );
+    upho_printf( "This program is distributed under the terms of\n" ); 
+    upho_printf( "        the GNU General Public License\n" );
     upho_printf( "\n" );
 
    	/* prepare low-level magic, to allow using llm_xxx() routines */
