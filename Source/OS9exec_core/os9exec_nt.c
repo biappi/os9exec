@@ -510,7 +510,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x11;
+	exec_revision= 0x12;
 	#endif
 } /* getversions */
 
