@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/09/11 16:59:19  bfo
+ *    Import "os9exec_incl.h" as the first file
+ *
  *    Revision 1.5  2002/08/09 22:39:20  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -315,11 +318,11 @@ os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
       if (net->transferBuffer==nil)  return E_NORAM;
 
     #elif defined win_linux
-          net->transferBuffer= get_mem( kTransferBufferSize, false );
+          net->transferBuffer= get_mem( kTransferBufferSize );
       if (net->transferBuffer==NULL) return E_NORAM;
     #endif
       
-        net->b_local= get_mem( kTransferBufferSize, false );
+        net->b_local= get_mem( kTransferBufferSize );
     if (net->b_local==NULL) return E_NORAM;
       
     net->bsize= 0;
@@ -357,6 +360,7 @@ os9err pNclose( ushort pid, syspath_typ* spP )
        
         #elif defined(windows32)
           err= closesocket( net->ep );
+          release_mem( net->transferBuffer );
         
         #elif defined linux
           net->closeIt= true;
@@ -365,6 +369,7 @@ os9err pNclose( ushort pid, syspath_typ* spP )
         #endif
     }
     
+    release_mem( net->b_local );
     net->bound= false;
     return 0;
 } /* pNclose */
