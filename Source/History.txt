@@ -1028,6 +1028,9 @@
                             getFD has grown a little messy by now, so I started to make a
                             pure win32 implementation using a single call to FindFirstFile(),
                             which returns all needed information (attrs, dates, size...).
+                            
+          02-07-22  Bfo     printf err messages at SCSI masked.
+          02-07-22  Bfo     Playing around with 'UpTime'
 
     3.14  02-07-??  Bfo     ...
     -------------------
