@@ -1016,6 +1016,11 @@
           02-07-07  Bfo     RBF device full inconsistency fixed now.
           02-07-08  Bfo     The RAM disk size will be taken from descriptor, if available
 
+          02-07-21  Bfo     RAM disk is running now also correctly for Windows (little/big endian bugfix)
+          02-07-21  Bfo     Extended 'Get_Time' function
+          02-07-21  Bfo     Synchronise the currentTick with seconds of time/date
+          02-07-21  Bfo     RAM disk: printf eliminated
+
           02-07-21  luz     found problem with "dir -e /c" crash (and probably many related things):
                             msdir.c is ok, problem was in getFD when calling Win32 FindFirstFile(),
                             which copies data into a WIN32_FILE_INFO structure, but was passed
