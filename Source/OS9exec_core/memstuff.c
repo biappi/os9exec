@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.5  2002/08/09 22:39:20  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -130,9 +133,7 @@ void release_mem( void* membase, Boolean mac_asHandle )
       #pragma unused(mac_asHandle)
       #endif
       
-      debugprintf(dbgMemory,dbgNorm,( "relmemv %08X\n", membase ));
       free( membase );
-      debugprintf(dbgMemory,dbgNorm,( "relmemn %08X\n", membase ));
     #endif
 } /* release_mem */
 
@@ -144,15 +145,13 @@ void release_memblock( ushort pid, ushort memblocknum )
     memblock_typ *m;
     
         m= &procs[pid].os9memblocks[memblocknum];
-   debugprintf(dbgMemory,dbgNorm,( "%d\n", memblocknum ));
-    if (m->base!=NULL) {
-        debugprintf(dbgMemory,dbgNorm, ("# release_memblock: block %3d @ $%lX (size=%lu)\n",
-             memblocknum, m->base, m->size ));
-        UnlockMemRange  ( m->base, m->size );
-        release_mem(      m->base, false );
-                          m->base=NULL; /* free block */
-   }
-   debugprintf(dbgMemory,dbgNorm,( "%d\n", memblocknum ));
+    if (m->base==NULL) return;
+    
+    debugprintf(dbgMemory,dbgNorm, ("# release_memblock: block %3d @ $%lX (size=%lu)\n",
+         memblocknum, m->base, m->size ));
+    UnlockMemRange  ( m->base, m->size );
+    release_mem(      m->base, false );
+                      m->base=NULL; /* free block */
 } /* release_memblock */
 
 
@@ -256,16 +255,16 @@ os9err os9free(ushort pid, void* membase, ulong memsz)
     memblock_typ *m;
     int k;
 
-    debugprintf(dbgMemory,dbgNorm,("# os9free: Free request of PID=%d, at $%08lX (size=%lu)\n",
+    debugprintf(dbgMemory,dbgNorm,("# os9free: Free request of pid=%d, at $%08lX (size=%lu)\n",
                                     pid,(ulong) membase,memsz));
     if (membase==NULL) return os9error(E_BPADDR); /* no memory was allocated here */
 
-    for(k=0;k<MAXMEMBLOCKS;k++) {
+    for (k=0; k<MAXMEMBLOCKS; k++) {
         m= &procs[pid].os9memblocks[k];
     
         if     (m->base==membase) {
             if (m->size==memsz  ) {
-                release_memblock(pid,k);
+                release_memblock( pid,k );
                 debugprintf(dbgMemory,dbgNorm,("# os9free: Found block #%d to free at $%08lX (size=%lu)\n",
                                                 k,membase,m->size));
             }
