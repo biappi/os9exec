@@ -18,6 +18,19 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
+/**********************************************/
+/*             O S 9 E x e c / NT             */
+/*  Cooperative-Multiprocess OS-9 emulation   */
+/*         for Apple Macintosh and PC         */
+/*                                            */
+/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/*                  Beat Forster, CH-Maur     */
+/*                                            */
+/* email: luz@synthesis.ch                    */
+/*        beat.forster@ggaweb.ch              */
+/**********************************************/
+
+
 #include "mactypes.r"
 
 resource 'vers' (2, purgeable) {

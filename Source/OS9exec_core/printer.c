@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2002/06/29 21:51:21  bfo
+ *    GetDefaultPrinter not available for CW5 -> skip whole printer part for CW5
+ *
  *    Revision 1.2  2002/06/26 21:24:39  bfo
  *    Mac version can be compiled with "printer.c"
  *
@@ -378,6 +381,7 @@ os9err pPrReady( ushort pid, syspath_typ *spP, ulong *n )
 #elif defined(windows32) || defined macintosh
   void init_Printer( fmgr_typ* f )
   {
+    #pragma unused(f)
     /* do nothing */
   }
 
