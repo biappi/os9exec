@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2003/06/09 21:55:06  bfo
+ *    Signals can be sent only to process ids < MAXPROCESSES
+ *
  *    Revision 1.24  2003/05/26 08:27:02  bfo
  *    buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
  *
@@ -789,7 +792,7 @@ void do_arbitrate(void)
                 else {
                     debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: checked all, now pid=%d must be startable\n",spid));
                     if  (sprocess->state==pSleeping) {
-                        #if defined macintosh || defined(windows32)
+                        #if defined macintosh || defined windows32
                           ulong ticks   = GetSystemTick();
                           HandleEvent();
                           slp_idleticks+= GetSystemTick()-ticks;
@@ -808,17 +811,18 @@ void do_arbitrate(void)
         } /* if arbitrate */
         
         /* --- test if process can be run */
-        if (sprocess->state==pWaiting ||
-            sprocess->state==pWaitRead) {
+     // if (sprocess->state==pWaiting ||
+     //     sprocess->state==pWaitRead) {
+        if (sprocess->state==pWaiting) {
             /* --- search if there is a dead child of that process */
             for (pid=0; pid<MAXPROCESSES; pid++) {
                 if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
                     deadpid= pid;
                     break;
-                }
-            }
+                } /* if */
+            } /* for */
             if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
-        } 
+        } /* if */
         
         /* --- check if process can be activated */
         if     (sprocess->state==pActive  ||       /* process can run, if one of these states */
