@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/10/27 23:39:02  bfo
+ *    Release memory at pNclose done in every case
+ *    get_mem/release_mem without param <mac_asHandle>
+ *
  *    Revision 1.7  2002/10/27 23:32:34  bfo
  *    Release memory at pRclose done in every case
  *    get_mem/release_mem without param <mac_asHandle>
@@ -372,10 +376,11 @@ os9err pNclose( ushort pid, syspath_typ* spP )
       //  err= shutdown( net->ep, SHUT_RDWR );
           err= close   ( net->ep );
         #endif
-    }
-    
-    release_mem( net->b_local );
-    net->bound= false;
+        
+        release_mem( net->b_local );
+        net->bound= false;
+    } /* if */
+
     return 0;
 } /* pNclose */
 
