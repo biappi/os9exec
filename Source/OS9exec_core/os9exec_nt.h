@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2003/04/20 23:02:55  bfo
+ *    net->connected and wTimeout support
+ *
  *    Revision 1.26  2003/04/12 21:56:03  bfo
  *    SS_Send, SS_Recv adaptions
  *
@@ -159,6 +162,10 @@
 #define MAX_PICTS         8 /* max number of picts to be displayed at /vmod display */
 #define MAXTRIES        100 /* max tries to delete a file */
 
+#ifdef macintosh
+  #define MAX_PATH     1024 /* for others already defined */
+#endif
+
 /* maximum number of modules that can be linked (minus one for the main module itself */
 #define MAXMODULES      512
 
@@ -200,7 +207,7 @@
 #define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
 
 /* number of dirs */
-#ifdef windows32
+#if defined(windows32) || defined macintosh
 #define MAXDIRS       10000
 #endif
 
@@ -902,7 +909,7 @@ extern  alarm_typ   alarms     [MAXALARMS];
 extern  alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#ifdef windows32
+#if defined(windows32) || defined macintosh
 extern  char*       dirtable[MAXDIRS];
 #endif
 

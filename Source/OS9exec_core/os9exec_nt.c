@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2003/04/20 23:06:58  bfo
+ *    <my_inetaddr> big endian/little endiran swap
+ *
  *    Revision 1.32  2003/01/10 21:37:00  bfo
  *    Changed to new version
  *
@@ -192,7 +195,7 @@ alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#ifdef windows32
+#if defined(windows32) || defined macintosh
   char*     dirtable[MAXDIRS];
 #endif
 
@@ -1131,6 +1134,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	char*		 my_toolname= (char*)toolname; /* do not change <toolname> directly */
 	alarm_typ*   aa;
 	ulong		 aNew; /* new alarm number for cyclic alarm */
+    int          ii;
 	
 	#ifdef MACFILES
 	  FSSpec     fs;
@@ -1189,8 +1193,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	interactivepid=  0;        /* send aborts to first process by default */
 	sig_queue.cnt =  0;        /* no signal pending at the beginning */
 	
-	#ifdef windows32
-	  dirtable[0]= NULL;       /* no dir table at the beginning */
+    #if defined(windows32) || defined macintosh
+      for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
 	#endif
 	
 	debug_prep();
