@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/07/01 21:29:23  bfo
+ *    Slightly adapted for Carbon -> It is running now correctly in Carbon window.
+ *    But still running in Mac OS9 environment. Don't know why.
+ *
  *    Revision 1.8  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -259,6 +263,7 @@ ulong   spininterval= DEFAULTSPININTERVAL;
 
 /* mount device name and write protection   */
 char*   mnt_name      = "";
+int     mnt_ramSize   =  0;
 int     mnt_scsi      = NO_SCSI;
 short   mnt_scsiAdapt = -1; // use default adaptor
 short   mnt_scsiBus   = -1; // use default bus

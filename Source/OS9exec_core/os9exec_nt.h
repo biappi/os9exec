@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/06/26 21:24:24  bfo
+ *    Mac version can be compiled with "printer.c"
+ *
  *    Revision 1.5  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -958,6 +961,7 @@ extern ulong spininterval;
 
 /* mount device name and write protection */
 extern  char*   mnt_name;
+extern  int     mnt_ramSize;
 extern  int     mnt_scsi;
 extern  short   mnt_scsiAdapt;
 extern  short   mnt_scsiBus;
