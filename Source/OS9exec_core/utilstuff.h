@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/09/11 17:23:24  bfo
+ *    os9_long_inc with unsigned int* param
+ *
  *    Revision 1.10  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -103,7 +106,6 @@ Boolean     OpenTDir ( const char* pathname, DIR** d );
 dirent_typ* ReadTDir                       ( DIR*  d );
 Boolean PathFound    ( const char* pathname );
 Boolean FileFound    ( const char* pathname );
-void CutUp                 ( char* pathname );
 void    EatBack            ( char* pathname );
 
 

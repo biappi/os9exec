@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2002/09/11 17:22:51  bfo
+ *    os9_long_inc with unsigned int* param
+ *
  *    Revision 1.22  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -1048,39 +1051,45 @@ Boolean FileFound( const char* pathname )
 
 
 
-void CutUp( char* pathname )
+static void CutUp( char* pathname, const char* prev )
 /* cut out /xxxx/../ sequences */
 {
-    #ifdef windows32
-      #define Prev  "\\."
-    #else
-      #define Prev  "/."
-    #endif  
-      
     char *v, *q, *qs;
     Boolean inc;
 
     v= pathname;
     while (true) {
-        q =   strstr( v,Prev ); if (q==NULL) break; /* search the string */
-        qs= q+strlen(   Prev );
+        q =   strstr( v,prev ); if (q==NULL) break; /* search the string */
+        qs= q+strlen(   prev );
         
         inc= false;
         switch (*qs) {
-            case NUL      : *q= NUL;                        break; /* cut "/."  at the end */
-            case PATHDELIM: *q= NUL; strcat( pathname,qs ); break; /* cut "/./" anywhere */
+            case NUL      : *q= NUL; break; /* cut "/."  at the end */
+            
+            /* avoid duplicate definition */
+            #ifndef linux
+            case PATHDELIM:
+            #endif
+            case PSEP     : *q= NUL; strcat( pathname,qs ); break; /* cut "/./" anywhere */
+
             case '.'      : v= qs;
                             while  (*(++v)=='.') {};
                             switch (*v) {
                                 case NUL:
-                                case PATHDELIM: while (q>pathname) {
+
+                                /* avoid duplicate definition */
+                                #ifndef linux
+                                case PATHDELIM:
+                                #endif
+                                case PSEP     : while   (q>pathname) {
                                                          q--;
-                                                    if (*q==PATHDELIM) break;
+                                                    if (*q==PATHDELIM || *q==PSEP) break;
                                                 } /* while */
 
                                                 *q= NUL; /* concatenate at the new position */
                                                 strcat( pathname,++qs );
                                                 break;
+
                                 default:        q++; inc= true;
                             } /* switch */
                             break;
@@ -1101,7 +1110,10 @@ void CutUp( char* pathname )
 
 void EatBack( char* pathname )
 {
+    #define Prev  "/."
+    #define PrevW "\\." /* Windows32 version */
     char*   p;
+    
     int     eat = 0;
     int     eat0= 0;
     Boolean searchP= true;
@@ -1133,7 +1145,11 @@ void EatBack( char* pathname )
       if (*p==':') { *++p= PATHDELIM; *++p= NUL; }
     #endif
           
-    CutUp( pathname );
+    CutUp( pathname, Prev ); /* support also for RBF OS-9 paths */
+    
+    #ifdef windows32
+      CutUp( pathname, PrevW );
+    #endif
 } /* EatBack */
 
 
