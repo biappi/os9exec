@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 
@@ -108,7 +108,10 @@ Boolean IsDesc       ( const char* dvn,      mod_dev** mod, char** p );
 Boolean SCSI_Device  ( const char* os9path,
                        short  *scsiAdapt, short  *scsiBus, int  *scsiId,    short   *scsiLUN,
                        ushort *scsiSsize, ushort *scsiSas, byte *scsiPDTyp, ptype_typ *typeP );
-Boolean  RAM_Device  ( const char* os9path );
+
+#ifdef RAM_SUPPORT
+  Boolean RAM_Device ( const char* os9path );
+#endif
 
 #ifdef windows32
   os9err AdjustPath ( const char* pathname, char* adname, Boolean creFile );

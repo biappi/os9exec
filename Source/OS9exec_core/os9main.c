@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /* includes */
@@ -343,7 +343,7 @@ static void os9_usage(char *name)
     upho_printf("\n");
 
     upho_printf("%s\n", OS9exec_Name() );
-    upho_printf("1993-2002 by luz/bfo ( luz@synthesis.ch / forsterb@dial.eunet.ch )\n");
+    upho_printf("1993-2002 by luz/bfo ( luz@synthesis.ch / beat.forster@ggaweb.ch )\n");
      upo_printf("\n");
 } /* os9_usage */
 

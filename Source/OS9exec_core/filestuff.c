@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/07/06 15:56:42  bfo
+ *    ram disks (also other names than /r0) can be mounted/unmounted with "mount"
+ *    the size -r=<size> is prepared, but not yet active
+ *
  *    Revision 1.4  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -1525,7 +1529,7 @@ void main_printf(const char* format, ...)
 /* copyright notice */
 void copyright(void)
 {
-    uphe_printf( "(c) 1993-2002 by luz/bfo (luz@synthesis.ch / forsterb@dial.eunet.ch)\n");
+    uphe_printf( "(c) 1993-2002 by luz/bfo (luz@synthesis.ch / beat.forster@ggaweb.ch)\n");
 } /* copyright */
 
 

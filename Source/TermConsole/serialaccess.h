@@ -21,7 +21,7 @@
 /*      Serial Line Routines
 **
 **      An interface to Mac's serial line.
-**      by Beat Forster (forsterb@dial.eunet.ch)
+**      by Beat Forster (beat.forster@ggaweb.ch)
 **
 **      Last revision: 26-Jun-00
 */

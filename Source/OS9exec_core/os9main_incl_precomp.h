@@ -31,7 +31,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/07/23 19:37:15  bfo
+ *    go back to the 1/60th second system
+ *
  *    Revision 1.5  2002/07/22 22:05:36  bfo
  *    Using "UpTime" as time base, still somewhat strange
  *

@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 #include "os9exec_incl.h"

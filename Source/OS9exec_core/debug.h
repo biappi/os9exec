@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 /* debugging aids */

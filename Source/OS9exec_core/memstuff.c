@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 #include "os9exec_incl.h"
@@ -115,6 +115,8 @@ void release_mem( void* membase, Boolean mac_asHandle )
       
       free(membase);
     #endif
+    
+//  upe_printf( "relmem %08X\n", membase );
 } /* release_mem */
 
 
@@ -189,6 +191,7 @@ void *get_mem( ulong memsz, Boolean mac_asHandle )
       pp= calloc((size_t)memsz, (size_t)1); /* get memory block, cleared to 0 */
     #endif
     
+//  upe_printf( "getmem %08X %d\n", pp,memsz );
     return pp;
 } /* get_mem */
 

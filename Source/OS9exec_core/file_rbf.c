@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 
@@ -67,8 +67,10 @@ typedef struct {
 			Boolean fProtected;			  /* true, if format protected */
 			Boolean multiSct;             /* true, if multi sector support */
 			
-			Boolean isRAM;                /* true, if RAM disk */
-            byte*   ramBase;              /* start address of RAM disk */
+			#ifdef RAM_SUPPORT
+			  Boolean isRAM;              /* true, if RAM disk */
+              byte*   ramBase;            /* start address of RAM disk */
+            #endif
             
 			int	    scsiID;               /* SCSI ID, -1 if NO_SCSI */
 			short   scsiAdapt;            /* SCSI Adaptor, -1 if none */
@@ -228,11 +230,13 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
         if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
     }
    
-    do {    
-        if (dev->isRAM) {
-            memcpy( buffer, dev->ramBase+(sectorNr*dev->sctSize), nSectors*dev->sctSize );
-            break;
-        }
+    do {
+        #ifdef RAM_SUPPORT    
+          if (dev->isRAM) {
+              memcpy( buffer, dev->ramBase+(sectorNr*dev->sctSize), nSectors*dev->sctSize );
+              break;
+          }
+        #endif
         
         if (IsSCSI(dev)) {
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
@@ -287,10 +291,12 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
     }
         
     do {
-        if (dev->isRAM) {
-            memcpy( dev->ramBase+(sectorNr*dev->sctSize), buffer, nSectors*dev->sctSize );
-            break;
-        }
+        #ifdef RAM_SUPPORT
+          if (dev->isRAM) {
+              memcpy( dev->ramBase+(sectorNr*dev->sctSize), buffer, nSectors*dev->sctSize );
+              break;
+          }
+        #endif
         
         if (IsSCSI(dev))
             err= WriteToSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
@@ -389,7 +395,9 @@ static os9err DevSize( rbfdev_typ* dev )
     ulong  size,ssize;
     
     /* should be defined already for the RAM disk */
-    if (dev->isRAM) return 0;
+    #ifdef RAM_SUPPORT
+      if (dev->isRAM) return 0;
+    #endif
 
     if (IsSCSI(dev)) {  /* try to switch to correct sector size first */
         err= Set_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize );
@@ -622,6 +630,7 @@ static Boolean MWrong( int cdv )
 
 
 
+#ifdef RAM_SUPPORT
 static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
 {
     #define DefaultScts 8192
@@ -657,9 +666,8 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     allocN   =       allocSize * dev->sctSize*BpB;
     allocScts= 1 +   allocSize + 2;
     
-    dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
-    if (dev->ramBase==NULL) return E_NORAM;
-    
+            dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
+    if    ( dev->ramBase==NULL ) return E_NORAM;
     memcpy( dev->ramBase,RAM_zero, dev->sctSize );
     
     pt= 0x80;
@@ -694,6 +702,7 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     strcpy( dev->img_name,cmp );
     return 0;
 } /* PrepareRAM */
+#endif
 
 
 
@@ -767,7 +776,12 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
         err= 0;
         if (!fu) {
-                 isRAM= RAM_Device( pathname );
+            #ifdef RAM_SUPPORT
+              isRAM= RAM_Device( pathname );
+            #else
+              isRAM= false;
+            #endif
+                 
             if (!isRAM) {
                 #ifdef MACFILES
                   err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
@@ -923,8 +937,11 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
     dev->last_alloc= 0;            /* initialize allocater pointer */
     dev->sp_img    = 0;            /* the image syspath will be connected here later */
-    dev->isRAM     = isRAM;        /* RAM disk flag */
     
+    #ifdef RAM_SUPPORT
+      dev->isRAM   = isRAM;        /* RAM disk flag */
+    #endif
+   
     strcpy( dev->img_name,"" );    /* no  image name by default */
     strcpy( dev->name2,   "" );    /* no  2nd   name by default */
     strcpy( dev->name3,   "" );    /* no  3rd   name by default */
@@ -966,9 +983,12 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     do {
         err= 0;                 /* set it as default   */
         dev->installed= true;   /* now it is installed */
+
+        #ifdef RAM_SUPPORT
+          if (isRAM) { err= PrepareRAM( dev, &cmp ); break; }  /* no more actions for RAM disk */
+        #endif
         
-        if (isRAM) { err= PrepareRAM( dev, &cmp ); break; }  /* no more actions for RAM disk */
-        if (IsSCSI(dev))                           break;    /* no more actions for SCSI */
+        if (IsSCSI(dev)) break; /* no more actions for SCSI */
             
         type    = IO_Type( pid, pathname, poRead );
         wProtect= mnt_wProtect;
@@ -1219,11 +1239,16 @@ static void unmount_usage( char* name, ushort pid )
 
 static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
 {
-    os9err err= 0;
+    os9err   err     = 0;
+    Boolean isRAMDisk= false;
     
-    if (dev->isRAM) release_mem( dev->ramBase, false );
-    else {
-        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img ); 
+    #ifdef RAM_SUPPORT
+          isRAMDisk= dev->isRAM;
+      if (isRAMDisk) release_mem( dev->ramBase, false );
+    #endif
+    
+    if  (!isRAMDisk) {    
+        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img );
     }
     
     if (!err) {       dev->installed= false;
@@ -1334,6 +1359,11 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
     char* unit;
     long long size= (long long)rb->totScts * rb->sctSize;
     float r;
+    Boolean isRAMDisk= false;
+    
+    #ifdef RAM_SUPPORT
+        isRAMDisk= rb->isRAM;
+    #endif
 
                          unit= "kB";
     if (Mega( size,&r )) unit= "MB";
@@ -1342,17 +1372,18 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
 //  sprintf( sc,     "%3d", rb->scsiID   );
     strcpy ( u,             rb->img_name ); 
     
-    if     (rb->isRAM || *u==NUL) strcpy( u," -" );
-    if     (rb->isRAM)  strcpy ( w, "ram" );
+    if     (isRAMDisk || *u==NUL) strcpy( u," -" );
+    if     (isRAMDisk)  strcpy ( w, "ram" );
     else {
         if (IsSCSI(rb)) sprintf( w, "SCSI: %d", rb->scsiID );
         else            strcpy ( w, "image" );
     }
     
-                 sprintf( v, "(%1.2f%s)", r,unit );
-    if (r>=  10) sprintf( v, "(%2.1f%s)", r,unit );
-    if (r>= 100) sprintf( v," (%3.0f%s)", r,unit );
-    if (r>=1000) sprintf( v, "(%4.0f%s)", r,unit );
+                  sprintf( v," (%1.2f%s)", r,unit );
+    if (r>=   10) sprintf( v, "(%2.2f%s)", r,unit );
+    if (r>=  100) sprintf( v, "(%3.1f%s)", r,unit );
+    if (r>= 1000) sprintf( v," (%4.0f%s)", r,unit );
+    if (r>=10000) sprintf( v, "(%5.0f%s)", r,unit );
     
     
     upo_printf( "%-10s ", StrBlk_Pt( s,10 ) );
@@ -1362,13 +1393,13 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                      rb->rMiss, rb->rTot,
                      rb->wMiss, rb->wTot );
     else 
-        upo_printf( "%-10s %-7s %2d %4d  %-4s %-26s %s\n", 
+        upo_printf( "%-10s %-7s %2d %4d  %-4s %-25s %s\n", 
                      w,
                      "rbf", 
                      rb->nr,
                      rb->sctSize,
                      rb->wProtected ? "yes":"no",
-                     StrBlk_Pt( u,26 ),
+                     StrBlk_Pt( u,25 ),
                      v );
 } /* Disp_RBF_DevsLine */
 

@@ -27,12 +27,12 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 
 /*      Telnet/TTY interface Routines
-**      by Beat Forster (forsterb@dial.eunet.ch)
+**      by Beat Forster (beat.forster@ggaweb.ch)
 */
 
 void               InitTTYs(void );

@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/07/24 22:33:28  bfo
+ *    Timer synchronisation enhanced
+ *
  *    Revision 1.9  2002/07/23 19:39:07  bfo
  *    introduce <syCorr> variable
  *

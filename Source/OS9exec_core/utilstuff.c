@@ -27,7 +27,7 @@
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        forsterb@dial.eunet.ch              */
+/*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
 /*
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2002/07/24 22:33:53  bfo
+ *    Timer synchronisation enhanced
+ *
  *    Revision 1.16  2002/07/23 19:40:33  bfo
  *    go back to the 1/60th seconds system, synchronise with <sycorr>
  *
@@ -1719,25 +1722,25 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
-Boolean RAM_Device( const char* os9path )
-/* check, if it is a RAM device */
-{
-    char     cmp[OS9PATHLEN];
-    mod_dev* mod;
-    char*    p;
+#ifdef RAM_SUPPORT
+  Boolean RAM_Device( const char* os9path )
+  /* check, if it is a RAM device */
+  {
+      char     cmp[OS9PATHLEN];
+      mod_dev* mod;
+      char*    p;
     
-    GetOS9Dev( os9path, (char*)&cmp );
-//  if (ustrcmp( cmp,"r0" )==0) return true;
-    if (mnt_ramSize>0)          return true;
+      GetOS9Dev( os9path, (char*)&cmp );
+      if (mnt_ramSize>0) return true;
     
-    if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
-        p= (char*)mod + os9_word(mod->_mpdev);
-        return ustrcmp( p,"ram" )==0;
-    }
+      if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
+          p= (char*)mod + os9_word(mod->_mpdev);
+          return ustrcmp( p,"ram" )==0;
+      }
     
-    return false;
-} /* RAM_Device */
-
+      return false;
+  } /* RAM_Device */
+#endif
 
 
 static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
@@ -1768,7 +1771,10 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     *typeP= fRBF; /* default value */
     #ifdef RBF_SUPPORT
       if (InstalledDev( os9path,"",false, &cdv )) return true; /* already ? */
-      if (RAM_Device  ( os9path ))                return true;
+      
+      #ifdef RAM_SUPPORT
+        if (RAM_Device( os9path )) return true;
+      #endif
     #endif
     
     #ifdef macintosh
