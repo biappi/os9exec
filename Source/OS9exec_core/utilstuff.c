@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 #include "os9exec_incl.h"
@@ -659,7 +662,10 @@ Boolean KeyToBuffer( ttydev_typ* mco, char key )
     char pd_xoff= mco->spP->opt[ PD_XOFF ];
 
     int lwp= mco->spP->lastwritten_pid;        /* where to send the signal ? */
-    if     ( mco->inBufUsed >= INBUFSIZE-1 ) return false; /* buffer is full */
+    if     ( mco->inBufUsed >= INBUFSIZE-1 ) {
+    /*  printf( "buffer is full %s\n", mco->spP->name ); */
+        return false; /* buffer is full */
+    }
     
     /* these characters will be eaten before they reach the input buffer */
     /* treatment for special chars */
