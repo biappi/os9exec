@@ -148,7 +148,7 @@
           00-05-17  Bfo     Unified main modules
     2.27  00-05-20  Bfo     Unified include files und Mac resource file. Some compiler warnings eliminated.
                     Bfo     Some MPW specific tasks masked
-    2.28  00-05-20  Bfo   The MGR client "mgencas" runs under OS9exec !!
+    2.28  00-05-20  Bfo     The MGR client "mgencas" runs under OS9exec !!
     -------------------     (with one exception so far: the MGR file selector box hangs)
                 
           00-06-17  Bfo     Preparations for Serial Interface in parallel to Strout
@@ -1141,8 +1141,11 @@
           02-10-28  Bfo     REUSE_MEM handling introduced
           02-10-28  Bfo     "iunused" implemented
           02-10-28  Bfo     network close with corrected release_mem for net->b_local
-          02-10-28  Bfo     slightly different checkpoint: STRANGE/UNUSED 
-    3.20  02-10-??  Bfo     ...
+          02-10-28  Bfo     slightly different checkpoint: STRANGE/UNUSED
+          02-11-06  Bfo     zero is zero for os9_word/os9_long (modstuff.c/utilstuff.c)
+          02-11-06  Bfo     lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+          02-11-06  Bfo     Colored memory dependency at OS9_F_Load avoided.
+    3.20  02-11-??  Bfo     ...
     -------------------
 */
 
