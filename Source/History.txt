@@ -1164,6 +1164,7 @@
     -------------------
 
           03-01-10  Bfo     Changed to new version
+          03-04-12  Bfo     Domain Name Server support introduced
     3.22  03-??-??
     -------------------
 */
