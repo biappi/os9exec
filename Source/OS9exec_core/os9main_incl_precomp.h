@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.10  2003/05/24 11:34:13  bfo
  *    Some more MACH-O adaptions, still not able to compile
  *
@@ -139,7 +142,7 @@
 #endif 
 
 /* either windows or linux */
-#if defined(windows32) || defined linux
+#if defined windows32 || defined linux
   #define win_linux
 #endif
 
@@ -147,7 +150,7 @@
 /* these platforms are supported to use TCP/IP sockets */
 #ifdef NET_SUPPORT
   #if defined powerc || defined win_linux
-    #define WITH_NETWORK
+    #define WITH_NETWORK 1
   #endif
 #endif
 

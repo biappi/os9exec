@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2004/11/20 11:40:58  bfo
+ *    Networking enhanced (for the demo httpd server).
+ *
  *    Revision 1.23  2004/10/22 22:51:12  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -584,14 +587,18 @@ os9err pNclose( ushort /* pid */, syspath_typ* spP )
  // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound, 
  //                                            net->accepted, net->ep );       
     if (net->bound && net->ep!=nil) {
-        #ifdef powerc
-                    err= OTSndOrderlyDisconnect(net->ep);
-          if (!err) err= OTRcvOrderlyDisconnect(net->ep);
+        #ifdef macintosh
+          #ifdef powerc
+                      err= OTSndOrderlyDisconnect(net->ep);
+            if (!err) err= OTRcvOrderlyDisconnect(net->ep);
         
-          OTUnbind       ( net->ep );
-          OTCloseProvider( net->ep );
-          OTFreeMem      ( net->transferBuffer );
-       
+            OTUnbind       ( net->ep );
+            OTCloseProvider( net->ep );
+            OTFreeMem      ( net->transferBuffer );
+          #else
+            return E_UNKSVC; // not supported for Classic Mac, but compileable
+          #endif
+          
        #elif defined windows32
        // err= shutdown   ( net->ep, SD_SEND );
           err= closesocket( net->ep ); 
@@ -615,12 +622,20 @@ os9err pNclose( ushort /* pid */, syspath_typ* spP )
 } /* pNclose */
 
 
+
 /* ---- OPERATING SYSTEM DEPENDENT PART OF netRead ---------------- */
 /* get the next block of data at <net->transferBuffer> of <net->ep> */
 /* Result is <err> >0 -> number of bytes read                       */
 /*                 =0 -> no data                                    */
 /*                 <0 -> error (OS dependent)                       */
 /* <net->closeit> will be set to true in case of EOF                */
+
+#if defined macintosh && !defined powerc
+  static OSStatus netReadBlock( net_typ* ) {
+    return E_UNKSVC; // not supported for Classic Mac, but compileable
+  } /* netReadBlock */
+#endif
+
 
 #ifdef powerc
   static OSStatus netReadBlock( net_typ* net )
@@ -910,7 +925,7 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
     #ifdef powerc
       InetInterfaceInfo iinfo;
 
-    #elif defined(windows32)
+    #elif defined windows32
       #define     Unk 0x7f7f7f7f
       HOSTENT*    h;
       ulong       *a;
@@ -1575,7 +1590,7 @@ os9err pNGNam( ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2, byte* i
   	c= (char*)ispP; /* type casting */
     #ifdef powerc
       strcpy( c,"bfomac" );
-    #elif defined(windows32)
+    #elif defined windows32
       strcpy( c,"bfowin" );
     #elif defined linux
       strcpy( c,"bfolinux" );
