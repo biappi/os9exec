@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/10/09 20:43:48  bfo
+ *    uphe_printf => upe_printf
+ *
  *
  */
 
@@ -292,7 +295,7 @@ static os9err int_paths( ushort pid, int argc, char **argv )
 
 
 
-static os9err int_mfree( ushort pid, int argc, char **argv)
+static os9err int_mem( ushort pid, int argc, char **argv)
 /* "imem": OS9exec internal allocated memory */
 {
     #ifndef linux
@@ -300,8 +303,19 @@ static os9err int_mfree( ushort pid, int argc, char **argv)
     #endif
 
     show_mem(MAXPROCESSES); return 0;
-} /* int_mfree */
+} /* int_mem */
 
+
+
+static os9err int_unused( ushort pid, int argc, char **argv)
+/* "imem": OS9exec internal allocated memory */
+{
+    #ifndef linux
+    #pragma unused(pid,argc,argv)
+    #endif
+
+    show_unused(); return 0;
+} /* int_unused */
 
 
 
@@ -476,7 +490,12 @@ cmdtable_typ commandtable[] =
     { "iprocs",        int_procs,     "shows OS9exec's processes" },
     { "imdir",         int_mdir,      "shows OS9exec's loaded OS-9 modules" },
     { "ipaths",        int_paths,     "shows OS9exec's path list" },
-    { "imem",          int_mfree,     "shows OS9exec's memory block list" },
+    { "imem",          int_mem,       "shows OS9exec's memory block list" },
+    
+    #ifdef REUSE_MEM
+    { "iunused",       int_unused,    "shows OS9exec's unused block list" },
+    #endif
+    
     { "idevs",         int_devs,      "shows OS9exec's devices" },
     { "ihelp/icmds",   int_help,      "shows this help text" },
     { "dhelp",         debug_help,    "shows debug flag information" },
@@ -569,12 +588,13 @@ os9err _errmsg(os9err err, char* format, ...)
 } /* _errmsg */
 
 
+
+os9err prepArgs(char *arglist, ushort *argcP, char*** argP)
 /* prepare arguments for internal commands
  * will return a allocated block of memory with argv[] and args
  * Note: only simple arg checking is used (argv[] is built from space
  *       delimiter information.
  */
-os9err prepArgs(char *arglist, ushort *argcP, char*** argP)
 {
     ushort argc,k;
     char *p, *cp;
@@ -602,13 +622,14 @@ os9err prepArgs(char *arglist, ushort *argcP, char*** argP)
         p++;
     }
     /* p now points behind last arg char */
-    localargv[argc]=p; /* save as end pointer */
-    
-    #ifdef MACMEM
-    pp=(char **)NewPtr(        (p-arglist+(argc+1)*sizeof(char**)+1)); 
-    #else
-    pp=(char **)malloc((size_t)(p-arglist+(argc+1)*sizeof(char**)+1));
-    #endif
+    localargv[argc]= p; /* save as end pointer */
+        
+//  #ifdef MACMEM
+//    pp=(char **)NewPtr(        (p-arglist+(argc+1)*sizeof(char**)+1)); 
+//  #else
+//    pp=(char **)malloc((size_t)(p-arglist+(argc+1)*sizeof(char**)+1));
+//  #endif
+        pp= get_mem( p-arglist + (argc+1)*sizeof(char**) + 1 );
     if (pp==NULL) return os9error(E_NORAM);
     
     p=(char *)(pp + argc +1);
