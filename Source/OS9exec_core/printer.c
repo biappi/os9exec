@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/09/04 12:23:29  luz
+ *    Implemented auto-linefeed for /lp (allowing direct printing of text files)
+ *
  *    Revision 1.4  2002/07/30 17:16:34  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -406,15 +409,16 @@ os9err pPrReady( ushort pid, syspath_typ *spP, ulong *n )
     #pragma unused(pid,spP)
     #endif
           
-
     return 0;
 } /* pPrReady */
 
 
-#elif defined(windows32) || defined macintosh
+#elif defined(windows32) || defined macintosh || defined linux
   void init_Printer( fmgr_typ* f )
   {
+    #ifndef linux
     #pragma unused(f)
+    #endif
     /* do nothing */
   }
 
