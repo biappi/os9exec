@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2002/11/24 18:49:14  bfo
+ *    Changed to new release V3.21
+ *
  *    Revision 1.28  2002/11/06 20:12:26  bfo
  *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
  *
@@ -1496,7 +1499,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				/* asynchronous signals are no longer allowed */
 			 // ----------------------
 
-								
 				/* if the system is on the way to intercept, d1 and carry 
 			       must be stored (must not override values of "send_signal" */
 			    	cwti= cp->way_to_icpt;
@@ -1534,10 +1536,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 					if (sigp==cp &&
 					    sigp->state==pWaitRead &&
 						sigp->pd._sigvec!=0) {
-						sigp->rtestate = sigp->state;
-						sigp->rteregs  = svd->r;      /* ignore latest d1 and carry */
-						sigp->rtevector= svd->vector;
-						sigp->rtefunc  = svd->func;
+						         sigp->rtestate = sigp->state;
+						memcpy( &sigp->rteregs,  &svd->r, sizeof(regs_type) );
+						         sigp->rtevector= svd->vector;
+						         sigp->rtefunc  = svd->func;
 						set_os9_state( spid, pActive );
 				    }
 
@@ -1593,7 +1595,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 		/* do not arbitrate if way to intercept */
 		if (!arb_cnt--) { arb_cnt= ARB_RATE-1; /* arbitrate= true; */ }
-		last_arbitrate= arbitrate;			
+		last_arbitrate= arbitrate;	
+		
+		if (cp->state==pWaitRead)
+		    memcpy( &cp->os9regs, &svd->r, sizeof(regs_type) ); /* save all regs */
+		
 		if (!cwti) do_arbitrate();
 		if (logtiming) arb_to_os9( last_arbitrate );
 			

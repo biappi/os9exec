@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2002/11/06 20:13:13  bfo
+ *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+ *
  *    Revision 1.17  2002/10/27 23:50:41  bfo
  *    Sibling handling of internal commands corrected ("idevs!head" bug)
  *
@@ -466,6 +469,7 @@ os9err send_signal(ushort spid, ushort signal)
     process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
     process_typ* sigp= &procs[      spid]; /* ptr to procs dsc to which the signal will be sent */
     sig_typ*     s   = &sig_queue;
+    save_type*   svd;
 	int          k;
 	
 	/* the broadcast (send to pid=0) is implemented here */
@@ -535,18 +539,17 @@ os9err send_signal(ushort spid, ushort signal)
         if (sigp->pd._signal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
                   /* should never be called, because now a signal queue is implemented */
 
+        sigp->rtestate= sigp->state;    /* save it, active after signal */
+        set_os9_state( spid, pActive ); /* activate for all cases */
+        
         if (sigp->state==pWaiting) {
             /* signal causes wakeup */
             debugprintf(dbgProcess,dbgDetail,("# send_signal: receiving pid=%d was waiting\n",spid));
             retword(sigp->os9regs.d[0])= 0;      /* return 0 means that no process has died (pid=0's death can't be awaited) */
             retword(sigp->os9regs.d[1])= signal; /* return signal code as error */
                     sigp->os9regs.sr  &= ~CARRY; /* error-free return */
-        }
-        else 
-            set_os9_state( spid, pActive );      /* activate for all other cases */
-
+        }        
         
-        sigp->rtestate= sigp->state;             /* save it, active after signal */ 
         arbitrate= false;
         sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
@@ -554,7 +557,18 @@ os9err send_signal(ushort spid, ushort signal)
         if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
             sigp->way_to_icpt = true;    /* activate both */
               cp->way_to_icpt = true;
-            sigp->rteregs     = sigp->os9regs; /* save all regs */
+            if (sigp->state==pWaitRead) {
+                                          svd= &sigp->savread; 
+                         sigp->rtevector= svd->vector;  /* save some additional info */
+                         sigp->rtefunc  = svd->func;
+                memcpy( &sigp->rteregs,  &svd->r,        sizeof(regs_type) ); /* save all regs */
+            }
+            else {
+                         sigp->rtevector= sigp->vector;  /* save some additional info */
+                         sigp->rtefunc  = sigp->func;
+                memcpy( &sigp->rteregs,  &sigp->os9regs, sizeof(regs_type) ); /* save all regs */
+            }
+            
             sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
             sigp->os9regs.a[6]= sigp->icpta6;
             sigp->os9regs.d[1]= signal;
