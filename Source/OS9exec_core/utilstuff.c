@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/07/03 21:41:47  bfo
+ *    RAM disk is now operational ( currently fixed to 2MB )
+ *
  *    Revision 1.9  2002/07/02 18:55:39  bfo
  *    Preparations done for RAM disk /r0 implementation
  *
@@ -544,17 +547,17 @@ char* StrBlk_Pt( char* s, int n )
 
 
 Boolean IsRead( ushort mode )
-/* returns true, if <mode> has execution bit set */
+/* returns true, if <mode> has read bit set */
 {   return (mode & poRead)!=0;
 } /* IsRead */
 
 Boolean IsWrite( ushort mode )
-/* returns true, if <mode> has execution bit set */
+/* returns true, if <mode> has write bit set */
 {   return (mode & poWrite)!=0;
 } /* IsWrite */
 
 Boolean IsRW( ushort mode )
-/* returns true, if <mode> has execution bit set */
+/* returns true, if <mode> has read or write bit set */
 {   return IsRead(mode) && IsWrite(mode);
 } /* IsRW */
 
@@ -564,12 +567,12 @@ Boolean IsExec( ushort mode )
 } /* IsExec */
 
 Boolean IsDir( ushort mode )
-/* returns true, if <mode> has execution bit set */
+/* returns true, if <mode> has directory bit set */
 {   return (mode & poDir)!=0;
 } /* IsDir */
 
 Boolean IsCrea( ushort mode )
-/* returns true, if <mode> has execution bit set */
+/* returns true, if <mode> has creation bit set */
 {   return (mode & poCreateMask)!=0;
 } /* IsCrea */
 

@@ -1728,7 +1728,7 @@ static os9err AdaptAlloc_FD( syspath_typ* spP, ulong pos, ulong scs )
             }
             
             if (lscs==0) {
-            err= WriteFD( spP ); if (err) return err;
+                err= WriteFD( spP ); if (err) return err;
                 return 0;
             }
         } /* if */
@@ -1757,7 +1757,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     ulong*      mw    = &spP->mustW;
     ulong       ma    = Max( dev->sas,dev->clusterSize );
     ushort*     w;
-    ulong       sect, offs, size, totsize, maxc, pos, scs, *rs, pref, coff;
+    ulong       sect, offs, size, totsize, maxc, pos, scs, *rs, pref, coff, sv;
     byte*       bb;
     byte        attr;
     byte        *bp;
@@ -1766,6 +1766,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     Boolean     rOK = (remain==0);         /* is true, if nothing to read */
 
     debugprintf( dbgFiles,dbgDetail,("# >DoAccess (%s): n=%d\n", wMode ? "write":"read", *lenP ));
+    sv= rbf->currPos;
+    
     do {          /* do this loop for every sector to be read into buffer */
         if (spP->rawMode) {
             sect= rbf->currPos / dev->sctSize;       /* get raw sector nr */    
@@ -1876,6 +1878,13 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
         remain-= maxc; /* adapt them for the next loop */
         boffs += maxc;
     } while (remain>0);
+    
+    if (err==E_FULL) {
+        rbf->currPos=   sv;
+        rbf->lastPos=   sv;
+        Set_FDSize( spP,sv );
+        WriteFD   ( spP );
+    }
     
     if (rbf->lastPos< rbf->currPos) /* adapt lastpos */
         rbf->lastPos= rbf->currPos;
@@ -2058,11 +2067,11 @@ static os9err CreateNewFile( syspath_typ* spP, byte fileAtt, char* name, ulong c
     scs=       (scs-1)/clu+1; /* and adapt for cluster granularity */
     scs=        scs   *clu;
 
-    err=      AllocateBlocks ( spP, scs, &fd,  &ascs, 0 ); if (err) return err;
+    err=     AllocateBlocks ( spP, scs, &fd,  &ascs, 0 ); if (err) return err;
              spP->u.rbf.fd_nr=           fd; /* access them correctly */
              spP->u.rbf.fddir=     dfd;     
-    err=      Create_FD      ( spP,          fileAtt, 0 ); if (err) return err;
-    err=      Access_DirEntry( dev, dfd,  fd,   name, d ); if (err) return err;
+    err=     Create_FD      ( spP,          fileAtt, 0 ); if (err) return err;
+    err=     Access_DirEntry( dev, dfd,  fd,   name, d ); if (err) return err;
 
     if  (scs>1) { /* get the remaining part */
         err= AdaptAlloc_FD  ( spP,       fd+1, ascs-1  ); if (err) return err;
@@ -2175,7 +2184,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         else {  /* if string is empty */
             if (*pathname==NUL) { err= E_FNA; break; }
             rbf->fd_nr= ls; /* take current path */
-            err= ReadFD( spP );                if (err) break;
+            err= ReadFD( spP );      if (err) break;
         }
     } while (false);
     if (err) return err;
@@ -2276,23 +2285,23 @@ os9err pRclose( ushort pid, syspath_typ* spP )
     debugprintf(dbgFiles,dbgNorm,("# RBF close (pid=%d) wMode/rawMode/mustW: %d %d $%x\n", 
                                      pid, rbf->wMode,spP->rawMode, spP->mustW ));
 
-        if (rbf->wMode==0 || /* no change in read or raw mode */
+    if (rbf->wMode==0 || /* no change in read or raw mode */
         spP->rawMode) return 0;
         
-        if (spP->mustW) { /* write the last cached sector */
+    if (spP->mustW) { /* write the last cached sector */
         err= WriteSector( dev, spP->mustW,1, spP->rw_sct ); if (err) return err;
-        }
+    }
 
-        /* set file size at close */
+    /* set file size at close */
         v= FDSize( spP ); 
-        if (v< lsp) { 
-            v= lsp; Set_FDSize( spP,v ); /* new file size */
+    if (v< lsp) { 
+        v= lsp; Set_FDSize( spP,v ); /* new file size */
         err=       WriteFD( spP ); if (err) return err;
-        }
+    }
 
-        /* release remaining part, if pointer is not at the end of file */
-        if (crp!=0 &&
-            crp==lsp) err= ReleaseBlocks( spP,v );
+    /* release remaining part, if pointer is not at the end of file */
+    if (crp!=0 &&
+        crp==lsp) err= ReleaseBlocks( spP,v );
 
     ReleaseBuffers( spP );
     return err;
