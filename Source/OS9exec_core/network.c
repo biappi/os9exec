@@ -41,11 +41,18 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/08/09 22:39:20  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *
  */
 
 
 
+#include "os9exec_incl.h"
+
+
+/* specific network definitions */
 #ifdef macintosh
   #include <OTDebug.h>
   #include <Threads.h>
@@ -67,8 +74,6 @@
   
   typedef struct sockaddr_in SOCKADDR_IN;
 #endif
-
-#include "os9exec_incl.h"
 
 
 
