@@ -56,8 +56,7 @@
                     LuZ/Bfo included Beat's F$GetPrDsc
     2.01  96-10-02  LuZ/Bfo Minor modifications (in Discussion with Beat Forster)
           96-10-11  Bfo     F$Permit included.
-          96-10-21  LuZ/Bfo Added more of Beat's Fcalls. Fixed various little bugs. Made working PPC
-                    Version.
+          96-10-21  LuZ/Bfo Added more of Beat's Fcalls. Fixed various little bugs. Made working PPC Version.
     2.02  96-10-23  LuZ     Revised os9_llm.a to allow open IRQ operation
           96-10-24  LuZ     Fixed case sesitive "/dd" check, fixed F$CmpNam case sensitivity and "xxx.*" failure.
           96-10-26  LuZ     Added named pipes, reorganized path struct
@@ -972,9 +971,11 @@
 		  02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
 		  02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
 		  02-05-05  Bfo     Prepare the Carbon implementation for Mac OS X
-		  02-05-10  Bfo     First Carbon version without compile/link errors, but not yet running.
-		                    (UAE must be in the same subdir, don't know why)
-	3.11  02-05-??  Bfo     ...
+	3.11  02-05-10  Bfo     First Carbon version without compile/link errors, but not yet running.
+    -------------------		(UAE must be in the same subdir, don't know why)
+
+	      02-05-11  Bfo     Problem ftp/telnet quit emulator fixed (pW_age bug all sleeping)
+	3.12  02-05-??  Bfo     ...
 	-------------------		
 */
 
