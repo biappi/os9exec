@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2002/10/02 19:21:37  bfo
+ *    Correct handling for "mount" without parameters
+ *
  *    Revision 1.29  2002/09/21 20:02:52  bfo
  *    E_DIDC problem fixed.
  *
@@ -1245,13 +1248,13 @@ os9err int_mount( ushort pid, int argc, char **argv )
                             sscanf( p,"%d", &ramSize );
                             break;
                             
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             mount_usage( argv[0],pid ); return 1;
             }   
         }
         else {
             if (nargc>=MAXARGS_) { 
-                uphe_printf("Error: no more than %d arguments allowed\n",MAXARGS_); 
+                upe_printf("Error: no more than %d arguments allowed\n",MAXARGS_); 
                 return 1;
             }
             nargv[nargc++]= argv[k];
@@ -1332,13 +1335,13 @@ os9err int_unmount( ushort pid, int argc, char **argv )
             p++;
             switch (tolower(*p)) {
                 case '?' :  unmount_usage(argv[0],pid); return 0;
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             unmount_usage(argv[0],pid); return 1;
             }   
         }
         else {
             if (nargc>=MAXARGS) { 
-                uphe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1;
+                upe_printf("Error: no more than %d arguments allowed\n",MAXARGS); return 1;
             }
             nargv[nargc++]= argv[h];
         }

@@ -260,13 +260,13 @@ static os9err int_paths( ushort pid, int argc, char **argv )
             p++;
             switch (tolower(*p)) {
                 case '?' :  ipaths_usage( argv[0],pid ); return 0;
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             ipaths_usage( argv[0],pid ); return 1;
             }   
         }
         else {
             if (nargc>=IPATHS_MAXARGS) { 
-                uphe_printf("Error: Only 1 argument allowed\n"); return 1;
+                upe_printf("Error: Only 1 argument allowed\n"); return 1;
             }
 
 			k= atoi(p);
@@ -345,13 +345,13 @@ static os9err int_devs( ushort pid, int argc, char **argv )
                 case '?' :  idevs_usage( argv[0],pid ); return 0;
                 case 'r' :  rbf_devs = true; break;
                 case 's' :  statistic= true; break;
-                default  :  uphe_printf("Error: unknown option '%c'!\n",*p); 
+                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
                             idevs_usage( argv[0],pid ); return 1;
             }   
         }
         else {
             if (nargc>=IDEVS_MAXARGS) { 
-                uphe_printf("Error: no arguments allowed\n"); return 1;
+                upe_printf("Error: no arguments allowed\n"); return 1;
             }
             nargc++;
         }
@@ -761,7 +761,7 @@ os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv)
 
       // Call MPW command???
       // Launch program???
-      uphe_printf("Calling external commands not yet implemented!\n");  
+      upe_printf("Calling external commands not yet implemented!\n");  
       return 0;
     #endif  
 } /* call_hostcmd */

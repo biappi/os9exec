@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/09/22 20:50:22  bfo
+ *    SS_206 (unused setstat call) included.
+ *
  *    Revision 1.9  2002/09/19 22:01:32  bfo
  *    "/h0" can be mounted again
  *
@@ -1543,7 +1546,7 @@ void main_printf(const char* format, ...)
 /* copyright notice */
 void copyright(void)
 {
-    uphe_printf( "(c) 1993-2002 by luz/bfo (luz@synthesis.ch / beat.forster@ggaweb.ch)\n");
+    upe_printf( "(c) 1993-2002 by luz/bfo (luz@synthesis.ch / beat.forster@ggaweb.ch)\n");
 } /* copyright */
 
 
