@@ -35,12 +35,12 @@
 
 resource 'vers' (1, purgeable) {
         0x3,
-        0x18,
+        0x19,
         beta,
         0x1,
         verGrSwiss,
-        "3.18",
-        "OS9exec V3.18 © 1993-2002 by luz/bfo, luz@synthesis.ch / beat.forster@ggaweb.ch"
+        "3.19",
+        "OS9exec V3.19 © 1993-2002 by luz/bfo, luz@synthesis.ch / beat.forster@ggaweb.ch"
 };
 
 resource 'cmdo' (257, "os9") {
