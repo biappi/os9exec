@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2002/09/19 22:00:18  bfo
+ *    Disabling "r0" more specific now
+ *
  *    Revision 1.27  2002/09/17 00:24:09  bfo
  *    /r0 is disabled as name, if RAM_SUPPORT is disabled.
  *
@@ -2373,8 +2376,11 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         } /* if (IsRaw) */
 
         if (AbsPath(p)) { /* if abs path -> search from the root */                     
-            err= RootLSN( dev, spP, false );   if (err) break;
-            err= ReadFD      ( spP );          if (err) break;
+            err= RootLSN( dev, spP, false );
+            if (err==E_DIDC) err= 0;       /* changes recognized */
+            if (err) break;       /* for all other errors: break */
+            
+            err= ReadFD( spP ); if (err) break;
             if (root)   { 
                 strcpy( spP->name,pathname+1 );
                 return 0; 
