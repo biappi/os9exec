@@ -1166,6 +1166,13 @@
           03-01-10  Bfo     Changed to new version
           03-04-12  Bfo     Domain Name Server support introduced
           03-04-14  Bfo     Release buffer (accept) at pNClose fixed
+          03-04-17  Bfo     GNam with additional param <d1>
+          03-04-18  Bfo     net->connected and wTimeout support
+          03-04-19  Bfo     <my_inetaddr> big endian/little endiran swap
+          03-04-19  Bfo     'MyInetAddr" supports now 2 DNS addresses
+          03-04-19  Bfo     "inetdb" adaptions and other manipulations
+          03-04-20  Bfo     SpecialIO text: idbg for printing and networking
+          03-04-21  Bfo     Various adaptions for "ping" support on all 3 platforms
     3.22  03-??-??
     -------------------
 */
