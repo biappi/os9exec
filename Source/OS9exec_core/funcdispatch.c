@@ -694,10 +694,10 @@ ulong show_timing( ushort mode )
     show_syscalltimers( true,  mode, active, &ticall,&tinum );
     show_os9timers    (        mode, active, &oscall,&osnum );
         
-    if (!logtiming) timerstart= now+1; /* prevent uninitialized <timerstart> */
+    if (!logtiming) timerstart= now+1;  /* prevent uninitialized <timerstart> */
     if (now<timerstart) now= timerstart;
     
-    realtime= (now-timerstart)*TICKS_PER_SEC;            /* avoid lost ticks */
+        realtime= (now-timerstart)*TICKS_PER_SEC;         /* avoid lost ticks */
     if (realtime<active) realtime= active;       /* avoid negative lost ticks */
 
 
