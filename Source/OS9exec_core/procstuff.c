@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2003/01/02 14:34:52  bfo
+ *    Some type castinmg things fixed
+ *
  *    Revision 1.19  2003/01/02 12:21:28  bfo
  *    RTE registers correctly saved and restored
  *
@@ -255,6 +258,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->memstart   = cp->memtop=0; /* no memory yet */
             cp->pd._signal = 0;            /* no signal, rteregs invalid */
             cp->masklevel  = 0;            /* sigmask is disabled by default */
+            cp->pwr_brk    = false;        /* pWaitRead break for signals <= 32 */
             cp->pd._sigvec = 0;            /* no intercept routine installed */
             cp->last_mco   = NULL;         /* last console buffer */
             cp->wakeUpTick = 0;            /* to be woken up */
@@ -474,6 +478,7 @@ os9err send_signal(ushort spid, ushort signal)
     sig_typ*     s   = &sig_queue;
     save_type*   svd;
 	int          k;
+	Boolean      wRead;
 	
 	/* the broadcast (send to pid=0) is implemented here */
 	if (currentpid!=0 && spid==0) {
@@ -503,20 +508,31 @@ os9err send_signal(ushort spid, ushort signal)
 
     if (signal==S_Wake && spid==currentpid) return 0; /* ignore this */
     
-    if    (cp->way_to_icpt || sigp->masklevel>0 || !async_area) {
+    /* signal will be delayed, if receiving process in pWaitRead mode */
+    wRead= ( sigp->state==pWaitRead && !sigp->pwr_brk );
+    
+    /* some of the signals must be stored in a queue */
+    if    (cp->way_to_icpt || sigp->masklevel>0 || wRead || !async_area) {
         if (signal==S_Wake && sigp->masklevel>0) return 0; /* needn't to be stored in this case */
+        
+        if (wRead && signal<=Pwr_Signal) sigp->pwr_brk= true; /* special break condition */
         
         s= &sig_queue; /* store it, but don't do anything */
         s->pid   [s->cnt]= spid;
         s->signal[s->cnt]= signal;
         
         if (s->cnt<MAXSIGNALS) s->cnt++;
+//      upe_printf("# send signal=%d to pid=%d queued (level=%d) %d\n",
+//                                         signal,spid, s->cnt, sigp->pwr_brk );
         debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d queued (level=%d)\n",
                                            signal,spid, s->cnt ));
         /* synchronise it (must be inside the os9exec area) */
         if (!async_area && sigp->masklevel==0) async_pending= true;
         return 0;
-    }
+    } /* if */
+    
+    /* now it's time to clear the flag again */
+    if (signal<=Pwr_Signal) sigp->pwr_brk= false; /* switch it off again */
     
     cp->icpt_pid   = spid;    /* keep it save */
     cp->icpt_signal= signal;
@@ -564,7 +580,7 @@ os9err send_signal(ushort spid, ushort signal)
                                           svd= &sigp->savread; 
                          sigp->rtevector= svd->vector;  /* save some additional info */
                          sigp->rtefunc  = svd->func;
-                memcpy( (void*)&sigp->rteregs, (void*)&svd->r,        sizeof(regs_type) ); /* save all regs */
+                memcpy( (void*)&sigp->rteregs, (void*)&svd->r,         sizeof(regs_type) ); /* save all regs */
             }
             else {
                          sigp->rtevector= sigp->vector;  /* save some additional info */
@@ -606,29 +622,51 @@ os9err sigmask( ushort cpid, int level )
     os9err err;
     process_typ* cp= &procs[cpid];  /* ptr to procs descriptor */
     int*   plv= &cp->masklevel;
+    process_typ*  sigp;
     sig_typ*      s= &sig_queue;
-    int    ii;
+    int    i, j;
     ushort pid, signal;
     
     switch (level) {
         case  0 :  *plv= 0; break;
         case  1 : (*plv)++; break;
         case -1 : (*plv)--; break;
-    }
-    
-    if (*plv<=0 && s->cnt>0) {
-        pid   = s->pid   [0]; /* use it as a fifo, save them first */
-        signal= s->signal[0];
+    } /* switch */
+
+    for (i=0; i<s->cnt; i++) {    /* remove one element from stack */
+        pid   = s->pid   [i]; /* use it as a fifo, save them first */
+        signal= s->signal[i];
         
-                      s->cnt--;
-        for (ii=0; ii<s->cnt; ii++) { /* remove one element from stack */
-            s->pid   [ii]= s->pid   [ii+1];
-            s->signal[ii]= s->signal[ii+1];
-        }
+            sigp= &procs[pid];
+        if (sigp->masklevel<=0 &&
+           (sigp->state!=pWaitRead ||
+            sigp->pwr_brk)) {
+                        s->cnt--;
+            for (j=i; j<s->cnt; j++) { /* remove one element from stack */
+                s->pid   [j]= s->pid   [j+1];
+                s->signal[j]= s->signal[j+1];
+            } /* for */
         
-        if (s->cnt<=0) async_pending= false;
-        err= send_signal( pid,signal );
-    }
+            if (s->cnt<=0) async_pending= false;
+            err= send_signal( pid,signal );
+            break;
+        } /* if */
+    } /* for */
+
+   
+//  if (*plv<=0 && s->cnt>0) {
+//      pid   = s->pid   [0]; /* use it as a fifo, save them first */
+//      signal= s->signal[0];
+//        
+//                    s->cnt--;
+//      for (ii=0; ii<s->cnt; ii++) { /* remove one element from stack */
+//          s->pid   [ii]= s->pid   [ii+1];
+//          s->signal[ii]= s->signal[ii+1];
+//      } /* for */
+//        
+//      if (s->cnt<=0) async_pending= false;
+//      err= send_signal( pid,signal );
+//  } /* if */
     
     return 0;
 } /* sigmask */

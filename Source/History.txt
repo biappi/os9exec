@@ -1155,6 +1155,7 @@
           03-01-01  Bfo     Register saving really done (till now it was only the pointer !!)
           03-01-02  Bfo     Remaining ticks of F$Sleep after intercept is correct now.
           03-01-02  Bfo     Some type casting things fixed.
+          03-01-03  Bfo     Store the signals during read the same way as in real OS-9, add pwr_brk flag
     3.21  03-01-??  Bfo     ...
     -------------------
 */

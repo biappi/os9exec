@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2003/01/02 12:16:41  bfo
+ *    "MAXEVENTS" changed from 100 to 512
+ *
  *    Revision 1.22  2002/11/06 20:12:12  bfo
  *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
  *
@@ -213,7 +216,7 @@
 #define MAXMEMBLOCKS 512 
 
 /* maximum number of open paths per "process" */
-#define MAXUSRPATHS 32
+#define MAXUSRPATHS   32
 
 /* number of exceptions for which a handler can be installed */
 #define NUMEXCEPTIONS  7
@@ -225,7 +228,8 @@
 #define E_OKFLAG    0x4200
 
 /* aging for pWaitRead state processes */
-#define NewAge      30;
+#define NewAge      30
+#define Pwr_Signal  32      /* singals below go thru directly */
 
 /* private error code */
 #define E_PLINK     0x1234  /* returned by xOpen when *mode is the new syspath number */
@@ -822,6 +826,7 @@ typedef struct {
                 ushort     rtefunc;         /* and function */
                 
                 int     masklevel;
+                Boolean pwr_brk;            /* pWaitRead break for signals <= 32 */
              // ulong   icptroutine;        /* the intercept routine, NULL if none */
                 ulong   icpta6;             /* value to pass in A6 to intercept routine */
 
