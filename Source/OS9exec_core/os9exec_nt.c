@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.18  2002/08/08 21:54:13  bfo
  *    F$SetSys extended with D_PrcDBT support
  *
@@ -1098,8 +1101,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	new_process( 0,&cpid, 0 ); /* get the kernel process */
 	cp=      &procs[cpid];
 	set_os9_state ( cpid, pSleeping ); /* to be compliant to real OS-9 */
-	cp->_prior= 0xFFFF;                /* "  "      "     "    "    "  */
-	cp->mid   = 0;              /* take "OS9exec" as the kernel module */
+	cp->pd._prior= os9_word( 0xFFFF ); /* "  "      "     "    "    "  */
+	cp->mid      = 0;           /* take "OS9exec" as the kernel module */
 
 	
 	/* ---- assign startVolID/dirID ---------------------------------- */

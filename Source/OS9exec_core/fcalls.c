@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/08/13 21:21:12  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.9  2002/08/13 15:15:37  bfo
  *    The state <dead> will be handled correctly now (state=0x9100)
  *
@@ -519,11 +522,11 @@ os9err OS9_F_ID( regs_type *rp, ushort cpid )
  * Error:   none
  */
 {
-    process_typ* cp= &procs[cpid];
+    procid* pd= &procs[cpid].pd;
 
     rp->d[0]= cpid; /* return current process' ID */
-    rp->d[1]= cp->_group<<BpB|cp->_user;
-    rp->d[2]= cp->_prior;
+    rp->d[1]= os9_word(pd->_group)<<BpB|os9_word(pd->_user);
+    rp->d[2]= os9_word(pd->_prior);
     return 0;
 } /* OS9_F_ID */
 
@@ -537,10 +540,10 @@ os9err OS9_F_SUser( regs_type *rp, ushort cpid )
  * Error:   Appropriate error code
  */
 {
-    process_typ* cp= &procs[cpid];
+    procid* pd= &procs[cpid].pd;
     
-    cp->_group= hiword( rp->d[1] );
-    cp->_user = loword( rp->d[1] );
+    pd->_group= os9_word( hiword( rp->d[1] ) );
+    pd->_user = os9_word( loword( rp->d[1] ) );
     return 0;
 } /* OS9_F_SUser */
 
@@ -720,9 +723,9 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     
     pd._usp   = (byte*) os9_long( rp->a[7] );
     
-    pd._group = os9_word(cp->_group);
-    pd._user  = os9_word(cp->_user );
-    pd._prior = os9_word(cp->_prior);
+//  pd._group = os9_word(cp->_group);
+//  pd._user  = os9_word(cp->_user );
+//  pd._prior = os9_word(cp->_prior);
     
     /* <_state> and <queueid> will be assigned directly */
     if (id==cpid) pd._queueid = '*';
@@ -1304,11 +1307,11 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
         
     /* --- multitasking enabled, fork program as process */
     /* --- check if "OS9exec" module is about to be launched, */
-    grp= cp->_group; /* inherit grp.usr from parent's process */
-    usr= cp->_user;
+    grp= os9_word( cp->pd._group ); /* inherit grp.usr from parent's process */
+    usr= os9_word( cp->pd._user  );
         
         prior= loword(rp->d[4]);
-    if (prior==0) prior= cp->_prior;
+    if (prior==0) prior= os9_word( cp->pd._prior );
 
     /* exe dir only, link style first, then load style */
               err= new_process( cpid,      &newpid,numpaths ); if (err) return err;
@@ -1404,12 +1407,12 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
         /* now chain; exe dir only, load style */
     }
     
-    grp= cp->_group; /* inherit grp.usr from the replaced process */
-    usr= cp->_user;
+    grp= os9_word( cp->pd._group ); /* inherit grp.usr from the replaced process */
+    usr= os9_word( cp->pd._user  );
     sib= cp->siblingid; /* save it */
     
         prior= loword(rp->d[4]);
-    if (prior==0) prior= cp->_prior;
+    if (prior==0) prior= os9_word( cp->pd._prior );
     
     if (!err) err= link_load( cpid, mpath, &newmid );
     if (!err) err= prepFork ( cpid, mpath,  newmid,

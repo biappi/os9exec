@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.10  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -99,7 +102,7 @@ void show_processes(void)
                         cp->parentid,
                         mIDs,
                         (ulong) mod,
-                        cp->_prior,
+                        os9_word(cp->pd._prior),
                         cp->memstart,
                         cp->memtop,
                         get_syscall_name(cp->lastsyscall),
@@ -430,8 +433,8 @@ os9err send_signal(ushort spid, ushort signal)
 	/* the broadcast (send to pid=0) is implemented here */
 	if (currentpid!=0 && spid==0) {
 		for (k=1; k<MAXPROCESSES; k++) {
-			if (cp->_group==procs[k]._group &&
-			    cp->_user ==procs[k]._user  &&
+			if (cp->pd._group==procs[k].pd._group &&
+			    cp->pd._user ==procs[k].pd._user  &&
 			    currentpid!=k) send_signal( k,signal );
 		} /* for */
 		
@@ -826,7 +829,7 @@ os9err setprior(ushort pid, ushort newprior)
 
     if  (pid>=MAXPROCESSES)  return os9error(E_IPRCID);
     if  (cp->state==pUnused) return os9error(E_IPRCID);
-         cp->_prior= newprior;
+         cp->pd._prior= os9_word(newprior);
         
     if (newprior<IRQBLOCKPRIOR)
          cp->os9regs.flags |=   FLAGS_IRQ;  /* allow IRQs (and VBL) during OS9 code execution */
@@ -864,8 +867,8 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     setprior( newpid,prior );
     
     /* inherit group and user */
-    cp->_group= grp;
-    cp->_user = usr;
+    cp->pd._group= os9_word(grp);
+    cp->pd._user = os9_word(usr);
     
     *intCmd= false; /* no internal command by default */
     #ifdef INT_CMD
@@ -915,8 +918,8 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     rp->pc=os9_long(theModule->_mexec)+(ulong)theModule; /* entry point */
     rp->a[3]=(ulong)theModule; /* primary module pointer */
     rp->d[0]= newpid;    /* assign process ID */
-    rp->d[1]= cp->_group<<(2*BpB)|
-              cp->_user; /* inherited group/user */
+    rp->d[1]= os9_word(cp->pd._group)<<(2*BpB)|
+              os9_word(cp->pd._user ); /* inherited group/user */
     rp->d[2]= prior;     /* priority */
     rp->d[3]= numpaths;  /* number of paths inherited */
    

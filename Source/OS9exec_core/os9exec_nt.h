@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2002/08/13 21:24:17  bfo
+ *    Some more variables defined at the real procid struct now.
+ *
  *    Revision 1.13  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -730,10 +733,10 @@ typedef struct {
                 ushort mid,                 /* the process' module ID */
                        parentid,            /* the parent  process ID */
                       siblingid,            /* the sibling process ID */
-                        childid,            /* the child   process ID */
-                       _group,              /* group number */
-                       _user,               /* user  number */
-                       _prior;              /* the process' priority */
+                        childid;            /* the child   process ID */
+//              ushort _group,              /* group number */
+//                     _user,               /* user  number */
+//                     _prior;              /* the process' priority */
 
                 os9err          exiterr;    /* process' exit OS9 error */
                 regs_type       os9regs;    /* the process' register stack */
@@ -746,11 +749,7 @@ typedef struct {
                 /* statistics */
                 ulong            fticks;    /* number of ticks at fcalls */
                 ulong            iticks;    /* number of ticks at icalls */
-                
-//              unsigned int
-//                 _rbytes,                  /* number of bytes read */
-//                 _wbytes;                  /* number of bytes written */
-                  
+                                  
                 /* memory */
                 ulong memstart;             /* the process' static storage start addr (unbiased) */ 
                 ulong memtop;               /* the process' static storage top pointer (unbiased) */
