@@ -1194,6 +1194,11 @@
 		  03-05-16  Bfo		'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
 		  03-05-16  Bfo		memstuff: better deallocation strategy for the unused blocks
 		  03-05-17  Bfo		Rename to the same file name on RBF is no longer possible now
+		  03-05-19  Bfo		Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
+		  03-05-19	Bfo/luz Start with Codewarrior 8 support
+		  03-05-20  Bfo     Use "procid_special.h" with *except[10] instead of *_except[10]
+		  03-05-20  Bfo		#define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
+		  03-05-21	Bfo		Preparations for seteuid on Mac OS X
     3.22  03-??-??  Bfo
     -------------------
 */
