@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2003/05/17 10:27:14  bfo
+ *    (remove some old unused comments)
+ *
  *    Revision 1.9  2002/10/09 20:30:49  bfo
  *    "show_timing" call with additional parameter <ticksLim>
  *
@@ -714,6 +717,8 @@ ulong show_timing( ushort mode, int ticksLim )
 
     time(&now);
     upho_printf( "%s timing (in 1/%d sec)\n", OS9exec_Name(),TICKS_PER_SEC );
+    upho_printf( "%s\n", hw_name );
+    
     if (!logtiming) {
         upo_printf("**** WARNING: timing log is currently DISABLED!\n");
     }
@@ -822,7 +827,6 @@ os9err int_systime(ushort pid, int argc, char **argv)
 
                     case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks   */
                               if (p[1]!='=' || sscanf(&p[2],"%d", &ticksLim)<1) ticksLim= 1;
-                              upe_printf( "%d '%s'\n", ticksLim, p );
                               p= p+strlen(p)-1; /* skip rest */
                               break;
                     
