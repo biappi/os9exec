@@ -61,7 +61,6 @@ int                 gInBackground     = false;
 int                 gConsoleQuickInput= false;
 short               gConsoleEcho      = true;   /* as it was standard in the original */
 int                 gConsoleSleep     = 1;      /* default was 5 */
-Str255              gTerminalToolName = "\pVT102 Tool";
 
 short               gConsoleNLExpand  = true;
 char                gTitle[OS9NAMELEN];         /* title for   /vmod output */
@@ -805,21 +804,25 @@ short InstallConsole(short fd)
         }
         
         c2pstr(title); /* make pascal notation */
-        if (nil != (mco->consoleTermPtr= (ulong)NewPtrClear(sizeof(TermWindowRec)))) {
-            if (noErr == (result= NewTermWindow(&mco->consoleTermPtr,
+        
+            mco->consoleTermPtr= (ulong)NewPtrClear( sizeof(TermWindowRec) );
+        if (mco->consoleTermPtr!=nil) {
+            result= NewTermWindow(&mco->consoleTermPtr,
                                   w, 
                                   title,
                                   true,
                                   zoomDocProc, 
                                   nil,
                                   goAway, 
-                                  gTerminalToolName))) {
+                                  "" );
+            
+            if (result==noErr) {
                 //we initialized!
                 /* now try to read Preferences for Terminal Window */
                 tw= (TermWindowPtr)mco->consoleTermPtr;
 
                 if (gConsoleID<VModBase) {
-                    LoadTerminalSettings(&tw,"OS9App"); /* parametrize! */
+                    LoadTerminalSettings( &tw,"OS9App" ); /* parametrize! */
                     DoZoomTermWindow(tw,inZoomOut, w->left,
                                                    w->top);
                 }
