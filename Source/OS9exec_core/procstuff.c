@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.9  2002/08/08 21:54:43  bfo
  *    F$SetSys extended with D_PrcDBT support
  *
@@ -109,12 +112,33 @@ void show_processes(void)
 void init_processes()
 /* initialize process descriptors */
 {
-    short* s;
+    short*  s;
+    procid* pd;
+    int     j, k;
+
+    for (k=0; k<MAXPROCESSES; k++) {   /* assign all the constant values which never change */
+        pd= &procs[k]; 
+        pd->_id    = os9_word(k);
+        pd->_sp    = 0;                /* just to be sure */
+        
+        pd->_pagcnt= 0;
+        pd->_age   = os9_word(128);    /* as in real OS-9 */
+        pd->_task  = 0;
+        pd->_resvd1= os9_word(0xBD00); /* as in real OS-9 */
+        pd->_deadlk= 0;                /* as in real OS-9 */
     
-    int  k;
-    for (k=0; k<MAXPROCESSES; k++) {
-        set_os9_state( k, pUnused ); /* invalidate this process  */
-        prDBT[k]= 0;                 /* and also the table entry */
+        pd->_frag  = NULL;             /* don't use OS-9 V3.0 memory method */
+        pd->_fragg = NULL;
+        
+        pd->_data  = NULL;
+        pd->_datasz= 0;
+    
+        for (j=0; j<   7; j++) pd->FPExcpt [j]= NULL;
+        for (j=0; j<   7; j++) pd->FPExStk [j]= NULL;
+        for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* no system stack used */
+        
+        set_os9_state( k, pUnused );   /* invalidate this process  */
+        prDBT[k]= 0;                   /* and also the table entry */
     } /* for */
     
                                   s= (short*)prDBT;
@@ -132,10 +156,11 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
  *       numpaths will not be updated (was once, but not required any more)
  */
 {
-    os9err      err;
-    ushort      npid, k;
-    process_typ *cp,*pap;
-	int			dayOfWk, currentTick;
+    os9err       err;
+    ushort       npid, k;
+    process_typ  *cp, *pap;
+	int			 dayOfWk, currentTick;
+	ulong        timbeg, datbeg;
     
     /* --- find empty process descriptor */
     debugprintf(dbgProcess,dbgNorm,("# new_process: parent=%d wants to create child\n",parentid));
@@ -168,15 +193,20 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->lastsyscall= STARTCALL;
             
             /* reset statistics */
-            cp->_uticks= 0;
-            cp->_fticks= 0;
-            cp->_iticks= 0;             /* julian time and date */
-			Get_Time( (ulong*)&cp->_timbeg, (ulong*)&cp->_datbeg, &dayOfWk,&currentTick, false,false );
+            cp->pd._uticks= 0;
+            cp->fticks    = 0;
+            cp->iticks    = 0;
+            cp->pd._sticks= os9_long(cp->fticks + cp->iticks);
+            
+            /* julian time and date */
+			Get_Time( &timbeg,&datbeg, &dayOfWk,&currentTick, false,false );
+            cp->pd._datbeg= os9_long(datbeg);
+            cp->pd._timbeg= os9_long(timbeg);
 			
-            cp->_fcalls= 0;  /* reset counters */
-            cp->_icalls= 0;
-            cp->_rbytes= 0;
-            cp->_wbytes= 0;
+            cp->pd._fcalls= 0; /* reset counters */
+            cp->pd._icalls= 0;
+            cp->pd._rbytes= 0;
+            cp->pd._wbytes= 0;
             
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */          
             cp->parentid   = parentid;     /* remember parent */

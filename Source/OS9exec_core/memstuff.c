@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/08/09 22:39:20  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *
  */
 
@@ -115,8 +118,8 @@ void release_mem( void* membase, Boolean mac_asHandle )
 /* process independent part of memory deallocation */
 {
     #ifdef MACMEM
-      if (mac_asHandle) DisposeHandle(membase);
-      else              DisposePtr   (membase);
+      if (mac_asHandle) DisposeHandle( membase );
+      else              DisposePtr   ( membase );
 
       if (MemError()!=noErr) {
           debugprintf(dbgMemory+dbgAnomaly,dbgDeep,
@@ -127,28 +130,29 @@ void release_mem( void* membase, Boolean mac_asHandle )
       #pragma unused(mac_asHandle)
       #endif
       
-      free(membase);
+      debugprintf(dbgMemory,dbgNorm,( "relmemv %08X\n", membase ));
+      free( membase );
+      debugprintf(dbgMemory,dbgNorm,( "relmemn %08X\n", membase ));
     #endif
-    
-//  upe_printf( "relmem %08X\n", membase );
 } /* release_mem */
 
 
 
 /* free an allocated memory block */
-void release_memblock(ushort pid, ushort memblocknum)
+void release_memblock( ushort pid, ushort memblocknum )
 {
     memblock_typ *m;
     
         m= &procs[pid].os9memblocks[memblocknum];
+   debugprintf(dbgMemory,dbgNorm,( "%d\n", memblocknum ));
     if (m->base!=NULL) {
-        debugprintf(dbgMemory,dbgNorm,
-              ("# release_memblock: block #%d @ $%lX size=$%lX\n",
-              memblocknum,m->base, m->size ));
+        debugprintf(dbgMemory,dbgNorm, ("# release_memblock: block %3d @ $%lX (size=%lu)\n",
+             memblocknum, m->base, m->size ));
         UnlockMemRange  ( m->base, m->size );
         release_mem(      m->base, false );
                           m->base=NULL; /* free block */
    }
+   debugprintf(dbgMemory,dbgNorm,( "%d\n", memblocknum ));
 } /* release_memblock */
 
 
@@ -156,8 +160,11 @@ void release_memblock(ushort pid, ushort memblocknum)
 /* free process' allocated memory blocks */
 void free_mem(ushort pid)
 {
-   int k;
-   for(k=0; k<MAXMEMBLOCKS; k++) release_memblock(pid,k);   
+   int  k;
+   
+   debugprintf(dbgMemory,dbgNorm,( "start 'free_mem'\n" ));
+   for( k=0; k<MAXMEMBLOCKS; k++ ) release_memblock( pid,k );   
+   debugprintf(dbgMemory,dbgNorm,( "end   'free_mem'\n" ));
 } /* free_mem */
 
 
@@ -237,7 +244,7 @@ void *os9malloc(ushort pid, ulong memsz)
         upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
     }
    
-    debugprintf(dbgMemory,dbgNorm,("# os9malloc: Allocated block #%d at $%08lX (size=%lu)\n",
+    debugprintf(dbgMemory,dbgNorm,("# os9malloc: Allocated block #%d at $%lX (size=%lu)\n",
                                       k,(ulong) pp,memsz));
     return pp;
 } /* os9malloc */

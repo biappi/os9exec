@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 /* General Utility routines */
 char* nullterm     ( char* s1,const char* s2, ushort max );
@@ -37,6 +51,7 @@ int   ustrcmp( const char* s1,const char* s2 );
 int  pustrcmp( const char* s1,const char* s2 );
 int  ustrncmp( const char* s1,const char* s2, ushort n );
 
+void os9_long_inc ( ulong* a, ulong increment );
 void set_os9_state( ushort cpid, pstate_typ state );
 
 os9err host2os9err( OSErr hosterr, ushort suggestion );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/07/30 16:47:20  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.5  2002/07/06 15:56:42  bfo
  *    ram disks (also other names than /r0) can be mounted/unmounted with "mount"
  *    the size -r=<size> is prepared, but not yet active
@@ -1348,6 +1351,7 @@ os9err usrpath_open( ushort pid,ushort *up, ptype_typ type, const char* pathname
 os9err syspath_write( ushort pid,ushort spnum, ulong *len, void* buffer, Boolean wrln )
 {
     os9err         err;
+    procid*        pd= &procs[pid].pd;
     fmgr_typ*      f;
     pathopfunc_typ wproc;
     syspath_typ*   spP= get_syspathd( pid,spnum );
@@ -1378,7 +1382,7 @@ os9err syspath_write( ushort pid,ushort spnum, ulong *len, void* buffer, Boolean
     else      wproc= f->write;
     err=     (wproc)( pid,spP, len,(char*)buffer );
     
-    if (!err) procs[pid]._wbytes+= (unsigned int)*len; /* for statistics*/
+    if (!err) os9_long_inc( &pd->_wbytes, *len ); /* for statistics*/
     if (!err && debugcheck(dbgSysCall,dbgDetail)) showbuff( spP, buffer,*len );
         
     debugprintf(dbgFiles,dbgDeep,("# syspath_write: pid=%d, type=%d, writeln=%d, written=%ld, err=%d\n",
@@ -1538,6 +1542,7 @@ void copyright(void)
 os9err syspath_read( ushort pid,ushort spnum, ulong *len, void* buffer, Boolean rdln )
 {
     os9err         err, cer;
+    procid*        pd= &procs[pid].pd;
     int            prev;
     fmgr_typ*      f;
     pathopfunc_typ rproc;
@@ -1551,7 +1556,7 @@ os9err syspath_read( ushort pid,ushort spnum, ulong *len, void* buffer, Boolean 
     err=     (rproc)( pid,spP, len,(char*)buffer );
     
     
-    if (!err) procs[pid]._rbytes+=(unsigned int)*len; /* for statistics */
+    if (!err) os9_long_inc( &pd->_rbytes, *len ); /* for statistics */
     if (!err && debugcheck(dbgSysCall,dbgDetail)) showbuff( spP, buffer,*len );
     
     if                   (spP->signal_to_send) {

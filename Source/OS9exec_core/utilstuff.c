@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2002/08/13 15:15:23  bfo
+ *    The state <dead> will be handled correctly now (state=0x9100)
+ *
  *    Revision 1.20  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -188,6 +191,13 @@ int ustrncmp( const char *s1, const char *s2, ushort n )
    
     return 0; /* equal */
 } /* ustrncmp */
+
+
+
+void os9_long_inc( ulong* a, ulong increment )
+/* increment ulong field <a> dependent on big/little endian */
+{   *a= os9_long( os9_long( *a ) + increment );
+} /* os9_long_inc */
 
 
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2002/08/09 22:39:21  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.12  2002/08/08 21:54:30  bfo
  *    F$SetSys extended with D_PrcDBT support
  *
@@ -739,18 +742,14 @@ typedef struct {
                 void      *systaskdataP;    /* system task data pointer */
                 ulong      systask_offs;    /* offset for rewrite call (from tty/pty) */
                 ushort      lastsyscall;    /* last system call issued by this process */
-                
+
                 /* statistics */
-                unsigned int
-                  _uticks,                  /* number of ticks in user mode */
-                  _fticks,                  /* number of ticks at fcalls */
-                  _iticks,                  /* number of ticks at icalls */
-                  _datbeg,                  /* julian date when forked */
-                  _timbeg,                  /* julian time when forked */
-                  _fcalls,                  /* number of fcalls */
-                  _icalls,                  /* number of icalls */
-                  _rbytes,                  /* number of bytes read */
-                  _wbytes;                  /* number of bytes written */
+                ulong            fticks;    /* number of ticks at fcalls */
+                ulong            iticks;    /* number of ticks at icalls */
+                
+//              unsigned int
+//                 _rbytes,                  /* number of bytes read */
+//                 _wbytes;                  /* number of bytes written */
                   
                 /* memory */
                 ulong memstart;             /* the process' static storage start addr (unbiased) */ 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/08/13 15:15:37  bfo
+ *    The state <dead> will be handled correctly now (state=0x9100)
+ *
  *    Revision 1.8  2002/08/09 22:39:21  bfo
  *    New procedure set_os9_state introduced and adapted everywhere
  *
@@ -708,45 +711,27 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
     if (cp->state==pUnused) return E_IPRCID; /* this is not a valid process */
 
+
     memcpy( &pd,&cp->pd, sizeof(procid) );
     
-    pd._id    = os9_word(id);
     pd._pid   = os9_word(cp->parentid);
     pd._sid   = os9_word(cp->siblingid);
     pd._cid   = os9_word(cp->childid);
     
-    pd._sp    = 0; /* just to be sure */
     pd._usp   = (byte*) os9_long( rp->a[7] );
-    pd._pagcnt= 0;
     
     pd._group = os9_word(cp->_group);
     pd._user  = os9_word(cp->_user );
     pd._prior = os9_word(cp->_prior);
-    pd._age   = os9_word(128); /* as in real OS-9 */
-    pd._task  = 0;
     
     /* <_state> and <queueid> will be assigned directly */
     if (id==cpid) pd._queueid = '*';
     
     pd._scall = os9_byte(cp->lastsyscall);
-    pd._resvd1= os9_word(0xBD00); /* as in OS-9 */
-    pd._deadlk= 0;                /* as in OS-9 */
     pd._signal= os9_word(cp->lastsignal );
     pd._sigvec= (char *)   os9_long(cp->icptroutine);
     pd._sigdat= (char *)   os9_long((ulong)&cp->sigdat);
     pd._pmodul= (mod_exec*)os9_long((ulong)os9mod(cp->mid));
-
-    pd._uticks= os9_long(cp->_uticks);
-    pd._sticks= os9_long(cp->_fticks + cp->_iticks);
-    pd._datbeg= os9_long(cp->_datbeg);
-    pd._timbeg= os9_long(cp->_timbeg);
-    pd._fcalls= os9_long(cp->_fcalls);
-    pd._icalls= os9_long(cp->_icalls);
-    pd._rbytes= os9_long(cp->_rbytes);
-    pd._wbytes= os9_long(cp->_wbytes);
-    
-    pd._frag  = NULL; /* don't use OS-9 V3.0 memory method */
-    pd._fragg = NULL;
 
     /* get the list of the currently connected trap handlers (bfo) */ 
     for (k=0; k<NUMTRAPHANDLERS; k++) {
@@ -784,13 +769,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     }
     pd._blksiz[0]=os9_long(memsz);
     
-    pd._data  = NULL;
-    pd._datasz= 0;
-    
-    for (k=0; k<   7; k++) pd.FPExcpt [k]= NULL;
-    for (k=0; k<   7; k++) pd.FPExStk [k]= NULL;
-    for (k=0; k<1168; k++) pd._procstk[k]= NUL; /* no system stack used */
-    
+        
     memcpy( (byte*)rp->a[0], &pd, loword(rp->d[1]) );
     return 0;
 } /* OS9_F_GPrDsc */
@@ -878,14 +857,17 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 	#define D_68881    0x002F
 	#define D_ModDir   0x003C
 	#define D_ModDir_L 0x0040
-	#define D_PrcDBT   0x0044   /* process descriptor block table pointer */
-	#define D_PthDBT   0x0048   /* path    descriptor block table pointer */
-	#define D_Ticks    0x0054   /* current tick count                     */
-	#define D_MinBlk   0x0070   /* process minimum allocatable block size */
-	#define D_BlkSiz   0x007C   /* system  minimum allocatable block size */
-	#define D_DevTbl   0x0080   /* I/O device table ptr                   */
-	#define D_MPUTyp   0x03C8   /* MPU type, also supported for PowerPC   */
-	#define D_IPID     0x040C   /* os9exec/nt identification!             */
+	#define D_PrcDBT   0x0044   /* process descriptor block table pointer   */
+	#define D_PthDBT   0x0048   /* path    descriptor block table pointer   */
+	#define D_Ticks    0x0054   /* current tick count                       */
+	#define D_TotRAM   0x006C   /* total RAM available at startup           */
+	#define D_MinBlk   0x0070   /* process minimum allocatable block size   */
+	#define D_FreMem   0x0074   /* system free memory list head             */
+	#define D_FreMem_L 0x0078
+	#define D_BlkSiz   0x007C   /* system  minimum allocatable block size   */
+	#define D_DevTbl   0x0080   /* I/O device table ptr                     */
+	#define D_MPUTyp   0x03C8   /* MPU type, also supported for PowerPC     */
+	#define D_IPID     0x040C   /* os9exec/nt identification!               */
 
 	#define D_ScreenW  0x1000   /* Width in pixels of this system's screen  */
 	#define D_ScreenH  0x1004   /* Hight  "   "    "    "    "         "    */
@@ -940,11 +922,14 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
                            else *ptr= os9_long( (ulong) &procs[k] ); /* is now the right ptr, but ... */
       
                            ptr++;
-                       }                             break; /* prc table image */
+                       }                             break; /* prc table image  */
                        
-      case D_PthDBT  : v=  (ulong)           syspth; break; /* pth table image */
+      case D_PthDBT  : v=  (ulong)           syspth; break; /* pth table image  */
       case D_Ticks   : v=           GetSystemTick(); break; /* system heartbeat */
+      case D_TotRAM  : v=                 max_mem(); break;
       case D_MinBlk  : v=                        16; break; /* as on real OS-9 systems */
+      case D_FreMem  : v=  (ulong)             NULL; break; /* no list available */
+      case D_FreMem_L: v=  (ulong)             NULL; break;  
       case D_BlkSiz  : v=            OS9MINSYSALLOC; break; /* as on real OS-9 systems */
       case D_DevTbl  : v=  (ulong)            &devs; break; /* I/O device table ptr */
       
@@ -983,7 +968,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
       case D_ScreenH1: v= screenH;          break; /* -y option of OS9exec  */
       case D_UserOpt : v= userOpt;          break; /* -u option of OS9exec  */
       
-      default        : v= 0; upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
+      default        : v= 0; if (debug[dbgNorm] & dbgAnomaly) upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
     }
     
     debugprintf(dbgPartial,dbgNorm,("# F$SetSys: %04lX %x %d\n", offs, size, v));

@@ -30,6 +30,20 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
 
 /* OS9 Service Request Dispatch table */
 /* ================================== */
@@ -269,13 +283,18 @@ const funcdispatch_entry* getfuncentry( ushort func )
 static ulong DiffTick( void )
 /* get the difference since last ticks */
 {
-    ulong          t= GetSystemTick(); /* time spent since last call except idle part */
-    ulong       a= t - last_complete - rw__idleticks - slp_idleticks; 
-    last_complete= t;
+    process_typ* cp= &procs[1];
+    ulong            t= GetSystemTick(); /* time spent since last call except idle part */
+    ulong        a = t - last_complete - rw__idleticks - slp_idleticks; 
+    last_complete  = t;
+
     
-    procs[1]._iticks += rw__idleticks + slp_idleticks;
+    cp->iticks       += rw__idleticks + slp_idleticks;
+    cp->pd._sticks= os9_long(cp->fticks + cp->iticks);
+    
     sum_rw__idleticks+= rw__idleticks;  rw__idleticks= 0;
     sum_slp_idleticks+= slp_idleticks;  slp_idleticks= 0;
+
     return a;
 } /* DiffTick */
 
@@ -290,10 +309,10 @@ void os9_to_xxx( ushort pid, const char* name )
     st_typ    *s, *sj, *sj1;
     Boolean   eli= false; /* end of list */
     ulong     a= DiffTick();
+    procid*   pd= &procs[pid].pd;
     
     /* try to measure ticks */
-    
-    procs[pid]._uticks+= a; /* info for F$GPrDsc */
+    os9_long_inc( &pd->_uticks, a ); /* info for F$GPrDsc */
 
         mid= procs[pid].mid;    
         mod= os9mod   ( mid );
@@ -358,26 +377,29 @@ void xxx_to_arb( ushort func, ushort pid )
 /* Get systime ticks on the way from XXX command to arbitration */
 {
     /* calc and save time spent */
-    ulong f;
-    ulong a= DiffTick();
+    process_typ* cp= &procs[pid];
+    ulong        a = DiffTick();
+    ulong        f;
             
     /* func was within range, register */
     if (func<=NUMFCALLS) {
         if (systime_prog_ok) f= func;
         else                 f= NUMFCALLS;
         
-        fcall_time[f]     += a;
-        fcall_num [f]     ++;
-        procs[pid]._fticks+= a; /* info for F$GPrDsc */
+        fcall_num [f]++;
+        fcall_time[f]+= a;
+        cp->fticks   += a; /* info for F$GPrDsc */
     }
     else {
         if (systime_prog_ok) f= func-0x80;
         else                 f= NUMICALLS;
 
-        icall_time[f]     += a;
-        icall_num [f]     ++;
-        procs[pid]._iticks+= a; /* info for F$GPrDsc */
-    }               
+        icall_num [f]++;
+        icall_time[f]+= a;
+        cp->iticks   += a; /* info for F$GPrDsc */
+    }  
+    
+    cp->pd._sticks= os9_long(cp->fticks + cp->iticks);
 } /* xxx_to_arb */
 
 
@@ -385,10 +407,12 @@ void xxx_to_arb( ushort func, ushort pid )
 void arb_to_os9( Boolean last_arbitrate )
 /* Get systime ticks on the way from arbitration to OS-9 */
 {
+    process_typ* cp= &procs[1];
     ulong a= DiffTick();  /* must be done after <b> calculation */
     
-    arbticks        += a;
-    procs[1]._fticks+= a; /* info for F$GPrDsc */
+    arbticks  += a;
+    cp->fticks+= a; /* info for F$GPrDsc */
+    cp->pd._sticks= os9_long(cp->fticks + cp->iticks); /* update it */
     
     if (last_arbitrate) arbnum++;
 } /* arb_to_os9 */
@@ -400,6 +424,7 @@ void arb_to_os9( Boolean last_arbitrate )
 os9err exec_syscall( ushort func, ushort pid, regs_type *rp )
 {
     os9err  err;
+    procid* pd= &procs[pid].pd;
     const   funcdispatch_entry* fdeP= getfuncentry(func);
     char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
     char*   fSS  = "";
@@ -424,9 +449,9 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp )
 
 
     if (fdeP!=&invalidcall) {
-        if     (func<NUMFCALLS) procs[pid]._fcalls++; /* "procs -a" uses it */
+        if     (func<NUMFCALLS) os9_long_inc( &pd->_fcalls, 1 ); /* "procs -a" uses it */
         else  { func-=0x80;
-            if (func<NUMICALLS) procs[pid]._icalls++; 
+            if (func<NUMICALLS) os9_long_inc( &pd->_icalls, 1 ); 
         }
     }
     
@@ -527,8 +552,9 @@ ulong GetSystemTick(void)
 /* init syscall timing */
 void init_syscalltimers(void)
 {
-    ushort k;
-
+    ushort       k;
+    process_typ* cp;
+    
     time( &timerstart );
     logtiming        = true;
     arbticks         = 0;
@@ -542,12 +568,14 @@ void init_syscalltimers(void)
     strcpy( systime_prog,"" );    /* invalidate it */
             systime_prog_ok= true;
 
-    for (k=0; k<=NUMFCALLS;   k++) { fcall_time[k]= 0;    fcall_num[k]= 0; }
-    for (k=0; k<=NUMICALLS;   k++) { icall_time[k]= 0;    icall_num[k]= 0; }
+    for (k=0; k<=NUMFCALLS;   k++) { fcall_time[k]= 0; fcall_num[k]= 0; }
+    for (k=0; k<=NUMICALLS;   k++) { icall_time[k]= 0; icall_num[k]= 0; }
 
-    for (k=0; k<MAXPROCESSES; k++) { procs[k]._uticks= 0;
-                                     procs[k]._fticks= 0; procs[k]._fcalls= 0; 
-                                     procs[k]._iticks= 0; procs[k]._icalls= 0; }
+    for (k=0; k<MAXPROCESSES; k++) { cp= &procs[k];
+                                     cp->pd._uticks= 0;
+                                     cp->fticks    = 0;       cp->pd._fcalls= 0; 
+                                     cp->iticks    = 0;       cp->pd._icalls= 0;
+                                     cp->pd._sticks= os9_long(cp->fticks + cp->iticks); }
 
     for (k=0; k<MAX_OS9PROGS; k++) { strcpy( statistics[k].name,"" );
                                              statistics[k].ticks= 0;
