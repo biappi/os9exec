@@ -622,6 +622,68 @@ static Boolean MWrong( int cdv )
 
 
 
+static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
+{
+    #define DefaultScts 8192
+    #define A_Base      0x100
+    #define MaxScts     0x00fffffc
+    
+    ulong   allocSize, allocN, allocScts;
+    ulong*  u;
+    ushort* w;
+    byte*   b;
+    ulong   f, r, fN, rN;
+    int     ii, v;
+    byte    p;
+    
+        dev->totScts= mnt_ramSize*KByte/dev->sctSize; /* adapt to KBytes */
+    if (dev->totScts     ==0) dev->totScts= DefaultScts;
+    if (dev->totScts>MaxScts) dev->totScts= MaxScts;
+    
+    allocSize= (dev->totScts-1)/(dev->sctSize*BpB) + 1; /* round up */
+    allocN   =       allocSize * dev->sctSize*BpB;
+    allocScts= 1 +   allocSize + 2;
+    
+    dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
+    if (dev->ramBase==NULL) return E_NORAM;
+    
+    memcpy( dev->ramBase,RAM_zero, dev->sctSize );
+    
+    p= 0x80;
+    for (ii=0; ii<allocN; ii++) {
+        if  (ii<allocScts || ii>=dev->totScts) {
+          v= ii/BpB;
+          b= &dev->ramBase[A_Base+v]; *b |= p;
+        }
+        
+        p= p/2; if (p==0) p= 0x80; /* prepare the next pattern */
+    } /* for */
+    
+    f=  1 + allocSize; fN= f*dev->sctSize;
+    r=  f + 1;         rN= r*dev->sctSize;
+    
+    u= &dev->ramBase[   0x00]; *u= os9_long( dev->totScts )<<BpB; /* 0x03 will be overwritten, is 0 anyway */
+    w= &dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
+    u= &dev->ramBase[   0x08]; *u= os9_long( f )<<BpB;            /* 0x0b will be overwritten, is 0 anyway */
+                        
+        dev->ramBase[fN+0x00]= 0xbf; /* prepare the fd sector */
+        dev->ramBase[fN+0x08]= 0x01;
+        dev->ramBase[fN+0x0C]= 0x40;
+    u= &dev->ramBase[fN+0x10]; *u= os9_long( r )<<BpB;
+        dev->ramBase[fN+0x14]= 0x01;
+            
+        dev->ramBase[rN+0x00]= 0x2e; /* prepare the directory entry */
+        dev->ramBase[rN+0x01]= 0xae;
+    w= &dev->ramBase[rN+0x1e]; *w= (ushort) os9_word( f );
+        dev->ramBase[rN+0x20]= 0xae;
+    w= &dev->ramBase[rN+0x3e]; *w= (ushort) os9_word( f );
+    
+    strcpy( dev->img_name,cmp );
+    return 0;
+} /* PrepareRAM */
+
+
+
 static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP, 
                           ushort cdv, char* pathname, char* curpath, ushort mode, Boolean *new_inst )
 /* Make Connection to SCSI system or to an TBF image file */ 
@@ -890,26 +952,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         dev->installed= true;   /* now it is installed */
         
         if (isRAM) {
-            upe_printf( "RAM disk: %d\n", mnt_ramSize );
-            dev->totScts= 8192;
-            dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
-            memcpy( dev->ramBase,RAM_zero, dev->sctSize );
-            
-            dev->ramBase[0x100]= 0xfe;
-            
-            dev->ramBase[0x500]= 0xbf;
-            dev->ramBase[0x508]= 0x01;
-            dev->ramBase[0x50C]= 0x40;
-            dev->ramBase[0x512]= 0x06;
-            dev->ramBase[0x514]= 0x01;
-            
-            dev->ramBase[0x600]= 0x2e;
-            dev->ramBase[0x601]= 0xae;
-            dev->ramBase[0x61f]= 0x05;
-            dev->ramBase[0x620]= 0xae;
-            dev->ramBase[0x63f]= 0x05;
-    
-            strcpy( dev->img_name,cmp );
+            err= PrepareRAM( dev, &cmp );
             break;
         }
         
@@ -1165,10 +1208,13 @@ static void unmount_usage( char* name, ushort pid )
 
 static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
 {
-    os9err            err= 0;
-    if (!dev->isRAM &&
-        !IsSCSI(dev)) err= syspath_close( pid, dev->sp_img ); 
-
+    os9err err= 0;
+    
+    if (dev->isRAM) release_mem( dev->ramBase, false );
+    else {
+        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img ); 
+    }
+    
     if (!err) {       dev->installed= false;
          release_mem( dev->tmp_sct,   false );
                       dev->tmp_sct= NULL;
@@ -1497,7 +1543,6 @@ static os9err GetThem( rbfdev_typ* dev, ulong pos, ulong scs, Boolean get_them )
     byte           mask= 0x80;
     while (jj>0) { mask= mask/2; jj--; } /* search first mask */
     
-
            kk= scs;
     while (kk>0) {     /* use the device's temporary sector */
         debugprintf(dbgFiles,dbgNorm,("# GetThem (%s) sectorNr: $%x, pos/scs: $%x %d\n",
@@ -1683,6 +1728,7 @@ static os9err ReleaseBlocks( syspath_typ* spP, ulong lastPos )
         if (broken) {
             *lp= 0;
             *sp= 0;
+            if (scs>0) GetThem( dev, pos, scs, false );
         }
         else {  tps+= scs;
             if (tps>cmp) {
@@ -1811,6 +1857,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 if (wMode) {
                     err= AllocateBlocks( spP,ma, &pos,&scs, pref ); if (err) break;
                     err= AdaptAlloc_FD ( spP,     pos, scs       ); if (err) break;
+                    
                     FD_Segment( spP, &attr,&size,&totsize,&sect, &pref );
                                              rs= &totsize;
                     if (rbf->currPos>=*rs) {
@@ -1901,10 +1948,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     } while (remain>0);
     
     if (err==E_FULL) {
-        rbf->currPos=   sv;
-        rbf->lastPos=   sv;
-        Set_FDSize( spP,sv );
-        WriteFD   ( spP );
+        rbf->currPos= sv;
+        rbf->lastPos= sv;
     }
     
     if (rbf->lastPos< rbf->currPos) /* adapt lastpos */
@@ -2322,8 +2367,11 @@ os9err pRclose( ushort pid, syspath_typ* spP )
 
     /* release remaining part, if pointer is not at the end of file */
     if (crp!=0 &&
-        crp==lsp) err= ReleaseBlocks( spP,v );
-
+        crp==lsp) {
+        Set_FDSize        ( spP,crp ); /* new file size */        
+        err= ReleaseBlocks( spP,crp );
+    }
+    
     ReleaseBuffers( spP );
     return err;
 } /* pRclose */
