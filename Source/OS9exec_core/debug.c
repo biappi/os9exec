@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2003/04/12 21:48:24  bfo
+ *    New codes SS_Send, SS_Recv, ... included
+ *
  *    Revision 1.6  2002/09/22 20:46:48  bfo
  *    SS_206 (unused setstat call) included.
  *
@@ -247,7 +250,7 @@ os9err debug_help( ushort pid, int argc, char **argv )
     upho_printf("  dbgStartup      0x0800  os9exec/nt startup and initial argument preparation\n");
     upho_printf("  dbgPartial      0x1000  warnings for inaccurate/partial emulated functions\n");
     upho_printf("  dbgTerminal     0x2000  interactive I/O, output filtering\n");
-    upho_printf("  dbgSpecialIO    0x4000  special I/O, such as printer\n");
+    upho_printf("  dbgSpecialIO    0x4000  special I/O, such as printer and network\n");
     upho_printf("  dbgWarnings     0x8000  warnings\n");
     upho_printf("\n");
     upho_printf("Debug levels\n");
