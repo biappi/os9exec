@@ -66,7 +66,10 @@ typedef struct {
 			Boolean wProtected;			  /* true, if write  protected */
 			Boolean fProtected;			  /* true, if format protected */
 			Boolean multiSct;             /* true, if multi sector support */
+			
 			Boolean isRAM;                /* true, if RAM disk */
+            byte*   ramBase;              /* start address of RAM disk */
+            
 			int	    scsiID;               /* SCSI ID, -1 if NO_SCSI */
 			short   scsiAdapt;            /* SCSI Adaptor, -1 if none */
 			short   scsiBus;              /* SCSI Bus, normally 0 */
@@ -77,6 +80,29 @@ typedef struct {
 
 /* the RBF devices */
 rbfdev_typ  rbfdev[MAXRBFDEV];		
+
+
+
+/* OS9exec builtin module, defined as constant array */
+const byte RAM_zero[] = {
+    0x00,0x20,0x00,0x00,0x04,0x00,0x00,0x01,0x00,0x00,0x05,0x00,0x00,0xbf,0x00,0x00,  // . ...........?..
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x02,0x07,0x03,0x14,0x2d,0x52,  // ..............-R
+    0x61,0x6d,0x20,0x44,0x69,0x73,0x6b,0x20,0x28,0x43,0x61,0x75,0x74,0x69,0x6f,0x6e,  // am Disk (Caution
+    0x3a,0x20,0x56,0x6f,0x6c,0x61,0x74,0x69,0x6c,0x65,0xa9,0x00,0x00,0x00,0x00,0x00,  // : Volatile).....
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x43,0x72,0x75,0x7a,0x00,0x00,0x00,0x01,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,  // Cruz............
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00   // ................
+};    
+
 
 
 
@@ -204,7 +230,7 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
    
     do {    
         if (dev->isRAM) {
-            err= E_NOTRDY;
+            memcpy( buffer, dev->ramBase+(sectorNr*dev->sctSize), nSectors*dev->sctSize );
             break;
         }
         
@@ -262,7 +288,7 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
         
     do {
         if (dev->isRAM) {
-            err= E_NOTRDY;
+            memcpy( dev->ramBase+(sectorNr*dev->sctSize), buffer, nSectors*dev->sctSize );
             break;
         }
         
@@ -362,10 +388,8 @@ static os9err DevSize( rbfdev_typ* dev )
     os9err err;
     ulong  size,ssize;
     
-    if (dev->isRAM) {
-        dev->totScts= 4096;
-        return 0;
-    }
+    /* should be defined already for the RAM disk */
+    if (dev->isRAM) return 0;
 
     if (IsSCSI(dev)) {  /* try to switch to correct sector size first */
         err= Set_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize );
@@ -681,6 +705,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             }
         }
 
+        isSCSI= false; /* don't forget to set a default */
         if (!isRAM) {
                  isSCSI= (err && mnt_scsi!=NO_SCSI);
             if  (isSCSI) {
@@ -855,8 +880,34 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     if (ustrcmp( cmp,"c1")==0) dev->fProtected= false;
 
     do {
-        err= 0; /* set it as default */
-        if (IsSCSI(dev)) { dev->installed= true; break; } /* now it is installed */
+        err= 0;                 /* set it as default   */
+        dev->installed= true;   /* now it is installed */
+        
+        if (isRAM) {
+            dev->totScts= 8192;
+            dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
+            memcpy( dev->ramBase,RAM_zero, dev->sctSize );
+            
+            dev->ramBase[0x100]= 0xfe;
+            
+            dev->ramBase[0x500]= 0xbf;
+            dev->ramBase[0x508]= 0x01;
+            dev->ramBase[0x50C]= 0x40;
+            dev->ramBase[0x512]= 0x06;
+            dev->ramBase[0x514]= 0x01;
+            
+            dev->ramBase[0x600]= 0x2e;
+            dev->ramBase[0x601]= 0xae;
+            dev->ramBase[0x61f]= 0x05;
+            dev->ramBase[0x620]= 0xae;
+            dev->ramBase[0x63f]= 0x05;
+    
+            strcpy( dev->img_name,cmp );
+            break;
+        }
+        
+        if (IsSCSI(dev)) break; /* no more actions for SCSI */
+
             
         type    = IO_Type( pid, pathname, poRead );
         wProtect= mnt_wProtect;
@@ -865,18 +916,14 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         /* inherit write protection to sub device */
         if (!wProtect && type==fRBF && InstalledDev( pathname,curpath, false, &cdv ))
              wProtect= rbfdev[cdv].wProtected;
-            
-        dev->installed= true; /* now it is installed */
 
         /* try to open in read/write mode first (if not asking for wProtection */
         /* if not possible, open it readonly */
-        if (!isRAM) {
-            if (!wProtect) {
-                 err= Open_Image( pid,dev, type,pathname, poUpdate ); if (!err) break;
-            }
-                 err= Open_Image( pid,dev, type,pathname, poRead );
-            if (!err)                 dev->wProtected= true;
+        if (!wProtect) {
+             err= Open_Image( pid,dev, type,pathname, poUpdate ); if (!err) break;
         }
+             err= Open_Image( pid,dev, type,pathname, poRead );
+        if (!err)                 dev->wProtected= true;
     } while (false);
 
     do {                               if (err) break;

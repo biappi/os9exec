@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/07/02 18:55:39  bfo
+ *    Preparations done for RAM disk /r0 implementation
+ *
  *    Revision 1.8  2002/07/01 21:28:11  bfo
  *    p2cstr and c2pstr implemented correctly for Carbon version
  *
@@ -1355,6 +1358,7 @@ Boolean SamePathBegin( const char* pathname, const char* cmp )
     return len>0 
        &&  ustrncmp( pathname,cmp, len )==0
        && (pathname[len]==NUL || 
+           pathname[len]=='@' || 
            pathname[len]==PSEP);
 } /* SamePathBegin */
 
