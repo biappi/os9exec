@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/07/30 16:46:14  bfo
+ *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
+ *
  *    Revision 1.3  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -109,12 +112,12 @@
 #ifdef MPW
 /* search path for MPW is different */
   #include ":os9defs:procid.h"
-  #include ":os9defs:errno.h"
   #include ":os9defs:sgstat.h"
+  #include ":os9defs:errno_adapted.h"
 #else  
   #include "procid.h"
-  #include "errno.h"
   #include "sgstat.h"
+  #include "errno_adapted.h"
 #endif
 
 
