@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/12/03 23:58:08  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.7  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -62,7 +65,7 @@
 
 
 
-#ifndef MAC_NOTX
+#ifndef MACOS9
   os9err int_dir(ushort pid, int argc, char **argv)
   /* internal "dir" command for OS9exec/nt */
   {
@@ -177,7 +180,7 @@ os9err int_dir(ushort pid, int argc, char **argv)
         upe_printf("Error: no or one argument allowed\n"); return 1;
     }
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       /* set right base dir */
       if (exedir) { volid= procs[pid].x.volID; dirid=procs[pid].x.dirID; }
       else        { volid= procs[pid].d.volID; dirid=procs[pid].d.dirID; }

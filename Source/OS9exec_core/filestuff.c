@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2004/12/03 23:57:26  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.19  2004/11/27 12:12:52  bfo
  *    _XXX_ implemented
  *
@@ -310,7 +313,7 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
 
         default:
             if (fsspecflag) {               
-                #ifdef MAC_NOTX
+                #ifdef MACOS9
                   upo_printf(" %8d %3d",spP->u.disk.spec.parID, /* path has FSSpec to show */
                                         spP->u.disk.spec.vRefNum );
                   memcpy( &theName,     spP->u.disk.spec.name, OS9NAMELEN );
@@ -517,7 +520,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     process_typ* cp= &procs[pid];
     int          k;
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       OSErr     oserr;
       dir_type* r;
       char*     ptx;
@@ -536,7 +539,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         uphe_printf("parsepathext  Input: '%s'\n", tmp );
     }
 
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
     /* --- first set the process' default dir */
     if (exedir) { r= &cp->x; ptx= "exec"; c= 'x'; }
     else        { r= &cp->d; ptx= "data"; c= 'd'; }
