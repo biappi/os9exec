@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.2  2004/11/27 13:35:20  bfo
+ *    comments added
+ *
  *    Revision 1.1  2004/11/27 12:19:42  bfo
  *    "net_platform" introduced
  *
@@ -63,6 +66,19 @@
 static netInstalled= false;
 /* Connection from Internet Support Package (ISP) */
 /* to the host system's network connection */
+
+
+
+#if defined MACOS9
+  EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
+                               OTOpenFlags        oflag,
+                               TEndpointInfo*     info,
+                               OSStatus*          err );
+
+  void* OTAllocMem_( OTByteCount size );
+#endif
+
+
 
 os9err NetInstall(void);
 /* Create the network connection, if not already done */

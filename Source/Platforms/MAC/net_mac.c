@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2004/11/27 12:19:56  bfo
+ *    "net_platform" introduced
+ *
  *
  */
 
@@ -71,27 +74,84 @@
 */
 
 
+
+// Common function for MacOS9
+// Can't be XXXInContext for classic, because already defined in "OpenTransport.h"
+// but not linkable
+
+EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
+                             OTOpenFlags        oflag,
+                             TEndpointInfo*     info, /* can be NULL */
+                             OSStatus*          err )
+{
+  #ifdef USE_CARBON
+    return OTOpenEndpointInContext( config, oflag, info, err, nil );
+  #else
+    return OTOpenEndpoint         ( config, oflag, info, err );
+  #endif
+} // OTOpenEndpoint_
+
+
+
+void* OTAllocMem_( OTByteCount size )
+{
+  #ifdef USE_CARBON
+    return OTAllocMemInContext( size, nil );
+  #else
+    return OTAllocMem         ( size );
+  #endif
+} // OTAllocMem_    
+
+
+
+static OSStatus InitOpenTransport_()
+{
+  #ifdef USE_CARBON
+    return InitOpenTransportInContext( kInitOTForApplicationMask, nil );
+  #else
+    return InitOpenTransport();
+  #endif
+} // InitOpenTransport_
+
+
+
+static InetSvcRef OTOpenInternetServices_( OTConfigurationRef   cfig,
+                                           OTOpenFlags          oflag,
+                                           OSStatus *           err )
+{
+  #ifdef USE_CARBON
+    return OTOpenInternetServicesInContext( cfig, oflag, err, nil );
+  #else
+    return OTOpenInternetServices         ( cfig, oflag, err );
+  #endif
+} // OTOpenInternetServices_
+
+
+
+static void CloseOpenTransport_()
+{
+  #ifdef USE_CARBON
+    CloseOpenTransportInContext( nil );
+  #else
+    CloseOpenTransport();
+  #endif
+} // CloseOpenTransport_
+
+
+
+
+// --------------------------------------------------------------------------------------------------------
 os9err NetInstall(void)
 {
   OSStatus   err;
   InetSvcRef inet_services= nil;
     
   if (netInstalled) return 0; /* already done, ok */
-    
-  #ifdef USE_CARBON
-        err= InitOpenTransportInContext( kInitOTForApplicationMask, nil );
-    if (err) return E_UNIT;
-    inet_services= OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0,&err, nil );
-    if (err) CloseOpenTransportInContext( nil );
-    
-  #else
-        err= InitOpenTransport();
-    if (err) return E_UNIT;
-    inet_services= OTOpenInternetServices( kDefaultInternetServicesPath, 0,&err );
-    if (err) CloseOpenTransport();
-  #endif
-  
-  if (err) return E_UNIT;
+
+      err= InitOpenTransport_();
+  if (err)                          return E_UNIT;
+  inet_services= OTOpenInternetServices_( kDefaultInternetServicesPath, 0, &err );
+  if (err) { CloseOpenTransport_(); return E_UNIT; }
   
   netInstalled= true; /* it is ok now */
   return 0;
