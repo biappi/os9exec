@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2002/10/27 23:16:39  bfo
+ *    get_mem/release_mem no longer with param <mac_asHandle>
+ *
  *    Revision 1.27  2002/10/15 17:58:21  bfo
  *    'CutUp' visible again (for linuxfiles.c)
  *
@@ -228,15 +231,15 @@ void set_os9_state( ushort cpid, pstate_typ state )
     
             cp->state= state;
     switch (cp->state) {
-        case pUnused   : pd->_state = os9_word(0);      pd->_queueid = '-'; break;
+        case pUnused   : pd->_state = 0;                pd->_queueid = '-'; break;
         case pActive   : pd->_state = os9_word(0x8800); pd->_queueid = 'a'; break;
         case pDead     : pd->_state = os9_word(0x9100); pd->_queueid = '-'; break;
         case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
         case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
-        case pIntUtil  : pd->_state = os9_word(0);      pd->_queueid = 'i'; break;
-        case pSysTask  : pd->_state = os9_word(0);      pd->_queueid = 't'; break;
+        case pIntUtil  : pd->_state = 0;                pd->_queueid = 'i'; break;
+        case pSysTask  : pd->_state = 0;                pd->_queueid = 't'; break;
         case pWaitRead : pd->_state = os9_word(0xA000); pd->_queueid = 'r'; break;
-        default        : pd->_state = os9_word(0);      pd->_queueid = '?';
+        default        : pd->_state = 0;                pd->_queueid = '?';
     }
 } /* set_os9_state */
 
