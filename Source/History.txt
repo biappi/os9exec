@@ -1095,6 +1095,7 @@
 
           02-09-15  Bfo     fpp.c FPU bug (FMOVE) fixed: Brian King's code included.
           02-09-15  Bfo     Relative paths can be mounted (again).
+          02-09-17  Bfo     /r0 is disabled as name, if RAM_SUPPORT is disabled.
     3.18  02-09-??  Bfo     ...
     -------------------
 */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2002/09/14 23:13:38  bfo
+ *    Relative paths can be mounted (again).
+ *
  *    Revision 1.25  2002/09/11 17:05:55  bfo
  *    Bug at incomplete sector of multisector write fixed
  *
@@ -529,12 +532,23 @@ static void CutPath( char* s )
 static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pathname, 
                           ushort mode )
 {
+    #define R0 "/r0"
     os9err  err, cer;
     ushort  sp;
     ulong   size, len;
     char    bb[STD_SECTSIZE]; /* one sector */
     
     do {
+        #ifndef RAM_SUPPORT
+          char* q;
+          ulong lr0= strlen( R0 );
+          
+          len= strlen( pathname );
+          if (ustrcmp( pathname, "r0" )==0 || len<lr0) return E_UNIT;
+          q=           pathname + len-lr0;
+          if (ustrcmp( q, R0 )==0 ) return E_UNIT;
+        #endif
+        
         err= syspath_open   ( pid, &sp, type,pathname,mode ); if (err) return err;
         err= syspath_gs_size( pid,  sp, &size );              if (err) break;
         if (size < 8192 || 
