@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2003 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2003/05/17 10:29:19  bfo
+ *    Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
+ *
  *    Revision 1.34  2003/04/25 19:34:30  bfo
  *    MAXDIR/MAX_PATH now visible for Macintosh version
  *
@@ -617,7 +620,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x22;
+	exec_revision= 0x23;
 	#endif
 } /* getversions */
 
@@ -1265,7 +1268,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     /* Sign-on message */
      upo_printf( "\n" );
     upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
-    upho_printf( "Copyright (C) 2002 Lukas Zeller / Beat Forster\n" );
+    upho_printf( "Copyright (C) 2004 Lukas Zeller / Beat Forster\n" );
     upho_printf( "This program is distributed under the terms of\n" ); 
     upho_printf( "        the GNU General Public License\n" );
     upho_printf( "\n" );

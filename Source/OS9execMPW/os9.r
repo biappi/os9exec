@@ -46,13 +46,13 @@
 /* read 'OS9C' (3,"csl") ":os9modules:csl";   */
 
 resource 'vers' (1, purgeable) {
-        0x3,
-        0x22,
-        beta,
-        0x1,
-        verGrSwiss,
-        "3.22",
-        "OS9exec V3.22 © 1993-2003 by luz/bfo, luz@synthesis.ch / beat.forster@ggaweb.ch"
+    0x3,
+    0x23,
+    beta,
+    0x1,
+    verGrSwiss,
+    "3.23",
+    "OS9exec V3.23   © 1993-2004   luz@synthesis.ch / beat.forster@ggaweb.ch"
 };
 
 resource 'cmdo' (257, "os9") {
