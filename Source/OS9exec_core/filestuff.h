@@ -135,7 +135,7 @@ void    CheckInBufferTTY( ttydev_typ* mco );
 
 
 /* external net    support routines */
-os9err        MyInetAddr( ulong *inetAddr );
+os9err        MyInetAddr( ulong *inetAddr, ulong *dnsAddr, char** domainName );
 os9err             pNask( ushort pid, syspath_typ* );
 
 /* eof */
