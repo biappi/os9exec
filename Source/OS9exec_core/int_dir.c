@@ -120,7 +120,7 @@ os9err int_dir(ushort pid, int argc, char **argv)
     ulong ressize,datasize;
     #define MAXDATESIZE 30
     char outdate[MAXDATESIZE];
-    struct tm *tp,tim;
+    struct tm tim;
     char   yy[3],mm[3],dd[3];
 
     /* %%% simple version for now */
@@ -247,8 +247,8 @@ os9err int_dir(ushort pid, int argc, char **argv)
                     ressize=0;
                     datasize=cipb.dirInfo.ioDrNmFls;
                 }
-                tp = localtime((time_t *)&modified);
-                tim=*tp; /* copy it, as it might be overwritten */
+                
+                TConv( modified, &tim );
                 Two( yy, tim.tm_year % 100 );
                 Two( mm, tim.tm_mon+1      );
                 Two( dd, tim.tm_mday       );
