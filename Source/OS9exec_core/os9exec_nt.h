@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2004/11/27 12:02:21  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.32  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -538,7 +541,7 @@ typedef struct {
 
 /* variant for disk objects */
 typedef struct {
-            #ifdef macintosh
+            #ifdef MAC_NOTX
               FSSpec spec;              /* the HFS object's FSSpec */
             #endif
 
@@ -564,10 +567,10 @@ typedef struct {
 
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
 #else
-  #ifdef linux
+  #if defined linux || defined __MACH__
     typedef ulong     SOCKET;  /* make it visible for linux as std type */
   #endif
   
@@ -586,7 +589,11 @@ typedef struct {
   typedef struct InetAddress InetAddress;
 #endif
 
-enum { kTransferBufferSize = 4096 };
+#ifdef linux
+  #define kTransferBufferSize 256
+#else
+  enum { kTransferBufferSize = 4096 };
+#endif
 
 
 /* variant for network objects */
@@ -601,9 +608,11 @@ typedef struct {
             InetAddress ipRemote;       /* the remote host's address */
             ushort      fAddT;
                 
-            #ifdef macintosh
+            #ifdef MAC_NOTX
               TCall     call;
-            #elif defined(windows32)
+            #endif
+            
+            #ifdef windows32
               WSAEVENT  hEventObj;
             #endif
                 
@@ -649,7 +658,7 @@ typedef struct {
       FILE*   stream;           /* the associated stream */
     #endif
         
-    #ifdef win_linux
+    #if defined win_linux || defined __MACH__
       char    fullName[OS9PATHLEN]; /* direct access makes life easier */
       DIR*    dDsc;
     #endif
@@ -834,7 +843,7 @@ typedef struct {
             ushort       pid;
             syspath_typ* spP;
         
-            #ifdef macintosh
+            #ifdef MAC_NOTX
               char       pict_title[OS9NAMELEN]; /* vmod window stores this info */
               PicHandle  pict_hdl   [MAX_PICTS];
               ushort     pict_tot;
@@ -1021,7 +1030,7 @@ extern  ushort interactivepid; /* process that will get keyboard abort signals *
 extern  char   startPath[OS9PATHLEN];   /* start path */
 extern  char   strtUPath[OS9PATHLEN];   /* next higher than start path */
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   /* the MPW-level default directory */
   extern    short startVolID;            /* startup dir's volume id */
   extern    long  startDirID;            /* startup dir's directory id */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2004/11/27 12:08:58  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.33  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -294,7 +297,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
    
     known=true;
 
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       if (hosterr==noErr) return 0;
     
       switch (hosterr) {
@@ -407,7 +410,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
       debugprintf(dbgErrors,dbgNorm,("# ** Win32 error=%d%s\n",
                                       hosterr,known ? "" : "(not known, using suggestion)"));
 
-    #elif defined linux
+    #elif defined linux || defined __MACH__
       if     (hosterr==0) return 0;
       err= suggestion; known=false;
     
@@ -1000,20 +1003,18 @@ Boolean VolInfo( const char* pathname, char* volname )
 Boolean OpenTDir( const char* pathname, DIR** d )
 /* Open Directory with special treatment of empty root dir on windows */
 {
-    #ifdef macintosh
+    #ifdef MAC_NOTX
       struct stat info;
-    #else
-      Boolean ok= false;
-      char    volname[OS9NAMELEN];
-    #endif 
 
-
-    #ifdef macintosh
       *d= NULL; /* not used */
       return stat_( pathname, &info )==0 && IsTrDir(info.st_mode);
 
     #else
+      Boolean ok= false;
+      
       #ifdef TFS_SUPPORT
+        char volname[OS9NAMELEN];
+
              *d= opendir( pathname ); /* try to open */
         ok= (*d!=NULL);
 
@@ -1021,9 +1022,9 @@ Boolean OpenTDir( const char* pathname, DIR** d )
           /* special handling for empty root directory */
           if (!ok) ok= VolInfo( pathname, &volname );
         #endif
-      
-        return ok;
       #endif
+      
+      return ok;
     #endif
 } /* OpenTDir */
 
@@ -1733,7 +1734,7 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
-#ifdef macintosh
+#ifdef MAC_NOTX
   os9err RBF_Rsc( FSSpec *fs )
   {
       os9err     err;
@@ -1892,11 +1893,11 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     ushort sas,ssize;
     byte   pdtyp;
     
-    #ifdef macintosh
+    #if defined MAC_NOTX
       Boolean isFolder;
       FSSpec  fs,afs;
 
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
       Boolean isFolder;
       char    rbfname[OS9PATHLEN];
     #endif
@@ -1915,11 +1916,11 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
       #endif
     #endif
     
-    #ifdef macintosh
+    #ifdef MAC_NOTX
                         err= GetRBFName(  os9path,   mode, &isFolder, &fs,&afs );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, &fs,&afs );
       
-    #elif defined win_linux
+    #elif defined win_linux || defined __MACH__
                         err= GetRBFName(  os9path,   mode, &isFolder, (char*)&rbfname );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, (char*)&rbfname );
 
