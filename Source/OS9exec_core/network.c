@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2004/11/27 12:16:15  bfo
+ *    "net_platform" used / _XXX_ introduced
+ *
  *    Revision 1.25  2004/11/20 13:29:59  bfo
  *    Compileable for Mac Classic again
  *
@@ -1577,7 +1580,8 @@ os9err pNask( ushort pid, syspath_typ* spP )
         sig= spP->signal_to_send;    /* must be stored before clear */
              spP->signal_to_send= 0; /* remove the signal after used once */
         return sig;
-    }
+    } /* if */
+    
     return 0;
 } /* pNask */
 
