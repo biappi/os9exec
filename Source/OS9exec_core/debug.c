@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2003/04/20 23:00:37  bfo
+ *    SpecialIO text: idbg for printing and networking
+ *
  *    Revision 1.7  2003/04/12 21:48:24  bfo
  *    New codes SS_Send, SS_Recv, ... included
  *
@@ -399,7 +402,7 @@ ushort debugwait( void )
                        dumpregs    ( temp ); break;
                        
             case 'v' : if      (sscanf(&inp[1],"%hd", &temp)<1) temp= MAXPROCESSES;
-                       show_mem    ( temp ); break;
+                       show_mem    ( temp, false ); break;
                        
             case 'p' : show_processes();     break;
 
