@@ -1073,6 +1073,7 @@
           02-08-14  Bfo     Some more variables of the real "procid" record used now
           02-09-01  Bfo     Some debug messages reduced.
           02-09-01  Bfo     big/little endian bug with *idp fixed
+          02-09-02  Bfo     Bug at rawmode write with multisector support fixed.
     3.16  02-09-??  Bfo     ...
     -------------------
 */

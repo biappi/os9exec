@@ -223,8 +223,8 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
 //      debugprintf(dbgFiles,dbgDetail,("# RBF read  sector0\n"));
 //  }
 
-    debugprintf(dbgFiles,dbgDetail,("# RBF read  sectorNr: $%06X (n=%d) @ $%08X\n",
-                                       sectorNr, nSectors, pos));
+    debugprintf(dbgFiles,dbgNorm,("# RBF read  sectorNr: $%06X (n=%d) @ $%08X\n",
+                                     sectorNr, nSectors, pos));
     if (sectorNr>0) {
         if (dev->totScts==0)                return E_NOTRDY;
         if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
@@ -283,8 +283,8 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
         if (dev->fProtected) return E_FORMAT;
     }
 
-    debugprintf(dbgFiles,dbgDetail,("# RBF write sectorNr: $%06X (n=%d) @ $%08X\n",
-                                       sectorNr, nSectors, pos));
+    debugprintf(dbgFiles,dbgNorm,("# RBF write sectorNr: $%06X (n=%d) @ $%08X\n",
+                                     sectorNr, nSectors, pos));
     if (sectorNr>0) {
         if (dev->totScts==0)                return E_NOTRDY;
         if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
@@ -1948,14 +1948,14 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
          || spP->rw_nr!=sect
          || mlt) {
             if (*mw!=0) {
-            //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
+            //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                 err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
                 *mw =0; /* now it is written */
             }
 
             if (!mlt || !wMode) {
                 err= ReadSector( dev, sect,n, b ); if (err) break;
-            //  if (dev->multiSct) upe_printf( "Rsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
+            //  if (dev->multiSct) upe_printf( "Rsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                 spP->rw_nr= sect + n0;
                 
                 if (mlt) {  
@@ -1998,19 +1998,25 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                     }
 
                     if (sect==1) dev->last_alloc= 0; /* reset after "format" */
-                    err= WriteSector( dev, sect,1, spP->rw_sct ); if (err) break;
-                    spP->rw_nr= sect;
+                    
+                    if (mlt) {
+                        err= WriteSector( dev, sect,n, b ); if (err) break;
+                                spP->rw_nr= sect + n0;
+                        memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+                    }
+                    else {
+                        err= WriteSector( dev, sect,1, spP->rw_sct ); if (err) break;
+                        spP->rw_nr= sect;
+                    }
             }
             else {
                 if (*mw!=0 && *mw!=sect) { /* if sector nr has changed */
-                //  if (dev->multiSct) upe_printf( "wsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                     err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
                     spP->rw_nr= *mw;
                 }
                 
                 *mw= sect;
                 if (mlt) {
-                //  if (dev->multiSct) upe_printf( "Wsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                     err= WriteSector( dev, sect,n, b ); if (err) break;
                             spP->rw_nr= sect + n0;
                     memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
