@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2002/09/11 17:05:55  bfo
+ *    Bug at incomplete sector of multisector write fixed
+ *
  *
  */
 
@@ -1081,7 +1084,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     ushort    sp;
 
     /* it might come as Mac or DOS path name ... --> OS-9 notation */
-    MakeOS9Path( name );
+//  MakeOS9Path( name );
 
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
