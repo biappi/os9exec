@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2003/04/12 21:56:26  bfo
+ *    Name server support
+ *
  *    Revision 1.9  2002/10/28 22:18:30  bfo
  *    network close with corrected release_mem for net->b_local
  *
@@ -374,13 +377,13 @@ os9err pNclose( ushort pid, syspath_typ* spP )
                     err= OTSndOrderlyDisconnect(net->ep);
           if (!err) err= OTRcvOrderlyDisconnect(net->ep);
         
-          junk= OTUnbind(net->ep);
-          junk= OTCloseProvider(net->ep);
-          OTFreeMem( net->transferBuffer );
+          junk= OTUnbind       ( net->ep );
+          junk= OTCloseProvider( net->ep );
+          if (!net->accepted) OTFreeMem( net->transferBuffer );
        
         #elif defined(windows32)
           err= closesocket( net->ep );
-          release_mem( net->transferBuffer );
+          if (!net->accepted) ( net->transferBuffer );
         
         #elif defined linux
           net->closeIt= true;
@@ -388,7 +391,7 @@ os9err pNclose( ushort pid, syspath_typ* spP )
           err= close   ( net->ep );
         #endif
         
-        release_mem( net->b_local );
+        if (!net->accepted) release_mem( net->b_local );
         net->bound= false;
     } /* if */
 
@@ -702,6 +705,9 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns_Addr, char** domainName )
       *inetAddr= *a; /* the 2nd one, don't know why */
       *dns_Addr= 0xd5a02802;
       strcpy( domainName, "ggaweb.ch" );
+ //   printf( "'%s'\n", domainName );
+ //   getdomainname( domainName, 30 );
+ //   printf( "'%s'\n", domainName );
       
     #elif defined linux
       err=                  uname( &sysname);
