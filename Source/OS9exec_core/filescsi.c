@@ -600,7 +600,7 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
                     cb[5]= 0;
 
             err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, false ); 
-        if (err) printf( "Read  %008X %d %d\n", sectorNr,ii,err );
+//      if (err) printf( "Read  %008X %d %d\n", sectorNr,ii,err );
         if (err!=E_UNIT && err!=E_SEEK) break;     
         
         #ifdef windows32
@@ -631,7 +631,7 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
                     cb[5]= 0;
 
             err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, true ); 
-        if (err) printf( "Write %008X %d %d\n", sectorNr,ii,err );
+//      if (err) printf( "Write %008X %d %d\n", sectorNr,ii,err );
         if (err!=E_UNIT && err!=E_SEEK) break;     
         
         #ifdef windows32
