@@ -49,6 +49,7 @@ typedef struct {
 			int     nr;					  /* own reference number (array index) */
 			ulong   sctSize;			  /* sector size for this device */
 			ushort  mapSize;              /* size of allocation map */
+			byte    pdtyp;                /* device type: hard disk, floppy */
 			ushort  sas;				  /* sector allocation size */
 			ulong   root_fd_nr;           /* sector nr of root fd */
 			ulong   clusterSize;          /* cluster size (allocation) */
@@ -607,12 +608,14 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     Boolean      abs, isSCSI, isFolder, wProtect;
     
     process_typ* cp    = &procs[pid];
-    int          scsiID= NO_SCSI;
-    short        scsiAdapt= -1;
-    short        scsiBus= 0;
-    short        scsiLUN= 0;
+    
+    int          scsiID    = NO_SCSI;
+    short        scsiAdapt = -1;
+    short        scsiBus   = 0;
+    short        scsiLUN   = 0;
     ushort       scsiSsize = STD_SECTSIZE;
-    ushort       scsiSas= 0;
+    ushort       scsiSas   = 0;
+    byte         scsiPDTyp = 0;
     
     Boolean      mock  = *mnt_name!=NUL;
     Boolean      fu    = spP->fullsearch;
@@ -671,12 +674,13 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
              isSCSI= (err && mnt_scsi!=NO_SCSI);
         if  (isSCSI) {
-            scsiID= mnt_scsi;
-            scsiAdapt=mnt_scsiAdapt>=0 ? mnt_scsiAdapt : defSCSIAdaptNo;
-            scsiBus=mnt_scsiBus>=0 ? mnt_scsiBus : defSCSIBusNo;    
-            scsiLUN=mnt_scsiLUN>=0 ? mnt_scsiLUN : 0;    
+            scsiID   = mnt_scsi;
+            scsiAdapt= mnt_scsiAdapt>=0 ? mnt_scsiAdapt : defSCSIAdaptNo;
+            scsiBus  = mnt_scsiBus  >=0 ? mnt_scsiBus   : defSCSIBusNo;    
+            scsiLUN  = mnt_scsiLUN  >=0 ? mnt_scsiLUN   : 0;    
         }
-        else isSCSI= (err && SCSI_Device( pathname, &scsiAdapt, &scsiBus, &scsiID, &scsiLUN, &scsiSsize, &scsiSas, &type ));
+        else isSCSI= (err && SCSI_Device( pathname, &scsiAdapt, &scsiBus, &scsiID, &scsiLUN, 
+                                                    &scsiSsize, &scsiSas, &scsiPDTyp, &type ));
         if  (isSCSI)           GetOS9Dev( pathname, (char*)&cmp );
         else {
             if (fu) CutPath( cmp );
@@ -816,6 +820,8 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->scsiBus   = scsiBus;
     dev->scsiID    = scsiID;
     dev->scsiLUN   = scsiLUN;  
+    dev->pdtyp     = scsiPDTyp;
+    
     if (IsSCSI(dev)) {
         dev->sctSize= scsiSsize;
         dev->sas    = scsiSas;
@@ -930,9 +936,9 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
         if (scsiID!=NO_SCSI) {
             mnt_name= name;
             mnt_scsiAdapt = adapt;
-            mnt_scsiBus = scsibus;
-            mnt_scsi= scsiID;
-            mnt_scsiLUN = scsiLUN;
+            mnt_scsiBus   = scsibus;
+            mnt_scsi      = scsiID;
+            mnt_scsiLUN   = scsiLUN;
             
             if (!AbsPath(name)) { /* make a device path */
                 strcpy ( tmp,PSEP_STR );
@@ -2411,10 +2417,11 @@ os9err pRopt(ushort pid, syspath_typ* spP, byte *buffer)
     ulong*      l;
     char*       c;
 
-
     /* and fill some specific RBF path values */
-    w= (ushort*)&buffer[ PD_SSize  ]; *w= os9_word(dev->sctSize);    /* phys sect size    */
+    b= (byte  *)&buffer[ PD_TYP    ]; *b=          dev->pdtyp;
     w= (ushort*)&buffer[ PD_SAS    ]; *w= os9_word(dev->sas);        /* sector alloc size */
+    w= (ushort*)&buffer[ PD_SSize  ]; *w= os9_word(dev->sctSize);    /* phys sect size    */
+    b= (byte  *)&buffer[ PD_CtrlrID]; *b=          dev->scsiID;
     b= (byte  *)&buffer[ PD_ATT    ]; *b=          rbf->att;
     l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr<<BpB); /* LSN of file       */
     l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir<<BpB); /* LSN of its dir    */
