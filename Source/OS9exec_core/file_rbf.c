@@ -205,8 +205,8 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
         if (IsSCSI(dev)) {
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
             if (err) {
-                err= Set_SSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize ); if (err) break; /* adjust sector size */
-                err= Get_DSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, &dev->totScts ); if (err) break; /* and get new info back */
+                err= Set_SSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,                  dev->sctSize ); if (err) break; /* adjust sector size */
+                err= ReadCapacity( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  &dev->totScts, &dev->sctSize ); if (err) break; /* and get new info back */
                 err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer );
             }
         }
@@ -380,7 +380,8 @@ static os9err DevSize( rbfdev_typ* dev )
             // - use sector size of SCSI device for now
             dev->sctSize=ssize;
         }
-        err= Get_DSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, &dev->totScts );
+        err= ReadCapacity(  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, 
+                           &dev->totScts,  &dev->sctSize );
     }
     else { 
         err= syspath_gs_size( 0, dev->sp_img, &size );
@@ -457,6 +458,7 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
         dev->last_alloc= 0; /* initialize allocater pointer */
     } /* loop */
     
+    l= (ulong *)&dev->tmp_sct[0]; dev->totScts    = os9_long(*l)>>BpB;
     w= (ushort*)&dev->tmp_sct[4]; dev->mapSize    = os9_word(*w);
     w= (ushort*)&dev->tmp_sct[6]; dev->clusterSize= os9_word(*w);
     l= (ulong *)&dev->tmp_sct[8]; dev->root_fd_nr = os9_long(*l)>>BpB;
@@ -1209,8 +1211,8 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
     strcpy ( s,         name         );
     sprintf( sc, "%3d", rb->scsiID   );
     strcpy ( u,         rb->img_name ); if (*u==NUL) strcpy( u," -" );
-    
-    if (r>=   1) sprintf( v, "(%1.2f%s)", r,unit );
+ 
+                 sprintf( v, "(%1.2f%s)", r,unit );
     if (r>=  10) sprintf( v, "(%2.1f%s)", r,unit );
     if (r>= 100) sprintf( v," (%3.0f%s)", r,unit );
     if (r>=1000) sprintf( v, "(%4.0f%s)", r,unit );
