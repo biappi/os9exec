@@ -30,6 +30,21 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 /* includes */
 /* ======== */
 
@@ -581,7 +596,7 @@ void os9_main( int argc, char **argv, char **envp )
     /* don't print before setup */
  // debugprintf(dbgStartup,dbgNorm,("# Starting OS9exec/nt with debug[]=$%04X,$%04X,$%04X, stop=$%04X, command='%s', spininterval=%ld\n",debug[dbgNorm],debug[dbgDetail],debug[dbgDeep],debughalt,argv[kX],spininterval));
     err= os9exec_nt( toolname,argc-kX-1,argv+kX+1,envp, memplus,iniprior );
-    if (logtiming_disp) show_timing(STIM_NONE);
+    if (logtiming_disp) show_timing( STIM_NONE,1 );
             
     currentpid= 0; /* no longer an active process */
      upo_printf("\n");
