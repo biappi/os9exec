@@ -35,6 +35,16 @@
 #ifndef _os9_ll_h
 #define _os9_ll_h
 
+
+/* this is required to allow the use of original */
+/* "module.h" with its ulong definition on Linux */
+#ifdef linux
+  #undef __USE_MISC
+  typedef unsigned long int ulong;
+  typedef unsigned int uint;
+#endif
+
+
 #ifdef USE_UAEMU
     /* include file os9_uae.h */
     #include "sysconfig.h"
@@ -52,16 +62,6 @@
     #include <stdarg.h>
     #include <time.h>
   #endif
-#endif
-
-
-/* original OS-9 include files */
-/* will be used for traphandler definitions */
-#ifdef MPW
-/* search path for MPW is different */
-  #include ":os9defs:module.h"
-#else  
-  #include "module.h"
 #endif
 
 
