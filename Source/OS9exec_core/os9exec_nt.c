@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2003/01/02 12:20:31  bfo
+ *    RTE registers correctly saved and restored
+ *
  *    Revision 1.29  2002/11/24 18:49:14  bfo
  *    Changed to new release V3.21
  *
@@ -1537,7 +1540,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 					    sigp->state==pWaitRead &&
 						sigp->pd._sigvec!=0) {
 						         sigp->rtestate = sigp->state;
-						memcpy( &sigp->rteregs,  &svd->r, sizeof(regs_type) );
+						memcpy( (void*)&sigp->rteregs, (void*)&svd->r, sizeof(regs_type) );
 						         sigp->rtevector= svd->vector;
 						         sigp->rtefunc  = svd->func;
 						set_os9_state( spid, pActive );
@@ -1598,7 +1601,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		last_arbitrate= arbitrate;	
 		
 		if (cp->state==pWaitRead)
-		    memcpy( &cp->os9regs, &svd->r, sizeof(regs_type) ); /* save all regs */
+		    memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); /* save all regs */
 		
 		if (!cwti) do_arbitrate();
 		if (logtiming) arb_to_os9( last_arbitrate );

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2003/01/02 12:19:17  bfo
+ *    RTE registers correctly saved and restored; remaining ticks (F$Sleep)
+ *
  *    Revision 1.17  2002/11/06 22:08:14  bfo
  *    OS9_F_Load <mode> problem is now really fixed !
  *
@@ -649,13 +652,13 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
         debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d\n",
                        cpid, os9_word(cp->pd._signal) ));
         set_os9_state( cpid,   cp->rtestate );
-        memcpy( &cp->os9regs, &cp->rteregs, sizeof(regs_type) ); /* restore regs */
+        memcpy( (void*)&cp->os9regs, (void*)&cp->rteregs, sizeof(regs_type) ); /* restore regs */
                  cp->vector=   cp->rtevector;
                  cp->func  =   cp->rtefunc;
         
         if (cp->state==pWaitRead) { /* make the save status ready again */
                      svd=        &cp->savread; /* pointer to process' saved registers */
-            memcpy( &svd->r,     &cp->rteregs, sizeof(regs_type) );
+            memcpy( (void*)&svd->r,     (void*)&cp->rteregs, sizeof(regs_type) );
                      svd->vector= cp->rtevector;
                      svd->func  = cp->rtefunc;
             

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2003/01/02 12:21:28  bfo
+ *    RTE registers correctly saved and restored
+ *
  *    Revision 1.18  2002/11/06 20:13:13  bfo
  *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
  *
@@ -561,12 +564,12 @@ os9err send_signal(ushort spid, ushort signal)
                                           svd= &sigp->savread; 
                          sigp->rtevector= svd->vector;  /* save some additional info */
                          sigp->rtefunc  = svd->func;
-                memcpy( &sigp->rteregs,  &svd->r,        sizeof(regs_type) ); /* save all regs */
+                memcpy( (void*)&sigp->rteregs, (void*)&svd->r,        sizeof(regs_type) ); /* save all regs */
             }
             else {
                          sigp->rtevector= sigp->vector;  /* save some additional info */
                          sigp->rtefunc  = sigp->func;
-                memcpy( &sigp->rteregs,  &sigp->os9regs, sizeof(regs_type) ); /* save all regs */
+                memcpy( (void*)&sigp->rteregs,  (void*)&sigp->os9regs, sizeof(regs_type) ); /* save all regs */
             }
             
             sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
