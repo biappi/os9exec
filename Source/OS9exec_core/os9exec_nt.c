@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2002/09/11 17:32:38  bfo
+ *    Up to date for V3.17
+ *
  *    Revision 1.21  2002/09/04 14:09:45  bfo
  *    built-in "init" will be used, if no external module available
  *
@@ -568,7 +571,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x17;
+	exec_revision= 0x18;
 	#endif
 } /* getversions */
 
