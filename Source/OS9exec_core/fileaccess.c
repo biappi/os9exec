@@ -1299,7 +1299,8 @@ os9err pFeof( ushort pid, syspath_typ* spP )
 } /* pFeof */
 
 
-
+// attempt to improve things a little
+#define NEW_LUZ_FD_IMPL 1
 
 /* prepare a FD from a cipb */
 static void getFD( void* fdl, ushort maxbyt, byte *buffer )
@@ -1311,7 +1312,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     Boolean   uDir    = false;
     ulong     u       = 0;
     struct tm tim;
-    
+        
     #ifdef macintosh
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
 
@@ -1324,7 +1325,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       #ifdef windows32
         HANDLE hFile;
         SYSTEMTIME sy;
-        LPWIN32_FIND_DATA data;
+        // This was the bad thing: declared pointer instead of data structure !
+        // LPWIN32_FIND_DATA data;
+        WIN32_FIND_DATA data;
         FILETIME cr, lastA, lastW, lastL;
           mode_t v;
       #else
@@ -1335,6 +1338,64 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       #pragma unused(fdl)
     #endif
     
+    #if defined NEW_LUZ_FD_IMPL && defined windows32
+    
+    #pragma unused(v,lastA,tim)
+    // use FindFirstFile for everything
+    pathname= (char*)fdl;
+    hFile= FindFirstFile( pathname, &data);
+    if (hFile) {
+      FindClose( hFile );
+      // now extract all the data from WIN32_FIND_DATA structure
+      // - is it a folder?
+      isFolder=(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
+      // - basic r or rw
+      *att=poRead | (poRead<<3); // always readable
+      if ((data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)==0)
+        *att |= poWrite | poWrite<<3; // if not write protected, also writeable
+      // - always executable
+      *att |= poExec | (poExec<<3);
+      // - dirs are special
+      if (isFolder) {
+        *att |= 0x3F; // all permissions
+        *att |= 0x80; // and dir bit
+      }
+      // - owner
+      fdbeg[1] =0;
+      fdbeg[2] =0; /* owner = superuser */
+      // - get moification dates
+      lastW = data.ftLastWriteTime;  
+      // - convert to systemtime
+      FileTimeToLocalFileTime ( &lastW, &lastL );
+      FileTimeToSystemTime    ( &lastL, &sy );
+      fdbeg[3]= sy.wYear-1900;
+      fdbeg[4]= sy.wMonth;
+      fdbeg[5]= sy.wDay;
+      fdbeg[6]= sy.wHour;
+      fdbeg[7]= sy.wMinute;
+
+      // link count
+      fdbeg[8]= 1; /* link count = 1 */
+      // creation date
+      cr = data.ftCreationTime;
+      FileTimeToLocalFileTime ( &cr, &lastL );
+      FileTimeToSystemTime    ( &lastL, &sy );
+      fdbeg[13]= sy.wYear-1900;
+      fdbeg[14]= sy.wMonth;
+      fdbeg[15]= sy.wDay;
+      // size of file
+      // NOTE: only lower 32 bits are used. NT returns 64bits here...
+      // NOTE: this is still a little hacky, as we use the info record only for size
+      //       by now.
+      info.st_size = data.nFileSizeLow; 
+    }
+    else {
+      // file does not exist (any more)
+      *att=0; // not accessible
+    }
+    #else
+    // conventional ifdef haystack :-)
+
     /* fill in constants */
     *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
 
@@ -1345,7 +1406,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       
     #elif defined win_linux
       pathname= (char*)fdl;
-      
+            
       #ifdef windows32
         isFolder= PathFound( pathname ); /* don't call stat_ for directories under Windows */
       #endif
@@ -1388,7 +1449,8 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       
       #ifdef windows32
         if (isFolder) {
-                hFile= FindFirstFile( pathname, &data);
+            // used to crash here because data was wrong type
+            hFile= FindFirstFile( pathname, &data);
             if (hFile!=NULL) {
                 debugprintf(dbgFiles,dbgNorm,("# getFD: '%s'\n",pathname));
                 FindNextFile( hFile, &data);
@@ -1450,6 +1512,8 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     /* file length */
     *sizeP= 0; /* by default */
     
+    #endif // NEW_LUZ_FD_IMPL
+        
     #ifdef macintosh
       if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
           *sizeP= (ulong)(cipbP->dirInfo.ioDrNmFls+2)*DIRENTRYSZ;
@@ -1477,6 +1541,8 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         
 //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
     #endif
+    
+
     
     /* copy FD beginning to caller's buffer */
     memcpy(buffer,fdbeg,maxbyt>16 ? 16 : maxbyt);

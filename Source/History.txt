@@ -1015,6 +1015,15 @@
           02-07-07  Bfo     RamDisk(s) can be created with any size now.
           02-07-07  Bfo     RBF device full inconsistency fixed now.
           02-07-08  Bfo     The RAM disk size will be taken from descriptor, if available
+
+          02-07-21  luz     found problem with "dir -e /c" crash (and probably many related things):
+                            msdir.c is ok, problem was in getFD when calling Win32 FindFirstFile(),
+                            which copies data into a WIN32_FILE_INFO structure, but was passed
+                            not a pointer to that structure, but one to a pointer to a pointer...
+                            getFD has grown a little messy by now, so I started to make a
+                            pure win32 implementation using a single call to FindFirstFile(),
+                            which returns all needed information (attrs, dates, size...).
+
     3.14  02-07-??  Bfo     ...
     -------------------
 */
