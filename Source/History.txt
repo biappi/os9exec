@@ -709,7 +709,6 @@
 
           01-11-25  Bfo     "ipaths" output format problems fixed.
           01-11-25  Bfo     inhibit_pid for "debugprintf" introduced.
-          01-11-28  Bfo     Purchase order from RUAG is here !!
           01-11-28  Bfo     "mdt" alertbox problem fixed: NUL chars no longer filtered
           01-12-02  Bfo     "sigvec" support at F$GPrDsc.
     2.78  01-12-02  Bfo     Signal problem RTE fixed: d1.w will be set to 0 now.
@@ -940,7 +939,6 @@
                     Bfo     The "list p_maloney.m ! head" (crash on Linux) is a problem of "list" V2.4 !!
                     Bfo     mount with several name combinations works now perfectly.
           02-03-15  Bfo     Raw device bug for mounted systems fixed.
-                    Bfo     (RUAG notebook arrived: V3.08 works perfectly on it !)
           02-03-16  Bfo     link of "init" module done now on current path.
                     Bfo     debugprintf of cpid=0 problem fixed.
           02-03-20  Bfo     Played with the target options -> some slight adaptions.
@@ -961,11 +959,20 @@
     3.10  02-04-01  Bfo >>> FINAL RELEASE V3.10 FOR RUAG <<<
     ===================     
 
+	
           02-04-20  luz     Imported V3.10 source as initial CVS checkin "V3_10"
                             at os9exec.sourceforge.net.
                     luz     detabbed History file (again), removed strange chars
                             in title text (as first test for CVS commit)
                     luz     checkout tests with WinCVS and MacCVS successful!
+
+          02-04-30  Bfo     Bring the update to sourceforge:
+		  02-04-12	Bfo	    Touch date problem (year) fixed in Mac version for CW7 (70 year offset).
+		  02-04-12  Bfo	    CLOCKS_PER_SECOND problem found (and workaround implemented)
+		  02-04-14  Bfo	    procs[x].pW_age introduced, reduce load of sleeping programs tremendously
+		  02-04-27  Bfo     Alertbox, if vt102 module is missing (Mac)
+	3.11  02-04-??  Bfo
+	-------------------		
 */
 
 
@@ -976,7 +983,6 @@
     !!  "_" name convention on Windows (hawk_C0).
     !!  "show" is using some unimplemented FPU calls.
     
-    -   No appropriate error, if vt102 (Mac) is not accessible (fatal error/line 1111/...)
     -   MPW uses its I/O currently partly also for the tty/pty system.
     -   "mgencas" will not startup over network (Linux), "mme" has also problems.
     -   "plotf" orig/max times not correct, problem in UAE FPU => workaround: use plotf instead of plotf020
