@@ -354,6 +354,11 @@ static void CheckH0( char* name, char* p, char** p3 )
       err= MountDev( 0, name,p, 0,0,NO_SCSI,0,false ); if (err) return;
     
       strcpy( name,"/h0" ); *p3= name;
+
+    #else
+       #ifndef linux
+       #pragma unused(name,p,p3)
+       #endif
     #endif
 } /* CheckH0 */
 
