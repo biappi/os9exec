@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2002/10/09 20:46:14  bfo
+ *    uphe_printf => upe_printf
+ *
  *
  */
 
@@ -88,8 +91,9 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     ptype_typ  type;
     char       *nameP, *qq;
     char       nmS     [OS9PATHLEN];
+    char       nmD     [OS9PATHLEN];
     char       newName [OS9PATHLEN];
-    ulong      fd, dfd, dcp, len;
+    ulong      fd, dfd, dcp, dcpD, len;
     Boolean    asDir;
     char       oldPath [OS9PATHLEN];
 
@@ -132,9 +136,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
                nameP= nargv[0];
     strcpy(nmS,nameP);
     
-//  #if defined macintosh || defined linux
-      err= parsepath( cpid, &nameP,oldPath, exedir ); if (err) return err;
-//  #endif
+    err= parsepath( cpid, &nameP,oldPath, exedir ); if (err) return err;
     
     /* ... and new name */
              strcpy( newName, nargv[1] );
@@ -156,13 +158,20 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         sv= p; sv--;
         
         while  (*p!=NUL) {
-            if (*p=='/') sv= p; /* search for the last one */
+            if (*p==PSEP) sv= p; /* search for the last one */
             p++;
         }
         
         if      (sv==nmS) return E_FNA; /* this is the root path */
-        if      (sv >nmS) *sv= NUL;    /* cut the file name at the end */
+        if      (sv >nmS) *sv= NUL;     /* cut the file name at the end */
         else strcpy( nmS, "." );        /* or take the current path */
+        
+        strcpy( nmD,nmS );
+        strcat( nmD,PSEP_STR );
+        strcat( nmD,newName );
+        	 err= get_locations  ( cpid,type, nmD,false, &asDir, &fd,&dfd,&dcpD );
+        if (!err && dcp!=dcpD) return E_CEF;   /* file already exists with different name ? */
+                                     /* case sensitive changes of the same name are allowed */
         
         err= usrpath_open   ( cpid,&path, type, nmS,     0x83);   if (err) return err;
         err= usrpath_seek   ( cpid, path, dcp );                  if (err) return err;
@@ -182,10 +191,6 @@ os9err int_rename(ushort cpid, int argc, char **argv)
           if (oserr==dupFNErr) _errmsg(0,"can't rename to \"%#s\"",newName);
           err= host2os9err(oserr,E_PNNF);
     
-    //  #elif defined(windows32)
-    //    err= 0;
-    //    call_hostcmd( "rename", cpid, argc-1,&argv[1] );
-          
         #elif defined win_linux
                            pp=  oldPath;
           err= AdjustPath( pp, adaptOld, false ); 

@@ -1193,7 +1193,7 @@
 							Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
 		  03-05-16  Bfo		'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
 		  03-05-16  Bfo		memstuff: better deallocation strategy for the unused blocks
-		  03-05-17  Bfo		Up to date
+		  03-05-17  Bfo		Rename to the same file name on RBF is no longer possible now
     3.22  03-??-??  Bfo
     -------------------
 */
