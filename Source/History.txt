@@ -1031,6 +1031,8 @@
                             
           02-07-22  Bfo     printf err messages at SCSI masked.
           02-07-22  Bfo     Playing around with 'UpTime'
+          02-07-23  Bfo     Go back to the 1/60th second system
+          02-07-23  Bfo     Synchronise with <syCorr> variable
 
     3.14  02-07-??  Bfo     ...
     -------------------

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2002/07/21 15:11:13  bfo
+ *    Up to date again
+ *
  *    Revision 1.14  2002/07/21 14:37:16  bfo
  *    Extended 'Get_Time' function
  *
@@ -469,19 +472,38 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
     byte      tc[4];
     ulong*    tcp= (ulong*)&tc[0];
-    int       y, m, d, ct0;
+    ulong     tsm, ssm, ct0, syTick;
+    int       y, m, d;
     
     /* Get consistent time/date and ticks */
+    if      (withTicks) { syTick= GetSystemTick(); *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
     do {
-        if  (withTicks)            ct0= GetSystemTick() % TICKS_PER_SEC;
+        if  (withTicks) ct0= *currentTick;
         
         GetTim( &tim );
         y=       tim.tm_year+1900;
         m=       tim.tm_mon +   1;
         d=       tim.tm_mday;
         
-        if  (withTicks)   *currentTick= GetSystemTick() % TICKS_PER_SEC;
+        if  (withTicks) { syTick= GetSystemTick(); *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
     } while (withTicks && *currentTick<ct0);
+
+    ssm= tim.tm_hour*3600
+        +tim.tm_min *  60
+        +tim.tm_sec;        /* seconds since midnight */
+        
+    if (withTicks) {
+            tsm= (syTick+syCorr)/TICKS_PER_SEC;
+        if (tsm>ssm) { 
+            syCorr= (ssm+1)*TICKS_PER_SEC - syTick-1;
+            *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        }
+          
+        if (tsm<ssm) {   
+            syCorr=  ssm*   TICKS_PER_SEC - syTick;
+            *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        }
+    }
    
     if (asGregorian) {
 		/* gregorian format */
@@ -498,10 +520,8 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     }
     else {
       	/* julian format */
-      	*cTime= tim.tm_hour*3600
-               +tim.tm_min *  60
-               +tim.tm_sec;        /* seconds since midnight */
-      	*cDate= j_date( d, m, y ); /* julian date, intenral clock starts 1904 */
+      	*cTime= ssm;             /* seconds since midnight */
+      	*cDate= j_date( d,m,y ); /* julian date, intenral clock starts 1904 */
     }
 
     *dayOfWk= tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
