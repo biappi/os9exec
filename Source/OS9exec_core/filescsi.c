@@ -62,6 +62,8 @@
 #define CB_SizeExt    10
 #define SizeCmd       12
 
+#define NTries        10
+
 
 
 #ifdef windows32
@@ -585,17 +587,27 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
                      ulong sectorNr, ulong nSectors,
                      ulong len, byte* buffer )
 {
+    os9err err;
     byte   cb[CB_Size];
     ulong* l;
+    int    ii;
 
-    l= (ulong*)&cb[0]; *l= os9_long( sectorNr); /* cb0,cb1,cb2,cb3 */
-                cb[0]= CmdRead;    /* and overwrite cb0 field */
-                cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
-                cb[4]= nSectors;
-                cb[5]= 0;
+    for (ii=0; ii<NTries; ii++) {
+        l= (ulong*)&cb[0]; *l= os9_long( sectorNr); /* cb0,cb1,cb2,cb3 */
+                    cb[0]= CmdRead;    /* and overwrite cb0 field */
+                    cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
+                    cb[4]= nSectors;
+                    cb[5]= 0;
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
-                     (byte*)&cb,CB_Size, buffer,len, false );
+            err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, false ); 
+        if (err!=E_UNIT) break;     
+        
+        #ifdef windows32
+          Sleep( 1 );
+        #endif
+    } /* for */
+
+    return err;
 } /* ReadFromSCSI */
 
 
@@ -604,17 +616,27 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
                     ulong sectorNr, ulong nSectors,
                     ulong len,      byte* buffer )
 {
+    os9err err;
     byte   cb[CB_Size];
     ulong* l;
+    int    ii;
 
-    l= (ulong*)&cb[0]; *l= os9_long( sectorNr ); /* cb0,cb1,cb2,cb3 */
-                cb[0]= CmdWrite;   /* and overwrite cb0 field */
-                cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
-                cb[4]= nSectors;
-                cb[5]= 0;
+    for (ii=0; ii<NTries; ii++) {
+        l= (ulong*)&cb[0]; *l= os9_long( sectorNr ); /* cb0,cb1,cb2,cb3 */
+                    cb[0]= CmdWrite;   /* and overwrite cb0 field */
+                    cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
+                    cb[4]= nSectors;
+                    cb[5]= 0;
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN,
-                     (byte*)&cb,CB_Size, buffer,len, true );
+            err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, true ); 
+        if (err!=E_UNIT) break;     
+        
+        #ifdef windows32
+          Sleep( 1 );
+        #endif
+    } /* for */
+
+    return err;
 } /* WriteToSCSI */
 
 
