@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/08/09 22:38:53  bfo
+ *    New procedure set_os9_state introduced and adapted everywhere
+ *
  *    Revision 1.4  2002/07/30 16:47:19  bfo
  *    E-Mail adress beat.forster@ggaweb.ch is updated everywhere
  *
@@ -76,6 +79,7 @@ os9err pEOF      ( ushort pid, syspath_typ*, ulong *maxlenP, char* buffer );
 void   init_SCF  ( fmgr_typ* f );
 os9err pSopen    ( ushort pid, syspath_typ*, ushort  *modeP, char* pathname );
 os9err pSBlink   ( ushort pid, syspath_typ*, ulong      *d2 );
+os9err pGBlink   ( ushort pid, syspath_typ*, ulong      *d2 );
 /* ------------------------------------------------------------------------- */
 
 void init_Cons( fmgr_typ* f )
@@ -159,6 +163,7 @@ void init_SCF( fmgr_typ* f )
     gs->_SS_Pos   = (pathopfunc_typ)pBadMode; /* not allowed */
     gs->_SS_EOF   = (pathopfunc_typ)pNop;         /* ignored */
     gs->_SS_Ready = (pathopfunc_typ)pBadMode; /* not allowed */
+    gs->_SS_LBlink= (pathopfunc_typ)pGBlink;     /* specific */
     gs->_SS_Undef = (pathopfunc_typ)pVMod;
 
     /* setstat */
@@ -505,6 +510,24 @@ os9err pSBlink( ushort pid, syspath_typ* spP, ulong *d2 )
      l2.ratio2= os9_word( *(ww+3) );
      return 0;
 } /* pSBlink */
+
+
+os9err pGBlink( ushort pid, syspath_typ* spP, ulong *d2 )
+/* specific "/L2" blink command, as defined in "led_Drv" */
+{
+    #ifndef linux
+    #pragma unused(pid,spP)
+    #endif
+    
+     byte*   bb= (byte  *)*d2;
+     ushort* ww= (ushort*)*d2;
+        	
+     *(bb+0)=          l2.col1; /* assign values as done in the "led_drv" */
+     *(ww+1)= os9_word(l2.ratio1);
+     *(bb+4)=          l2.col2;
+     *(ww+3)= os9_word(l2.ratio2);
+     return 0;
+} /* pGBlink */
 
 
 

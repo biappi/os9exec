@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2003/07/31 14:40:48  bfo
+ *    Additional parameter for sectorsize
+ *
  *    Revision 1.14  2003/04/20 22:52:01  bfo
  *    GNam with additional param <d1>
  *
@@ -154,6 +157,8 @@ void init_None( fmgr_typ* f )
     
     gs->_SS_PCmd   = (pathopfunc_typ)pUnimp; /* network specific function  */
     
+    gs->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
+    
     gs->_SS_Undef  = (pathopfunc_typ)pUnimp; /* any other getstat */
 
 
@@ -175,7 +180,7 @@ void init_None( fmgr_typ* f )
     ss->_SS_SOpt   = (pathopfunc_typ)pUnimp;
     ss->_SS_SendTo = (pathopfunc_typ)pUnimp;
     ss->_SS_PCmd   = (pathopfunc_typ)pUnimp;
-
+    
     ss->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
     
     ss->_SS_Undef  = (pathopfunc_typ)pUnimp; /* any other setstat */
@@ -1678,27 +1683,30 @@ os9err syspath_getstat( ushort pid, ushort sp, ushort func,
     
     /* call appropriate service */
     switch (func) {
-        case SS_Size : err= (g->_SS_Size )( pid,spP, d2       );            break;
-        case SS_Opt  : err= (g->_SS_Opt  )( pid,spP,       *a );            break;
-        case SS_DevNm: err= (g->_SS_DevNm)( pid,spP,       *a );            break;
-        case SS_Pos  : err= (g->_SS_Pos  )( pid,spP, d2       );            break;
-        case SS_EOF  : err= (g->_SS_EOF  )( pid,spP );                      break;
-        case SS_Ready: err= (g->_SS_Ready)( pid,spP, d1 ); arbitrate= true; break;
-        case SS_FD   : err= (g->_SS_FD   )( pid,spP, d2,   *a );            break;
-        case SS_FDInf: err= (g->_SS_FDInf)( pid,spP, d2,d3,*a );            break;
-        case SS_DSize: err= (g->_SS_DSize)( pid,spP, d2,d3 );               break;
+        case SS_Size   : err= (g->_SS_Size  )( pid,spP, d2       );            break;
+        case SS_Opt    : err= (g->_SS_Opt   )( pid,spP,       *a );            break;
+        case SS_DevNm  : err= (g->_SS_DevNm )( pid,spP,       *a );            break;
+        case SS_Pos    : err= (g->_SS_Pos   )( pid,spP, d2       );            break;
+        case SS_EOF    : err= (g->_SS_EOF   )( pid,spP );                      break;
+        case SS_Ready  : err= (g->_SS_Ready )( pid,spP, d1 ); arbitrate= true; break;
+        case SS_FD     : err= (g->_SS_FD    )( pid,spP, d2,   *a );            break;
+        case SS_FDInf  : err= (g->_SS_FDInf )( pid,spP, d2,d3,*a );            break;
+        case SS_DSize  : err= (g->_SS_DSize )( pid,spP, d2,d3 );               break;
 
         /* $7A protocol direct command */
-        case SS_PCmd : err= (g->_SS_PCmd )( pid,spP,       *a );            break;
+        case SS_PCmd   : err= (g->_SS_PCmd  )( pid,spP,       *a );            break;
+
+        /* $80 + 32: "/L2" specific */
+        case SS_LBlink : err= (g->_SS_LBlink)( pid,spP,d2        );            break;
 
         /* get ETC path name and more */
-        case SS_Etc  : err=       etc_path( pid,spP, d2,   *a );            break;
+        case SS_Etc    : err=       etc_path( pid,spP, d2,    *a );            break;
 
         /* don't know yet what is it good for, used by mgratrap */
-        case SS_201  : err= 0;                                              break;
+        case SS_201    : err= 0;                                               break;
             
         /* undefined */
-        default      : err= (g->_SS_Undef)( pid,spP, d1,d2 );               break;
+        default        : err= (g->_SS_Undef)( pid,spP, d1,d2 );                break;
     } /* switch */
         
    return err;
@@ -1779,6 +1787,7 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
         case SS_SEvent : err= 0; spP->set_evId= *d2;                 break; /* $3A set event on data ready */
         case SS_Reset  : err= 0; /* do nothing */                    break;
         case SS_WTrk   : err= (s->_SS_WTrk   )( pid,spP,    d2,*a ); break;
+        
         case SS_LBlink : err= (s->_SS_LBlink )( pid,spP,    d2    ); break; /* $80 + 32: "/L2" specific */
         
         /* socket connections */

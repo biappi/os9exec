@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2003/06/09 21:53:32  bfo
+ *    Maximum number of modules changed from 512 -> 1024
+ *
  *    Revision 1.28  2003/04/25 19:33:48  bfo
  *    MAXDIR/MAX_PATH now visible for Macintosh version
  *
@@ -643,6 +646,8 @@ typedef struct {
                            _SS_DSize,
                            
                            _SS_PCmd,   /* network specific function */
+
+                           _SS_LBlink,                /* L2 support */
                            
                            _SS_Undef; /* any other getstat function */
         } gs_typ;
