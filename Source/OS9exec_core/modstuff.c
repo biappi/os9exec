@@ -30,6 +30,21 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 #include "os9exec_incl.h"
 
 /* 00/05/07 bfo  open files in binary mode for PC version */
@@ -44,6 +59,8 @@ ulong memplusall;
 
 /* Memory modules */
 /* ============== */
+
+
 
 
 /* OS9exec builtin module */
@@ -452,8 +469,8 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     
     char datapath[OS9PATHLEN];
     Boolean isPath;
-    char *pn;
-    void *pp;
+    char* pn;
+    void* pp;
     
     #ifdef MACFILES
       OSErr  oserr;
@@ -559,11 +576,16 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
             if (ustrcmp(name,"init")==0) {
             	Init_ptr= (mod_exec*)Init_mod;
                 dsize   =     sizeof_Init_mod;
+                
+                /* it can't be const def, because it wil be changed afterwards */
+                pp= get_mem( dsize,true );
            	
             	#ifdef macintosh
-            	  theModuleH= &Init_ptr;
+             	           theModuleH= pp;
+                  memcpy( *theModuleH, Init_ptr, dsize );
                 #else
-                  theModuleP=  Init_ptr;
+                           theModuleP= pp;
+                  memcpy(  theModuleP, Init_ptr, dsize );
                 #endif
              
                 isBuiltIn = true;
