@@ -1003,6 +1003,7 @@
                             windows default printer. Of course, data sent must be valid for that type
                             of printer (normally postScript). Tested with Apple LaserWriter on TCP/IP
                             network.
+          02-06-26  Bfo     Can be compiled also for Mac.
     3.14  02-06-??  Bfo     ...
     -------------------
 */
