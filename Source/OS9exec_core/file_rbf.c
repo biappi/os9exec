@@ -1942,13 +1942,9 @@ static os9err Delete_DirEntry( rbfdev_typ* dev, ulong fd,  char* name )
 
 static os9err touchfile_RBF( syspath_typ* spP, Boolean creDat )
 {
-    struct  tm *tp,tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    time_t  caltime;
+    struct tm tim;  /* Important Note: internal use of <tm> as done in OS-9 */
 
-    time          (&caltime);     /* get the current time, it seems to be   */
-    tp = localtime(&caltime);     /* based on 1900, not 1904, as file dates */
-    tim= *tp;                     /* copy it, as it might be overwritten    */
-
+    GetTim       ( &tim );
     spP->fd_sct[3]= tim.tm_year;
     spP->fd_sct[4]= tim.tm_mon+1; /* somewhat different month notation */
     spP->fd_sct[5]= tim.tm_mday;
