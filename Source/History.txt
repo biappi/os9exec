@@ -1184,35 +1184,36 @@
           03-05-08  Bfo     MacOSX: "carbon.r" added => os9app is running natively under MacOSX !!
           03-05-08  Bfo     MacOSX: RBF and network support added ( xxxInContext functions )
           03-05-12  Bfo     Define OT variable as static
-          03-05-14	Bfo		vmod driver and serial system disabled for USE_CARBON
-          03-05-14  Bfo		'p2cstr' and 'c2pstr' prototype defined in the ".h" file now
+          03-05-14  Bfo     vmod driver and serial system disabled for USE_CARBON
+          03-05-14  Bfo     'p2cstr' and 'c2pstr' prototype defined in the ".h" file now
           03-05-14  Bfo     "os9exec_incl_precomp.h": Clean Carbon import
-          03-05-15  Bfo		Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
+          03-05-15  Bfo     Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
           03-05-16  Bfo     UserOpt activated for Carbon (gs_ready problem, same as Linux version)
-          03-05-16  Bfo		Several adaptions for Carbon: MGR/telnet are running now.
-							Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
-		  03-05-16  Bfo		'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
-		  03-05-16  Bfo		memstuff: better deallocation strategy for the unused blocks
-		  03-05-17  Bfo		Rename to the same file name on RBF is no longer possible now
-		  03-05-19  Bfo		Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
-		  03-05-19	Bfo/luz Start with Codewarrior 8 support
-		  03-05-20  Bfo     Use "procid_special.h" with *except[10] instead of *_except[10]
-		  03-05-20  Bfo		#define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
-		  03-05-21	Bfo		Preparations for seteuid on Mac OS X
-		  03-05-21  Bfo		Some more MACH-O adaptions, still not able to compile
-		  03-05-25  Bfo		<totalMem> can't be any more smaller than <memsz>
-		  03-05-25  Bfo		"double" big/little endian problem module sizes fixed
-		  03-05-25	Bfo		buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
-		  
-		  03-06-09	Bfo		Maximum number of modules changed from 512 -> 1024
-		  03-06-09	Bfo		Signals can be sent only to process ids < MAXPROCESSES
-		  03-07-08  Bfo     Print hw name additionally
-		  03-07-08  Bfo     /socket and /le0 are built-in modules now
-		  03-07-25  Bfo     Change calculation of PD_FD/PD_DFD (sector size instead of 256)
-		  03-07-31  Bfo     "get_locations": Additional parameter for sectorsize
-		  03-07-31  Bfo     Use sector size instead of 256 at "int_move"
-		  03-07-31  Bfo     /L2 getstat & 'Blue' support
-		  03-07-31  Bfo     do not create file w/o existing subdir
+          03-05-16  Bfo     Several adaptions for Carbon: MGR/telnet are running now.
+                            Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
+          03-05-16  Bfo     'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
+          03-05-16  Bfo     memstuff: better deallocation strategy for the unused blocks
+          03-05-17  Bfo     Rename to the same file name on RBF is no longer possible now
+          03-05-19  Bfo     Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
+          03-05-19  Bfo/luz Start with Codewarrior 8 support
+          03-05-20  Bfo     Use "procid_special.h" with *except[10] instead of *_except[10]
+          03-05-20  Bfo     #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
+          03-05-21  Bfo     Preparations for seteuid on Mac OS X
+          03-05-21  Bfo     Some more MACH-O adaptions, still not able to compile
+          03-05-25  Bfo     <totalMem> can't be any more smaller than <memsz>
+          03-05-25  Bfo     "double" big/little endian problem module sizes fixed
+          03-05-25  Bfo     buggy "list" V2.4 and "cmp" V3.0 diabled ( E_BADREV )
+
+          03-06-09  Bfo     Maximum number of modules changed from 512 -> 1024
+          03-06-09  Bfo     Signals can be sent only to process ids < MAXPROCESSES
+          03-07-08  Bfo     Print hw name additionally
+          03-07-08  Bfo     /socket and /le0 are built-in modules now
+          03-07-25  Bfo     Change calculation of PD_FD/PD_DFD (sector size instead of 256)
+          03-07-31  Bfo     "get_locations": Additional parameter for sectorsize
+          03-07-31  Bfo     Use sector size instead of 256 at "int_move"
+          03-07-31  Bfo     /L2 getstat & 'Blue' support
+          03-07-31  Bfo     do not create file w/o existing subdir
+          03-09-17  Bfo     Ugly tab things removed
     3.22  03-??-??  Bfo
     -------------------
 */
