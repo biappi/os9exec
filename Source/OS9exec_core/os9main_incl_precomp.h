@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2002/07/22 22:05:36  bfo
+ *    Using "UpTime" as time base, still somewhat strange
+ *
  *    Revision 1.4  2002/06/25 20:44:33  luz
  *    Added /lp printer support under windows. Not tested or even compiled for Mac
  *
@@ -136,9 +139,9 @@
 
 #ifdef macintosh
   #if __MWERKS__ >= CW7_MWERKS
-    #define TICKS_PER_SEC 100 /* new strategy with UpTime */
+    #define TICKS_PER_SEC 60 /* CLOCKS_PER_SEC seems to buggy in CW7 */
   #else
-    #define TICKS_PER_SEC CLOCKS_PER_SEC /* seems to buggy in CW7 */ 
+    #define TICKS_PER_SEC CLOCKS_PER_SEC
   #endif 
 #endif
 
