@@ -1033,10 +1033,12 @@
           02-07-22  Bfo     Playing around with 'UpTime'
           02-07-23  Bfo     Go back to the 1/60th second system
           02-07-23  Bfo     Synchronise with <syCorr> variable
-          02/07/24  Bfo     First version with multi sector read/write
-          02/07/24  Bfo     Timer synchronisation enhanced
-          02/07/26  Bfo     Multisector support for RBF emulator is now running smoothly
-    3.14  02-07-??  Bfo     ...
+          02-07-24  Bfo     First version with multi sector read/write
+          02-07-24  Bfo     Timer synchronisation enhanced
+          02-07-26  Bfo     Multisector support for RBF emulator is now running smoothly
+          02-07-30  Bfo     E-Mail address "beat.forster@ggaweb.ch" corrected everywhere
+          02-07-30  Bfo     "idbg" comments adapted.
+    3.14  02-07-30  Bfo     Version V3.14 released for the customer.
     -------------------
 */
 
