@@ -1035,6 +1035,7 @@
           02-07-23  Bfo     Synchronise with <syCorr> variable
           02/07/24  Bfo     First version with multi sector read/write
           02/07/24  Bfo     Timer synchronisation enhanced
+          02/07/26  Bfo     Multisector support for RBF emulator is now running smoothly
     3.14  02-07-??  Bfo     ...
     -------------------
 */

@@ -919,7 +919,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->nr        = cdv;          /* already done ?? */
     dev->wProtected= mnt_wProtect; /* if not otherwise defined */
     dev->fProtected= false;
-    dev->multiSct  = false;        /* not yet supported */
+    dev->multiSct  = true;         /* is now supported */
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
     dev->last_alloc= 0;            /* initialize allocater pointer */
     dev->sp_img    = 0;            /* the image syspath will be connected here later */
@@ -960,8 +960,8 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     if (ustrcmp( cmp,"c0")==0) dev->fProtected= false;
     if (ustrcmp( cmp,"c1")==0) dev->fProtected= false;
 
-    if (ustrcmp( cmp,"c0")==0 ||
-        ustrcmp( cmp,"hx")==0) dev->multiSct= true;
+//  if (ustrcmp( cmp,"c0")==0 ||
+//      ustrcmp( cmp,"hx")==0) dev->multiSct= true;
 
     do {
         err= 0;                 /* set it as default   */
@@ -1498,7 +1498,7 @@ static void Set_FDLnk( syspath_typ* spP, byte lnk )
 
 
 static os9err FD_Segment( syspath_typ* spP, byte *attr, ulong *size, ulong *totsize, 
-                                           ulong *sect, ulong *pref )
+                                           ulong *sect, ulong *slim, ulong *pref )
 {
     rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
     ulong       *lp, v, scs, blk, add, pos;
@@ -1518,12 +1518,12 @@ static os9err FD_Segment( syspath_typ* spP, byte *attr, ulong *size, ulong *tots
         
         if (!done && v+blk>spP->u.rbf.currPos) {
             add  =        (spP->u.rbf.currPos-v)/dev->sctSize;
-            *sect= pos + add;
+            *sect= pos+add;
+            *slim= pos+scs;
             done = true;
         }
         
-        if (scs>0) 
-            *pref= pos+scs;
+        if (scs>0) *pref= pos+scs;
             
         v += blk;
         ii+= SegSize; /* goto next entry */
@@ -1835,7 +1835,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     ulong*      mw    = &spP->mustW;
     ulong       ma    = Max( dev->sas,dev->clusterSize );
     ushort*     w;
-    ulong       sect, offs, size, totsize, maxc, pos, scs, *rs, pref, coff, sv;
+    ulong       sect, slim, offs, size, totsize, maxc, pos, scs, *rs, pref, coff, sv;
     byte*       bb;
     byte        attr;
     byte        *bp;
@@ -1843,19 +1843,20 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     Boolean     done= false;               /* break condition for readln  */
     Boolean     rOK = (remain==0);         /* is true, if nothing to read */
     Boolean     mlt;
-    ulong       n;
+    ulong       n, n0, d;
     byte*       b;
     
     debugprintf( dbgFiles,dbgDetail,("# >DoAccess (%s): n=%d\n", wMode ? "write":"read", *lenP ));
     sv= rbf->currPos;
     
-    do {          /* do this loop for every sector to be read into buffer */
+    do {           /* do this loop for every sector to be read into buffer */
         if (spP->rawMode) {
-            sect= rbf->currPos / dev->sctSize;       /* get raw sector nr */    
-            size= -1; rs= &size; /* no upper limit */
+            sect= rbf->currPos / dev->sctSize;        /* get raw sector nr */
+            slim= -1;  
+            size= -1; rs= &size;                         /* no upper limit */
         }
-        else {                           /* get sector nr of segment info */
-            FD_Segment( spP, &attr,&size,&totsize,&sect, &pref );
+        else {                            /* get sector nr of segment info */
+            FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
                                         rs= &totsize; /* the relevant size */
             if (!wMode && size<totsize) rs= &size;
             
@@ -1872,7 +1873,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                     err= AllocateBlocks( spP,ma, &pos,&scs, pref ); if (err) break;
                     err= AdaptAlloc_FD ( spP,     pos, scs       ); if (err) break;
                     
-                    FD_Segment( spP, &attr,&size,&totsize,&sect, &pref );
+                    FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
                                              rs= &totsize;
                     if (rbf->currPos>=*rs) {
                         debugprintf( dbgFiles,dbgDetail,("# DoAccess (%s) EOF: n=%d\n", 
@@ -1889,38 +1890,54 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     
         offs= rbf->currPos % dev->sctSize; /* get offset within this sector */
 
-            mlt= (dev->multiSct && sect!=0 && offs==0 && remain>=2*dev->sctSize && !wMode && false);
+            mlt= (dev->multiSct && sect!=0 && offs==0 && remain>=2*dev->sctSize);
         if (mlt) {
                 maxc= *rs;
             if (maxc>remain) maxc= remain;
-            n= (maxc-1)/dev->sctSize + 1;
+            n=  maxc / dev->sctSize;
+            d=  maxc % dev->sctSize;
             b=  buffer+boffs;
+            
+            if (sect+n>slim) n= slim-sect; /* not more than a segment   */
+            if (n     > 255) n=       255; /* command for <=256 sectors */
+
+            n0= n; if (d==0) n0--;
+            maxc= dev->sctSize*n; /* don't take the last sector, if incomplete: could cause overflow */
         }
         else {
-                maxc= dev->sctSize - offs;  /* calculate the max number of bytes to be read */
+                maxc= dev->sctSize - offs; /* calculate the max number of bytes to be read */
             if (maxc>remain) maxc= remain;
-            n= 1;
+            n= 1; n0= 0; d= 0;
             b= spP->rw_sct;
         } 
         
+//      if (dev->multiSct) 
+//          upe_printf( "rw_nr sect remain mw wMode cur %7d %7d %7d %7d %7d %7d\n", spP->rw_nr,sect,remain,*mw,wMode,rbf->currPos );
         if (spP->rw_nr==0     /* read only if different one */
-         || spP->rw_nr!=sect) {
+         || spP->rw_nr!=sect
+         || mlt) {
             if (*mw!=0) {
+            //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                 err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
                 *mw =0; /* now it is written */
             }
 
-            if (true) {
+            if (!mlt || !wMode) {
                 err= ReadSector( dev, sect,n, b ); if (err) break;
-            
-                if (mlt) {  spP->rw_nr= sect + n-1;
-                    memcpy( spP->rw_sct, b+maxc-dev->sctSize, dev->sctSize ); /* update rw_sct */
+            //  if (dev->multiSct) upe_printf( "Rsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
+                spP->rw_nr= sect + n0;
+                
+                if (mlt) {  
+                    if (n>n0) { /* the full sector has been read */
+                        memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+                    }
+                    else        spP->rw_nr= 0; /* there must be a follow up */
                 }
                 else {
                     if (sect==0) { err= ChkIntegrity( dev, spP, b,true ); if (err) break; }
                 }
             } /* if */  
-        }   
+        } /* if */
 
         rOK = true;
         debugprintf(dbgFiles,dbgDeep,("# RBF %s: \"%s\" $%x bytes, sect: $%x, size: $%x\n", 
@@ -1937,8 +1954,10 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     
         /* copy to/from the buffer */   
         if (wMode) {
-            memcpy(spP->rw_sct+offs, buffer+boffs, maxc);
-
+            if (!mlt) {
+                memcpy(spP->rw_sct+offs, buffer+boffs, maxc);
+            }
+            
             /* if sector in raw mode */
             if (spP->rawMode) {
                     if (sect==0) {
@@ -1953,14 +1972,17 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
             }
             else {
                 if (*mw!=0 && *mw!=sect) { /* if sector nr has changed */
+                //  if (dev->multiSct) upe_printf( "wsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                     err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
+                    spP->rw_nr= *mw;
                 }
                 
                 *mw= sect;
-                if (mlt && false) {
+                if (mlt) {
+                //  if (dev->multiSct) upe_printf( "Wsct slm n n0 offs d len%7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
                     err= WriteSector( dev, sect,n, b ); if (err) break;
-                    sect= sect + n-1;
-                    memcpy( spP->rw_sct, b+maxc-dev->sctSize, dev->sctSize ); /* update rw_sct */
+                            spP->rw_nr= sect + n0;
+                    memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
                     *mw= 0; /* already written */
                 }
             }
@@ -1984,6 +2006,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
         
         remain-= maxc; /* adapt them for the next loop */
         boffs += maxc;
+//      if (dev->multiSct) upe_printf( " remain boffs maxc      %7d %7d %7d\n", remain,boffs,maxc );
     } while (remain>0);
     
     if (err==E_FULL) {
@@ -2208,7 +2231,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     rbf_typ*        rbf= &spP->u.rbf;
     rbfdev_typ*     dev;
     os9err          err= 0;
-    ulong           sect, size, totsize, dir_len, pref;
+    ulong           sect, slim, size, totsize, dir_len, pref;
     os9direntry_typ dir_entry;
     char            cmp_entry[OS9NAMELEN];
     int             root, isFileEntry;    
@@ -2263,7 +2286,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     rbf->wMode = IsWrite(*modeP);
     GetBuffers ( dev,spP ); /* get the internal buffer structures now */
     spP->rw_nr = 0;         /* undefined */
-
+    
     do {
         /* take care of write protection */     
         if (cre && dev->wProtected) { err= E_WP; break; }
@@ -2328,8 +2351,8 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
             rbf->lastPos= 0;                      /* last       position is 0 */
 
                              rbf->fd_nr= DirLSN( &dir_entry );
-            err= ReadFD    ( spP );                                    if (err) break;  
-            err= FD_Segment( spP, &attr,&size,&totsize,&sect, &pref ); if (err) break;
+            err= ReadFD    ( spP );                                          if (err) break;  
+            err= FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref ); if (err) break;
             rbf->lastPos= size;                   /* last pos is the filesize */
             rbf->att    = attr;                   /* save attributes */
             isFileEntry= (attr & 0x80)==0x00;     /* recognized as file entry */
@@ -2695,7 +2718,7 @@ os9err pRsize( ushort pid, syspath_typ* spP, ulong *sizeP )
     rbf_typ*    rbf= &spP->u.rbf;
     rbfdev_typ* dev= &rbfdev[rbf->devnr];
     byte        attr;
-    ulong       sect, totsize, sv, pref;
+    ulong       sect, slim, totsize, sv, pref;
 
     if (spP->rawMode) {
         *sizeP= dev->totScts*dev->sctSize;
@@ -2705,7 +2728,7 @@ os9err pRsize( ushort pid, syspath_typ* spP, ulong *sizeP )
     sv = rbf->currPos;
          rbf->currPos= 0;  /* initialize position to 0 */
     
-    err= FD_Segment( spP, &attr,sizeP,&totsize,&sect, &pref );
+    err= FD_Segment( spP, &attr,sizeP,&totsize,&sect,&slim, &pref );
 
          rbf->currPos= sv; /* get saved position back */
     if  (rbf->lastPos>*sizeP) *sizeP= rbf->lastPos;
