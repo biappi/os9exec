@@ -1183,6 +1183,7 @@
           
           03-05-08  Bfo     MacOSX: "carbon.r" added => os9app is running natively under MacOSX !!
           03-05-08  Bfo     MacOSX: RBF and network support added ( xxxInContext functions )
+          03-05-12  Bfo     Define OT variable as static
     3.22  03-??-??  Bfo
     -------------------
 */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2003/05/08 23:12:40  bfo
+ *    MacOSX: Network activated for Carbon
+ *
  *    Revision 1.15  2003/05/07 19:23:20  bfo
  *    Error 000:164 for raw socket open w/o permission
  *
@@ -91,8 +94,7 @@
 #endif
 
 #ifdef USE_CARBON
-  OTClientContextPtr *otContext;
-  
+  static OTClientContextPtr *otContext;
 #endif
 
 #ifdef windows32
