@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2003/05/17 10:36:14  bfo
+ *    Several adaptions for Carbon: MGR/telnet are running now.
+ *    Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
+ *
  *    Revision 1.17  2003/05/12 16:30:48  bfo
  *    Define OT variable as static
  *
@@ -295,7 +299,7 @@ typedef struct _iphdr
 
 
 
-#ifdef powerc
+#if defined powerc && __MWERKS__ >= CW7_MWERKS
 static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
 /* Input: ep - endpointref on which to negotiate the option
    enableReuseIPMode - desired option setting - true/false
@@ -401,7 +405,12 @@ static void SetDefaultEndpointModes( SOCKET s )
 {
     #ifdef powerc
       OSStatus junk;
-    
+      
+      /* %%% workaround for the moment */
+      #ifdef USE_CARBON
+        return;
+      #endif
+      
       junk= OTSetNonBlocking   ( s );
 //    junk= OTSetBlocking      ( s );
       OTAssert("SetDefaultEndpointModes: Could not set blocking",         junk==noErr);
@@ -410,9 +419,9 @@ static void SetDefaultEndpointModes( SOCKET s )
       OTAssert("SetDefaultEndpointModes: Could not set synchronous",      junk==noErr);
       
       #ifdef USE_CARBON
- 		if (gYieldingNotifierUPP==NULL)
+   		if (gYieldingNotifierUPP==NULL)
             gYieldingNotifierUPP= NewOTNotifyUPP( (OTNotifyProcPtr)YieldingNotifier );
-
+  
         junk= OTInstallNotifier( s, gYieldingNotifierUPP, s );
       #else 
         junk= OTInstallNotifier( s, &YieldingNotifier, nil );
@@ -991,7 +1000,10 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       TEndpointInfo info;
       TBind         bindReq;
       char*         kN;
-      OSStatus      junk;
+      
+      #if __MWERKS__ >= CW7_MWERKS
+        OSStatus    junk;
+      #endif
     #endif
     
     #ifdef win_linux
@@ -1019,11 +1031,9 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
                                
       if (err) return E_FNA;
       
-	  junk= DoNegotiateIPReuseAddrOption( net->ls, true );
-	  
-    /* %%% the "reUse", has still no effect, don't know why ... */
-//  if (!net->listen) err= reUse( pid, spP ); if (err) return OS9_EADDRINUSE;
-    
+      #if __MWERKS__ >= CW7_MWERKS
+	    junk= DoNegotiateIPReuseAddrOption( net->ls, true );
+	  #endif    
     #elif defined win_linux
           net->ls= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
       if (net->ls==INVALID_SOCKET) return E_FNA;
@@ -1174,6 +1184,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
     net_typ* net= &spP->u.net;
     process_typ*  cp= &procs[pid];
     ushort        fPort;
+    Boolean       isRaw;
     
     #ifdef powerc
       TCall sndCall;
@@ -1183,10 +1194,10 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
     #ifdef win_linux
       int          af, ty, proto; 
       SOCKADDR_IN  name;
-      
-      #ifdef linux
-        int  id, u_err;
-      #endif
+    #endif
+    
+    #if defined linux
+      int  id, u_err;
     #endif
    
     #ifndef WITH_NETWORK
@@ -1202,6 +1213,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
 
     memcpy( &net->ipRemote, ispP, sizeof(net->ipRemote) );
     fPort= os9_word(net->ipRemote.fPort); /* little/big endian change */
+    isRaw= (fPort==0);
     
     if (net->bound) {
         net->ep= net->ls;
@@ -1209,11 +1221,20 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
     }
     else {
         #ifdef powerc
-          if (fPort==0) kN= kRawIPName;
-          else          kN= kTCPName;
+          if (isRaw) kN= kRawIPName;
+          else       kN= kTCPName;
         
           #ifdef USE_CARBON
+       //   if (isRaw) {
+       //       id= geteuid();        // printf( "%d\n",     id    );
+       //       u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
+       //   }
+       
             net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0,nil, &err, nil );
+
+       //   if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
+       //       u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
+       //   }
           #else
             net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0,nil, &err );
           #endif
@@ -1227,11 +1248,11 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
         #elif defined win_linux
           af= os9_word(net->ipRemote.fAddressType);
           
-          if (fPort==0) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
-          else          { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
+          if (isRaw) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
+          else       { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
           #ifdef linux
-            if (fPort==0) {
+            if (isRaw) {
                 id= geteuid();        // printf( "%d\n",     id    );
                 u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
             }
@@ -1240,20 +1261,19 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           net->ep= socket( af, ty, proto );
           
           #ifdef linux
-            if (fPort==0) {
-                                      // printf(  "ep=%d %d\n", net->ep, fPort );
+            if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
                 u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
             }
           #endif
           
           debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort ));
           if (net->ep==INVALID_SOCKET)
-              if (fPort==0) return E_PERMIT;
-              else          return E_FNA;
+              if (isRaw) return E_PERMIT;
+              else       return E_FNA;
         #endif
             
         net->bound= true;
-        if (fPort==0) return 0;
+        if (isRaw) return 0;
     }
 
 //  /* the domain service is now implemented */
