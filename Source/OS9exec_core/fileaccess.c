@@ -39,10 +39,6 @@
 #include "os9exec_incl.h"
 
 #ifdef win_linux
-//  #ifdef windows32
-//    #define __dest_os __win32_os
-//  #endif
-      
   #include <utime.h>
 #endif
 
@@ -174,6 +170,7 @@ void init_Dir( fmgr_typ* f )
   {   if (!b) printf( "Assert Error\n" ); 
   }
 #endif
+
 
 
 /* input from file */
@@ -590,7 +587,7 @@ os9err pHvolnam(ushort pid, syspath_typ* spP, char* volname)
         LPWIN32_FIND_DATA data;
         FILETIME   cr, lastA, lastW, lastL;
         SYSTEMTIME sy;
-        struct     tm *tp,tim;
+        struct tm  tim;
 
         /* open as file or as current directory */
             hh= _lopen( spP->fullName, OF_READWRITE );
@@ -611,9 +608,8 @@ os9err pHvolnam(ushort pid, syspath_typ* spP, char* volname)
         FileTimeToLocalFileTime( &lastW, &lastL );
         FileTimeToSystemTime   ( &lastL, &sy );
         
-        if (t==0) time( &t ); /* get the current time, it seems to be   */
-        tp = localtime( &t );
-        tim= *tp; /* copy it, as it might be overwritten */
+        if (t==0) GetTim  ( &tim );
+        else      TConv( t, &tim );
         
         sy.wYear  = tim.tm_year+1900;
         sy.wMonth = tim.tm_mon+1;
@@ -643,18 +639,14 @@ os9err pHvolnam(ushort pid, syspath_typ* spP, char* volname)
 
 static os9err touchfile( ushort pid, syspath_typ* spP )
 {
-    struct tm *tp,tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    time_t caltime;
-    byte   fdbeg[16]; /* buffer for preparing FD */
-    ulong  maxbyte = 16;
-    int k;
+    struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
+    byte      fdbeg[16]; /* buffer for preparing FD */
+    ulong     maxbyte = 16;
+    int       k;
     
-    time          (&caltime);  /* get the current time, it seems to be   */
-    tp = localtime(&caltime);  /* based on 1900, not 1904, as file dates */
-    tim= *tp;                  /* copy it, as it might be overwritten    */
-
     for (k=0; k<16; k++) fdbeg[ k]= 0; /* initialize it */
     
+    GetTim ( &tim );
     fdbeg[3]= tim.tm_year;
     fdbeg[4]= tim.tm_mon+1; /* somewhat different month notation */
     fdbeg[5]= tim.tm_mday;
@@ -1307,16 +1299,18 @@ os9err pFeof( ushort pid, syspath_typ* spP )
 } /* pFeof */
 
 
+
+
 /* prepare a FD from a cipb */
 static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 {
-    byte    fdbeg[16];                   /* buffer for preparing FD */
-    byte*   att     = (byte*) &fdbeg[0]; /* the position of the attr field */
-    ulong*  sizeP   = (ulong*)&fdbeg[9]; /* the position of the size field */
-    Boolean isFolder= false;
-    Boolean uDir    = false;
-    ulong   u       = 0;
-    struct  tm *tp,tim;
+    byte      fdbeg[16];                   /* buffer for preparing FD */
+    byte*     att     = (byte*) &fdbeg[0]; /* the position of the attr field */
+    ulong*    sizeP   = (ulong*)&fdbeg[9]; /* the position of the size field */
+    Boolean   isFolder= false;
+    Boolean   uDir    = false;
+    ulong     u       = 0;
+    struct tm tim;
     
     #ifdef macintosh
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
@@ -1411,8 +1405,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       #endif
     #endif
 
-    tp = localtime( (time_t*)&u );
-    tim= *tp; /* copy it, as it might be overwritten */
+    TConv( u, &tim );
+//  tp = localtime( (time_t*)&u );
+//  tim= *tp; /* copy it, as it might be overwritten */
 
     #ifdef windows32
       if (uDir) {
@@ -1444,8 +1439,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       u= info.st_ctime;
     #endif
 
-    tp = localtime( (time_t*)&u );
-    tim= *tp; /* copy it, as it might be overwritten */
+    TConv( u, &tim );
+//  tp = localtime( (time_t*)&u );
+//  tim= *tp; /* copy it, as it might be overwritten */
 
     fdbeg[13]= tim.tm_year;
     fdbeg[14]= tim.tm_mon+1;
@@ -1493,26 +1489,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 
 
 
-static time_t TConv( struct tm *tim )
-/* time conversion, seems to be buggy under CW7 -> 70 year correction */
-{
-	time_t u;
-	
-	#if __MWERKS__ >= CW7_MWERKS
-	  tim->tm_year -= 2; 
-	#endif
-
-    u= mktime( tim );              /* set modification time */
-
-	#if __MWERKS__ >= CW7_MWERKS
-	  u += (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
-	#endif
-	
-	return u;
-} /* TConv */
-
-
-
 static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
 /* adapt cipb with info of FD */
 // void setFD(CInfoPBRec *cipbP, ushort maxbyt, byte *buffer)
@@ -1537,7 +1513,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     tim.tm_min = fdbeg[ 7];
     tim.tm_sec = 0;           /* no seconds supported */
     
-    u= TConv( &tim );
+    u= UConv( &tim );
 
     spP->u.disk.u.file.moddate        = u;
     spP->u.disk.u.file.moddate_changed= true;
@@ -1558,7 +1534,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     tim.tm_min = 0;
     tim.tm_sec = 0;           /* no seconds supported */
 
-    u= TConv( &tim );
+    u= UConv( &tim );
 	
     #ifdef MACFILES
       cipbP->hFileInfo.ioFlCrDat= (ulong)u-OFFS_1904; /* fill it into Mac's record */
