@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2003/01/10 21:01:09  bfo
+ *    pWaitRead problems fixed
+ *
  *    Revision 1.22  2003/01/09 21:58:55  bfo
  *    pWaitRead things adapted
  *
@@ -894,6 +897,9 @@ static os9err os9exec_compatible( mod_exec* mod )
     if (ustrcmp(p,"deldir" )==0 && ed<=100) return E_BADREV; /* shrinking directory entries not supported */
     if (ustrcmp(p,"sysdbg" )==0 && ed<=100) return E_BADREV; /* crashes right at the beginning */
     if (ustrcmp(p,"mnt"    )==0 && ed<=100) return E_BADREV; /* no "/mt" device available */
+
+    if (ustrcmp(p,"list"   )==0 && ed== 16) return E_BADREV; /* V2.4 version is buggy */
+    if (ustrcmp(p,"cmp"    )==0 && ed== 23) return E_BADREV; /* V3.0 version is buggy */
     
     return 0;
 } /* os9exec_compatible */
