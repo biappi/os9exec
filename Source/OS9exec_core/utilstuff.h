@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2003/05/05 17:56:49  bfo
+ *    Activate most of the ramDisk things even without RAM_SUPPORT
+ *
  *    Revision 1.15  2003/04/25 19:29:17  bfo
  *    Handle Netatalk IDs out of range correctly now (using FD_ID)
  *
@@ -88,6 +91,13 @@ void   Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
                  Boolean asGregorian, Boolean withTicks );
 
 ulong GetScreen( char mode );
+
+
+#ifdef USE_CARBON
+  char* p2cstr( unsigned char* s );
+  unsigned char* c2pstr( char* s );
+#endif
+
 
 ulong Min( ulong a, ulong b );
 ulong Max( ulong a, ulong b );
