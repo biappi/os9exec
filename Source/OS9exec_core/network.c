@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2003/08/01 11:16:52  bfo
+ *    up to date
+ *
  *    Revision 1.19  2003/05/21 20:34:25  bfo
  *    Preparations for seteuid on Mac OS X
  *
@@ -864,7 +867,9 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
     #elif defined(windows32)
       #define     Unk 0x7f7f7f7f
       HOSTENT*    h;
-      ulong       *a, *a0, *a1, *a2;
+      ulong       *a;
+//    ulong       *a0, *a1, *a2;
+      int         i;
       
     #elif defined linux
       SOCKADDR_IN        a;
@@ -905,14 +910,26 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
     #elif defined(windows32)
           h= gethostbyname( "" ); /* my own host */
       if (h==NULL) return OS9_ENETDOWN;
-          a0= h->h_addr_list[0]; 
-          a1= h->h_addr_list[1]; 
-          a2= h->h_addr_list[2]; 
+      
+      a= NULL; 
+      i= h->h_length/sizeof(ulong);
+      while (i>0 && a==NULL) {
+          a= h->h_addr_list[ i-1 ];
+      //  printf( "length: %d %X\n", i, a );
+          i--;
+      }
+      
+      //  a0= h->h_addr_list[0]; 
+      //  a1= h->h_addr_list[1]; 
+      //  a2= h->h_addr_list[2]; 
+      //  a1= NULL;
+      //  a2= NULL;
+   // printf( "length: %d\n", h->h_length );
 
       /* Windows allows more than one host address */   
-                              a= a2; /* e.g. PPP under Win2000 */
-      if (a==NULL || *a==Unk) a= a1; /* e.g. LAN */
-      if (a==NULL || *a==Unk) a= a0; /* if no other one */
+      //                         a= a2; /* e.g. PPP under Win2000 */
+      // if (a==NULL || *a==Unk) a= a1; /* e.g. LAN */
+      // if (a==NULL || *a==Unk) a= a0; /* if no other one */
 
       if (a==NULL) return OS9_ENETDOWN;       
 

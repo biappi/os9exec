@@ -1222,6 +1222,7 @@
     -------------------
 
           04-01-04  Bfo     Changed to new version
+          04-02-19  Bfo     Network IP address bugfix for Windows XP (seems to be the only problem with XP :-))
     3.23  04-??-??  Bfo
     -------------------    
 */
