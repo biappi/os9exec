@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2004/11/20 13:29:59  bfo
+ *    Compileable for Mac Classic again
+ *
  *    Revision 1.24  2004/11/20 11:40:58  bfo
  *    Networking enhanced (for the demo httpd server).
  *
@@ -110,6 +113,7 @@
 
 
 #include "os9exec_incl.h"
+#include "net_platform.h"
 
 
 /* specific network definitions */
@@ -274,20 +278,10 @@ void init_Net( fmgr_typ* f )
  */
 
 
-
-/* Connection from Internet Support Package (ISP) */
-/* to the host system's network connection */
-
-static NetInstalled= false;
-enum { kTransferBufferSize = 4096 };
-// #define MAXCNT 10000
-
-
 /* definitions for ICMP (ping) */
 #define kOurMagic 0x5175696E /* enum { kOurMagic = 'Quin' }; */
 #define ICMP_ECHOREPLY     0
 #define ICMP_ECHO          8
-
 
 #ifdef win_linux
   #define MAX_PACKET 1024 // Max ICMP packet size
@@ -379,7 +373,7 @@ static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuse
 
 
 #ifdef USE_CARBON
-static void OTAssert( char* /* txt */, Boolean cond ) 
+static void OTAssert( _txt_, Boolean cond ) 
 {   if (!cond) DebugStr( "\pOT: Assertion failure." );
 } 
 #endif
@@ -465,63 +459,6 @@ static void SetDefaultEndpointModes( SOCKET s )
 
 
 
-static os9err NetInstall(void)
-{
-    #ifdef powerc
-      OSStatus   err;
-      InetSvcRef inet_services= nil;
-    #endif
-    
-    #ifdef windows32
-      WORD    wVersionRequested= MAKEWORD(2,2);
-      WSADATA wsaData;
-    #endif
-
-    
-    if (NetInstalled) return 0; /* already done, ok */
-    
-    #ifdef powerc
-      #ifdef USE_CARBON
-          err= InitOpenTransportInContext( kInitOTForApplicationMask, nil );
-      #else
-          err= InitOpenTransport();
-      #endif
-          
-      if (err) return E_UNIT;
-      
-      #ifdef USE_CARBON
-        inet_services= OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0,&err, nil );
-      #else
-        inet_services= OTOpenInternetServices         ( kDefaultInternetServicesPath, 0,&err );
-      #endif
-          
-      if (err) { 
-          #ifdef USE_CARBON
-            CloseOpenTransportInContext( nil ); 
-          #else
-            CloseOpenTransport(); 
-          #endif
-          
-          return E_UNIT; 
-      }
-
-    #elif defined(windows32)
-      /* now it works also for Windows !! */
-      WSAStartup( wVersionRequested, &wsaData );
-    
-    #elif defined linux
-      // do nothing here
-
-    #else
-      return OS9_ECONNREFUSED;
-    #endif
-        
-    NetInstalled= true; /* it is ok now */
-    return 0;
-} /* NetInstall */
-
-
-
 static os9err GetBuffers( net_typ* net )
 /* Get the transfer buffers for the net devices */
 {
@@ -548,7 +485,7 @@ static os9err GetBuffers( net_typ* net )
 
 
 
-os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pathname)
+os9err pNopen( _pid_, syspath_typ* spP, _modeP_, char* pathname)
 {
     OSStatus err;
     net_typ* net= &spP->u.net;
@@ -575,7 +512,7 @@ os9err pNopen( ushort /* pid */, syspath_typ* spP, ushort* /* modeP */, char* pa
 
 
 
-os9err pNclose( ushort /* pid */, syspath_typ* spP )
+os9err pNclose( _pid_, syspath_typ* spP )
 {
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
@@ -623,85 +560,6 @@ os9err pNclose( ushort /* pid */, syspath_typ* spP )
 
 
 
-/* ---- OPERATING SYSTEM DEPENDENT PART OF netRead ---------------- */
-/* get the next block of data at <net->transferBuffer> of <net->ep> */
-/* Result is <err> >0 -> number of bytes read                       */
-/*                 =0 -> no data                                    */
-/*                 <0 -> error (OS dependent)                       */
-/* <net->closeit> will be set to true in case of EOF                */
-
-#if defined macintosh && !defined powerc
-  static OSStatus netReadBlock( net_typ* ) {
-    return E_UNKSVC; // not supported for Classic Mac, but compileable
-  } /* netReadBlock */
-#endif
-
-
-#ifdef powerc
-  static OSStatus netReadBlock( net_typ* net )
-  {
-    OSStatus err;
-    OTFlags  junkFlags;
-    OTResult lookResult;
-
-    /* keep interface fast for at least one minute */
-    gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
-    HandleEvent(); /* allow cooperative multitasking */
-        
-    /* read not more than the transfer buffer size */
-    err= OTRcv( net->ep, (void *)net->transferBuffer, 
-                                     kTransferBufferSize, &junkFlags );
-                                           
-            /* <err> is the number of bytes read, if positive */                     
-    if     (err<=0) {      /* and error status, if negative */
-        if (err==kOTNoDataErr) err= 0;
-        if (err==kOTLookErr) {
-                lookResult= OTLook(net->ep);
-            if (lookResult==T_ORDREL) net->closeIt= true;
-        } /* if */
-    } /* if */
-      
-    return err;
-  } /* netReadBlock */
-#endif
-
-
-#ifdef windows32
-  static OSStatus netReadBlock( net_typ* net )
-  {
-    OSStatus err;
-    ulong    arg;
-    int      flags= 0;
-    WSANETWORKEVENTS ev;
-
-           err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
-    if   (!err && (ev.lNetworkEvents & FD_CLOSE)!=0)
-           net->closeIt= true; /* close event: close after last read */
-                
-           err= ioctl( net->ep, FIONREAD, &arg );
-    if    (err>=0 && arg>0) 
-           err= recv ( net->ep, net->transferBuffer, kTransferBufferSize, flags );
-    return err;
-  } /* netReadBlock */
-#endif
-
-
-#ifdef linux
-  static OSStatus netReadBlock( net_typ* net )
-  {
-    OSStatus err;
-    int      flags= 0;
-      
-           err= recv( net->ep, net->transferBuffer, kTransferBufferSize, flags );
-    if    (err==0)    net->closeIt= true;
-    return err;
-  } /* netReadBlock */
-#endif
-/* ---- OPERATING SYSTEM DEPENDENT PART OF netRead ---------------- */
-
-
-
-
 static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP, 
                                    char* buffer, Boolean lnmode )
 {
@@ -711,18 +569,16 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
     int          ii;
     ulong        askBytes= *lenP, mx;
     Boolean      CR_found= false; /* CR found for <lnmode> */
-    
-    #ifndef WITH_NETWORK
-      return E_UNKSVC;
-    #endif
+    ulong        nBytes= kTransferBufferSize;
     
     *lenP= 0; /* how many bytes read ? 0 at the beginning */
     do {
         if (net->bsize==0) { /* buffer is currently empty */
             if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
-        
-                err= netReadBlock( net );
-            if (err<=0) {        /* <err> is the number of bytes read, if positive */                     
+            HandleEvent(); /* allow cooperative multitasking */
+       
+                err= netReadBlock( pid, net, &nBytes );
+            if (err) {           /* <err> is the number of bytes read, if positive */                     
                 if (net->closeIt) return E_EOF;   /* and error status, if negative */
             
                 cp->saved_state= cp->state;
@@ -730,7 +586,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
                 return E_NOTRDY;
             } /* if */
                 
-            net->bsize= (ulong) err; /* bytesReceived */
+            net->bsize= nBytes; /* bytesReceived */
                     net->bpos=  net->b_local;
             memcpy( net->bpos,  net->transferBuffer, net->bsize );
         } /* if */
@@ -755,7 +611,6 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
 } /* netRead */
 
 
-
 os9err pNread( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 {   return netRead( pid,spP, lenP,buffer, false );
 } /* pNread */
@@ -769,107 +624,35 @@ os9err pNreadln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP, 
                         char* buffer, Boolean lnmode )
 {
-    OSStatus     err= 0;
-    net_typ*     net= &spP->u.net;
-    ulong        remain, blk;
-    int          ii;
-    int          flags= 0;
-
-    #ifdef macintosh
-      #pragma unused(pid)
-      
-      #ifdef powerc
-        OTResult   lookResult;
-      #endif
-    #endif
-    
-    #ifdef windows32
-      Boolean    ok;
-      int        loopit;   
-    #endif
-
-
-    #ifndef WITH_NETWORK
-      return E_UNKSVC;
-    #endif
+    OSStatus  err= 0;
+    net_typ*  net= &spP->u.net;
+    ulong     remain, nBytes;
+    int       ii;
 
     if (lnmode) {
         for (ii=0; ii<*lenP; ii++) {
             if (buffer[ii]==CR) { *lenP= ii+1; break; }
-        }
-    }
+        } /* for */
+    } /* if */
     
-    /* keep interface fast for at least one minute */
-    #ifdef powerc
-      gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
-    #endif
-        
-             remain= *lenP;
-    while   (remain>0) {
-        blk= remain;
-        if (blk>kTransferBufferSize) blk= kTransferBufferSize;
-        memcpy( net->transferBuffer,buffer, blk );
+    remain= *lenP;
+    *lenP =     0;
     
-        while (true) {
-            HandleEvent(); /* allow cooperative multitasking */
+    while (remain>0) {
+            nBytes= remain;
+        if (nBytes>kTransferBufferSize) nBytes= kTransferBufferSize;
+        memcpy( net->transferBuffer,buffer, nBytes );
+    
+        HandleEvent(); /* allow cooperative multitasking */
+        if (net->closeIt) return 0;
             
-            #ifdef powerc       
-                  err= OTSnd( net->ep, (void *)net->transferBuffer, blk,0 );
-              if (err>0) break; /* ok */
-        
-              /* this is not an error */
-              if (err==kOTNoDataErr) { err= 0; break; }
-              if (err==kOTLookErr) {
-                      lookResult= OTLook(net->ep);
-                  if (lookResult==T_ORDREL) {
-                      *lenP= 0;
-                      return 0;
-                  }
-              }
-
-              if (err!=kOTFlowErr) return E_WRITE;
-
-            #elif defined win_linux
-              if (net->closeIt) {
-                  *lenP= 0;
-                  return 0;
-              }
-              
-                  err= send( net->ep, net->transferBuffer, blk, flags );
-              if (err>=0) break;
-            
-              #ifdef windows32
-                ok= false;
-                              
-                loopit= 10;
-                while (true) {
-                    err= WSAGetLastError();
+            err= netWriteBlock( pid, net, &nBytes );
+        if (err) return err;
                     
-                //  upe_printf( "%d %d\n", err, blk ); 
-                    if (!err) { ok= true; break; }
-                    if (loopit<=0)        break;
-                    Sleep( 1 );
-                        
-                        err= send( net->ep, net->transferBuffer, blk, flags );
-                //  upe_printf( "%d %d --\n", err, blk );
-                    if (err>=0) { ok= true; break; }
-                    loopit--;
-                } /* while */
-                if (ok) break;
-                
-                switch (err) {
-                    case WSAECONNABORTED: *lenP= 0; return 0;
-                    case WSAECONNRESET  :
-                    case WSAENOTCONN    : *lenP= 0; send_signal( pid, S_HangUp);
-                                                    return E_WRITE;
-                } /* switch */
-              #endif
-            #endif          
-        } /* while */
-        
-        buffer += err; /* bytesSent */
-        remain -= err;
-    }
+        *lenP += nBytes;
+        buffer+= nBytes; /* bytesSent */
+        remain-= nBytes;
+    } /* while */
                           
     return 0;
 } /* netWrite */
@@ -886,7 +669,7 @@ os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 
 
 #ifdef macintosh
-static os9err reUse( ushort /* pid */, syspath_typ *spP )
+static os9err reUse( _pid_, syspath_typ *spP )
 {
     net_typ* net= &spP->u.net;
 
@@ -919,154 +702,8 @@ static os9err reUse( ushort /* pid */, syspath_typ *spP )
 #endif
 
 
-os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
-                                    ulong *dns2Addr, char* domainName )
-{
-    #ifdef powerc
-      InetInterfaceInfo iinfo;
 
-    #elif defined windows32
-      #define     Unk 0x7f7f7f7f
-      HOSTENT*    h;
-      ulong       *a;
-//    ulong       *a0, *a1, *a2;
-      int         i;
-      
-    #elif defined linux
-      SOCKADDR_IN        a;
-      int                af, s;
-      socklen_t          len;
-      struct utsname     sysname= { 0 };
-      struct hostent     *hostPtr;  
-      struct sockaddr_in serverName= { 0 };
-      
-      FILE*   stream;
-      char*   p;
-      char    c;
-      int     cnt;
-      Boolean isEOF;
-      #define LINELEN 132
-      char    buffer[ LINELEN ];
-      char*   v;
-      int     n= 1;
-      char*   dom;
-      char    hostName[ OS9PATHLEN ];
-    #endif
-
-        
-    OSStatus err= NetInstall(); if (err) return err;
-
-    *inetAddr= 0; /* default values */
-    *dns1Addr= 0;
-    *dns2Addr= 0;
-    strcpy( domainName, "" );
-
-    #ifdef powerc
-      err= OTInetGetInterfaceInfo( &iinfo,0 ); if (err) return OS9_ENETDOWN;
-      *inetAddr= iinfo.fAddress;
-      *dns1Addr= iinfo.fDNSAddr;
-      *dns2Addr= 0;
-      strcpy( domainName, &iinfo.fDomainName );
-    
-    #elif defined(windows32)
-          h= gethostbyname( "" ); /* my own host */
-      if (h==NULL) return OS9_ENETDOWN;
-      
-      a= NULL; 
-      i= h->h_length/sizeof(ulong);
-      while (i>0 && a==NULL) {
-          a= h->h_addr_list[ i-1 ];
-      //  printf( "length: %d %X\n", i, a );
-          i--;
-      }
-      
-      //  a0= h->h_addr_list[0]; 
-      //  a1= h->h_addr_list[1]; 
-      //  a2= h->h_addr_list[2]; 
-      //  a1= NULL;
-      //  a2= NULL;
-   // printf( "length: %d\n", h->h_length );
-
-      /* Windows allows more than one host address */   
-      //                         a= a2; /* e.g. PPP under Win2000 */
-      // if (a==NULL || *a==Unk) a= a1; /* e.g. LAN */
-      // if (a==NULL || *a==Unk) a= a0; /* if no other one */
-
-      if (a==NULL) return OS9_ENETDOWN;       
-
-      *inetAddr= os9_long( *a );          /* take simply the last one */
-      *dns1Addr= 0xd5a02802;             /* %%% currently fixed value */
-      *dns2Addr= 0xd5a02822;             /* %%% currently fixed value */
-      strcpy( domainName, "ggaweb.ch" ); /* %%% currently fixed value */
-      
-    #elif defined linux
-      err=                  uname( &sysname);
-          hostPtr = gethostbyname(  sysname.nodename );
-      if (hostPtr==NULL) return OS9_ENETDOWN;
-
-      memset( &serverName, 0, sizeof(serverName));
-      memcpy( &serverName.sin_addr, hostPtr->h_addr,
-                                    hostPtr->h_length );
-
-      *inetAddr= os9_long( serverName.sin_addr.s_addr );
-
-          stream= fopen( "/etc/resolv.conf","r" ); /* open "resolv.conv" file */
-      if (stream!=NULL) {
-                  isEOF= false;
-          while (!isEOF) {
-              p  = buffer;
-              cnt= 0;
-          
-              while( cnt<LINELEN ) {
-                  if ((c=fgetc(stream))==EOF) { isEOF= true; break; }
-                  if ( c=='\n' ) break; /* abort on CR */
-                  
-                  *p++= c; /* save in the buffer */        
-                  cnt++;
-              } /* while */
-
-              *p++= '\0'; 
-          //  if (*buffer!='#') printf( "'%s'\n", buffer );
-              
-              v= "search ";
-              if (strstr( buffer,v )!=NULL) {
-                  v= buffer + strlen( v );
-                  strcpy( domainName, v );
-              }
-              
-              v= "nameserver ";
-              if (strstr( buffer,v )!=NULL) {
-                  v= buffer + strlen( v );
-                  if (n==1) *dns1Addr= os9_long( inet_addr( v ) );
-                  else      *dns2Addr= os9_long( inet_addr( v ) );
-                  n++;
-              }
-         } /* loop */
-          
-          fclose( stream );
-      } /* if */
-
-      hostPtr= gethostbyaddr( (void*)&serverName.sin_addr.s_addr,sizeof(ulong), AF_INET );
-      strcpy( hostName, hostPtr->h_name );
-      dom= strstr( hostName,domainName );
-      if (dom!=NULL && strlen(dom)==strlen(domainName)) {
-        dom--; if (*dom=='.') *dom= '\0';
-      }
-//    printf( "'%s'\n", hostName );
-      
-//    printf( "i12d %08X %08X %08X '%s'\n", *inetAddr, *dns1Addr, *dns2Addr, domainName );
-      
-    #else
-      return OS9_ENETDOWN;
-    #endif
-    
-//  printf( "inet/dns %08X %08X\n", *inetAddr,*dns_Addr );
-    return 0;
-} /* MyInetAddr */
-
-
-
-os9err pNbind( ushort /* pid */, syspath_typ* spP, ulong* /* nn */, byte *ispP )
+os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
 {
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
@@ -1253,7 +890,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
 
 
 
-os9err pNconnect( ushort pid, syspath_typ* spP, ulong* /* n */, byte *ispP)
+os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
 {
     #define CONNECT_TIMEOUT 100000
     
@@ -1567,7 +1204,7 @@ os9err pNsend( ushort pid, syspath_typ* spP, ulong *d1, ulong *d2, char** a0 )
 
 
 
-os9err pNGNam( ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2, byte* ispP )
+os9err pNGNam( _pid_, syspath_typ* spP, ulong* d1, ulong* d2, byte* ispP )
 /* Still some hardcoded things here */
 /* mode will be:    accepted / connected */
 /* ftpd/telnetd:      yes         no     */
@@ -1604,7 +1241,7 @@ os9err pNGNam( ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2, byte* i
 
 
 
-os9err pNSOpt(ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2)
+os9err pNSOpt( _pid_, syspath_typ* spP, ulong* d1, ulong* d2 )
 /* don't know what this is really good for (bfo) */
 {
     net_typ* net= &spP->u.net;
@@ -1620,7 +1257,7 @@ os9err pNSOpt(ushort /* pid */, syspath_typ* spP, ulong* d1, ulong* d2)
 
 
 
-static ushort checksum( ushort *buffer, int size) 
+static ushort checksum( ushort *buffer, int size ) 
 /* This function calculates the 16-bit one's complement sum */
 /* of the supplied buffer (ICMP) header */
 {
@@ -1640,7 +1277,7 @@ static ushort checksum( ushort *buffer, int size)
 
 
 
-os9err pNsPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
+os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
 {   
     OSStatus   err= 0;
     net_typ*   net= &spP->u.net;
@@ -1714,7 +1351,7 @@ os9err pNsPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
 
 
 
-os9err pNgPCmd( ushort /* pid */, syspath_typ *spP, ulong *a0 )
+os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
 {   
     OSStatus    err= 0;
     long        start_time;
@@ -1850,18 +1487,18 @@ const byte netstdopts[OPTSECTSIZE]=
 
 
 /* get options from console */
-os9err pNopt(ushort /* pid */, syspath_typ*, byte *buffer)
+os9err pNopt( _pid_, _spP_, byte *buffer )
 {   memcpy( buffer, netstdopts, OPTSECTSIZE ); return 0;
 } /* pNopt */
 
 
-os9err pNpos(ushort /* pid */, syspath_typ*, ulong *posP )
+os9err pNpos( _pid_, _spP_, ulong *posP )
 /* get current file position */
 {   *posP= 0; return 0;
 } /* pRpos */
 
 
-os9err pNready(ushort /* pid */, syspath_typ* spP, ulong *n )
+os9err pNready( _pid_, syspath_typ* spP, ulong *n )
 {
     #ifdef powerc
       OTResult lookResult;
