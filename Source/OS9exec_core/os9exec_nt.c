@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2004/01/04 19:53:17  bfo
+ *    Changed to new version
+ *
  *    Revision 1.35  2003/05/17 10:29:19  bfo
  *    Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
  *
@@ -620,7 +623,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x23;
+	exec_revision= 0x24;
 	#endif
 } /* getversions */
 
