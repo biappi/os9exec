@@ -1,7 +1,7 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
-//	  Available under http://www.synthesis.ch/os9exec
+//    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
 //    modify it under the terms of the GNU General Public License as 
@@ -275,21 +275,25 @@ typedef struct {
             char   name[OS9NAMELEN];    /* device name */
             ushort ssize;               /* sector size */
             ushort sas;                 /* sector allocation size */
+            byte   pdtyp;               /* PD_TYP according to descriptor */
+
             /* full SCSI Address */
-            short adapt;
-            short bus;
-            short id;                
-            short lun;
+            short  adapt;
+            short  bus;
+            short  id;                
+            short  lun;
         } scsi_typ;
 
 
 /* option section constants */
 #define PthOffs    0x80           /* Offset to option section */
     
-#define PD_SAS     0x8E - PthOffs /* RBF */
+#define PD_TYP     0x83 - PthOffs /* RBF */
+#define PD_SAS     0x8E - PthOffs
 #define PD_SSize   0x94 - PthOffs
 #define PD_CtrlID  0xA6 - PthOffs
 #define PD_LUN     0x99 - PthOffs
+#define PD_CtrlrID 0xA6 - PthOffs
 #define PD_ATT     0xB5 - PthOffs
 #define PD_FD      0xB6 - PthOffs
 #define PD_DFD     0xBA - PthOffs
