@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2003/05/07 19:23:20  bfo
+ *    Error 000:164 for raw socket open w/o permission
+ *
  *    Revision 1.14  2003/04/25 20:04:56  bfo
  *    Use geteuid / set user ID only to 0 for raw sockets
  *
@@ -85,6 +88,11 @@
 #ifdef macintosh
   #include <OTDebug.h>
   #include <Threads.h>
+#endif
+
+#ifdef USE_CARBON
+  OTClientContextPtr *otContext;
+  
 #endif
 
 #ifdef windows32
@@ -391,13 +399,29 @@ static os9err NetInstall(void)
     if (NetInstalled) return 0; /* already done, ok */
     
     #ifdef powerc
-          err= InitOpenTransport(); 
+      #ifdef USE_CARBON
+          err= InitOpenTransportInContext( kInitOTForApplicationMask, &otContext );
+      #else
+          err= InitOpenTransport();
+      #endif
+          
       if (err) return E_UNIT;
-        
-      inet_services= OTOpenInternetServices(
-                   kDefaultInternetServicesPath, 0,&err);
-        
-      if (err) { CloseOpenTransport(); return E_UNIT; }
+      
+      #ifdef USE_CARBON
+        inet_services= OTOpenInternetServicesInContext( kDefaultInternetServicesPath, 0,&err, otContext );
+      #else
+        inet_services= OTOpenInternetServices         ( kDefaultInternetServicesPath, 0,&err );
+      #endif
+          
+      if (err) { 
+          #ifdef USE_CARBON
+            CloseOpenTransportInContext( otContext ); 
+          #else
+            CloseOpenTransport(); 
+          #endif
+          
+          return E_UNIT; 
+      }
 
     #elif defined(windows32)
       /* now it works also for Windows !! */
@@ -444,7 +468,12 @@ os9err pNopen(ushort pid, syspath_typ* spP, ushort *modeP, char* pathname)
     
     #ifdef powerc
       /* First allocate a buffer for storing the data as we read it. */
-          net->transferBuffer= OTAllocMem(kTransferBufferSize);
+      #ifdef USE_CARBON
+          net->transferBuffer= OTAllocMemInContext( kTransferBufferSize, otContext );
+      #else
+          net->transferBuffer= OTAllocMem         ( kTransferBufferSize );
+      #endif    
+          
       if (net->transferBuffer==nil)  return E_NORAM;
 
     #elif defined win_linux
@@ -931,7 +960,12 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
       if (net->listen) kN= "tilisten,tcp";
       else             kN=  kTCPName;
 
-      net->ls= OTOpenEndpoint( OTCreateConfiguration(kN), 0, &info, &err);                           
+      #ifdef USE_CARBON
+        net->ls= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0, &info, &err, otContext );                           
+      #else
+        net->ls= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0, &info, &err );
+      #endif
+                               
       if (err) return E_FNA;
 
     /* %%% the "reUse", has still no effect, don't know why ... */
@@ -1122,7 +1156,12 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           if (fPort==0) kN= kRawIPName;
           else          kN= kTCPName;
         
-          net->ep= OTOpenEndpoint(OTCreateConfiguration(kN), 0,nil, &err);
+          #ifdef USE_CARBON
+            net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kN), 0,nil, &err, otContext );
+          #else
+            net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kN), 0,nil, &err );
+          #endif
+          
           if (err) return E_FNA;
         
           SetDefaultEndpointModes( net->ep );
@@ -1261,8 +1300,12 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           return E_NOTRDY;
       }
     
-    
-      net->ep= OTOpenEndpoint(OTCreateConfiguration(kTCPName), 0, nil, &err);
+      #ifdef USE_CARBON
+        net->ep= OTOpenEndpointInContext( OTCreateConfiguration(kTCPName), 0, nil, &err, otContext );
+      #else
+        net->ep= OTOpenEndpoint         ( OTCreateConfiguration(kTCPName), 0, nil, &err );
+      #endif
+      
       if (err) return E_FNA;
     
       SetDefaultEndpointModes( net->ep );
