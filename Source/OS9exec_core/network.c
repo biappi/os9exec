@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2004/02/19 19:50:02  bfo
+ *    Network IP address bugfix for Windows XP (seems to be the only problem with XP :-))
+ *
  *    Revision 1.20  2003/08/01 11:16:52  bfo
  *    up to date
  *
@@ -125,6 +128,15 @@
   #define SOCKET_ERROR   (-1)
   
   typedef struct sockaddr_in SOCKADDR_IN;
+#endif
+
+// Newer socket libraries require these types
+#if !defined __SOCKADDR_ARG
+  #define    __SOCKADDR_ARG SOCKADDR_IN*
+#endif
+
+#if !defined __CONST_SOCKADDR_ARG
+  #define    __CONST_SOCKADDR_ARG SOCKADDR_IN*
 #endif
 
 
@@ -1092,7 +1104,7 @@ os9err pNbind( ushort pid, syspath_typ* spP, ulong *nn, byte *ispP )
           name.sin_port       = os9_word(fPort);
           name.sin_addr.s_addr=          net->ipAddress.fHost;  /* my own address */
         
-          err= bind( net->ls, &name,sizeof(name) );
+          err= bind( net->ls, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
           #ifdef windows32
             if     (err) {
                     err= WSAGetLastError();
@@ -1314,7 +1326,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
       name.sin_port       =          net->ipRemote.fPort;
       name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
 
-      err= connect( net->ep, &name,sizeof(name) );
+      err= connect( net->ep, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
     #endif
 
     debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d: %d %d %x\n", err, net->ep, 
@@ -1368,7 +1380,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
       OSStatus       state;
       OTResult       lookResult;
     #endif
-    
+        
     #ifdef win_linux
       SOCKADDR_IN    name;
       int            len;
@@ -1428,8 +1440,8 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
         err= WSAEventSelect( net->ls, net->hEventObj, 
                              FD_ACCEPT|FD_READ|FD_WRITE|FD_CLOSE );
       #endif
-                                           len= sizeof(name);
-          net->ep= accept( net->ls, &name,&len );
+          len= sizeof(name);
+          net->ep= accept( net->ls, (__SOCKADDR_ARG)&name, &len );
       if (net->ep==INVALID_SOCKET) {
           cp->saved_state= cp->state;
           set_os9_state( pid, pWaitRead );
