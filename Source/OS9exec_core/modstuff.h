@@ -36,6 +36,7 @@
 
 mod_exec* os9mod      ( int k );
 char*     Mod_Name    ( mod_exec* mod );
+void      Update_MDir ( void );
 
 void      MoveBlk     ( byte *dst, byte *src, ulong size );
 Boolean   SameBlk     ( byte *a,   byte *b,   ulong size );

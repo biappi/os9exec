@@ -41,17 +41,14 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/09/11 17:20:30  bfo
+ *    Make an internal copy of the built-in "init" module: ref to var, not to const
+ *
  *
  */
 
 
 #include "os9exec_incl.h"
-
-/* 00/05/07 bfo  open files in binary mode for PC version */
-/* 00/05/13 bfo  hide ifdef of modulehandle/modulebase    */
-/* 00/05/13 bfo  adaptions for module group loading       */
-
-
 
 /* additional memory for all processes */
 ulong memplusall;
@@ -177,6 +174,40 @@ char* Mod_Name( mod_exec* mod )
 /* get the module's name */
 {   return (char*)mod + os9_long(mod->_mh._mname);
 } /* Mod_Name */
+
+
+
+void Update_MDir( void )
+/* Update the image of the module directory structure */
+{
+    ulong       b;
+    int         k;
+    mod_exec*   mod;
+    module_typ* modK;
+    Boolean     ok;
+    mdir_entry* en;
+    
+    for (k=0; k<MAXMODULES; k++) {
+        en= &mdirField[k];
+        
+                 mod= os9mod(k);
+            ok= (mod!=NULL);
+        if (ok) {                modK= &os9modules[k];
+            hiword( b )= (ushort)modK->linkcount;
+            
+            en->m1  = os9_long( (ulong)mod );
+            en->m2  = en->m1;                      /* %%% module groups not yet supported */
+            en->size= os9_long( mod->_mh._msize );
+            en->lnk = os9_long( b );
+        }
+        else {
+            en->m1  = 0;
+            en->m2  = 0;
+            en->size= 0;
+            en->lnk = 0;
+        }
+    } /* for */
+}
 
 
 
