@@ -630,7 +630,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     char         cmp[OS9PATHLEN],
                  ali[OS9PATHLEN],
                  tmp[OS9PATHLEN],
-                 ers[10], *q, *p;
+                 ers[10], *q, *p, *v;
     rbfdev_typ*  dev;
     ptype_typ    type;
     int          ii, n;
@@ -806,7 +806,10 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
              dev= &rbfdev[ cdv ]; 
     *my_dev= dev;                      /* activate RBF device */
     strcpy ( dev->alias,ali );         /* can change all the time */
-    if     (!dev->installed) strcpy( dev->name,cmp );
+    if     (!dev->installed) {
+        v= strstr( cmp,"@" ); if (v!=NULL) *v= NUL;
+        strcpy( dev->name,cmp );
+    }
     
              q= dev->name; /* compare with mnt_name, if available */
     if (fum) q= mnt_name;
@@ -837,7 +840,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 	
     dev->nr        = cdv;          /* already done ?? */
     dev->wProtected= mnt_wProtect; /* if not otherwise defined */
-             dev->fProtected= false;
+    dev->fProtected= false;
     dev->multiSct  = false;        /* not yet supported */
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
     dev->last_alloc= 0;            /* initialize allocater pointer */
