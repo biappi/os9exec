@@ -30,6 +30,19 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 
 /* OS9exec/nt internal move */
@@ -201,27 +214,29 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     strcat(nmS,PSEP_STR);
     strcat(nmS,fromname);
     nameS= nmS;
-    parsepath( cpid, &nameS, pS, exe_dir ); nameS= pS;
-//  printf( "S= '%s'\n", nameS );
+    
+        typeS= IO_Type( cpid,nameS, 0x00 ); /* get the device type: Mac/PC or RBF */
+    if (typeS!=fRBF) parsepath( cpid, &nameS, pS, exe_dir ); nameS= pS;
 
     strcpy(nmD,todir);
     strcat(nmD,PSEP_STR);
-    if    (toname[0]==0) /* use source's name if no new dest name specified */
+    if      (strcmp( toname,"" )==0) /* use source's name if no new dest name specified */
          destname= fromname;
     else destname=   toname;
     strcat(nmD,destname);
     nameD= nmD;
-    parsepath( cpid, &nameD, pD, exe_dir ); nameD= pD;
-//  printf( "D= '%s'\n", nameD );
     
-    len= strlen( destname );
+        typeD= IO_Type( cpid,nameD, 0x00 );
+    if (typeD!=fRBF) parsepath( cpid, &nameD, pD, exe_dir ); nameD= pD;
+    
+        len= strlen( destname );
     if (len>DIRNAMSZ)
         return _errmsg( E_BPNAM,"name too long \"%s\"\n", destname );
 
 
     asDirS= false;   
-    typeS= IO_Type( cpid,nameS, 0x00 ); /* get the device type: Mac/PC or RBF */
-    typeD= IO_Type( cpid,nameD, 0x00 );
+//  typeS= IO_Type( cpid,nameS, 0x00 ); /* get the device type: Mac/PC or RBF */
+//  typeD= IO_Type( cpid,nameD, 0x00 );
 
    
         isRBF= (typeS==fRBF || typeD==fRBF);
@@ -259,7 +274,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
           if (!dodir) asDirS= PathFound( nameS );
         
         #else
-          uphe_printf("internal move not yet implemented %%%\n");
+          upe_printf("internal move not yet implemented %%%\n");
           return 1; /* SIGWAKE */
         #endif
         
