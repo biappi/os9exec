@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/10/02 18:42:38  bfo
+ *    "systime -s?" bug fixed (no stop after -? text)
+ *
  *    Revision 1.7  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -627,7 +630,7 @@ static void show_title( Boolean show, char* name )
 
 
 static void show_line( Boolean show, ushort mode, 
-                       char c, char* name, ulong t, int n, ulong active )
+                       char c, char* name, ulong t, int n, ulong active, int ticksLim )
 {
     #define Lim  0.051
     #define GLim 1
@@ -639,8 +642,8 @@ static void show_line( Boolean show, ushort mode,
     if (active==0) f= 0; /* no division by zero */
     else           f= (float)100*t/active;
 
-    if ((mode & STIM_TICKAVAIL) &&   t==0) return;
-    if ((mode & STIM_PERCENT  ) && f<GLim) return;
+    if ((mode & STIM_TICKAVAIL) && t<ticksLim) return;
+    if ((mode & STIM_PERCENT  ) && f<GLim    ) return;
     
     if (n==-1) strcpy ( nnnn,"" );
     else       sprintf( nnnn,"%d", n );
@@ -652,14 +655,14 @@ static void show_line( Boolean show, ushort mode,
 
 
 static void show_sline( char* name,  ulong t, int n, ulong active )
-{           show_line ( true,0, ' ', name, t,n, active );
+{           show_line ( true,0, ' ', name, t,n, active, 1 );
 } /* show_sline */
 
 
 
 /* show system call timers */
 static void show_syscalltimers( Boolean icalls, ushort mode, ulong active, 
-                                                ulong *call, ulong *num )
+                                                ulong *call, ulong *num, int ticksLim )
 {
     ushort   k;
     int      t, n;
@@ -678,7 +681,7 @@ static void show_syscalltimers( Boolean icalls, ushort mode, ulong active,
         if (k==max) name= icalls ? "I$xxx (other progs)":"F$xxx (other progs)";
         else        name= icalls ?  icalltable[k].name  : fcalltable[k].name;
         
-        show_line( show,mode, ' ',name, t,n, active );
+        show_line( show,mode, ' ',name, t,n, active, ticksLim );
         if (n>0) { *call+= t; *num+= n; }
     } /* for */
 } /* show_syscalltimers */
@@ -686,7 +689,7 @@ static void show_syscalltimers( Boolean icalls, ushort mode, ulong active,
 
 
 /* show system call timers */
-static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num )
+static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num, int ticksLim )
 {
     ushort  k;
     st_typ* s;
@@ -702,7 +705,7 @@ static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num )
         t= s->ticks;
         n= s->num;
         
-        show_line( show,mode, s->intern ? '>':' ', s->name, t,n, active );
+        show_line( show,mode, s->intern ? '>':' ', s->name, t,n, active, ticksLim );
         if (n>0) { *call+= t; *num+= n; }
     } /* for */
 } /* show_os9timers */
@@ -710,7 +713,7 @@ static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num )
 
 
 /* show timing summary */
-ulong show_timing( ushort mode )
+ulong show_timing( ushort mode, int ticksLim )
 {
     ulong  tfcall, ticall, oscall;
     ulong  tfnum,  tinum,  osnum;
@@ -725,18 +728,18 @@ ulong show_timing( ushort mode )
         upo_printf("**** WARNING: timing log is currently DISABLED!\n");
     }
 
-    show_syscalltimers( false, 0,1, &tfcall,&tfnum );
-    show_syscalltimers( true,  0,1, &ticall,&tinum );
-    show_os9timers    (        0,1, &oscall,&osnum );
+    show_syscalltimers( false, 0,   1,       &tfcall,&tfnum, ticksLim );
+    show_syscalltimers( true,  0,   1,       &ticall,&tinum, ticksLim );
+    show_os9timers    (        0,   1,       &oscall,&osnum, ticksLim );
 
     t_call= tfcall+ticall;
     active= t_call+oscall + arbticks + sum_rw__idleticks + sum_slp_idleticks;
     
     if (active==0) active=1; /* prevent division by zero */
     
-    show_syscalltimers( false, mode, active, &tfcall,&tfnum );
-    show_syscalltimers( true,  mode, active, &ticall,&tinum );
-    show_os9timers    (        mode, active, &oscall,&osnum );
+    show_syscalltimers( false, mode, active, &tfcall,&tfnum, ticksLim );
+    show_syscalltimers( true,  mode, active, &ticall,&tinum, ticksLim );
+    show_os9timers    (        mode, active, &oscall,&osnum, ticksLim );
         
     if (!logtiming) timerstart= now+1;  /* prevent uninitialized <timerstart> */
     if (now<timerstart) now= timerstart;
@@ -773,16 +776,17 @@ static void usage( char *name,ushort pid )
     #pragma unused(pid)
     #endif
 
-    uphe_printf("Usage:    %s [options]\n",name);
-    uphe_printf("Function: OS9exec emulator timing utility\n");
-    uphe_printf("Options:  -r          switch on timing measurement & reset counters\n");
-    uphe_printf("          -d          disable   timing measurement (slightly better performance)\n");
-    uphe_printf("          -e          re-enable timing measurement (but no reset)\n");
-    uphe_printf("          -n=[<prog>] display info of OS-9 <prog> only\n");
-    uphe_printf("          -f          show F$xxx call timing list\n");
-    uphe_printf("          -i          show I$xxx call timing list\n");
-    uphe_printf("          -o          show OS-9 progs timing list\n");
-    uphe_printf("          -s          show I$xxx + F$xxx calls + OS-9 progs (same as -i -f -o)\n");
+    upe_printf("Usage:    %s [options]\n",name);
+    upe_printf("Function: OS9exec emulator timing utility\n");
+    upe_printf("Options:  -r          switch on timing measurement & reset counters\n");
+    upe_printf("          -d          disable   timing measurement\n");
+    upe_printf("          -e          re-enable timing measurement (but no reset)\n");
+    upe_printf("          -n=[<prog>] display info of OS-9 <prog> only\n");
+    upe_printf("          -f          show F$xxx call timing list\n");
+    upe_printf("          -i          show I$xxx call timing list\n");
+    upe_printf("          -o          show OS-9 progs timing list\n");
+    upe_printf("          -s          show I$xxx + F$xxx calls + OS-9 progs (same as -fio)\n");
+    upe_printf("          -t=[<n>]    a minimum of <n> ticks must have been counted\n");
     copyright ();
 } /* usage */
 
@@ -793,6 +797,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
     char   *p;              /* command line scanning */
     char   opt;
     ushort h;
+    int    ticksLim;
     
     /* get arguments and options, multiple options allowed (bfo) */
     for ( h=1; h<argc; h++ ) {
@@ -825,21 +830,26 @@ os9err int_systime(ushort pid, int argc, char **argv)
                     case 'o': mode |= STIM_OS9;                                break;
                     case 's': mode  = STIM_ICALLS | STIM_FCALLS | STIM_OS9;    break;
 
-                    case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks   */        break;
+                    case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks   */
+                              if (p[1]!='=' || sscanf(&p[2],"%d", &ticksLim)<1) ticksLim= 1;
+                              upe_printf( "%d '%s'\n", ticksLim, p );
+                              p= p+strlen(p)-1; /* skip rest */
+                              break;
+                    
                     case 'p': mode |= STIM_PERCENT;   /* >=1 percent */        break;
                     
-                    default : uphe_printf("Error: unknown option '%c'!\n",*p); 
+                    default : upe_printf("Error: unknown option '%c'!\n",*p); 
                               usage(argv[0],pid); return 1;
                 }
                 
                 p++;
-            }
+            } /* while */
         }
         else {
-            uphe_printf("Error: no arguments allowed\n"); return 1;
+            upe_printf("Error: no arguments allowed\n"); return 1;
         }
     }   
-    if (mode!=STIM_NONE) show_timing(mode);
+    if (mode!=STIM_NONE) show_timing( mode,ticksLim );
     return 0;
 }
     

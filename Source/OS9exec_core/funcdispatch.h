@@ -30,6 +30,19 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 
 /* os9 service request */
@@ -83,7 +96,7 @@ os9err exec_syscall(ushort func, ushort pid, regs_type *rp);
 
 void   init_L2(void);
 void   init_syscalltimers(void);
-ulong  show_timing(ushort mode);
-os9err int_systime(ushort pid, int argc, char **argv);
+ulong  show_timing( ushort mode,int ticksLim );
+os9err int_systime( ushort pid, int argc, char **argv );
 
 /* eof */
