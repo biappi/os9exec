@@ -1486,6 +1486,27 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 } /* getFD */
 
 
+
+static time_t TConv( struct tm *tim )
+/* time conversion, seems to be buggy under CW7 -> 70 year correction */
+{
+	time_t u;
+	
+	#if __MWERKS__ >= CW7_MWERKS
+	  tim->tm_year -= 2; 
+	#endif
+
+    u= mktime( tim );              /* set modification time */
+
+	#if __MWERKS__ >= CW7_MWERKS
+	  u += (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
+	#endif
+	
+	return u;
+} /* TConv */
+
+
+
 static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
 /* adapt cipb with info of FD */
 // void setFD(CInfoPBRec *cipbP, ushort maxbyt, byte *buffer)
@@ -1503,14 +1524,15 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     #endif
     
     memcpy(fdbeg,buffer,16);  /* the size IS 16 */  
-    tim.tm_year= fdbeg[ 3];
+    tim.tm_year= fdbeg[ 3]; 
     tim.tm_mon = fdbeg[ 4]-1; /* the month correction */
     tim.tm_mday= fdbeg[ 5];
     tim.tm_hour= fdbeg[ 6];
     tim.tm_min = fdbeg[ 7];
     tim.tm_sec = 0;           /* no seconds supported */
     
-    u= mktime(&tim);          /* set modification time */
+    u= TConv( &tim );
+
     spP->u.disk.u.file.moddate        = u;
     spP->u.disk.u.file.moddate_changed= true;
 
@@ -1530,8 +1552,8 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     tim.tm_min = 0;
     tim.tm_sec = 0;           /* no seconds supported */
 
-    u= mktime(&tim);          /* set creation time */
-
+    u= TConv( &tim );
+	
     #ifdef MACFILES
       cipbP->hFileInfo.ioFlCrDat= (ulong)u-OFFS_1904; /* fill it into Mac's record */
     #endif
