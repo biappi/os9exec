@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2002/10/15 18:38:23  bfo
+ *    Consider only lobyte at OS9_I_Delete
+ *
  *    Revision 1.31  2002/10/09 20:41:16  bfo
  *    uphe_printf => upe_printf
  *
@@ -404,8 +407,8 @@ static void GetBuffers( rbfdev_typ* dev, syspath_typ* spP )
 //  if (spP->rw_sct==NULL) spP->rw_sct= get_mem( dev->sctSize, false );
 
     /* %%% there is currently an allocation bug, use always 2048 bytes */
-    if (spP->fd_sct==NULL) spP->fd_sct= get_mem( 2048, false );
-    if (spP->rw_sct==NULL) spP->rw_sct= get_mem( 2048, false );
+    if (spP->fd_sct==NULL) spP->fd_sct= get_mem( 2048 );
+    if (spP->rw_sct==NULL) spP->rw_sct= get_mem( 2048 );
 
 //  if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
 //                       spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
@@ -416,8 +419,8 @@ static void GetBuffers( rbfdev_typ* dev, syspath_typ* spP )
 static void ReleaseBuffers( syspath_typ* spP )
 {
 //  upe_printf( "Relbuffers %d %08X %08X\n", spP->nr, spP->fd_sct,spP->rw_sct);
-    release_mem( spP->fd_sct, false ); spP->fd_sct= NULL;
-    release_mem( spP->rw_sct, false ); spP->rw_sct= NULL;
+    if (spP->fd_sct!=NULL) release_mem( spP->fd_sct ); spP->fd_sct= NULL;
+    if (spP->rw_sct!=NULL) release_mem( spP->rw_sct ); spP->rw_sct= NULL;
 } /* ReleaseBuffers */
 
 
@@ -512,12 +515,12 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
         	dev->sctSize= sctSize;        /* this is the correct sector size */
     
         /* release buffers of old size */
-        release_mem   ( dev->tmp_sct, false );
+        release_mem   ( dev->tmp_sct );
         ReleaseBuffers( spP );
         
         /* and get the new buffers with the new sector size */
      // dev->tmp_sct= get_mem( dev->sctSize, false );
-        dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE, false );
+        dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE );
         GetBuffers( dev,spP );
 
         dev->totScts   = 0; /* must be set to correct value */
@@ -714,7 +717,7 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     allocN   =       allocSize * dev->sctSize*BpB;
     allocScts= 1 +   allocSize + 2;
     
-            dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
+            dev->ramBase= get_mem( dev->sctSize*dev->totScts );
     if    ( dev->ramBase==NULL ) return E_NORAM;
     memcpy( dev->ramBase,RAM_zero, dev->sctSize );
     
@@ -1016,7 +1019,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     }
 
     // make sure we get a buffer that is big enough for reading any sector 0 (will be adjusted later)
-    dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE, false );
+    dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE );
     
     debugprintf(dbgFiles,dbgNorm,("# RBF open: trying to open %s \"%s\"\n",
                                      IsSCSI(dev) ? "SCSI":"RBF Image", q));
@@ -1063,7 +1066,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 
     if (err) {
         dev->installed= false;
-        release_mem( dev->tmp_sct,false );
+        release_mem( dev->tmp_sct );
                      dev->tmp_sct= NULL;
     }
         
@@ -1298,7 +1301,7 @@ static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
     
     #ifdef RAM_SUPPORT
           isRAMDisk= dev->isRAM;
-      if (isRAMDisk) release_mem( dev->ramBase, false );
+      if (isRAMDisk) release_mem( dev->ramBase );
     #endif
     
     if  (!isRAMDisk) {    
@@ -1306,7 +1309,7 @@ static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
     }
     
     if (!err) {       dev->installed= false;
-         release_mem( dev->tmp_sct,   false );
+         release_mem( dev->tmp_sct );
                       dev->tmp_sct= NULL;
     }
     
@@ -2375,6 +2378,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     rbf->devnr = dev->nr;
     rbf->diskID= dev->last_diskID;
     rbf->wMode = IsWrite(*modeP);
+//  printf( "GetBuffers %08X %08X\n", spP->fd_sct, spP->rw_sct );
     GetBuffers ( dev,spP ); /* get the internal buffer structures now */
     spP->rw_nr = 0;         /* undefined */
     
@@ -2490,6 +2494,8 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         } /* if entry found */
     } /* while (true) */    
     
+//  printf( "RelBuffers %08X %08X %d\n", spP->fd_sct, spP->rw_sct, err );
+    if    (err) ReleaseBuffers( spP );
     return err;
 } /* pRopen */
 
@@ -2507,26 +2513,28 @@ os9err pRclose( ushort pid, syspath_typ* spP )
     debugprintf(dbgFiles,dbgNorm,("# RBF close (pid=%d) wMode/rawMode/mustW: %d %d $%x\n", 
                                      pid, rbf->wMode,spP->rawMode, spP->mustW ));
 
-    if (rbf->wMode==0 || /* no change in read or raw mode */
-        spP->rawMode) return 0;
+    do {
+        if (rbf->wMode==0 || /* no change in read or raw mode */
+            spP->rawMode) break;
         
-    if (spP->mustW) { /* write the last cached sector */
-        err= WriteSector( dev, spP->mustW,1, spP->rw_sct ); if (err) return err;
-    }
+        if (spP->mustW) { /* write the last cached sector */
+            err= WriteSector( dev, spP->mustW,1, spP->rw_sct ); if (err) break;
+        }
 
-    /* set file size at close */
-        v= FDSize( spP ); 
-    if (v< lsp) { 
-        v= lsp; Set_FDSize( spP,v ); /* new file size */
-        err=       WriteFD( spP ); if (err) return err;
-    }
+        /* set file size at close */
+            v= FDSize( spP ); 
+        if (v< lsp) { 
+            v= lsp; Set_FDSize( spP,v ); /* new file size */
+            err=       WriteFD( spP ); if (err) break;
+        }
 
-    /* release remaining part, if pointer is not at the end of file */
-    if (crp!=0 &&
-        crp==lsp) {
-        Set_FDSize        ( spP,crp ); /* new file size */        
-        err= ReleaseBlocks( spP,crp );
-    }
+        /* release remaining part, if pointer is not at the end of file */
+        if (crp!=0 &&
+            crp==lsp) {
+            Set_FDSize        ( spP,crp ); /* new file size */        
+            err= ReleaseBlocks( spP,crp );
+        }
+    } while (false);
     
     ReleaseBuffers( spP );
     return err;
