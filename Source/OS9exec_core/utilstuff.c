@@ -372,21 +372,67 @@ void g_date(ulong jdn, int *dp, int *mp, int *yp )
 
 
 
+void TConv( time_t u, struct tm* tim )
+/* time conversion, seems to be buggy under CW7 -> 70 year correction */
+{
+	struct tm *tp;
+
+	#if __MWERKS__ >= CW7_MWERKS
+	  u -= (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
+	#endif
+	
+    tp= localtime( (time_t*)&u );
+    memcpy( tim,tp, sizeof(struct tm) ); /* copy it, as it might be overwritten */
+	
+	#if __MWERKS__ >= CW7_MWERKS
+	  tim->tm_year += 2; 
+	#endif
+} /* TConv */
+
+
+time_t UConv( struct tm* tim )
+/* time conversion, seems to be buggy under CW7 -> 70 year correction */
+{
+	time_t u;
+	
+	#if __MWERKS__ >= CW7_MWERKS
+	  tim->tm_year -= 2; 
+	#endif
+
+    u= mktime( tim );              /* set modification time */
+
+	#if __MWERKS__ >= CW7_MWERKS
+	  u += (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
+	#endif
+	
+	return u;
+} /* UConv */
+
+
+void GetTim( struct tm* tim )
+/* time conversion, seems to be buggy under CW7 -> 70 year correction */
+{
+	time_t     u;
+	struct tm* tp;
+	
+    time                   ( &u );       /* get the current time, it seems to be   */
+    tp = localtime( (time_t*)&u );       /* based on 1900, not 1904, as file dates */
+    memcpy( tim,tp, sizeof(struct tm) ); /* copy it, as it might be overwritten    */
+} /* GetTim */
+
+
+
 void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, Boolean asGregorian )
 {
-    time_t caltime;
-    struct tm *tp,tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    byte   tc[4];
-    ulong* tcp= (ulong*)&tc[0];
-    int    y, m, d;
+    struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
+    byte      tc[4];
+    ulong*    tcp= (ulong*)&tc[0];
+    int       y, m, d;
     
-    time          ( &caltime ); /* get the current time, it seems to be   */
-    tp = localtime( &caltime ); /* based on 1900, not 1904, as file dates */
-    tim= *tp;                   /* copy it, as it might be overwritten    */
-   
-    y= tim.tm_year+1900;
-    m= tim.tm_mon +   1;
-    d= tim.tm_mday;
+    GetTim( &tim );
+    y=       tim.tm_year+1900;
+    m=       tim.tm_mon +   1;
+    d=       tim.tm_mday;
    
     if (asGregorian) {
 		/* gregorian format */
