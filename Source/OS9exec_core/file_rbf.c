@@ -657,7 +657,6 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     allocN   =       allocSize * dev->sctSize*BpB;
     allocScts= 1 +   allocSize + 2;
     
-    printf( "%d %s\n", dev->totScts, cmp );
     dev->ramBase= get_mem( dev->sctSize*dev->totScts, false );
     if (dev->ramBase==NULL) return E_NORAM;
     
@@ -677,7 +676,6 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     r=  f + 1;         rN= r*dev->sctSize;
     
     u= &dev->ramBase[   0x00]; *u= os9_long( dev->totScts<<BpB ); /* 0x03 will be overwritten, is 0 anyway */
-    printf( "%08X\n", *u );
     w= &dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
     u= &dev->ramBase[   0x08]; *u= os9_long( f<<BpB );            /* 0x0b will be overwritten, is 0 anyway */
                         
