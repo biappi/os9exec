@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2002/10/09 20:14:03  bfo
+ *    "show_timing" call with additional parameter <ticksLim>
+ *
  *
  */
 
@@ -585,7 +588,7 @@ void os9_main( int argc, char **argv, char **envp )
 		screenH= 0;
 	}
 
-	#ifdef linux
+	#if defined linux || defined USE_CARBON
 	  userOpt= true; /* %%% currently misused for Spectrapot software in Linux */
 	#endif
 
