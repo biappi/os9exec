@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2002/10/09 20:30:49  bfo
+ *    "show_timing" call with additional parameter <ticksLim>
+ *
  *    Revision 1.8  2002/10/02 18:42:38  bfo
  *    "systime -s?" bug fixed (no stop after -? text)
  *
@@ -515,19 +518,6 @@ ulong GetSystemTick(void)
     ulong t;
 
     #ifdef macintosh
-//    #define NanoDiv 250000
-//      
-//    AbsoluteTime a;
-//    static ulong v= 0xffffffff / NanoDiv + 1;
-//    static ulong m= 0xffffffff % NanoDiv + 1;
-//      
-//    a= UpTime();
-//      
-//    t= a.lo;
-//    t= t - a.hi*(NanoDiv-m);
-//    t= t /       NanoDiv;
-//    t= t + a.hi*v;
-
       t=  TickCount();
                   
     #elif defined(windows32)
