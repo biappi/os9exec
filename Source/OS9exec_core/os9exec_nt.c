@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/06/25 20:44:33  luz
+ *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *
  */
 
 /* Revision History
@@ -1105,9 +1108,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
 	  /* must be synchronized to OpenDocument Apple Event */
 	  #ifdef MACTERMINAL
-		memcpy( &gFS,  &fs, sizeof(FSSpec) );
-	    while (!gDocDone) HandleEvent();
-		memcpy(  &fs, &gFS, sizeof(FSSpec) );
+	    #ifndef USE_CARBON
+  		  memcpy( &gFS,  &fs, sizeof(FSSpec) );
+	      while (!gDocDone) HandleEvent();
+		  memcpy(  &fs, &gFS, sizeof(FSSpec) );
+		#endif
 		
 		/* If file has correct type and creator,
 		/* it can be executed directly */
