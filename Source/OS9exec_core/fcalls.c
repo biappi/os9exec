@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2002/10/27 23:25:13  bfo
+ *    module system on Mac no longer implemented with handles
+ *    get_mem/release_mem without param <mac_asHandle>
+ *
  *    Revision 1.14  2002/10/15 18:40:05  bfo
  *    Consider only loword at OS9_F_CmpNam / type casting fixed
  *
@@ -102,8 +106,10 @@ os9err OS9_F_Load( regs_type *rp, ushort cpid )
     char     mpath[OS9PATHLEN],*p;
     ushort   mid;
     ushort   mode  = loword(rp->d[0]); /* attributes */
-    Boolean  exedir= IsExec(mode) || mode==0;  /* mode=0 is a strange default, */
-                    /* but seems to be correct as default for exedir in 'load' */
+    Boolean  exedir= IsExec(mode) || (mode & 0x7f==0); /* mode=0 is a strange default, */
+                            /* but seems to be correct as default for exedir in 'load' */
+                            /* Attention !!! Colored memory (bit 7) is NOT supported.  */ 
+                                    
            
     p= nullterm(mpath,(char*)rp->a[0],OS9PATHLEN);
     debugprintf(dbgModules,dbgNorm,
@@ -594,11 +600,11 @@ os9err OS9_F_Icpt( regs_type *rp, ushort cpid )
 {
     process_typ* cp= &procs[cpid];
 
-    cp->icptroutine=rp->a[0];  /* set address of intercept routine */
-    cp->icpta6=rp->a[6]; /* set data pointer for intercept routine */
+    cp->pd._sigvec= (char*) os9_long(rp->a[0]);  /* set address of intercept routine */
+    cp->icpta6    =                  rp->a[6]; /* set data pointer for intercept routine */
     debugprintf(dbgProcess,dbgNorm,
       ("# F$Icpt: set intercept of pid=%d to pc=$%08lx, a6=$%08lx\n",
-          cpid,cp->icptroutine,cp->icpta6));
+          cpid,os9_long((ulong)cp->pd._sigvec),cp->icpta6));
     return 0;
 } /* OS9_F_Icpt */
 
@@ -622,7 +628,7 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
     process_typ* cp = &procs[cpid];
     save_type*   svd;
     
-    if (cp->lastsignal==0) {
+    if (cp->pd._signal==0) {
         /* fatal: kill process */
         debugprintf(dbgAnomaly,dbgNorm,("# F$RTE: *** Fatal: called by pid=%d not from an intercept routine\n",cpid));
         cp->exiterr= os9error(E_DELSP); /* no close match, but signals strange condition */
@@ -631,8 +637,8 @@ os9err OS9_F_RTE( regs_type *rp, ushort cpid )
     else {
         /* ok, terminate processing of intercept routine */
         debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d\n",
-                       cpid, cp->lastsignal ));
-        cp->lastsignal = 0; /* intercept done */
+                       cpid, os9_word(cp->pd._signal) ));
+        cp->pd._signal =     0; /* intercept done */
         set_os9_state( cpid, cp->rtestate );
         cp->os9regs    =     cp->rteregs; /* restore regs */
         cp->vector     =     cp->rtevector;
@@ -734,17 +740,16 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     /* <_state> and <queueid> will be assigned directly */
     if (id==cpid) pd._queueid = '*';
     
-    pd._scall = os9_byte(cp->lastsyscall);
-    pd._signal= os9_word(cp->lastsignal );
-    pd._sigvec= (char *)   os9_long(cp->icptroutine);
-    pd._sigdat= (char *)   os9_long((ulong)&cp->sigdat);
+    pd._scall =            os9_byte(cp->lastsyscall);
+//  pd._signal=            os9_word(cp->lastsignal );
+//  pd._sigvec=     (char*)os9_long(cp->icptroutine);
     pd._pmodul= (mod_exec*)os9_long((ulong)os9mod(cp->mid));
 
     /* get the list of the currently connected trap handlers (bfo) */ 
     for (k=0; k<NUMTRAPHANDLERS; k++) {
         tp = &cp->TrapHandlers[k];
-        pd._traps [k]= (byte*) os9_long((ulong)tp->trapmodule);
-        pd._trpmem[k]= (byte*) os9_long((ulong)tp->trapmem);
+        pd._traps [k]= (byte*)os9_long((ulong)tp->trapmodule);
+        pd._trpmem[k]= (byte*)os9_long((ulong)tp->trapmem);
         pd._trpsiz[k]= 0;
     }
 
@@ -757,15 +762,9 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
 
    /* get the list of the currently opened paths */ 
    for (k=0; k<MAXUSRPATHS; k++) {
-        pd._path[k] = os9_word((ushort)cp->usrpaths[k]);
+        pd._path[k] = os9_word(cp->usrpaths[k]);
     }
- 
-   /* clear all memory segments ... */
-   for (k=0; k<32; k++) {
-        pd._memimg[k] = NULL;
-        pd._blksiz[k] = 0;
-    }
-    
+     
     /* ... and get the total size from the first segment */
     memsz=0;
     for (k=0; k<MAXMEMBLOCKS; k++) {
@@ -774,7 +773,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
             memsz+= cp->os9memblocks[k].size;
         }
     }
-    pd._blksiz[0]=os9_long(memsz);
+    pd._blksiz[0]= os9_long(memsz);
     
         
     memcpy( (byte*)rp->a[0], &pd, loword(rp->d[1]) );
@@ -1344,7 +1343,7 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
             if (sp>0 && sp<MAXSYSPATHS) usrpath_close( cpid, k );
         }
 
-        cp->icptroutine= 0; /* switch it off for the new process */
+        cp->pd._sigvec= 0; /* switch it off for the new process */
 
         /* this stuff is no longer used now */
         unlink_traphandlers(cpid);
