@@ -21,9 +21,9 @@
 /**********************************************/
 /*             O S 9 E x e c / NT             */
 /*  Cooperative-Multiprocess OS-9 emulation   */
-/*         for Apple Macintosh and PC         */
+/*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2003 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -35,10 +35,10 @@
 
 resource 'vers' (2, purgeable) {
     0x3,
-    0x21,
+    0x22,
     beta,
     0x1,
     verGrSwiss,
-    "3.21",
-    "OS9exec V3.21, © 1993-2002 by luz/bfo"
+    "3.22",
+    "OS9exec V3.22, © 1993-2003 by luz/bfo"
 };

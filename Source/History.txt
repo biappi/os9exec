@@ -1162,6 +1162,10 @@
           03-01-10  Bfo     pWaitRead problems fixed.
     3.21  03-01-10  Bfo     Branch Tag V3_21 at Sourceforge.net / Release for Customer
     -------------------
+
+          03-01-10  Bfo     Changed to new version
+    3.22  03-??-??
+    -------------------
 */
 
 

@@ -1,8 +1,4 @@
 // 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
-//    Copyright (C) 2002 Lukas Zeller / Beat Forster
-//    Available under http://www.synthesis.ch/os9exec
-// 
 //    This program is free software; you can redistribute it and/or 
 //    modify it under the terms of the GNU General Public License as 
 //    published by the Free Software Foundation; either version 2 of 
@@ -18,6 +14,18 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
+/**********************************************/
+/*             O S 9 E x e c / NT             */
+/*  Cooperative-Multiprocess OS-9 emulation   */
+/*         for MacOS, Windows and Linux       */
+/*                                            */
+/* (c) 1993-2003 by Lukas Zeller, CH-Zuerich  */
+/*                  Beat Forster, CH-Maur     */
+/*                                            */
+/* email: luz@synthesis.ch                    */
+/*        beat.forster@ggaweb.ch              */
+/**********************************************/
+
 /* This Rez source generates OS9C resources for the
  * common OS9 libraries used by OS9exec/NT based tools
  */
@@ -26,10 +34,10 @@
  
 resource 'vers' (1, purgeable) {
     0x3,
-    0x21,
+    0x22,
     beta,
     0x1,
     verGrSwiss,
-    "3.21",
-    "OS9exec V3.21 © 1993-2002 by luz/bfo, luz@synthesis.ch / beat.forster@ggaweb.ch"
+    "3.22",
+    "OS9exec V3.22 © 1993-2003 by luz/bfo, luz@synthesis.ch / beat.forster@ggaweb.ch"
 };

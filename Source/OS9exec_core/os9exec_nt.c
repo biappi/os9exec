@@ -21,9 +21,9 @@
 /**********************************************/
 /*             O S 9 E x e c / NT             */
 /*  Cooperative-Multiprocess OS-9 emulation   */
-/*         for Apple Macintosh and PC         */
+/*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2002 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2003 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2003/01/02 14:34:37  bfo
+ *    Some type castinmg things fixed
+ *
  *    Revision 1.30  2003/01/02 12:20:31  bfo
  *    RTE registers correctly saved and restored
  *
@@ -605,7 +608,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x21;
+	exec_revision= 0x22;
 	#endif
 } /* getversions */
 
