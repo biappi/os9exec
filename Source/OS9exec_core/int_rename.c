@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2003/05/17 21:36:31  bfo
+ *    rename to the same file name on RBF is no longer possible now
+ *
  *    Revision 1.4  2002/10/09 20:46:14  bfo
  *    uphe_printf => upe_printf
  *
@@ -93,7 +96,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     char       nmS     [OS9PATHLEN];
     char       nmD     [OS9PATHLEN];
     char       newName [OS9PATHLEN];
-    ulong      fd, dfd, dcp, dcpD, len;
+    ulong      fd, dfd, dcp, dcpD, sSct, len;
     Boolean    asDir;
     char       oldPath [OS9PATHLEN];
 
@@ -151,7 +154,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         type= IO_Type( cpid,nmS, 0x00 ); /* get the device type: Mac/PC or RBF */
     if (type==fRBF) {
         /* do it the same way as the OS-9 rename */
-            err= get_locations( cpid,type, nmS,false, &asDir, &fd,&dfd,&dcp );
+            err= get_locations( cpid,type, nmS,false, &asDir, &fd,&dfd,&dcp,&sSct );
         if (err) return err;
         
         p = (char*)&nmS;
@@ -169,7 +172,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         strcpy( nmD,nmS );
         strcat( nmD,PSEP_STR );
         strcat( nmD,newName );
-        	 err= get_locations  ( cpid,type, nmD,false, &asDir, &fd,&dfd,&dcpD );
+        	 err= get_locations  ( cpid,type, nmD,false, &asDir, &fd,&dfd,&dcpD,&sSct );
         if (!err && dcp!=dcpD) return E_CEF;   /* file already exists with different name ? */
                                      /* case sensitive changes of the same name are allowed */
         
