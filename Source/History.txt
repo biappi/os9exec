@@ -1177,6 +1177,9 @@
           03-04-21  Bfo     MAXDIR/MAX_PATH now visible for Macintosh version
           03-04-25  Bfo     Setuid/seteuid support for Linux
           03-04-25  Bfo     Use geteuid / set user ID only to 0 for raw sockets
+          03-04-26  Bfo     Activate inactive "netatalk" nodes automatically in Mac file system
+          03-04-26  Bfo     Activate most of the ramDisk things even without RAM_SUPPORT
+          03-05-05  Bfo     Error 000:164 for raw socket open w/o permission
     3.22  03-??-??  Bfo
     -------------------
 */
@@ -1195,7 +1198,6 @@
     -   "inetd" superdaemon is not yet running correctly.
     -   Mouse movements on XServer (Mac) still slow and jumpy.
     -   MGP slow startup problems (NT 4.0).
-    -   inode support for transparent Mac file system
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
 
    (+)  Take tty00/pty00 first (problems with arbitration)
@@ -1209,9 +1211,6 @@
     -   RBF disk cache not yet implemented.
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
-    -   "ping" for Windows & Linux, ping of ISP.
-    -   socket close not done in every case
-    -   nameserver support for network
     -   direct line editing on linux (over network)
     -   inode support instead of file lists for Windows file access, at least faster lists
     -   CtrlC/CtrlE support for Linux not yet done
@@ -1228,5 +1227,4 @@
 
    (+)  return of d1.l from pipe-systasks
    (+)  passing of d2.l to pipe open
-   (-)  Check if "ftp" under ISP is running with PowerFPU. Currently "ftp" of OS9TCP used.
 */

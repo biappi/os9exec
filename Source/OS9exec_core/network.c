@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2003/04/25 20:04:56  bfo
+ *    Use geteuid / set user ID only to 0 for raw sockets
+ *
  *    Revision 1.13  2003/04/25 19:37:50  bfo
  *    Setuid/seteuid support for Linux
  *
@@ -1148,7 +1151,9 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           #endif
           
           debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort ));
-          if (net->ep==INVALID_SOCKET) return E_FNA;
+          if (net->ep==INVALID_SOCKET)
+              if (fPort==0) return E_PERMIT;
+              else          return E_FNA;
         #endif
             
         net->bound= true;
