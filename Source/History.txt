@@ -1184,6 +1184,16 @@
           03-05-08  Bfo     MacOSX: "carbon.r" added => os9app is running natively under MacOSX !!
           03-05-08  Bfo     MacOSX: RBF and network support added ( xxxInContext functions )
           03-05-12  Bfo     Define OT variable as static
+          03-05-14	Bfo		vmod driver and serial system disabled for USE_CARBON
+          03-05-14  Bfo		'p2cstr' and 'c2pstr' prototype defined in the ".h" file now
+          03-05-14  Bfo     "os9exec_incl_precomp.h": Clean Carbon import
+          03-05-15  Bfo		Include the "non-debug" flag (bit7 of path) for OS9_I_WritLn
+          03-05-16  Bfo     UserOpt activated for Carbon (gs_ready problem, same as Linux version)
+          03-05-16  Bfo		Several adaptions for Carbon: MGR/telnet are running now.
+							Not yet fully working: ftp data path, ftpd, telnetd: Permission for OTBind ?
+		  03-05-16  Bfo		'show_mem' with <mem_unused> parameter / Full "imem" support ( -u )
+		  03-05-16  Bfo		memstuff: better deallocation strategy for the unused blocks
+		  03-05-17  Bfo		Up to date
     3.22  03-??-??  Bfo
     -------------------
 */
