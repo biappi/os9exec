@@ -2542,9 +2542,12 @@ os9err pRdsize(ushort pid, syspath_typ* spP, ulong* size, ulong* dtype )
 /* get the size of the device as numbers of sectors */
 /* the <dtype> field will be returned as 0, to avoid problems with "castype" */
 {
+    os9err      err;
     rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    *size =     dev->totScts;
-    *dtype=     0;
+    
+    err   = DevSize( dev ); if (err) return err;
+    *size = dev->totScts;
+    *dtype= 0;
 
     debugprintf( dbgFiles,dbgNorm,("# RBF dsize (pid=%d): %d\n", pid, *size ));
     return 0;
