@@ -333,9 +333,9 @@ os9err pNclose( ushort pid, syspath_typ* spP )
           if (!err) err= OTRcvOrderlyDisconnect(net->ep);
         
           junk= OTUnbind(net->ep);
-          // OTFreeMem( net->transferBuffer );
           junk= OTCloseProvider(net->ep);
-        
+          OTFreeMem( net->transferBuffer );
+       
         #elif defined(windows32)
           err= closesocket( net->ep );
         
