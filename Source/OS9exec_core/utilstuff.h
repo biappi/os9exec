@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2002/09/19 21:59:20  bfo
+ *    "CutUp" invisible, "CutUp"/"Eatback" adapted for Win/Mac + OS9
+ *
  *    Revision 1.11  2002/09/11 17:23:24  bfo
  *    os9_long_inc with unsigned int* param
  *
@@ -75,6 +78,7 @@ void   GetTim            ( struct tm* tim );
 void   Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick, 
                  Boolean asGregorian, Boolean withTicks );
 
+ulong GetScreen( char mode );
 
 ulong Min( ulong a, ulong b );
 ulong Max( ulong a, ulong b );

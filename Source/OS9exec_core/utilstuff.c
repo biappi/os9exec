@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2002/09/22 20:54:34  bfo
+ *    CutUp handling corrected /
+ *    Min nr of dir entries is 2 ( ".." and "." )
+ *
  *    Revision 1.24  2002/09/19 21:59:39  bfo
  *    "CutUp" invisible, "CutUp"/"Eatback" adapted for Win/Mac + OS9
  *
@@ -509,6 +513,8 @@ time_t UConv( struct tm* tim )
 } /* UConv */
 
 
+
+
 void GetTim( struct tm* tim )
 /* time conversion, seems to be buggy under CW7 -> 70 year correction */
 {
@@ -588,6 +594,33 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
     *dayOfWk= tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
 } /* Get_Time */
 
+
+
+
+ulong GetScreen( char mode )
+/* Get screen dimensions: 'w'=width, 'h'=height */
+{
+    int r= 0; // no information, return zero (full screen)
+    
+    #ifdef windows32
+      HWND dwh = GetDesktopWindow();
+      RECT screenrec;
+
+      if (GetWindowRect(dwh,&screenrec)) {
+    	  switch (mode) {
+    		  case 'w': r= screenrec.right -screenrec.left; break; /* return width  */ 
+    		  case 'h': r= screenrec.bottom-screenrec.top;  break; /* return height */
+    	  } 
+      }
+    #else
+	  switch (mode) {
+		  case 'w': r= 1600; break; /* return width  */ 
+		  case 'h': r= 1200; break; /* return height */
+	  } 
+    #endif
+    
+    return (ulong)r;
+} /* GetScreen */
 
 
 
