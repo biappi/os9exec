@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2003/04/20 23:10:41  bfo
+ *    Various adaptions for "ping" support on all 3 platforms
+ *
  *    Revision 1.11  2003/04/14 21:52:14  bfo
  *    Release buffer (accept) at pNClose fixed
  *
@@ -1126,20 +1129,22 @@ os9err pNconnect( ushort pid, syspath_typ* spP, ulong *n, byte *ispP)
           else          { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
        // #ifdef linux
-       //   ty   = SOCK_STREAM;
-       //   proto= IPPROTO_TCP;
+       //   if (fPort==0) {
+       //       ty   = SOCK_DGRAM;
+       //       proto= IPPROTO_TCP;
+       //   }
        // #endif
           
           #ifdef linux
-            id= getuid();        printf( "%d\n",     id    );
-            u_err= setuid(  0 ); printf( "err=%d\n", u_err );
+            id= getuid();         // printf( "%d\n",     id    );
+            u_err= seteuid(  0 ); // printf( "err=%d\n", u_err );
           #endif
           
           net->ep= socket( af, ty, proto );
           
           #ifdef linux
-                                 printf(  "ep=%d\n", net->ep );
-            u_err= setuid( id ); printf( "err=%d\n", u_err   );
+                                  // printf(  "ep=%d %d\n", net->ep, fPort );
+            u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
           #endif
           
           debugprintf(dbgSpecialIO,dbgNorm, ( "connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort ));

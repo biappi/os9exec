@@ -1173,7 +1173,10 @@
           03-04-19  Bfo     "inetdb" adaptions and other manipulations
           03-04-20  Bfo     SpecialIO text: idbg for printing and networking
           03-04-21  Bfo     Various adaptions for "ping" support on all 3 platforms
-    3.22  03-??-??
+          03-04-21  Bfo     Handle Netatalk IDs out of range correctly now (using FD_ID)
+          03-04-21  Bfo     MAXDIR/MAX_PATH now visible for Macintosh version
+          03-04-25  Bfo     Setuid/seteuid support for Linux
+    3.22  03-??-??  Bfo
     -------------------
 */
 
