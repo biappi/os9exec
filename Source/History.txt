@@ -999,6 +999,10 @@
           02-06-23  Bfo     Iomega JAZ drive supported now: Using "ReadCapacity" instead of "ModeSense".
           02-06-24  Bfo     "idevs" displays sectorsize also.
           02-06-24  Bfo     Timeout procedure for SCSI read/write.
+          02-06-24  luz     Added /lp support. Works fine, printing to /lp sends data directly to
+                            windows default printer. Of course, data sent must be valid for that type
+                            of printer (normally postScript). Tested with Apple LaserWriter on TCP/IP
+                            network.
     3.14  02-06-??  Bfo     ...
     -------------------
 */
