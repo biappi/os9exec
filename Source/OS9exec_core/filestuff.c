@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2002/09/01 17:57:53  bfo
+ *    some more variables of the real "procid" record used now
+ *
  *    Revision 1.7  2002/08/13 21:24:17  bfo
  *    Some more variables defined at the real procid struct now.
  *
@@ -383,6 +386,7 @@ static void CheckH0( char* name, char* p, char** p3 )
    
       q= name + strlen( name )-2; *q= NUL; /* cut "h0" again */
       strcat          ( name,"dd" );
+      MakeOS9Path     ( name ); /* it might come as Mac or DOS path name ... --> OS-9 notation */
       err= MountDev( 0, name,p, 0,0,NO_SCSI,0,0,false ); if (err) return;
     
       strcpy( name,"/h0" ); *p3= name;
