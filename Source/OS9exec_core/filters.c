@@ -30,24 +30,33 @@
 /*        beat.forster@ggaweb.ch              */
 /**********************************************/
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
+
+
 /* global includes */
 #include "os9exec_incl.h"
 
 
+void releasefilter( void **memoryPP )
 /* release filter and its memory */
-void releasefilter(void **memoryPP)
 {
     /* return the memory */
-    if (*memoryPP!=NULL) {
-        #ifdef MACMEM
-          DisposePtr( *memoryPP );
-        #else
-          free      ( *memoryPP );      
-        #endif
-        
-        *memoryPP=NULL; /* no memory any more */
+    if (*memoryPP!=NULL) { release_mem( *memoryPP );
+        *memoryPP= NULL; /* no memory any more */
     }
-}
+} /* releasefilter */
 
 
 #ifndef MPW_FILTERS
@@ -412,12 +421,12 @@ typedef struct {
 
 filtertable_typ filtertable[] =
 {
-    { "r68", r68_filter, r68_init, "Microware Assembler for 68000" },
-    { "r68020", r68_filter, r68_init, "Microware Assembler for 68020" },
-    { "cfe", c_filter, c_init, "Microware C compiler (C-frontend)" },
-    { "pc", omega_filter, omega_init, "OmegaSoft Pascal Compiler" },
-    { "icc6811", icc_filter, icc_init, "IAR HC 11 cross compiler" },
-    { NULL, NULL, NULL } /* terminator */
+    { "r68",     r68_filter,   r68_init, "Microware Assembler for 68000"     },
+    { "r68020",  r68_filter,   r68_init, "Microware Assembler for 68020"     },
+    { "cfe",       c_filter,     c_init, "Microware C compiler (C-frontend)" },
+    { "pc",     mega_filter, omega_init, "OmegaSoft Pascal Compiler"         },
+    { "icc6811", icc_filter,   icc_init, "IAR HC 11 cross compiler"          },
+    {  NULL,           NULL,       NULL                                      } /* terminator */
 };
 
 
