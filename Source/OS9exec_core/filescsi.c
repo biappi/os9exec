@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2004/12/03 23:56:46  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.12  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -61,7 +64,7 @@
 #include "os9exec_incl.h"
 #include "filescsi.h"
 
-#ifdef MAC_NOTX
+#ifdef MACOS9
   #include <Scsi.h>
 #elif defined(windows32)
   // NT DDK includes (extracted from NT4DDK)

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2004/12/03 23:53:12  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.5  2004/11/20 11:44:06  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -58,7 +61,7 @@
   extern  short      gConsoleNLExpand;
   extern  char       gTitle[OS9NAMELEN];
   
-  #ifdef MAC_NOTX
+  #ifdef MACOS9
     extern Rect*     gRect;
   #endif
 #endif
@@ -87,7 +90,7 @@ extern  ulong        gNetLast;
     extern ttydev_typ main_mco;
   #endif
    
-  #ifdef MAC_NOTX
+  #ifdef MACOS9
     extern Boolean gDocDone; /* synchronisation for <gFS> callback */
     extern FSSpec  gFS;
     

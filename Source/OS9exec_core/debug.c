@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2004/12/03 23:54:06  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.13  2004/11/27 12:01:31  bfo
  *    _XXX_ introduced
  *
@@ -335,7 +338,7 @@ static void dumpmem(ulong *memptrP,int numlines)
 /* show regs in debugger */
 static void regs_in_debugger( regs_type *rp )
 {
-    #ifdef MAC_NOTX
+    #ifdef MACOS9
       Str255 message;
     
       sprintf( &message[1], "%s called debugger, OS9 PC=%08lX, OS9 A7=%08lX\n",
