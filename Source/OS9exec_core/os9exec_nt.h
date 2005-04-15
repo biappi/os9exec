@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2005/01/22 16:15:40  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.34  2004/12/04 00:05:08  bfo
  *    MacOSX MACH adaptions / small transferBuffer for Linux
  *
@@ -443,8 +446,14 @@ typedef enum { fNone, fCons,fTTY,fNIL,fVMod,fSCF, fFile,fDir,
                       fPipe,fPTY, fRBF, fNET, fPrinter, fARRSZ } ptype_typ;
 
 
+#define  TOT_POS  0x00       /* Total number of sectors */
+#define  MAP_POS  0x04       /* Number of bytes in allocation map */
+#define  BIT_POS  0x06       /* Cluster size */
+#define  DIR_POS  0x08       /* Position of root dir */
 #define CRUZ_POS  0x60       /* Cruz position at RBF boot sector */
-#define Cruz_Str "Cruz"      /* And the string */
+#define SECT_POS  0x68       /* Sector size */
+
+#define Cruz_Str "Cruz"      /* the expected magic string at CRUZ_POS */
 #define UNDEF_POS 0xFFFFFFFF /* invalid compare position for image raw access */
 
 typedef struct {
@@ -569,6 +578,15 @@ typedef struct {
         } rbf_typ;
 
 
+/* the SCSI device variables */
+typedef struct {
+			      int	      ID;               /* SCSI ID, -1 if NO_SCSI   */
+			      short     adapt;            /* SCSI Adaptor, -1 if none */
+			      short     bus;              /* SCSI Bus, normally 0     */
+			      short     LUN;              /* SCSI LUN, normally 0     */
+        } scsi_dev;
+        
+        
 
 #ifdef MACOS9
   typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
@@ -1137,13 +1155,15 @@ extern ulong spininterval;
 /* mount device name and write protection */
 extern  char*   mnt_name;
 extern  int     mnt_ramSize;
-extern  int     mnt_scsi;
+
+#define NO_SCSI -1
+extern  int     mnt_scsiID;
 extern  short   mnt_scsiAdapt;
 extern  short   mnt_scsiBus;
 extern  short   mnt_scsiLUN;
 
-#define NO_SCSI -1
 extern  Boolean mnt_wProtect;
+extern  Boolean mnt_reducedImg;
 
 /* additional memory for all processes */
 extern ulong memplusall;
