@@ -1237,7 +1237,12 @@
           04-11-30  Bfo     No more MACH compilation errors
           04-12-07  Bfo     network: Zero reading correction
           04-12-17  Bfo     Renamed to ifdef MACOS9
-    3.26  05-01-22  Bfo     SS_Opt: fdPos info for foreign file system (problem with "diff" fixed).
+          05-01-22  Bfo     SS_Opt: fdPos info for foreign file system (problem with "diff" fixed).
+          05-03-06  Bfo     Implementation for undersized images started.
+          05-03-07  Bfo     SCSI vars combined into a struct.
+          05-03-13  Bfo     Reduced size for RBF images introduced.
+          05-04-15  Bfo     Checkin for SourceForge
+    3.26  05-??-??  Bfo
     -------------------    
 */
 
@@ -1247,14 +1252,11 @@
 /* unresolved bugs: */
 /*
     !!  "_" name convention on Windows (hawk_C0).
-    !!  "show" is using some unimplemented FPU calls.
     
     -   MPW uses its I/O currently partly also for the tty/pty system.
     -   "mgencas" will not startup over network (Linux), "mme" has also problems.
     -   Linux telnet close still quits emulator (recognition of end cond not correctly)
     -   "inetd" superdaemon is not yet running correctly.
-    -   Mouse movements on XServer (Mac) still slow and jumpy.
-    -   MGP slow startup problems (NT 4.0).
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
 
    (+)  Take tty00/pty00 first (problems with arbitration)
@@ -1281,6 +1283,7 @@
     -   termcap support for the DOS window.
     -   fix the msnap mouse blocker problem.
     -   fix the "mmore" MGR scroll problem.
+    -   Support for MACH
 
    (+)  return of d1.l from pipe-systasks
    (+)  passing of d2.l to pipe open
