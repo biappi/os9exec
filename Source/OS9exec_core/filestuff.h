@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2004/11/27 12:12:07  bfo
+ *    "MyInetAddr" no longer implemented here
+ *
  *    Revision 1.9  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -144,7 +147,7 @@ void    ConsPutcEdit    ( char  c, Boolean alf, char eorch );
 os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, 
                           short  adapt, ushort scsibus, 
                           short scsiID, ushort scsiLUN, 
-                          int  ramSize, Boolean wProtect );
+                          int  ramSize, Boolean wProtect, Boolean reducedImg );
                              
 os9err  int_mount       ( ushort pid, int argc, char **argv );
 os9err  int_unmount     ( ushort pid, int argc, char **argv );
