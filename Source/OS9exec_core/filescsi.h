@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.5  2003/05/17 11:13:25  bfo
  *    (CVS header included)
  *
@@ -49,25 +52,13 @@
 
 /* Low level SCSI interface */
 
-os9err Set_SSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong sctSize );
-os9err Get_SSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong *sctSize );
+os9err Set_SSize   ( scsi_dev* scsi,                 ulong  sctSize );
+os9err Get_SSize   ( scsi_dev* scsi,                 ulong *sctSize );
+os9err ReadCapacity( scsi_dev* scsi, ulong *totScts, ulong *sctSize );
+os9err Get_DSize   ( scsi_dev* scsi, ulong *totScts );
 
-os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong *totScts,  ulong *sctSize );
-
-os9err Get_DSize   ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong *totScts );
-
-os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong sectorNr,  ulong nSectors,
-                     ulong len,       byte* buffer );
-
-os9err WriteToSCSI ( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong sectorNr,  ulong nSectors,
-                     ulong len,       byte* buffer );
-
+os9err ReadFromSCSI( scsi_dev* scsi, ulong sectorNr, ulong nSectors, ulong len, byte* buffer );
+os9err WriteToSCSI ( scsi_dev* scsi, ulong sectorNr, ulong nSectors, ulong len, byte* buffer );
 
 #ifdef windows32
 void scsiadaptor_help (void);

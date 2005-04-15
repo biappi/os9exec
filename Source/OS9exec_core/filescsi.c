@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2005/01/22 15:50:31  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.13  2004/12/03 23:56:46  bfo
  *    MacOSX MACH adaptions
  *
@@ -501,15 +504,14 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
 
 
 
-os9err Set_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong sctSize )
+os9err Set_SSize( scsi_dev* scsi, ulong sctSize )
 /* Set the SCSI sector size */
 {
     byte   cb     [CB_Size];
     ulong  dat_buf[3];
 
     cb[0]= CmdSel;
-    cb[1]= ((scsiLUN & 0x07)<<5);
+    cb[1]= (scsi->LUN & 0x07)<<5;
     cb[2]= 0;
     cb[3]= 0;
     cb[4]= SizeCmd;
@@ -519,13 +521,12 @@ os9err Set_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     dat_buf[1]= os9_long( 0 );
     dat_buf[2]= os9_long( sctSize );
 
-    return SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+    return SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN, 
                      (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), true );
 } /* Set_SSize */
 
 
-os9err Get_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong *sctSize )
+os9err Get_SSize( scsi_dev* scsi, ulong *sctSize )
 /* Get the SCSI sector size */
 {
     os9err err;
@@ -533,13 +534,13 @@ os9err Get_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     ulong  dat_buf[3];
 
     cb[0]= CmdSense;
-    cb[1]= ((scsiLUN & 0x07)<<5);
+    cb[1]= (scsi->LUN & 0x07)<<5;
     cb[2]= 0;
     cb[3]= 0;
     cb[4]= SizeCmd;
     cb[5]= 0;
 
-    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+    err= SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN,
                    (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), false );
     *sctSize = os9_long( dat_buf[2] );
     return err;
@@ -547,8 +548,7 @@ os9err Get_SSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
 
 
 
-os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong *totScts, ulong *sctSize )
+os9err ReadCapacity( scsi_dev* scsi, ulong *totScts, ulong *sctSize )
 /* Get the SCSI device size */
 {
     os9err err;
@@ -560,7 +560,7 @@ os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
     dat_buf[2]= 0; 
 
     cb[0]= CmdCapacity;
-    cb[1]= ((scsiLUN & 0x07)<<5);
+    cb[1]= (scsi->LUN & 0x07)<<5;
     cb[2]= 0;
     cb[3]= 0;
     cb[4]= 0;
@@ -570,7 +570,7 @@ os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
     cb[8]= 0;
     cb[9]= 0;
 
-    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+    err= SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN,
                    (byte*)&cb,CB_SizeExt, (byte*)&dat_buf,sizeof(dat_buf), false );
 
     *totScts= os9_long( dat_buf[0] )+1; /* +1, because capacity returns latest sector */
@@ -581,8 +581,7 @@ os9err ReadCapacity( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
 
 
 
-os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                  ulong *totScts )
+os9err Get_DSize( scsi_dev* scsi, ulong *totScts )
 /* Get the SCSI device size */
 {
     os9err err;
@@ -591,30 +590,29 @@ os9err Get_DSize( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN
     ulong  sctSize;
     
     cb[0]= CmdSense;
-    cb[1]= ((scsiLUN & 0x07)<<5);
+    cb[1]= (scsi->LUN & 0x07)<<5;
     cb[2]= 0;
     cb[3]= 0;
     cb[4]= SizeCmd;
     cb[5]= 0;
 
-    err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, 
+    err= SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN,
                    (byte*)&cb,CB_Size, (byte*)&dat_buf,sizeof(dat_buf), false );
     *totScts= os9_long( dat_buf[1] );
      sctSize= os9_long( dat_buf[2] );
     
     /* Iomega JAZ does not support the mode sense command */
     if (*totScts==0) {
-        err= ReadCapacity( scsiAdapt, scsiBus, scsiID, scsiLUN, totScts,&sctSize );
-    }
+        err= ReadCapacity( scsi, totScts,&sctSize );
+    } // if
     
     return err;
 } /* Get_DSize */
 
 
 
-os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                     ulong sectorNr, ulong nSectors,
-                     ulong len, byte* buffer )
+os9err ReadFromSCSI( scsi_dev* scsi, ulong sectorNr, ulong nSectors,
+                                     ulong len,      byte* buffer )
 {
     os9err err;
     byte   cb[CB_Size];
@@ -624,11 +622,12 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
     for (ii=0; ii<NTries; ii++) {
         l= (ulong*)&cb[0]; *l= os9_long( sectorNr); /* cb0,cb1,cb2,cb3 */
                     cb[0]= CmdRead;    /* and overwrite cb0 field */
-                    cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
+                    cb[1]= (cb[1] & 0x1F) | ((scsi->LUN & 0x07)<<5); // upper 3 bits are LUN
                     cb[4]= nSectors;
                     cb[5]= 0;
 
-            err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, false ); 
+            err= SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN, 
+                           (byte*)&cb,CB_Size, buffer,len, false ); 
 //      if (err) printf( "Read  %008X %d %d\n", sectorNr,ii,err );
         if (err!=E_UNIT && err!=E_SEEK) break;     
         
@@ -643,9 +642,8 @@ os9err ReadFromSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsi
 
 
 
-os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiLUN,
-                    ulong sectorNr, ulong nSectors,
-                    ulong len,      byte* buffer )
+os9err WriteToSCSI( scsi_dev* scsi, ulong sectorNr, ulong nSectors,
+                                    ulong len,      byte* buffer )
 {
     os9err err;
     byte   cb[CB_Size];
@@ -655,11 +653,11 @@ os9err WriteToSCSI( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort scsiL
     for (ii=0; ii<NTries; ii++) {
         l= (ulong*)&cb[0]; *l= os9_long( sectorNr ); /* cb0,cb1,cb2,cb3 */
                     cb[0]= CmdWrite;   /* and overwrite cb0 field */
-                    cb[1]= (cb[1] & 0x1F) | ((scsiLUN & 0x07)<<5); // upper 3 bits are LUN
+                    cb[1]= (cb[1] & 0x1F) | ((scsi->LUN & 0x07)<<5); // upper 3 bits are LUN
                     cb[4]= nSectors;
                     cb[5]= 0;
 
-            err= SCSIcall( scsiAdapt, scsiBus, scsiID, scsiLUN, (byte*)&cb,CB_Size, buffer,len, true ); 
+            err= SCSIcall( scsi->adapt, scsi->bus, scsi->ID, scsi->LUN, (byte*)&cb,CB_Size, buffer,len, true ); 
 //      if (err) printf( "Write %008X %d %d\n", sectorNr,ii,err );
         if (err!=E_UNIT && err!=E_SEEK) break;     
         
