@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2004/12/04 00:00:52  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.15  2004/11/27 12:08:24  bfo
  *    _XXX_ introduced
  *
@@ -369,10 +372,12 @@ static void idevs_usage( char* name, _pid_ )
 static void devs_printf( syspath_typ* spP, char* driv, char* fmgr )
 {
     char    s[OS9NAMELEN];
+    char    d[OS9NAMELEN];
     strcpy( s,spP->name );
+    strcpy( d,driv );
     
-    upo_printf( "%-10s %-10s %-7s %2d  %3s %s\n", 
-                 StrBlk_Pt( s,Mx ), driv, fmgr, spP->nr, "","" );
+    upo_printf( "%-10s %-8s %-7s %2d\n", 
+                 StrBlk_Pt( s,Mx ), StrBlk_Pt( d,8 ), fmgr, spP->nr );
 } /* devs_printf */
 
 
@@ -420,8 +425,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
         upo_printf( "---------- ----------------------  -----------------------\n" );
     }
     else {
-        upo_printf( "Device     Driver     FileMgr nr sect wProt Image\n" );
-        upo_printf( "---------- ---------- ------- -- ---- ----- -----------------------------------\n" );
+        upo_printf( "Device     Driver   FileMgr nr sect wPrt Image\n" );
+        upo_printf( "---------- -------- ------- -- ---- ---- --------------------------------------\n" );
     }
     
     #ifdef RBF_SUPPORT 
