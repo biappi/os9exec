@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2004/12/03 23:54:51  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.40  2004/11/27 12:04:28  bfo
  *    _XXX_ introduced
  *
@@ -106,43 +109,46 @@
 /* the RBF device entry itself */			
 typedef struct {
 			/* common for all types */
-			char    name [OS9NAMELEN];	  /* device         name */
-			char    name2[OS9NAMELEN];	  /* device 2nd     name */
-			char    name3[OS9NAMELEN];	  /* device 3rd     name %%% dirty solution */
-			char    alias[OS9PATHLEN];	  /* device's alias name */
+			char     name [OS9NAMELEN];	   /* device         name */
+			char     name2[OS9NAMELEN];	   /* device 2nd     name */
+			char     name3[OS9NAMELEN];	   /* device 3rd     name %%% dirty solution */
+			char     alias[OS9PATHLEN];	   /* device's alias name */
 
-			int     nr;					  /* own reference number (array index) */
-			ulong   sctSize;			  /* sector size for this device */
-			ushort  mapSize;              /* size of allocation map */
-			byte    pdtyp;                /* device type: hard disk, floppy */
-			ushort  sas;				  /* sector allocation size */
-			ulong   root_fd_nr;           /* sector nr of root fd */
-			ulong   clusterSize;          /* cluster size (allocation) */
-			ulong   totScts;              /* total number of sectors */
-			ushort  last_diskID;          /* last disk ID, inherited by new paths */
-            ulong   last_alloc;           /* the last allocation was here */
-			ulong	currPos;			  /* current position at image */
-			ulong   rMiss, rTot,		  /* device statistics */
-					wMiss, wTot;
-			ushort  sp_img;			      /* syspath number of image file */
-			char	img_name[OS9PATHLEN]; /* full path name of image file */
+			int      nr;					         /* own reference number (array index) */
+			ulong    sctSize;			         /* sector size for this device */
+			ushort   mapSize;              /* size of allocation map */
+			byte     pdtyp;                /* device type: hard disk, floppy */
+			ushort   sas;				           /* sector allocation size */
+			ulong    root_fd_nr;           /* sector nr of root fd */
+			ulong    clusterSize;          /* cluster size (allocation) */
+			ulong    totScts;              /* total   number of sectors */
+			ulong    imgScts;              /* current number of sectors at this image */
+			ushort   last_diskID;          /* last disk ID, inherited by new paths */
+      ulong    last_alloc;           /* the last allocation was here */
+			ulong	   currPos;			         /* current position at image */
+			ulong    rMiss, rTot,		       /* device statistics */
+					     wMiss, wTot;
+			ushort   sp_img;			         /* syspath number of image file */
+			char	   img_name[OS9PATHLEN]; /* full path name of image file */
 	
-			byte*   tmp_sct; 			  /* temporary buffer sector */
-			Boolean wProtected;			  /* true, if write  protected */
-			Boolean fProtected;			  /* true, if format protected */
-			Boolean multiSct;             /* true, if multi sector support */
+			byte*    tmp_sct; 			       /* temporary buffer sector */
+			Boolean  wProtected;			     /* true, if write  protected */
+			Boolean  fProtected;			     /* true, if format protected */
+			Boolean  reducedImg;           /* true, if reduced img size is allowed/supported */
+			Boolean  multiSct;             /* true, if multi sector support */
 			
-	     // #ifdef RAM_SUPPORT
-			  Boolean isRAM;              /* true, if RAM disk */
-              byte*   ramBase;            /* start address of RAM disk */
-         // #endif
-            
-			int	    scsiID;               /* SCSI ID, -1 if NO_SCSI */
-			short   scsiAdapt;            /* SCSI Adaptor, -1 if none */
-			short   scsiBus;              /* SCSI Bus, normally 0 */
-			short   scsiLUN;              /* SCSI LUN, normally 0 */
+	    // #ifdef RAM_SUPPORT
+      Boolean  isRAM;                /* true, if RAM disk */
+      byte*    ramBase;              /* start address of RAM disk */
+      // #endif
+      
+      scsi_dev scsi;                 /* SCSI device variables    */
+	 // int	     scsiID;               /* SCSI ID, -1 if NO_SCSI   */
+	 // short    scsiAdapt;            /* SCSI Adaptor, -1 if none */
+	 // short    scsiBus;              /* SCSI Bus, normally 0     */
+	 // short    scsiLUN;              /* SCSI LUN, normally 0     */
 
-			Boolean installed;			  /* true, if device is already installed */
+			Boolean  installed;			       /* true, if device is already installed */
 		} rbfdev_typ;
 
 /* the RBF devices */
@@ -270,7 +276,7 @@ void init_RBF_devs()
 // -----------------------------------------------------------------------
 
 static IsSCSI( rbfdev_typ* dev )
-{   return dev->scsiID!=NO_SCSI;
+{   return dev->scsi.ID!=NO_SCSI;
 } /* IsSCSI */
 
 
@@ -280,50 +286,92 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
 {
     os9err  err= 0;
     Boolean pos_already;
-    ulong   pos= sectorNr*dev->sctSize; /* get position and length to read */
-    ulong   len= nSectors*dev->sctSize;
+    ulong   sect     = dev->sctSize;
+    ulong   pos      =     sectorNr*sect; // get position and length to read
+    ulong   len      =     nSectors*sect;
+    ulong   img      = dev->imgScts*sect;
+    ulong   sectorLim= sectorNr + nSectors;   // upper limit
+    ulong   blindNr, nBlinds;                 // not accessible sectors
     long    cnt;
 
 //  if (sectorNr==0) {
 //      debugprintf(dbgFiles,dbgDetail,("# RBF read  sector0\n"));
 //  }
+//  if (dev->imgScts<dev->totScts) upo_printf( "read  sectors %d..%d (%d)\n", sectorNr, sectorLim-1, dev->imgScts );
+
+//  if (dev->imgScts>2097152) upo_printf( "read  sectors %d..%d (%d/%d)\n", 
+//                                         sectorNr, sectorLim-1, dev->imgScts, dev->totScts );
 
     debugprintf(dbgFiles,dbgNorm,("# RBF read  sectorNr: $%06X (n=%d) @ $%08X\n",
                                      sectorNr, nSectors, pos));
     if (sectorNr>0) {
-        if (dev->totScts==0)                return E_NOTRDY;
-        if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
-    }
+      if (dev->totScts==0)        return E_NOTRDY;
+      if (dev->totScts<sectorLim) return E_EOF; /* out of valid range */
+      if (dev->imgScts<sectorLim) {
+                              blindNr= dev->imgScts; 
+        if (blindNr<sectorNr) blindNr= sectorNr;
+    //  upo_printf( "read       sectors %d..%d\n", sectorNr, sectorLim-1 );
+    //  upo_printf( "read blind sectors %d..%d\n", blindNr,  sectorLim-1 );
+          
+        nBlinds  = sectorLim-blindNr;
+        nSectors-= nBlinds;
+        len     -= nBlinds*sect;  
+        memset( buffer + len, 0xEE, nBlinds*sect ); // fill rest with 0xEE
+    //  upo_printf( "nBlinds=%d nSectors=%d len=%d\n", nBlinds,nSectors,len );
+      } // if
+    } // if
    
     do {
      // #ifdef RAM_SUPPORT    
           if (dev->isRAM) {
-              memcpy( buffer, dev->ramBase+(sectorNr*dev->sctSize), nSectors*dev->sctSize );
+              memcpy( buffer, dev->ramBase+(sectorNr*sect), nSectors*sect );
               break;
           }
      // #endif
         
         if (IsSCSI(dev)) {
-                err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
-            if (err) {
-                err= Set_SSize   ( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,                  dev->sctSize ); if (err) break; /* adjust sector size */
-                err= ReadCapacity( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  &dev->totScts, &dev->sctSize ); if (err) break; /* and get new info back */
-                err= ReadFromSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer );
-            }
+          err= ReadFromSCSI( &dev->scsi, sectorNr,nSectors, len,buffer ); if (!err) break;
+          err= Set_SSize   ( &dev->scsi,                          sect ); if  (err) break; /* adjust sector size */
+          err= ReadCapacity( &dev->scsi, &dev->totScts,          &sect ); dev->sctSize= sect;
+          dev->imgScts= dev->totScts; if (err) break;                                   /* and get new info back */
+                
+          err= ReadFromSCSI( &dev->scsi, sectorNr,nSectors, len,buffer );
+          
+
+         //     err= ReadFromSCSI(  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors,  len,buffer ); 
+         // if (err) {
+         //     err= Set_SSize   (  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,                   dev->sctSize ); 
+                                            
+         //     err= ReadCapacity(  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  &dev->totScts,  &dev->sctSize ); 
+         //     dev->imgScts= dev->totScts; if (err) break; /* and get new info back */
+                
+         //     err= ReadFromSCSI(  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer );
+         // } // if
         }
         else {
-            pos_already = (pos==dev->currPos);
-            dev->currPos= UNDEF_POS; /* invalidate for case of an error */
+        //if (rawMode && sectorNr>=60 && sectorLim<=90) {
+        //  if (sectorLim-1>sectorNr) upo_printf( "READ  RAW: %d..%d\n", sectorNr,sectorLim-1 );
+        //  else                      upo_printf( "READ  RAW: %d\n",     sectorNr );
+        //} // if
+          
+          pos_already = (pos==dev->currPos);
+          dev->currPos= UNDEF_POS; /* invalidate for case of an error */
     
+          if (len>0) {
             if (!pos_already) {       dev->rMiss++;
                 err= syspath_seek( 0, dev->sp_img,  pos ); if (err) break;
-            }
+            //  if (dev->imgScts>2097152) upo_printf( "seek err=%d\n", err );
+            } // if
                                       dev->rTot++;  cnt= len;
                 err= syspath_read( 0, dev->sp_img, &cnt, buffer, false ); 
+            //  if (dev->imgScts>2097152) upo_printf( "read err=%d len=%d cnt=%d\n", err, len, cnt );
             if (err)                   break;
             if (cnt<len) { err= E_EOF; break; };  /* if not enough read, make EOF */
-
-            dev->currPos= pos+cnt; /* here is now our current read/write position */
+          } // if
+          
+          // don't set <currPos> behind <img> position 
+               dev->currPos= pos+cnt; /* here is now our current read/write position */
+          if  (dev->currPos>img) { /* upo_printf( "redu %d -> %d\n", dev->currPos,img ); */ dev->currPos= img; }
         }
     } while (false);
 
@@ -337,10 +385,15 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
 /* Write sectors, either to SCSI or on an RBF image file */
 {
     os9err  err= 0;
-    Boolean pos_already;
-    ulong   pos= sectorNr*dev->sctSize; /* get position and length to write */
-    ulong   len= nSectors*dev->sctSize;
+    Boolean pos_already, extendIt= false;
+    ulong   sect     = dev->sctSize;
+    ulong   pos      =     sectorNr*sect;     // get position and length to write
+    ulong   len      =     nSectors*sect;
+    ulong   img      = dev->imgScts*sect;
+    ulong   sectorLim= sectorNr + nSectors;   // upper limit
+    ulong   blindNr;                          // not accessible sectors
     long    cnt;
+    byte    ee;
 
     /* take care of write and format protection */
     if (dev->wProtected) return E_WP;
@@ -348,36 +401,89 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
         if (dev->fProtected) return E_FORMAT;
     }
 
+//  if (dev->imgScts<dev->totScts) upo_printf( "write sectors %d..%d (%d)\n", sectorNr, sectorLim-1, dev->imgScts );
+//  if (dev->imgScts>2097152) upo_printf( "write sectors %d..%d (%d/%d)\n", 
+//                                         sectorNr, sectorLim-1, dev->imgScts, dev->totScts );
+    
     debugprintf(dbgFiles,dbgNorm,("# RBF write sectorNr: $%06X (n=%d) @ $%08X\n",
                                      sectorNr, nSectors, pos));
     if (sectorNr>0) {
-        if (dev->totScts==0)                return E_NOTRDY;
-        if (dev->totScts<sectorNr+nSectors) return E_EOF; /* out of valid range */
-    }
+      if (dev->totScts==0)        return E_NOTRDY;
+      if (dev->totScts<sectorLim) return E_EOF; /* out of valid range */
+      if (dev->imgScts<sectorLim) {
+                              blindNr= dev->imgScts; 
+        if (blindNr<sectorNr) blindNr= sectorNr;
+     // upo_printf( "write       sectors %d..%d\n", sectorNr, sectorLim-1 );
+     // upo_printf( "write blind sectors %d..%d\n", blindNr,  sectorLim-1 );
+     // 
+     // if (pos==dev->imgScts*dev->sctSize) upo_printf( "perfect fit" );
+     // if (pos< dev->imgScts*dev->sctSize) upo_printf( "partly" );
+        
+        if (pos>img) {
+          pos=  img;
+          err= syspath_seek ( 0, dev->sp_img,  pos ); if (err) return err;
+       // upo_printf( "fill blind sectors %d..%d\n", dev->imgScts, sectorNr-1 );
+         
+          // fill the unused part of the sector
+          // this should not happen, as the RBF allocator will ask for the follow up sector
+          while (pos<sectorNr*sect) {       cnt= sizeof(ee); ee= 0xFF; // slow because no buffer
+            err= syspath_write( 0, dev->sp_img, &cnt,       &ee, false ); if (err) return err;
+            pos++;
+          } // while
+        } // if
+        
+        dev->currPos= UNDEF_POS;
+        dev->imgScts= sectorLim;
+        img         = dev->imgScts*sect;
+        extendIt    = true;
+        err= syspath_setstat( 0, dev->sp_img, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
+      } // if
+    } // if
         
     do {
      // #ifdef RAM_SUPPORT
           if (dev->isRAM) {
-              memcpy( dev->ramBase+(sectorNr*dev->sctSize), buffer, nSectors*dev->sctSize );
+              memcpy( dev->ramBase+(sectorNr*sect), buffer, nSectors*sect );
               break;
           }
      // #endif
         
         if (IsSCSI(dev))
-            err= WriteToSCSI( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer ); 
+          err= WriteToSCSI( &dev->scsi, sectorNr,nSectors, len,buffer ); 
         else {
-            pos_already = (pos==dev->currPos);
-            dev->currPos= UNDEF_POS; /* invalidate for case of an error */
+        //if (rawMode && sectorNr>=60 && sectorLim<=90) {
+        //  if (sectorLim-1>sectorNr) upo_printf( "WRITE RAW: %d..%d\n", sectorNr,sectorLim-1 );
+        //  else                      upo_printf( "WRITE RAW: %d\n",     sectorNr );
+        //} // if
+          
+          pos_already = (pos==dev->currPos);
+          dev->currPos= UNDEF_POS; /* invalidate for case of an error */
     
-            if (!pos_already) {        dev->wMiss++;
-                err= syspath_seek ( 0, dev->sp_img,  pos ); if (err) break;
-            }
-                                       dev->wTot++;  cnt= len;
-                err= syspath_write( 0, dev->sp_img, &cnt, buffer, false ); 
-            if (err)                   break;
-            if (cnt<len) { err= E_EOF; break; }; /* if not enough read, make EOF */
+          if (!pos_already) {        dev->wMiss++;
+              err= syspath_seek ( 0, dev->sp_img,  pos ); if (err) break;
+          } // if
+                                     dev->wTot++;  cnt= len;
+              err= syspath_write( 0, dev->sp_img, &cnt, buffer, false ); 
+        //upo_printf( "write err=%d cnt=%d\n", err, cnt );
+          if (err)                   break;
+          if (cnt<len) { err= E_EOF; break; }; /* if not enough read, make EOF */
 
-            dev->currPos= pos+cnt; /* here is now our current read/write position */
+          dev->currPos= pos+cnt; /* here is now our current read/write position */
+            
+          if (extendIt) {
+          //upo_printf( "extend cnt=%d %02X %02X %02X\n", cnt, buffer[ 0 ],buffer[ 1 ],buffer[ 2 ] );
+            err= syspath_seek ( 0, dev->sp_img,  0            ); // flush the buffer
+          //upo_printf( "seek0 err=%d\n", err );
+            err= syspath_seek ( 0, dev->sp_img,  dev->currPos );
+            
+          //                                     cnt=         sect;
+          //upo_printf( "seekN err=%d pos=%d\n", err, dev->currPos );
+          //err= syspath_read ( 0, dev->sp_img, &cnt, dev->tmp_sct, false ); 
+           
+          //upo_printf( "size is now %d err=%d pos=%d\n", img, err, dev->currPos );
+          //err= syspath_setstat( 0, dev->sp_img, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
+          //upo_printf( "size is now %d err=%d pos=%d\n", img, err, dev->currPos );
+          } // if
         }
     } while (false);
     
@@ -453,7 +559,7 @@ static os9err DevSize( rbfdev_typ* dev )
    copy device's current sector size to dev->sctSize */
 {
     os9err err;
-    ulong  size,ssize;
+    ulong  size, ssize;
     
     /* should be defined already for the RAM disk */
  // #ifdef RAM_SUPPORT
@@ -461,22 +567,25 @@ static os9err DevSize( rbfdev_typ* dev )
  // #endif
 
     if (IsSCSI(dev)) {  /* try to switch to correct sector size first */
-        err= Set_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  dev->sctSize );
+        err= Set_SSize( &dev->scsi, dev->sctSize );
         if (err) {
             // not possible to change sector size to what OS9 expects
             // - get sector size of SCSI device
-            err= Get_SSize( dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN,  &ssize );
+            err= Get_SSize( &dev->scsi, &ssize );
             if (err) return err; 
             if (ssize>MIN_TMP_SCT_SIZE) return err; // cannot read sector 0 that big
             // - use sector size of SCSI device for now
             dev->sctSize=ssize;
         }
-        err= ReadCapacity(  dev->scsiAdapt, dev->scsiBus, dev->scsiID, dev->scsiLUN, 
-                           &dev->totScts,  &dev->sctSize );
+        err= ReadCapacity( &dev->scsi, &dev->totScts, &dev->sctSize );
+        dev->imgScts=                   dev->totScts;
     }
     else { 
         err= syspath_gs_size( 0, dev->sp_img, &size );
-        dev->totScts= size/dev->sctSize;
+    //  upo_printf( "DevSize v img=%d/tot=%d \n", dev->imgScts, dev->totScts );
+        dev->imgScts= size/dev->sctSize;
+    //  dev->imgScts= dev->totScts;
+    //  upo_printf( "DevSize n img=%d/tot=%d \n", dev->imgScts, dev->totScts );
     }
 
     return err;
@@ -503,7 +612,60 @@ static os9err ChkIntegrity( rbfdev_typ* dev, syspath_typ* spP,
 } /* ChkIntegrity */
 
 
-static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
+
+static void GetTop( ushort pid, rbfdev_typ* dev )
+{
+  os9err err;
+  short  sp  = dev->sp_img;
+  ulong  sect= dev->sctSize;
+  ulong  map = dev->mapSize;
+  ulong  last= map % sect;
+  ulong  len;
+  ulong  pos = ( (map-1)/sect + 1 )*sect;
+  byte   b   = 0;
+  ulong  offs= 0;
+  ulong  sv= dev->imgScts;
+  ulong img;
+  
+//upo_printf( "map=%d sect=%d pos=%d\n", map, sect, pos );
+  
+  if (last==0) last= sect;
+  
+  while (pos>=sect) {
+    err= syspath_seek( pid,  sp,  pos );                       if (err) break;
+                                  len= sect;
+    err= syspath_read( pid,  sp, &len, dev->tmp_sct, false );  if (err) break;
+    
+    while (last>0) {
+          b= dev->tmp_sct[ --last ];
+      if (b) break; 
+    } // while
+    
+    if (b) break;
+    pos-= sect;
+    last= sect;
+  } // while
+  
+  while (b) { b= b<<1; offs++; }
+
+//upo_printf( "GetTop v img=%d tot=%d\n", dev->imgScts, dev->totScts );
+  dev->imgScts= ( ( pos-sect+last )*BpB + offs )*dev->clusterSize;
+//upo_printf( "GetTop n img=%d tot=%d\n", dev->imgScts, dev->totScts );
+  
+  if (sv>dev->imgScts) {
+//  upo_printf( "REDUCE\n" );
+    img= dev->imgScts*sect;
+//  upo_printf( "REDUCE img=%d\n",  img );
+    err= syspath_setstat( pid, sp, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
+//  upo_printf( "REDUCED err=%d\n", err );
+  } // if
+  
+//upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
+} /* GetTop */
+
+
+
+static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
 {   
     os9err  err;
     ulong*  l;
@@ -511,6 +673,7 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
     ushort  sctSize;
     Boolean cruz;
     
+ // upo_printf( "RootLSN\n" );
     while (true) { /* loop */
         debugprintf(dbgFiles,dbgNorm,("# RootLSN: sectorsize %d\n", dev->sctSize ));
         
@@ -523,7 +686,7 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
         debugprintf(dbgFiles,dbgNorm,("# RootLSN: sectorsize %d %s\n", dev->sctSize, cruz?"(cruz)":"" ));
         
         if (cruz) {
-            w= (ushort*)&dev->tmp_sct[104]; sctSize= os9_word(*w);
+            w= (ushort*)&dev->tmp_sct[ SECT_POS ]; sctSize= os9_word(*w);
         }
         else {
             if (dev->sctSize==0) sctSize= STD_SECTSIZE;
@@ -549,13 +712,18 @@ static os9err RootLSN( rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
         dev->last_alloc= 0; /* initialize allocater pointer */
     } /* loop */
     
-    l= (ulong *)&dev->tmp_sct[0]; dev->totScts    = os9_long(*l)>>BpB;
-    w= (ushort*)&dev->tmp_sct[4]; dev->mapSize    = os9_word(*w);
-    w= (ushort*)&dev->tmp_sct[6]; dev->clusterSize= os9_word(*w);
-    l= (ulong *)&dev->tmp_sct[8]; dev->root_fd_nr = os9_long(*l)>>BpB;
+ // upo_printf( "RootLSN a img=%d tot=%d\n", dev->imgScts, dev->totScts );
+    l= (ulong *)&dev->tmp_sct[ TOT_POS ]; dev->totScts    = os9_long(*l) >> BpB;
+    if (dev->imgScts==0)                  dev->imgScts    = dev->totScts;
+    w= (ushort*)&dev->tmp_sct[ MAP_POS ]; dev->mapSize    = os9_word(*w);
+    w= (ushort*)&dev->tmp_sct[ BIT_POS ]; dev->clusterSize= os9_word(*w);
+    l= (ulong *)&dev->tmp_sct[ DIR_POS ]; dev->root_fd_nr = os9_long(*l) >> BpB;
     
+//  upo_printf( "RootLSN b img=%d tot=%d\n", dev->imgScts, dev->totScts );
     spP->u.rbf.fd_nr=  dev->root_fd_nr;
-    err= ChkIntegrity( dev,spP, dev->tmp_sct, ignore ); return err;
+    err= ChkIntegrity( dev,spP, dev->tmp_sct, ignore );
+//  if (!dev->isRAM && !IsSCSI( dev ) && dev->reducedImg) GetTop( pid, dev );
+    return err;
 } /* RootLSN */
 
 
@@ -574,9 +742,12 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
 {
     #define R0 "/r0"
     os9err  err, cer;
-    ushort  sp;
-    ulong   size, len;
-    char    bb[STD_SECTSIZE]; /* one sector */
+    ushort  sp, sctSize;
+    ulong   len, iSize, tSize;
+    ulong   imgScts, totScts;
+    ulong*  l;
+    ushort* w;
+    byte    bb[STD_SECTSIZE]; /* one sector */
     
     do {
         #ifndef RAM_SUPPORT
@@ -591,17 +762,29 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
         #endif
         
         err= syspath_open   ( pid, &sp, type,pathname,mode ); if (err) return err;
-        err= syspath_gs_size( pid,  sp, &size );              if (err) break;
-        if (size < 8192 || 
-           (size % 2048)!=0) { err= E_FNA; break; }
+        err= syspath_gs_size( pid,  sp, &iSize );             if (err) break;
+        if (!RBF_ImgSize( iSize )) { err= E_FNA; break; }
       
                                          len= sizeof(bb);
         err= syspath_read   ( pid,  sp, &len, &bb, false );   if (err) break;
         err= syspath_seek   ( pid,  sp,  0 );                 if (err) break;
 
         /* Cruzli check */
-        if (strcmp( &bb[CRUZ_POS],Cruz_Str )!=0) { err= E_FNA; break; }
-                            
+        if (strcmp( &bb[ CRUZ_POS ],Cruz_Str )!=0) { err= E_FNA; break; }
+        l= (ulong *)&bb[  TOT_POS ]; totScts= os9_long(*l) >> BpB;
+        w= (ushort*)&bb[ SECT_POS ]; sctSize= os9_word(*w);
+        if (sctSize==0)              sctSize= STD_SECTSIZE;
+       
+        imgScts= iSize/sctSize;
+      //upo_printf( "name1='%s' size=%d %d\n", pathname, imgScts, totScts );
+
+             tSize= totScts*sctSize;
+        if ((tSize %    2048)!=0 ||
+             tSize <    8192     ||
+            (iSize % sctSize)!=0) { err= E_FNA; break; }
+      
+      //upo_printf( "name2='%s' size=%d %d\n", pathname, imgScts, totScts );
+               
         dev->sp_img= sp; /* do this before calling DevSize */
         err= DevSize( dev );
     } while (false);
@@ -694,8 +877,8 @@ static Boolean MWrong( int cdv )
 	for (ii=1; ii<MAXRBFDEV; ii++) {       
     	    dev= &rbfdev[ ii ];             /* get RBF device  */
     	if (dev->installed && ii!=cdv && (ustrcmp( mnt_name,dev->name  )==0 ||
-                                          ustrcmp( mnt_name,dev->name2 )==0 ||
-                                          ustrcmp( mnt_name,dev->name3 )==0)) return true;
+                                        ustrcmp( mnt_name,dev->name2 )==0 ||
+                                        ustrcmp( mnt_name,dev->name3 )==0)) return true;
     } /* for */
     
     return false;
@@ -722,6 +905,7 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     
         dev->totScts= mnt_ramSize*KByte/dev->sctSize; /* adapt to KBytes */
     if (dev->totScts==0) dev->totScts= DefaultScts;
+    dev->imgScts=        dev->totScts;
     
     if ( mnt_ramSize==0 
       && IsDesc( cmp, &mod, &p )  
@@ -730,10 +914,12 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
         if (ustrcmp( p,"ram" )==0) {
             w= (ushort*)(&mod->_mdtype + PD_SCT);
             dev->totScts= os9_word( *w );
-        }
-    } /* if */
+            dev->imgScts= dev->totScts;
+        } // if
+    } // if
 
     if (dev->totScts>MaxScts) dev->totScts= MaxScts;
+    dev->imgScts= dev->totScts;
     
     allocSize= (dev->totScts-1)/(dev->sctSize*BpB) + 1; /* round up */
     allocN   =       allocSize * dev->sctSize*BpB;
@@ -756,21 +942,21 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
     f=  1 + allocSize; fN= f*dev->sctSize;
     r=  f + 1;         rN= r*dev->sctSize;
     
-    u= (ulong*) &dev->ramBase[   0x00]; *u= os9_long( dev->totScts<<BpB ); /* 0x03 overwritten, is 0 anyway */
-    w= (ushort*)&dev->ramBase[   0x04]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
-    u= (ulong*) &dev->ramBase[   0x08]; *u= os9_long( f<<BpB );            /* 0x0b overwritten, is 0 anyway */
+    u= (ulong*) &dev->ramBase[ TOT_POS ]; *u=          os9_long(  dev->totScts << BpB ); /* 0x03 overwritten, is 0 anyway */
+    w= (ushort*)&dev->ramBase[ MAP_POS ]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
+    u= (ulong*) &dev->ramBase[ DIR_POS ]; *u=          os9_long(             f << BpB ); /* 0x0b overwritten, is 0 anyway */
                         
-                 dev->ramBase[fN+0x00]= 0xbf; /* prepare the fd sector */
-                 dev->ramBase[fN+0x08]= 0x01;
-                 dev->ramBase[fN+0x0C]= 0x40;
-    u= (ulong*) &dev->ramBase[fN+0x10]; *u= os9_long( r<<BpB );
-                 dev->ramBase[fN+0x14]= 0x01;
+                 dev->ramBase[ fN      ]= 0xbf; /* prepare the fd sector */
+                 dev->ramBase[ fN+0x08 ]= 0x01;
+                 dev->ramBase[ fN+0x0C ]= 0x40;
+    u= (ulong*) &dev->ramBase[ fN+0x10 ]; *u= os9_long( r<<BpB );
+                 dev->ramBase[ fN+0x14 ]= 0x01;
             
-                 dev->ramBase[rN+0x00]= 0x2e; /* prepare the directory entry */
-                 dev->ramBase[rN+0x01]= 0xae;
-    w= (ushort*)&dev->ramBase[rN+0x1e]; *w= (ushort) os9_word( f );
-                 dev->ramBase[rN+0x20]= 0xae;
-    w= (ushort*)&dev->ramBase[rN+0x3e]; *w= (ushort) os9_word( f );
+                 dev->ramBase[ rN      ]= 0x2e; /* prepare the directory entry */
+                 dev->ramBase[ rN+0x01 ]= 0xae;
+    w= (ushort*)&dev->ramBase[ rN+0x1e ]; *w= (ushort) os9_word( f );
+                 dev->ramBase[ rN+0x20 ]= 0xae;
+    w= (ushort*)&dev->ramBase[ rN+0x3e ]; *w= (ushort) os9_word( f );
     
     strcpy( dev->img_name,cmp );
     return 0;
@@ -817,7 +1003,6 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
       char rbfname[OS9PATHLEN];
     #endif
 
-
     do {
         *new_inst= false;
         if (fu) {
@@ -849,7 +1034,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         }
         
         /* existing relative path ? */
-        if (!abs && cdv!=0 && mnt_scsi==NO_SCSI) break;
+        if (!abs && cdv!=0 && mnt_scsiID==NO_SCSI) break;
 
         err      =     0;
         isRAMDisk= false; /* do it for all conditions */
@@ -876,9 +1061,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             GetOS9Dev( pathname, (char*)&cmp );
         }
         else {
-                 isSCSI= (err && mnt_scsi!=NO_SCSI);
+                 isSCSI= (err && mnt_scsiID!=NO_SCSI);
             if  (isSCSI) {
-                scsiID   = mnt_scsi;
+                scsiID   = mnt_scsiID;
                 scsiAdapt= mnt_scsiAdapt>=0 ? mnt_scsiAdapt : defSCSIAdaptNo;
                 scsiBus  = mnt_scsiBus  >=0 ? mnt_scsiBus   : defSCSIBusNo;    
                 scsiLUN  = mnt_scsiLUN  >=0 ? mnt_scsiLUN   : 0;    
@@ -942,7 +1127,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             }
             else {
                /* is there already a file with the same file name ? */
-     			debugprintf(dbgFiles,dbgNorm,("# DevInit: path='%s' img='%s'\n", 
+     			      debugprintf(dbgFiles,dbgNorm,("# DevInit: path='%s' img='%s'\n", 
      			                                 pathname,dev->img_name ));
                 if (SamePathBegin( pathname,dev->img_name)) {
                 	if (strcmp( cmp,dev->name )!=0) {
@@ -961,7 +1146,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                  || ustrcmp( q,dev->name3 )==0) { cdv= ii; break; }
 
                 if (isSCSI && IsSCSI( dev ) &&
-                    scsiID == dev->scsiID) {
+                    scsiID == dev->scsi.ID) {
                     if (*dev->name2==NUL) { strcpy( dev->name2,q ); cdv= ii; break; }
                     if (*dev->name3==NUL) { strcpy( dev->name3,q ); cdv= ii; break; }
                     return E_DEVBSY;
@@ -986,6 +1171,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                                      q, cdv, dev->installed ? "/installed":"",
                                              *new_inst      ? "/new_inst" :"" ));
 
+  //upo_printf( "DEVICEINIT='%s' img=%d tot=%d %d\n", pathname, dev->imgScts, dev->totScts, dev->installed );
     if (dev->installed) {
     	if (!abs) return 0; /* ok, if not absolute */
     	if (mock && MWrong( cdv )) return E_DEVBSY;
@@ -993,28 +1179,31 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     	strcpy  ( tmp,pathname );
     	n= strlen(tmp)-1;
     	while   ( tmp[n]=='@' ) tmp[n--]= NUL;
-        p=        tmp+1;
-        if (SamePathBegin( tmp,dev->img_name ) ||
-            SamePathBegin( p,  dev->name     ) ||
-            SamePathBegin( p,  dev->name2    ) ||
-            SamePathBegin( p,  dev->name3    )) return 0;
+      p=        tmp+1;
+      if (SamePathBegin( tmp,dev->img_name ) ||
+          SamePathBegin( p,  dev->name     ) ||
+          SamePathBegin( p,  dev->name2    ) ||
+          SamePathBegin( p,  dev->name3    )) return 0;
         
         /* already in use !! */    
-    //  printf( "path='%s' img='%s'\n", pathname,dev->img_name );
-    //  printf( "path='%s'  n1='%s'\n", pathname,dev->name  );
-    //  printf( "path='%s'  n2='%s'\n", pathname,dev->name2 );
-    //  printf( "path='%s'  n3='%s'\n", pathname,dev->name3 );
-        return E_DEVBSY;
-	} /* if installed */
+  //  printf( "path='%s' img='%s'\n", pathname,dev->img_name );
+  //  printf( "path='%s'  n1='%s'\n", pathname,dev->name  );
+  //  printf( "path='%s'  n2='%s'\n", pathname,dev->name2 );
+  //  printf( "path='%s'  n3='%s'\n", pathname,dev->name3 );
+      return E_DEVBSY;
+   	} /* if installed */
 	
     dev->nr        = cdv;          /* already done ?? */
     dev->wProtected= mnt_wProtect; /* if not otherwise defined */
+    dev->reducedImg= mnt_reducedImg;
     dev->fProtected= false;
     dev->multiSct  = true;         /* is now supported */
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
     dev->last_alloc= 0;            /* initialize allocater pointer */
     dev->sp_img    = 0;            /* the image syspath will be connected here later */
-    
+    dev->imgScts   = 0;
+    dev->totScts   = 0;            /* set default values */
+   
  // #ifdef RAM_SUPPORT
       dev->isRAM   = isRAMDisk;    /* RAM disk flag */
  // #endif
@@ -1028,10 +1217,10 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->wMiss     = 0;
     dev->wTot      = 0;
 
-    dev->scsiAdapt = scsiAdapt;
-    dev->scsiBus   = scsiBus;
-    dev->scsiID    = scsiID;
-    dev->scsiLUN   = scsiLUN;  
+    dev->scsi.adapt= scsiAdapt;
+    dev->scsi.bus  = scsiBus;
+    dev->scsi.ID   = scsiID;
+    dev->scsi.LUN  = scsiLUN;  
     dev->pdtyp     = scsiPDTyp;
     
     if (IsSCSI(dev)) {
@@ -1084,16 +1273,24 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         if (!err)                 dev->wProtected= true;
     } while (false);
 
-    do {                               if (err) break;
-        err= RootLSN( dev,spP, true ); if (err) break;
+    do {                                    if (err) break;
+        err= RootLSN( pid,dev, spP, true ); if (err) break;
         dev->last_diskID= spP->u.rbf.diskID;
         *new_inst= true;
     } while (false);
 
     if (err) {
-        dev->installed= false;
-        release_mem( dev->tmp_sct );
-                     dev->tmp_sct= NULL;
+      dev->installed= false;
+      release_mem( dev->tmp_sct );
+                   dev->tmp_sct= NULL;
+    }
+    else {
+    //upo_printf( "IMGSECS=%d\n", dev->imgScts );
+      if ((dev->reducedImg ||
+           dev->imgScts<dev->totScts) && !dev->isRAM && !IsSCSI( dev )) {
+        GetTop( pid, dev );
+      //upo_printf( "TOPALLOC=%d of %d\n", dev->imgScts, dev->totScts );
+      } // if
     }
         
     sprintf( ers,"  #000:%03d", err );
@@ -1112,6 +1309,7 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "Function: mount an RBF image file\n" );
     upe_printf( "Options:  \n" );
     upe_printf( "    -w         open with write protection on\n" );
+    upe_printf( "    -i         allow reduced image size\n" );
     
     #ifdef windows32
     upe_printf( "    -ah        show all SCSI devices on all adaptors and buses\n" );
@@ -1129,7 +1327,7 @@ static void mount_usage( char* name, _pid_ )
 
 os9err MountDev( ushort pid, char* name, char* mnt_dev, 
                              short adapt, ushort scsibus, short scsiID, ushort scsiLUN, 
-                             int ramSize, Boolean wProtect )
+                             int ramSize, Boolean wProtect, Boolean reducedImg )
 {
     os9err    err= 0;
     char      tmp[OS9NAMELEN];
@@ -1151,9 +1349,9 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
        
         if (scsiID!=NO_SCSI) {
             mnt_name= name;
+            mnt_scsiID    = scsiID;
             mnt_scsiAdapt = adapt;
             mnt_scsiBus   = scsibus;
-            mnt_scsi      = scsiID;
             mnt_scsiLUN   = scsiLUN;
             
             if (!AbsPath(name)) { /* make a device path */
@@ -1175,20 +1373,24 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
         if (err) name= mnt_name; /* for error output */
     } /* if */
 
-    mnt_wProtect= wProtect;
-    if (!err) {                type= fRBF;
-        if (mnt_scsi==NO_SCSI) type= IO_Type( pid,name, poDir );
+    mnt_wProtect  = wProtect;
+    mnt_reducedImg= reducedImg;
+    
+    if (!err) {                  type= fRBF;
+        if (mnt_scsiID==NO_SCSI) type= IO_Type( pid,name, poDir );
         
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' type='%s'\n", 
                                           name, mnt_name,TypeStr(type) ));
         err= syspath_open( pid, &sp,type, name, poDir );
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' err=%d\n",
                                           name, mnt_name,err ));
-    }
-    mnt_wProtect= false; /* switch them off again */
-    mnt_name    = "";
-    mnt_scsi    = NO_SCSI;
-    mnt_ramSize = 0;
+    } // if
+
+    mnt_wProtect  = false; /* switch them off again */
+    mnt_reducedImg= false;
+    mnt_name      = "";
+    mnt_scsiID    = NO_SCSI;
+    mnt_ramSize   = 0;
     
     if   (!err) err= syspath_close( pid, sp );
     return err;
@@ -1207,7 +1409,8 @@ os9err int_mount( ushort pid, int argc, char** argv )
     short     scsiLUN = 0;
     int       ramSize = 0;
     
-    Boolean   wProtect= false;
+    Boolean   wProtect  = false;
+    Boolean   reducedImg= false;
     char      *p;
     int       k;
     
@@ -1216,15 +1419,16 @@ os9err int_mount( ushort pid, int argc, char** argv )
     
 
     for (k=1; k<argc; k++) {
-             p= argv[k];    
+             p= argv[ k ];    
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
                 case '?' :  mount_usage( argv[0], pid ); return 0;
 
-                case 'w' :  wProtect= true; break;
+                case 'w' :  wProtect  = true; break;
+                case 'i' :  reducedImg= true; break;
 
-				#ifdef windows32
+				        #ifdef windows32
                   case 'a' :  if (*(p+1)=='h') {
                                   upho_printf("Current defaults: Adaptor=SCSI%d, Bus=%d\n\n",
                                                defSCSIAdaptNo,defSCSIBusNo);
@@ -1292,7 +1496,8 @@ os9err int_mount( ushort pid, int argc, char** argv )
 
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
-        err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, ramSize, wProtect );
+        err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, 
+                       ramSize, wProtect, reducedImg );
     if (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
     return 0;
 } /* int_mount */
@@ -1416,42 +1621,51 @@ static Boolean Mega( long long size, float *r )
     return m;
 }
 
+
+
+static char* Kb( char* v, long long size )
+{
+  float r;
+  char* unit;
+                       unit= "kB";
+  if (Mega( size,&r )) unit= "MB";
+    
+  if (r>=1000) { sprintf( v, "%.0f%s", r,unit ); return v; }
+  if (r>= 100) { sprintf( v, "%.1f%s", r,unit ); return v; }
+  if (r>=  10) { sprintf( v, "%.2f%s", r,unit ); return v; }
+                 sprintf( v, "%.3f%s", r,unit ); return v;
+} // Kb
+
+
 static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
 {
-//  char  sc[20];
     char  s [OS9NAMELEN];
     char  u [OS9PATHLEN];
-    char  v [20];
-    char  w [20];
-    char* unit;
-    long long size= (long long)rb->totScts * rb->sctSize;
-    float r;
-    Boolean isRAMDisk= false;
-    
- // #ifdef RAM_SUPPORT
-      isRAMDisk= rb->isRAM;
- // #endif
+    char  vI[20], vT[20];
+    char  v [20], w [20];
 
-                         unit= "kB";
-    if (Mega( size,&r )) unit= "MB";
+    long long sizeI= (long long)rb->imgScts * rb->sctSize;
+    long long sizeT= (long long)rb->totScts * rb->sctSize;
+
+ // Boolean isRAMDisk= false;
+ // #ifdef RAM_SUPPORT
+ //   isRAMDisk= rb->isRAM;
+ // #endif
 
     strcpy ( s,             name         );
 //  sprintf( sc,     "%3d", rb->scsiID   );
     strcpy ( u,             rb->img_name ); 
     
-    if     (isRAMDisk || *u==NUL) strcpy( u," -" );
-    if     (isRAMDisk)  strcpy ( w, "ram" );
+    if     (rb->isRAM || *u==NUL) strcpy( u," -" );
+    if     (rb->isRAM)  strcpy ( w, "ram" );
     else {
-        if (IsSCSI(rb)) sprintf( w, "SCSI: %d", rb->scsiID );
+        if (IsSCSI(rb)) sprintf( w, "SCSI: %d", rb->scsi.ID );
         else            strcpy ( w, "image" );
     }
     
-                  sprintf( v," (%1.2f%s)", r,unit );
-    if (r>=   10) sprintf( v, "(%2.2f%s)", r,unit );
-    if (r>=  100) sprintf( v, "(%3.1f%s)", r,unit );
-    if (r>= 1000) sprintf( v," (%4.0f%s)", r,unit );
-    if (r>=10000) sprintf( v, "(%5.0f%s)", r,unit );
-    
+    Kb   ( vT, sizeT );
+    if (sizeI==sizeT) sprintf( v,    "(%s)",                 vT );
+    else              sprintf( v, "(%s/%s)", Kb( vI, sizeI ),vT );
     
     upo_printf( "%-10s ", StrBlk_Pt( s,10 ) );
             
@@ -1460,13 +1674,13 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                      rb->rMiss, rb->rTot,
                      rb->wMiss, rb->wTot );
     else 
-        upo_printf( "%-10s %-7s %2d %4d  %-4s %-25s %s\n", 
-                     w,
+        upo_printf( "%-8s %-7s %2d %4d %-3s %-23s %15s\n", 
+                     StrBlk_Pt( w,7 ),
                      "rbf", 
                      rb->nr,
                      rb->sctSize,
                      rb->wProtected ? "yes":"no",
-                     StrBlk_Pt( u,25 ),
+                     StrBlk_Pt( u,23 ),
                      v );
 } /* Disp_RBF_DevsLine */
 
@@ -1940,7 +2154,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     int         ii;
     Boolean     done= false;               /* break condition for readln  */
     Boolean     rOK = (remain==0);         /* is true, if nothing to read */
-    Boolean     mlt;
+    Boolean     first= true;
+    Boolean     mlt, mltFirst;
     ulong       n, n0, d;
     byte*       b;
     
@@ -1949,46 +2164,53 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
     
     do {           /* do this loop for every sector to be read into buffer */
         if (spP->rawMode) {
-            sect= rbf->currPos / dev->sctSize;        /* get raw sector nr */
-            slim= -1;  
-            size= -1; rs= &size;                         /* no upper limit */
+          sect= rbf->currPos / dev->sctSize;          /* get raw sector nr */
+          slim= -1;  
+          size= -1; rs= &size;                           /* no upper limit */
         }
         else {                            /* get sector nr of segment info */
-            FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
-                                        rs= &totsize; /* the relevant size */
-            if (!wMode && size<totsize) rs= &size;
+          FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
+                                      rs= &totsize;   /* the relevant size */
+          if (!wMode && size<totsize) rs= &size;
             
-            if (totsize<=rbf->lastPos)      rbf->lastPos= totsize;
-            if (*rs    <=rbf->lastPos) *rs= rbf->lastPos;
+          if (totsize<=rbf->lastPos)      rbf->lastPos= totsize;
+          if (*rs    <=rbf->lastPos) *rs= rbf->lastPos;
 
-            if (!wMode) { /* reduce to currect ammount */
-                if     (*rs<rbf->currPos+remain) 
-                remain= *rs-rbf->currPos;
-            }
+          if (!wMode) { /* reduce to currect ammount */
+            if     (*rs<rbf->currPos+remain) 
+            remain= *rs-rbf->currPos;
+          } // if
             
-            if (rbf->currPos>=*rs) {
-                if (wMode) {
-                    err= AllocateBlocks( spP,ma, &pos,&scs, pref ); if (err) break;
-                    err= AdaptAlloc_FD ( spP,     pos, scs       ); if (err) break;
+          if (rbf->currPos>=*rs) {
+            if (wMode) {
+              err= AllocateBlocks( spP,ma, &pos,&scs, pref ); if (err) break;
+              err= AdaptAlloc_FD ( spP,     pos, scs       ); if (err) break;
                     
-                    FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
+              FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
                                              rs= &totsize;
-                    if (rbf->currPos>=*rs) {
-                        debugprintf( dbgFiles,dbgDetail,("# DoAccess (%s) EOF: n=%d\n", 
-                                                            wMode ? "write":"read", *lenP ));
-                        return E_EOF;
-                    }               
-                }
-                else {
-                    if (rOK)    break; /* reading is ok so far */
-                    err= E_EOF; break;
-                }
+              if (rbf->currPos>=*rs) {
+                debugprintf( dbgFiles,dbgDetail,("# DoAccess (%s) EOF: n=%d\n", 
+                                                    wMode ? "write":"read", *lenP ));
+                return E_EOF;
+              } //if               
             }
-        }
+            else {
+              if (rOK)    break; /* reading is ok so far */
+              err= E_EOF; break;
+            } // if
+          } // if
+        } // if
+ 
+      //if (spP->rawMode && sect>=60 && sect<=90) {
+      //  upo_printf( "DoAccess sect=%d w=%d len=%d\n", sect, wMode, *lenP );
+      //} // if
+    
     
         offs= rbf->currPos % dev->sctSize; /* get offset within this sector */
 
             mlt= (dev->multiSct && sect!=0 && offs==0 && remain>=2*dev->sctSize);
+        if (first) { mltFirst= mlt; first= false; }
+        
         if (mlt) {
                 maxc= *rs;
             if (maxc>remain) maxc= remain;
@@ -2007,39 +2229,42 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
             if (maxc>remain) maxc= remain;
             n= 1; n0= 0; d= 0;
             b= spP->rw_sct;
-        } 
-        
-//      if (dev->multiSct) 
-//          upe_printf( "rw_nr sect remain mw wMode cur %7d %7d %7d %7d %7d %7d\n", spP->rw_nr,sect,remain,*mw,wMode,rbf->currPos );
-        if (spP->rw_nr==0     /* read only if different one */
-         || spP->rw_nr!=sect
-         || mlt) {
-            if (*mw!=0) {
-            //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
-                err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
-                *mw =0; /* now it is written */
-            }
+        } // if
 
-            if (!mlt || !wMode) {
-                err= ReadSector( dev, sect,n, b ); if (err) break;
-            //  if (dev->multiSct) upe_printf( "Rsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
-                spP->rw_nr= sect + n0;
+      //if (spP->rawMode && sect>=60 && sect<=90) {
+      //  upo_printf( "DoAccess rw_nr=%d sect=%d *mw=%d mlt=%d\n", spP->rw_nr, sect, *mw, mlt );
+      //} // if
+    
+        if (spP->rw_nr==0    ||             /* read only if different one */
+            spP->rw_nr!=sect || mltFirst) { /* it is important to decide about <mlt> of the first run */
+          if (*mw!=0) {
+          //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
+              err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
+                *mw= 0; /* now it is written */
+          } // if
+
+          if (!mlt || !wMode) {
+            err= ReadSector( dev, sect,n, b ); if (err) break;
+        //  if (dev->multiSct) upe_printf( "Rsct slm n n0 offs d len %7d %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
+            spP->rw_nr= sect + n0;
                 
-                if (mlt) {  
-                    if (n>n0) { /* the full sector has been read */
-                        memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
-                    }
-                    else        spP->rw_nr= 0; /* there must be a follow up */
-                }
-                else {
-                    if (sect==0) { err= ChkIntegrity( dev, spP, b,true ); if (err) break; }
-                }
-            } /* if */  
-        } /* if */
+            if (mlt) {  
+              if (n>n0) { /* the full sector has been read */
+                memcpy( spP->rw_sct, b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+              }
+              else      spP->rw_nr= 0; /* there must be a follow up */
+            }
+            else {
+              if (sect==0) { err= ChkIntegrity( dev, spP, b,true ); if (err) break; }
+            } // if
+            
+          } // if  
+        } // if
 
         rOK = true;
         debugprintf(dbgFiles,dbgDeep,("# RBF %s: \"%s\" $%x bytes, sect: $%x, size: $%x\n", 
                                          wMode ? "write":"read", dev->name, remain, sect, *rs));
+      //if (sect==0) upe_printf( "Write 0 raw=%d\n", spP->rawMode );
                 
         if (lnmode) {       /* depends on read or write */
             if (wMode) { bb=      buffer; coff= boffs; }
@@ -2047,8 +2272,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
 
             for (ii=coff; ii<coff+maxc; ii++) {
                 if (bb[ii]==CR) { done= true; maxc= ii-coff+1; break; }
-            }
-        }
+            } // for
+        } // if
     
         /* copy to/from the buffer */   
         if (wMode) {
@@ -2056,20 +2281,47 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 memcpy(spP->rw_sct+offs, buffer+boffs, maxc);
             }
             
+            if (*mw!=0 && *mw!=sect) { /* if sector nr has changed */
+              err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
+              spP->rw_nr= *mw;
+            } // if
+
             /* if sector in raw mode */
             if (spP->rawMode) {
+              if (sect==0) {
+                w= (ushort*)&spP->rw_sct[14]; /* get the new disk ID */
+                dev->last_diskID = *w;        /* must be done */
+                rbf->diskID=       *w;
+                
+                /* write sector 0 always */
+                err= WriteSector( dev,  sect,1, spP->rw_sct ); if (err) break;
+              } // if
+
+              if (sect==1) dev->last_alloc= 0; /* reset after "format" */
+            } // if
+                    
+            *mw= sect;
+            if (mlt) {
+              err= WriteSector( dev, sect,n, b ); if (err) break;
+              spP->rw_nr= sect + n0;
+              *mw= 0; /* already written */
+            } // if
+
+           /*
+           // if sector in raw mode
+            if (spP->rawMode) {
                     if (sect==0) {
-                        w= (ushort*)&spP->rw_sct[14]; /* get the new disk ID */
-                        dev->last_diskID = *w;        /* must be done */
+                        w= (ushort*)&spP->rw_sct[14]; // get the new disk ID
+                        dev->last_diskID = *w;        // must be done
                         rbf->diskID=       *w;
                     }
 
-                    if (sect==1) dev->last_alloc= 0; /* reset after "format" */
+                    if (sect==1) dev->last_alloc= 0; // reset after "format"
                     
                     if (mlt) {
                         err= WriteSector( dev, sect,n, b ); if (err) break;
                                 spP->rw_nr= sect + n0;
-                    //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
+                    //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); // update rw_sct
                     }
                     else {
                         err= WriteSector( dev, sect,1, spP->rw_sct ); if (err) break;
@@ -2077,7 +2329,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                     }
             }
             else {
-                if (*mw!=0 && *mw!=sect) { /* if sector nr has changed */
+                if (*mw!=0 && *mw!=sect) { // if sector nr has changed
                     err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
                     spP->rw_nr= *mw;
                 }
@@ -2086,10 +2338,11 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
                 if (mlt) {
                     err= WriteSector( dev, sect,n, b ); if (err) break;
                             spP->rw_nr= sect + n0;
-                //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); /* update rw_sct */
-                    *mw= 0; /* already written */
+                //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); // update rw_sct
+                    *mw= 0; // already written
                 }
             }
+            */
         }
         else if (!mlt) memcpy( buffer+boffs, spP->rw_sct+offs, maxc );
 
@@ -2391,7 +2644,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
 //  printf( "GetBuffers %08X %08X\n", spP->fd_sct, spP->rw_sct );
     GetBuffers ( dev,spP ); /* get the internal buffer structures now */
     spP->rw_nr = 0;         /* undefined */
-    
+   
     do {
         /* take care of write protection */     
         if (cre && dev->wProtected) { err= E_WP; break; }
@@ -2404,7 +2657,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         } /* if (IsRaw) */
 
         if (AbsPath(p)) { /* if abs path -> search from the root */                     
-            err= RootLSN( dev, spP, false );
+            err= RootLSN( pid, dev, spP, false );
             if (err==E_DIDC) err= 0;       /* changes recognized */
             if (err) break;       /* for all other errors: break */
             
@@ -2473,28 +2726,27 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
             if (*cmp_entry==NUL) {                /* no more sub directories */
                 strcpy( spP->name, dir_entry.name );
                 
-                if     (isFileEntry) {            /* if it is a file entry */
-                    if (isFile) {
-                        if (cre)  err= E_CEF;     /* already there */
-                        else      err= 0;         /* is there as file -> ok */
-                    }
-                    else        { err= E_FNA;     /* is path, should be file */
-                        if (size >= 8192     && 
-                           (size %  2048)==0 &&
-                            !spP->fullsearch) {   /* but try it again in special mode */
-                             spP->fullsearch= true;
-                             debugprintf(dbgFiles,dbgNorm,("# not a path >>fullsearch '%s'\n",         
-                                                              pathname ));
-                             err= pRopen( pid, spP, modeP,    pathname );
-                             debugprintf(dbgFiles,dbgNorm,("# not a path <<fullsearch '%s', err=%d\n",
-                                                              pathname,err ));
-                             spP->fullsearch= false;
-                        } /* if */
-                    }
+                if   (isFileEntry) {              /* if it is a file entry */
+                  if (isFile) {
+                    if (cre)  err= E_CEF;         /* already there */
+                    else      err= 0;             /* is there as file -> ok */
+                  }
+                  else      { err= E_FNA;         /* is path, should be file */
+                    if (RBF_ImgSize( size ) &&
+                       !spP->fullsearch) {        /* but try it again in special mode */
+                        spP->fullsearch= true;
+                      debugprintf(dbgFiles,dbgNorm,("# not a path >>fullsearch '%s'\n",         
+                                                    pathname ));
+                      err= pRopen( pid, spP, modeP, pathname );
+                      debugprintf(dbgFiles,dbgNorm,("# not a path <<fullsearch '%s', err=%d\n",
+                                                    pathname, err ));
+                      spP->fullsearch= false;
+                    } /* if */
+                  }
                 }
-                else {                            /* if it is a dir  entry */
-                    if (isFile) err= E_FNA;       /* is file, should be path */
-                    else        err= 0;           /* is there path -> ok */
+                else {                          /* if it is a dir  entry */
+                  if (isFile) err= E_FNA;       /* is file, should be path */
+                  else        err= 0;           /* is there path -> ok */
                 }
                 
                 if (!err &&  rbf->wMode
@@ -2527,12 +2779,13 @@ os9err pRclose( ushort pid, syspath_typ* spP )
                                      pid, rbf->wMode,spP->rawMode, spP->mustW ));
 
     do {
-        if (rbf->wMode==0 || /* no change in read or raw mode */
-            spP->rawMode) break;
+        if (rbf->wMode==0) break; /* no change in read mode */
         
         if (spP->mustW) { /* write the last cached sector */
             err= WriteSector( dev, spP->mustW,1, spP->rw_sct ); if (err) break;
-        }
+        } // if
+
+        if (spP->rawMode) break; // no more things to do
 
         /* set file size at close */
             v= FDSize( spP ); 
@@ -2716,11 +2969,8 @@ os9err pRopt(ushort pid, syspath_typ* spP, byte *buffer)
     b= (byte  *)&buffer[ PD_TYP    ]; *b=          dev->pdtyp;
     w= (ushort*)&buffer[ PD_SAS    ]; *w= os9_word(dev->sas);        /* sector alloc size */
     w= (ushort*)&buffer[ PD_SSize  ]; *w= os9_word(sSct);            /* phys sect size    */
-    b= (byte  *)&buffer[ PD_CtrlrID]; *b=          dev->scsiID;
+    b= (byte  *)&buffer[ PD_CtrlrID]; *b=          dev->scsi.ID;
     b= (byte  *)&buffer[ PD_ATT    ]; *b=          rbf->att;
-
-//  l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr<<BpB); /* LSN of file       */
-//  l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir<<BpB); /* LSN of its dir    */
 
     l= (ulong *)&buffer[ PD_FD     ]; *l= os9_long(rbf->fd_nr*sSct); /* pos of file       */
     l= (ulong *)&buffer[ PD_DFD    ]; *l= os9_long(rbf->fddir*sSct); /* pos of its dir    */
@@ -2797,7 +3047,7 @@ os9err pRsize( ushort pid, syspath_typ* spP, ulong *sizeP )
     if (spP->rawMode) {
         *sizeP= dev->totScts*dev->sctSize;
         return 0;
-	}
+	  } // if
 
     sv = rbf->currPos;
          rbf->currPos= 0;  /* initialize position to 0 */
