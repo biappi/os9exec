@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2004/12/04 00:08:18  bfo
+ *    MacOSX MACH adaptions
+ *
  *    Revision 1.19  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -177,6 +180,9 @@ Boolean SCSI_Device  ( const char* os9path,
 #ifdef win_linux
   void   GetEntry( dirent_typ* dEnt, char* name, Boolean do_2e_conv );
 #endif
+
+Boolean RBF_ImgSize( long size );
+/* Returns true, if it is a valid RBF Image size */
 
 #if defined macintosh && !defined __MACH__
   os9err RBF_Rsc   ( FSSpec  *fs );

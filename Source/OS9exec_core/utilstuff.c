@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2005/01/22 16:13:38  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.35  2004/12/04 00:07:26  bfo
  *    MacOSX MACH adaptions / small transferBuffer for Linux
  *
@@ -1736,6 +1739,14 @@ Boolean SCSI_Device( const char* os9path,
 #endif
 
 
+Boolean RBF_ImgSize( long size )
+/* Returns true, if it is a valid RBF Image size */
+{
+ //   if (size<8192 || (size % 2048)!=0)         return E_PNNF;
+ //   if (size<1024 || (size % STD_SECTSIZE)!=0) return E_PNNF;
+  return size>=1024 && (size % STD_SECTSIZE)==0;
+} /* RBF_ImgSize */
+
 
 #ifdef MACOS9
   os9err RBF_Rsc( FSSpec *fs )
@@ -1751,8 +1762,7 @@ Boolean SCSI_Device( const char* os9path,
       err= getCipb( &cipb, fs ); if (err) return err;
       size= (ulong)  cipb.hFileInfo.ioFlLgLen;
       
-      if (size<8192 || (size % 2048)!=0) return E_PNNF;
-
+      if (!RBF_ImgSize( size )) return E_PNNF;
             
           oserr=FSpOpenDF( fs, fsRdPerm, &refnum );
       if (oserr) return host2os9err(oserr,E_PNNF);
@@ -1842,9 +1852,8 @@ Boolean SCSI_Device( const char* os9path,
           /* allow to access the image as a normal file */
           if (ustrcmp(adjust,pp)==0 && !IsDir(mode))   { err= E_FNA;  break; }
       
-          err= stat_( pp, &info );            if (err) { err= E_PNNF; break; }
-          if              (info.st_size < 8192 || 
-                          (info.st_size % 2048)!=0)    { err= E_FNA;  break; }
+          err= stat_( pp,  &info );           if (err) { err= E_PNNF; break; }
+          if (!RBF_ImgSize( info.st_size ))            { err= E_FNA;  break; }
 
           stream= fopen( pp,"rb" );  if (stream==NULL) { err= E_PNNF; break; }
           cnt= fread( &bb, 1,sizeof(bb), stream );
