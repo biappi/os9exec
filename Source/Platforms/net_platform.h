@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2005/01/22 16:17:25  bfo
+ *    New common definitions
+ *
  *    Revision 1.2  2004/11/27 13:35:20  bfo
  *    comments added
  *
@@ -69,7 +72,11 @@ static netInstalled= false;
 
 
 
-#if defined MACOS9
+#ifdef MACOS9
+  #ifdef MPW
+    typedef UInt32 OTOpenFlags; // not defined here
+  #endif
+  
   EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
                                OTOpenFlags        oflag,
                                TEndpointInfo*     info,
