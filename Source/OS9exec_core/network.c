@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2005/01/22 16:20:54  bfo
+ *    Unified OT calling interface for Classic and Carbon
+ *
  *    Revision 1.29  2004/12/10 10:58:06  bfo
  *    zero reading correction
  *
@@ -726,7 +729,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
     ushort   fPort;
     #define  ALLOC_PORT 1025
     
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
       TEndpointInfo info;
       TBind         bindReq;
       char*         kN;
@@ -911,7 +914,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
     ushort        fPort;
     Boolean       isRaw;
     
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
       TCall sndCall;
       char* kN;
       OTResult lookResult;
@@ -1070,7 +1073,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     ulong*       cpt;
     SOCKET       epNew;
     
-    #if defined powerc && !defined __MACH__
+    #ifdef MACOS9
       OSStatus state;
       OTResult lookResult;
     #endif

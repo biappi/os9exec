@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2005/04/17 20:17:56  bfo
+ *    Special handling for MPW
+ *
  *    Revision 1.3  2005/01/22 16:17:25  bfo
  *    New common definitions
  *
@@ -73,8 +76,10 @@ static netInstalled= false;
 
 
 #ifdef MACOS9
-  #ifdef MPW
-    typedef UInt32 OTOpenFlags; // not defined here
+  #ifdef MPW // not defined here
+    typedef struct OTConfiguration* OTConfigurationRef;
+    typedef UInt32                  OTOpenFlags;
+    typedef ByteCount               OTByteCount;
   #endif
   
   EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
