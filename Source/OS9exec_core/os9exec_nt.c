@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2005/04/15 11:51:45  bfo
+ *    Reduced size of RBF images is supported now, 2005 adaption
+ *
  *    Revision 1.41  2005/01/22 16:23:20  bfo
  *    Changed to Version V3.26
  *
@@ -637,7 +640,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x26;
+	exec_revision= 0x27;
 	#endif
 } /* getversions */
 

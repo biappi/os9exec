@@ -1242,8 +1242,13 @@
           05-03-07  Bfo     SCSI vars combined into a struct.
           05-03-13  Bfo     Reduced size for RBF images introduced.
           05-04-15  Bfo     Checkin for SourceForge
-    3.26  05-??-??  Bfo
-    -------------------    
+    3.26  05-04-16  Bfo     Release together with SPECTRAPOT V5.58, Last version for CodeWarrior V8.
+    -------------------
+    
+          05-04-17  Bfo     Change to CodeWarrior V9 (nothing must be adapted).
+    3.27  05-??-??  Bfo     ...
+    -------------------
+       
 */
 
 
