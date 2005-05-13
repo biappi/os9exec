@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2005/04/15 11:13:04  bfo
+ *    Reduced size of RBF images is supported now
+ *
  *    Revision 1.41  2004/12/03 23:54:51  bfo
  *    MacOSX MACH adaptions
  *
@@ -103,7 +106,7 @@
 #include "os9exec_incl.h"
 #include "filescsi.h"
 
-#define  SegSize 5
+#define  SegSize 5 // number of bytes per segment
 
 
 /* the RBF device entry itself */			
@@ -134,7 +137,7 @@ typedef struct {
 			byte*    tmp_sct; 			       /* temporary buffer sector */
 			Boolean  wProtected;			     /* true, if write  protected */
 			Boolean  fProtected;			     /* true, if format protected */
-			Boolean  reducedImg;           /* true, if reduced img size is allowed/supported */
+			Boolean  imgMode;              /* true, if reduced img size is allowed/supported */
 			Boolean  multiSct;             /* true, if multi sector support */
 			
 	    // #ifdef RAM_SUPPORT
@@ -627,10 +630,11 @@ static void GetTop( ushort pid, rbfdev_typ* dev )
   ulong  sv= dev->imgScts;
   ulong img;
   
-//upo_printf( "map=%d sect=%d pos=%d\n", map, sect, pos );
+/**/upo_printf( "map=%d sect=%d pos=%d\n", map, sect, pos );
   
   if (last==0) last= sect;
   
+  // search for the last allocated position at the allocation map
   while (pos>=sect) {
     err= syspath_seek( pid,  sp,  pos );                       if (err) break;
                                   len= sect;
@@ -648,21 +652,34 @@ static void GetTop( ushort pid, rbfdev_typ* dev )
   
   while (b) { b= b<<1; offs++; }
 
-//upo_printf( "GetTop v img=%d tot=%d\n", dev->imgScts, dev->totScts );
+/**/upo_printf( "GetTop v img=%d tot=%d\n", dev->imgScts, dev->totScts );
   dev->imgScts= ( ( pos-sect+last )*BpB + offs )*dev->clusterSize;
-//upo_printf( "GetTop n img=%d tot=%d\n", dev->imgScts, dev->totScts );
+/**/upo_printf( "GetTop n img=%d tot=%d\n", dev->imgScts, dev->totScts );
   
   if (sv>dev->imgScts) {
-//  upo_printf( "REDUCE\n" );
+/**/  upo_printf( "REDUCE\n" );
     img= dev->imgScts*sect;
-//  upo_printf( "REDUCE img=%d\n",  img );
+/**/  upo_printf( "REDUCE img=%d\n",  img );
     err= syspath_setstat( pid, sp, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
-//  upo_printf( "REDUCED err=%d\n", err );
+/**/  upo_printf( "REDUCED err=%d\n", err );
   } // if
   
-//upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
+/**/upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
 } /* GetTop */
 
+
+static void GetFull( ushort pid, rbfdev_typ* dev )
+{
+  os9err err;
+  short  sp  = dev->sp_img;
+  ulong  sect= dev->sctSize;
+  ulong  img = dev->totScts*sect;
+  
+  err= syspath_setstat( pid, sp, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
+  if (!err) dev->imgScts= dev->totScts;
+  
+  upo_printf( "FULL AGAIN err=%d\n", err );
+} /* GetFull */
 
 
 static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore )
@@ -730,14 +747,14 @@ static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore 
 
 static void CutPath( char* s )
 {
-    int  ii,len= strlen( s );
-    for (ii=len-1; ii>=0; ii--) {
-        if (s[ii]==PSEP) { strcpy( s,&s[ii+1] ); break; }
-    } /* for */
+  int  ii,len= strlen( s );
+  for (ii=len-1; ii>=0; ii--) {
+     if (s[ii]==PSEP) { strcpy( s,&s[ii+1] ); break; }
+  } /* for */
 } /* CutPath */
 
 
-static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pathname, 
+static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pathName, 
                           ushort mode )
 {
     #define R0 "/r0"
@@ -755,14 +772,17 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
           ulong lr0= strlen( R0 );
           if (ustrcmp( mnt_name, "r0" )==0) return E_UNIT;
          
-          len= strlen( pathname );
-          if (ustrcmp( pathname, "r0" )==0 || len<lr0) return E_UNIT;
-          q=           pathname + len-lr0;
+          len= strlen( pathName );
+          if (ustrcmp( pathName, "r0" )==0 || len<lr0) return E_UNIT;
+          q=           pathName + len-lr0;
           if (ustrcmp( q, R0 )==0 ) return E_UNIT;
         #endif
-        
-        err= syspath_open   ( pid, &sp, type,pathname,mode ); if (err) return err;
+        upe_printf( "OpenImage1 '%s'\n", pathName );
+       
+        err= syspath_open   ( pid, &sp, type,pathName,mode ); if (err) return err;
+        upe_printf( "OpenImage2 '%s' err=%d\n", pathName, err );
         err= syspath_gs_size( pid,  sp, &iSize );             if (err) break;
+        upe_printf( "iSize=%d\n", iSize );
         if (!RBF_ImgSize( iSize )) { err= E_FNA; break; }
       
                                          len= sizeof(bb);
@@ -779,6 +799,7 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
       //upo_printf( "name1='%s' size=%d %d\n", pathname, imgScts, totScts );
 
              tSize= totScts*sctSize;
+        upe_printf( "totScts=%d\n", tSize );
         if ((tSize %    2048)!=0 ||
              tSize <    8192     ||
             (iSize % sctSize)!=0) { err= E_FNA; break; }
@@ -790,26 +811,27 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
     } while (false);
     
     if (err) { cer= syspath_close( 0, sp ); return err; }
-    strcpy( dev->img_name,pathname );
+    strcpy( dev->img_name,pathName );
     
     /* if not the complete name at the image */
     if     (ustrcmp( &dev->img_name[1],dev->name )==0) {
-            strcpy (  dev->img_name, pathname  );
-    }
+            strcpy (  dev->img_name, pathName  );
+    } // if
 
     if     (ustrcmp( &dev->img_name[1],dev->name )==0) {
         strcpy     (  dev->img_name, startPath );
         MakeOS9Path(  dev->img_name );
-        strcat     (  dev->img_name, pathname  );
+        strcat     (  dev->img_name, pathName  );
         
         if   (!FileFound( dev->img_name )) {
             strcpy     (  dev->img_name, strtUPath );
             MakeOS9Path(  dev->img_name );
-            strcat     (  dev->img_name, pathname  );
+            strcat     (  dev->img_name, pathName  );
         }
-    }
+    } // if
     
     EatBack( dev->img_name );
+    upe_printf( "EndImgName '%s'\n", dev->img_name );
     return 0;                                                         
 } /* Open_Image */
 
@@ -1195,7 +1217,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
 	
     dev->nr        = cdv;          /* already done ?? */
     dev->wProtected= mnt_wProtect; /* if not otherwise defined */
-    dev->reducedImg= mnt_reducedImg;
+    dev->imgMode   = mnt_imgMode;
     dev->fProtected= false;
     dev->multiSct  = true;         /* is now supported */
     dev->currPos   = UNDEF_POS;    /* to make access faster: no seeks all the time */
@@ -1285,13 +1307,18 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                    dev->tmp_sct= NULL;
     }
     else {
-    //upo_printf( "IMGSECS=%d\n", dev->imgScts );
-      if ((dev->reducedImg ||
-           dev->imgScts<dev->totScts) && !dev->isRAM && !IsSCSI( dev )) {
+      if ((dev->imgMode==Img_Reduced ||
+          (dev->imgMode==Img_Unchanged && dev->imgScts<dev->totScts)) && 
+          !dev->isRAM && !IsSCSI( dev )) {
+        upo_printf( "vor TOPALLOC\n" );
         GetTop( pid, dev );
-      //upo_printf( "TOPALLOC=%d of %d\n", dev->imgScts, dev->totScts );
+        upo_printf( "TOPALLOC=%d of %d\n", dev->imgScts, dev->totScts );
       } // if
-    }
+      
+      if (dev->imgMode==Img_FullSize) {
+        GetFull( pid, dev );
+      } // if
+    } // if
         
     sprintf( ers,"  #000:%03d", err );
     debugprintf(dbgFiles,dbgNorm,("# RBF open: \"%s\" (%d%s%s)\n", 
@@ -1327,7 +1354,7 @@ static void mount_usage( char* name, _pid_ )
 
 os9err MountDev( ushort pid, char* name, char* mnt_dev, 
                              short adapt, ushort scsibus, short scsiID, ushort scsiLUN, 
-                             int ramSize, Boolean wProtect, Boolean reducedImg )
+                             int ramSize, Boolean wProtect, int imgMode )
 {
     os9err    err= 0;
     char      tmp[OS9NAMELEN];
@@ -1340,6 +1367,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     /* commented out: wil be done at "filestuff.c" */
 //  MakeOS9Path( name );
 
+    upe_printf( "Mounty1 '%s'\n", mnt_dev );
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
     /* NOTE: mnt_name is only valid within this context here */
@@ -1373,26 +1401,29 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
         if (err) name= mnt_name; /* for error output */
     } /* if */
 
-    mnt_wProtect  = wProtect;
-    mnt_reducedImg= reducedImg;
+    mnt_wProtect= wProtect;
+    mnt_imgMode = imgMode;
     
     if (!err) {                  type= fRBF;
         if (mnt_scsiID==NO_SCSI) type= IO_Type( pid,name, poDir );
         
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' type='%s'\n", 
                                           name, mnt_name,TypeStr(type) ));
+        upe_printf( "Mounty2 '%s'\n", mnt_dev );
         err= syspath_open( pid, &sp,type, name, poDir );
+        upe_printf( "Mounty3 '%s' err=%d\n", mnt_dev, err );
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' err=%d\n",
                                           name, mnt_name,err ));
     } // if
 
-    mnt_wProtect  = false; /* switch them off again */
-    mnt_reducedImg= false;
-    mnt_name      = "";
-    mnt_scsiID    = NO_SCSI;
-    mnt_ramSize   = 0;
+    mnt_wProtect= false; /* switch them off again */
+    mnt_imgMode = Img_Unchanged;
+    mnt_name    = "";
+    mnt_scsiID  = NO_SCSI;
+    mnt_ramSize = 0;
     
     if   (!err) err= syspath_close( pid, sp );
+    upe_printf( "Mounty4 '%s' err=%d\n", mnt_dev, err );
     return err;
 } /* MountDev */
 
@@ -1410,7 +1441,7 @@ os9err int_mount( ushort pid, int argc, char** argv )
     int       ramSize = 0;
     
     Boolean   wProtect  = false;
-    Boolean   reducedImg= false;
+    int       imgMode   = Img_Unchanged;
     char      *p;
     int       k;
     
@@ -1422,62 +1453,68 @@ os9err int_mount( ushort pid, int argc, char** argv )
              p= argv[ k ];    
         if (*p=='-') { 
             p++;
-            switch (tolower(*p)) {
-                case '?' :  mount_usage( argv[0], pid ); return 0;
+            switch (*p) {
+                case '?' : mount_usage( argv[0], pid ); return 0;
 
-                case 'w' :  wProtect  = true; break;
-                case 'i' :  reducedImg= true; break;
+                case 'w' : wProtect= true;         break;
+                case 'i' : imgMode = Img_Reduced;  break;
+                case 'I' : imgMode = Img_FullSize; break;
 
 				        #ifdef windows32
-                  case 'a' :  if (*(p+1)=='h') {
-                                  upho_printf("Current defaults: Adaptor=SCSI%d, Bus=%d\n\n",
-                                               defSCSIAdaptNo,defSCSIBusNo);
-                                  scsiadaptor_help();
-                                  return 0;    
-                              }
-                              if (*(p+1)=='=') p+=2;
-                              else {  k++; /* next arg */
-                                  if (k>=argc) break;
-                                  p= argv[k];
-                              }
-                              sscanf( p,"%hd", &adapt );
-                              break;
+                  case 'a' : if (*(p+1)=='h') {
+                               upho_printf("Current defaults: Adaptor=SCSI%d, Bus=%d\n\n",
+                                            defSCSIAdaptNo,defSCSIBusNo);
+                               scsiadaptor_help();
+                               return 0;    
+                             } // if
+                             
+                             if (*(p+1)=='=') p+=2;
+                             else { k++; /* next arg */
+                               if  (k>=argc) break;
+                               p= argv[k];
+                             } // if
+                             
+                             sscanf( p,"%hd", &adapt );
+                             break;
                             
-                  case 'b' :  if (*(p+1)=='=') p+=2;
-                              else {  k++; /* next arg */
-                                  if (k>=argc) break;
-                                  p= argv[k];
-                              }
-                              sscanf( p,"%hd", &scsibus );
-                              break;
+                  case 'b' : if (*(p+1)=='=') p+=2;
+                             else { k++; /* next arg */
+                               if  (k>=argc) break;
+                               p= argv[k];
+                             } // if
+                             
+                             sscanf( p,"%hd", &scsibus );
+                             break;
                 #endif
                             
-                case 's' :  if (*(p+1)=='=') p+=2;
-                            else {  k++; /* next arg */
-                                if (k>=argc) break;
-                                p= argv[k];
-                            }
-                            if (sscanf( p,"%hd", &scsiID )<1) scsiID= NO_SCSI;
-                            break;
+                case 's' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           if (sscanf( p,"%hd", &scsiID )<1) scsiID= NO_SCSI;
+                           break;
 
-                case 'l' :  if (*(p+1)=='=') p+=2;
-                            else {  k++; /* next arg */
-                                if (k>=argc) break;
-                                p= argv[k];
-                            }
-                            sscanf( p,"%hd", &scsiLUN );
-                            break;
+                case 'l' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           
+                           sscanf( p,"%hd", &scsiLUN );
+                           break;
 
-                case 'r' :  if (*(p+1)=='=') p+=2;
-                            else {  k++; /* next arg */
-                                if (k>=argc) break;
-                                p= argv[k];
-                            }
-                            sscanf( p,"%d", &ramSize );
-                            break;
+                case 'r' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           
+                           sscanf( p,"%d", &ramSize );
+                           break;
                             
-                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            mount_usage( argv[0],pid ); return 1;
+                default  : upe_printf("Error: unknown option '%c'!\n",*p); 
+                           mount_usage( argv[0],pid ); return 1;
             }   
         }
         else {
@@ -1497,7 +1534,8 @@ os9err int_mount( ushort pid, int argc, char** argv )
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
         err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, 
-                       ramSize, wProtect, reducedImg );
+                       ramSize, wProtect, imgMode );
+    upe_printf( "int_mount done err=%d\n", err );
     if (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
     return 0;
 } /* int_mount */
@@ -1616,10 +1654,10 @@ static Boolean Mega( long long size, float *r )
 {
     #define MegaLim 10000.0;
     Boolean m;
-                           *r= size/KByte;
-    m = *r>MegaLim; if (m) *r= *r  /KByte;
+                          *r= size/KByte;
+    m= *r>MegaLim; if (m) *r= *r  /KByte;
     return m;
-}
+} // Mega
 
 
 
@@ -1674,13 +1712,13 @@ static void Disp_RBF_DevsLine( rbfdev_typ* rb, char* name, Boolean statistic )
                      rb->rMiss, rb->rTot,
                      rb->wMiss, rb->wTot );
     else 
-        upo_printf( "%-8s %-7s %2d %4d %-3s %-23s %15s\n", 
+        upo_printf( "%-8s %-7s %2d %4d %-3s %-21s %17s\n", 
                      StrBlk_Pt( w,7 ),
                      "rbf", 
                      rb->nr,
                      rb->sctSize,
                      rb->wProtected ? "yes":"no",
-                     StrBlk_Pt( u,23 ),
+                     StrBlk_Pt( u,21 ),
                      v );
 } /* Disp_RBF_DevsLine */
 
