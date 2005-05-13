@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2005/04/15 11:50:48  bfo
+ *    Reduced size of RBF images is supported now, struct for SCSI
+ *
  *    Revision 1.35  2005/01/22 16:15:40  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -576,6 +579,12 @@ typedef struct {
             ulong     fddir;   /* current FD logical sector of the dir  */
             ulong     deptr;   /* dir entry ptr                         */
         } rbf_typ;
+
+
+/* Mount modes for RBF images */
+#define  Img_Unchanged 0 // as is
+#define  Img_Reduced   1 // reduced;   mount -i
+#define  Img_FullSize  2 // full size; mount -I
 
 
 /* the SCSI device variables */
@@ -1163,7 +1172,7 @@ extern  short   mnt_scsiBus;
 extern  short   mnt_scsiLUN;
 
 extern  Boolean mnt_wProtect;
-extern  Boolean mnt_reducedImg;
+extern  Boolean mnt_imgMode;
 
 /* additional memory for all processes */
 extern ulong memplusall;
@@ -1204,8 +1213,6 @@ void    eAdvanceCursor(void);
 
 /* OS9exec builtin module definitons */
 #define OS9exec_name "OS9exec"   /* the name of the built-in OS9exec module */
-
-
 
 
 /* routines */

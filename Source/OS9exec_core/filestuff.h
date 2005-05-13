@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2005/04/15 11:48:38  bfo
+ *    Reduced size of RBF images is supported now
+ *
  *    Revision 1.10  2004/11/27 12:12:07  bfo
  *    "MyInetAddr" no longer implemented here
  *
@@ -147,7 +150,7 @@ void    ConsPutcEdit    ( char  c, Boolean alf, char eorch );
 os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, 
                           short  adapt, ushort scsibus, 
                           short scsiID, ushort scsiLUN, 
-                          int  ramSize, Boolean wProtect, Boolean reducedImg );
+                          int  ramSize, Boolean wProtect, int imgMode );
                              
 os9err  int_mount       ( ushort pid, int argc, char **argv );
 os9err  int_unmount     ( ushort pid, int argc, char **argv );

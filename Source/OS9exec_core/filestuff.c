@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2005/04/15 11:49:28  bfo
+ *    Reduced size of RBF images is supported now
+ *
  *    Revision 1.21  2005/01/22 15:56:50  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -431,7 +434,7 @@ static void CheckH0( char* name, char* p, char** p3 )
       q= name + strlen( name )-2; *q= NUL; /* cut "h0" again */
       strcat          ( name,"dd" );
       MakeOS9Path     ( name ); /* it might come as Mac or DOS path name ... --> OS-9 notation */
-      err= MountDev( 0, name,p, 0,0,NO_SCSI,0,0, false,false ); if (err) return;
+      err= MountDev( 0, name,p, 0,0,NO_SCSI,0,0, false,Img_Unchanged ); if (err) return;
     
       strcpy( name,"/h0" ); *p3= name;
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2005/04/17 15:15:03  bfo
+ *    Change to V3.27
+ *
  *    Revision 1.42  2005/04/15 11:51:45  bfo
  *    Reduced size of RBF images is supported now, 2005 adaption
  *
@@ -372,14 +375,14 @@ Boolean with_intcmds  = true;   /* by default, internal commands will be used */
 ulong   spininterval= DEFAULTSPININTERVAL;
 
 /* mount device name and write protection   */
-char*   mnt_name      = "";
-int     mnt_ramSize   =  0;
-int     mnt_scsiID    = NO_SCSI;
-short   mnt_scsiAdapt = -1; // use default adaptor
-short   mnt_scsiBus   = -1; // use default bus
-short   mnt_scsiLUN   = -1; // use default LUN
-Boolean mnt_wProtect  = false;
-Boolean mnt_reducedImg= false;
+char*   mnt_name     = "";
+int     mnt_ramSize  =  0;
+int     mnt_scsiID   = NO_SCSI;
+short   mnt_scsiAdapt= -1; // use default adaptor
+short   mnt_scsiBus  = -1; // use default bus
+short   mnt_scsiLUN  = -1; // use default LUN
+Boolean mnt_wProtect = false;
+Boolean mnt_imgMode  = false;
 /* ---------------------------------------- */
 
 
@@ -908,13 +911,13 @@ static void titles( void )
        #endif
        upho_printf("- Mac Serial Interface Version            (c) 2000 by B. Forster\n");
      
-     #elif defined(windows32)
+     #elif defined windows32
        upho_printf("- Windows Console Version\n");
      #elif defined linux
        upho_printf("- Linux XTerm Version\n");
      #else
-       /* unknown */
-       upho_printf("- Unknown System\n");
+       upho_printf("- Unknown System\n"); /* unknown */
+
      #endif
      
    #else
