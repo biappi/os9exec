@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2005/01/22 16:22:30  bfo
+ *    SS_Opt: fdPos info for foreign file system (problem with "diff" fixed).
+ *
  *    Revision 1.20  2004/12/03 23:56:04  bfo
  *    MacOSX MACH adaptions
  *
@@ -1192,35 +1195,132 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 
 
 /* set file size */
-os9err pFsetsz( _pid_, syspath_typ* spP, ulong *sizeP )
+os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
 
-    #ifdef windows32
-      #define N_Tries 100
-      int     ii, n, cnt;
-      char    name[OS9NAMELEN];
-      FILE*   tmp;
-      byte    a;
-      Boolean doRead;
-      
-    #elif defined linux
-      int fd;
-    #endif
-    
-   
     #ifdef MACFILES
       OSErr oserr= SetEOF( spP->u.disk.u.file.refnum, (long)*sizeP );
       err= host2os9err( oserr,E_SEEK );
 
     #else
       #ifdef windows32
+        HANDLE hFile;
+        DWORD  pos;
         fpos_t tmp_pos;
-        fgetpos( spP->stream, &tmp_pos );  /* save current position */
+        int    fno;
+        byte   b;
+        ulong  n;
+        ulong  p;
+
+        fgetpos( spP->stream, &tmp_pos );  // save current position
+        fflush ( spP->stream );
+        
+        fno  = _fileno( spP->stream ); 
+        hFile= (HANDLE)_get_osfhandle( fno );
+        upo_printf( "Set FileSize xxx: '%s' %d %08X %d\n", spP->fullName, fno, hFile, *sizeP );
+        
+        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
+        upo_printf( "XXX pos=%d err=%d\n", pos, errno );
+        
+        if (tmp_pos>*sizeP)  tmp_pos= *sizeP;
+        SetEndOfFile( hFile );
+        upo_printf( "YYY err=%d\n", errno );
+
+                                           n= sizeof(b);
+                                 p= *sizeP-n;
+        err= pFseek ( pid, spP, &p );
+        upo_printf( "S err=%d\n", err );
+        err= pFread ( pid, spP,           &n, &b );
+        upo_printf( "R err=%d %d\n", err, b );
+        
+                                           n= sizeof(b);
+                                 p= *sizeP-n;
+        err= pFseek ( pid, spP, &p );
+        upo_printf( "S err=%d\n", err );
+        err= pFwrite( pid, spP,           &n, &b );
+        upo_printf( "W err=%d\n", err );
       
-        /* create a temporary file and copy until length */
+        err= pFseek ( pid, spP, &tmp_pos );
+        upo_printf( "S err=%d\n", err );
+    
+      //fsetpos( spP->stream, &tmp_pos); // restore position
+      //fflush ( spP->stream );
+
+
+        /* ----------------------------------------------------
+        HANDLE hFile;
+        DWORD  pos;
+        fpos_t tmp_pos;
+
+        fgetpos( spP->stream, &tmp_pos );  // save current position
+        fclose ( spP->stream );
+        
+        hFile= CreateFile( spP->fullName, GENERIC_WRITE,FILE_SHARE_WRITE,NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0 );
+        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
+        SetEndOfFile( hFile );
+
+        if (hFile) CloseHandle( hFile );
+        if (tmp_pos>*sizeP) tmp_pos= *sizeP;
+        
+                spP->stream= fopen( spP->fullName,"rb+" ); // %% make it more precise !!
+        fsetpos(spP->stream, &tmp_pos); // restore position
+        */
+
+        /* -----------------------------------------------------
+        #define N_Tries 100
+        int     ii, n, cnt;
+        char    name[OS9NAMELEN];
+        FILE*   tmp;
+        byte    a;
+        Boolean doRead;
+        fpos_t  tmp_pos;
+    
+        HANDLE hFile;
+        DWORD  pos;
+      //void*  buf;
+        fpos_t tmp_pos;
+
+        fgetpos( spP->stream, &tmp_pos );  // save current position
+        fclose ( spP->stream );
+        
+        hFile= CreateFile( spP->fullName, GENERIC_WRITE,FILE_SHARE_WRITE,NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0 );
+      //d= GetLastError();
+      //upe_printf( "Set FileSize a): '%s' %08X %d %d\n", spP->fullName, hFile, *sizeP,d );
+        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
+      //upe_printf( "Set FileSize 1): '%s' %08X %d %d\n", spP->fullName, hFile, *sizeP,d );
+        SetEndOfFile( hFile );
+
+        (*
+        if (!hFile) {
+          FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                      FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL,d,0,
+                      (LPTSTR) &buf,0,NULL);
+
+          MessageBox(NULL, (LPTSTR)buf, NULL, MB_OK | MB_ICONINFORMATION);
+          // Free the buffer
+          LocalFree(buf);
+        }
+        *)
+        
+        if (hFile) CloseHandle( hFile );
+        if (tmp_pos>*sizeP) tmp_pos= *sizeP;
+        
+                spP->stream= fopen( spP->fullName,"rb+" ); // %% make it more precise !!
+      //d= GetLastError();
+      //upe_printf( "Set FileSize b): '%s' %08X %d %d\n", spP->fullName, spP->stream, *sizeP,d );
+        fsetpos(spP->stream, &tmp_pos); // restore position
+      //d= GetLastError();
+      //upe_printf( "Set FileSize b): '%s' %08X %d %d\n", spP->fullName, spP->stream, tmp_pos,d );
+        
+        (*     
+      //fgetpos( spP->stream, &tmp_pos );  // save current position
+      
+        // create a temporary file and copy until length
         ii= 1;
-        for (ii=0; ii<N_Tries; ii++) { /* try some tmp files */
+        for (ii=0; ii<N_Tries; ii++) { // try some tmp files
             sprintf( name,".tmp.%d", ii++ );
             
                 tmp= fopen( name,"wb+" );
@@ -1232,30 +1332,34 @@ os9err pFsetsz( _pid_, syspath_typ* spP, ulong *sizeP )
         fsetpos( spP->stream, &n );
         
         doRead= true;
-        for (ii=0; ii<*sizeP; ii++) { /* copy the file content */
-            if (doRead) { /* fill with NUL, if longer */
+        for (ii=0; ii<*sizeP; ii++) { // copy the file content
+            if (doRead) { // fill with NUL, if longer
                     cnt= fread( &a, 1,1, spP->stream );
                 if (cnt==0) { a= NUL; doRead= false; }
-            } /* if */
+            } // if
             
             cnt= fwrite( &a, 1,1, tmp );
-        } /* for */
+        } // for
 
         
-        fclose( spP->stream ); /* close them both */
+        fclose( spP->stream ); // close them both
         fclose( tmp );
     
-        /* and change to original name */
+        // and change to original name
         err= remove(        spP->fullName ); if (err) return E_PNNF;
         err= rename( name,  spP->fullName ); if (err) return E_PNNF;
         spP->stream= fopen( spP->fullName, "rb+" );
 
         if     (tmp_pos!=*sizeP) {
             if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
-          fsetpos(spP->stream, &tmp_pos); /* restore position */
+          fsetpos(spP->stream, &tmp_pos); // restore position
         }
-
+        *)
+        */
+        
       #elif defined linux
+        int fd;
+        
         long tmp_pos= ftell( spP->stream ); /* make it compatible for gcc 3.2 */
 
         fflush     ( spP->stream );        /* unbuffer everything */
