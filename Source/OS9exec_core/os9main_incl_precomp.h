@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2005/06/30 15:22:44  bfo
+ *    Adapted for universal use
+ *
  *    Revision 1.15  2005/06/30 11:53:47  bfo
  *    Mach-O support
  *
@@ -94,7 +97,7 @@
 
 /* WINTEL can't be separated :-) */
 #ifdef __INTEL__
-  // except for the bright future
+  // except for the "bright future"
   #ifndef macintosh
     #define windows32
   #endif

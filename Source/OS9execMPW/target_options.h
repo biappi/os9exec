@@ -18,6 +18,9 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
+
+#define MPW
+
 // Target options
   #define INT_CMD         // internal commands       supported
   #define CON_SUPPORT     // conole and TTYs         supported
