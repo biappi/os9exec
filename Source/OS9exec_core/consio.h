@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2005/01/22 15:45:22  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.6  2004/12/03 23:53:12  bfo
  *    MacOSX MACH adaptions
  *
@@ -86,7 +89,7 @@ extern  ulong        gNetLast;
     extern short TermWinScrolls;
   #endif
 
-  #ifdef win_linux
+  #ifdef win_unix
     extern ttydev_typ main_mco;
   #endif
    
