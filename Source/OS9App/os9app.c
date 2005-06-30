@@ -38,18 +38,42 @@
 /* ======== */
 #include "os9exec_incl.h"
 
+#ifdef windows32
+  #include <crtl.h>
+
+  void main( int argc, char** argv ) 
+  {
+    /* get environment pointers */
+    char** envp= environ; 
+        
+    os9_main( argc,argv,envp );
+  } /* main */
 
 
-void main() 
-{
+#elif defined unix
+  int main( int argc, char* argv[] )
+  {
+    char *envp[] = {
+          NULL,
+          NULL
+    };
+  
+    os9_main( argc,argv, envp );
+    return 0; // no error
+  }
+
+
+#else
+  void main() 
+  {
     const argc= 1;
     
     char *argv[]= {
-          "os9app"
-      // ,"-d"
-      // ,"20"
-      // ,"shell"
-      // ,"startup"
+         "os9app"
+     // ,"-d"
+     // ,"20"
+     // ,"shell"
+     // ,"startup"
     };
 
     char *envp[] = {
@@ -57,16 +81,17 @@ void main()
           NULL
     };
 
-
     /* set terminal options */
-    #ifndef USE_CARBON
+    #if !defined USE_CARBON
       TermWinScrolls     = 1;      // use scroll bars
       gConsoleQuickInput = true;   // get single chars
       gConsoleEcho       = 0;      // no echo
       gConsoleNLExpand   = false;  // no NL expand
     #endif
     
-    os9_main(argc,argv,envp);
-}
+    os9_main( argc,argv, envp );
+  }
+#endif
+
 /* eof */
 
