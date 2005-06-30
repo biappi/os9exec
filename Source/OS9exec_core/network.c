@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2005/04/17 20:46:49  bfo
+ *    MPW is supported again
+ *
  *    Revision 1.30  2005/01/22 16:20:54  bfo
  *    Unified OT calling interface for Classic and Carbon
  *
@@ -146,7 +149,7 @@
   #define WSA_ASYNC WM_USER+1
 #endif
 
-#if defined linux || defined __MACH__
+#ifdef unix
   #include <sys/utsname.h>
   #include <netdb.h>
   #include <netinet/in.h>
@@ -158,6 +161,10 @@
   
   #define INVALID_SOCKET (-1)
   #define SOCKET_ERROR   (-1)
+
+  #ifdef __MACH__
+    #include <sys/filio.h>
+  #endif
   
   typedef struct sockaddr_in SOCKADDR_IN;
 #endif
@@ -302,7 +309,7 @@ void init_Net( fmgr_typ* f )
 #define ICMP_ECHOREPLY     0
 #define ICMP_ECHO          8
 
-#if defined win_linux || defined __MACH__
+#if defined win_unix
   #define MAX_PACKET 1024 // Max ICMP packet size
 #endif
 
@@ -317,7 +324,7 @@ typedef struct _icmphdr
 
 
 
-#if defined win_linux || defined __MACH__
+#if defined win_unix
 /* IP header structure */
 typedef struct _iphdr 
 {
@@ -427,8 +434,8 @@ static pascal void YieldingNotifier( void* /* contextPtr */, OTEventCode code,
 
 
 #ifdef windows32
-int ioctl( IN SOCKET s, IN long cmd, IN OUT u_long FAR * argp )
-{   return ioctlsocket( s,cmd, argp );
+int ioctl( IN SOCKET s, IN long cmd, IN OUT u_long FAR * argp ) {
+  return ioctlsocket( s,cmd, argp );
 }
 #endif
 
@@ -467,9 +474,9 @@ static void SetDefaultEndpointModes( SOCKET s )
       junk= OTUseSyncIdleEvents( s, true );
       OTAssert("SetDefaultEndpointModes: Could not use sync idle events", junk==noErr);
     
-    #elif defined win_linux
+    #elif defined win_unix
       ulong nonblocking= true;
-      int err= ioctl( s, FIONBIO,  &nonblocking );
+      int err= ioctl( s, FIONBIO, &nonblocking );
     
     #else
       #pragma unused(s)
@@ -486,7 +493,7 @@ static os9err GetBuffers( net_typ* net )
           net->transferBuffer= OTAllocMem_( kTransferBufferSize );
       if (net->transferBuffer==nil)  return E_NORAM;
 
-    #elif defined win_linux
+    #elif defined win_unix
           net->transferBuffer= get_mem( kTransferBufferSize );
       if (net->transferBuffer==NULL) return E_NORAM;
     #endif
@@ -505,7 +512,7 @@ os9err pNopen( _pid_, syspath_typ* spP, _modeP_, char* pathname)
     OSStatus err;
     net_typ* net= &spP->u.net;
     
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
         
@@ -532,14 +539,14 @@ os9err pNclose( _pid_, syspath_typ* spP )
     OSStatus err= 0;
     net_typ* net= &spP->u.net;
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
    
  // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound, 
  //                                            net->accepted, net->ep );       
     if (net->bound && net->ep!=nil) {
-        #ifdef macintosh
+        #ifdef MACOS9
           #ifdef powerc
                       err= OTSndOrderlyDisconnect(net->ep);
             if (!err) err= OTRcvOrderlyDisconnect(net->ep);
@@ -556,7 +563,7 @@ os9err pNclose( _pid_, syspath_typ* spP )
           err= closesocket( net->ep ); 
           release_mem     ( net->transferBuffer );
          
-        #elif defined linux
+        #elif defined unix
        // err= shutdown( net->ep, SHUT_RDWR );
           err= close   ( net->ep );
           release_mem  ( net->transferBuffer );
@@ -739,12 +746,12 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
 //    #endif
     #endif
     
-    #ifdef win_linux
-      SOCKADDR_IN   name;
+    #ifdef win_unix
+      SOCKADDR_IN name;
     #endif
 
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
     
@@ -762,7 +769,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
 //    #if __MWERKS__ >= CW7_MWERKS
 //      junk= DoNegotiateIPReuseAddrOption( net->ls, true );
 //    #endif    
-    #elif defined win_linux
+    #elif defined win_unix
           net->ep= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
       if (net->ep==INVALID_SOCKET) return E_FNA;
     #endif
@@ -791,7 +798,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
                net->ipAddress.fAddressType==0) ; /* do nothing */
           else break;
 
-        #elif defined win_linux
+        #elif defined win_unix
           #ifdef windows32
             if (net->ipAddress.fAddressType==0)  /* Windows needs AF_INET info ! */
                 net->ipAddress.fAddressType= os9_word(AF_INET);
@@ -867,7 +874,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
     #endif
 
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
     
@@ -881,7 +888,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
           err= OTListen( net->ep, &net->call );
       if (err==kOTNoDataErr) err= 0; /* this is not an error */
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       err= listen( net->ep, SOMAXCONN );
       
       #ifdef windows32
@@ -920,16 +927,16 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
       OTResult lookResult;
     #endif
     
-    #ifdef win_linux
+    #ifdef win_unix
       int          af, ty, proto; 
       SOCKADDR_IN  name;
     #endif
     
-    #if defined linux
+    #ifdef unix
       int  id, u_err;
     #endif
    
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
 
@@ -969,13 +976,13 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
           SetDefaultEndpointModes( net->ep );
           err= OTBind( net->ep, nil,nil ); if (err) return OS9_ECONNREFUSED;
           
-        #elif defined win_linux
+        #elif defined win_unix
           af= os9_word(net->ipRemote.fAddressType);
           
           if (isRaw) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
           else       { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
-          #ifdef linux
+          #ifdef unix
             if (isRaw) {
                 id= geteuid();        // printf( "%d\n",     id    );
                 u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
@@ -984,7 +991,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
           
           net->ep= socket( af, ty, proto );
           
-          #ifdef linux
+          #ifdef unix
             if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
                 u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
             }
@@ -1019,7 +1026,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
         debugprintf(dbgSpecialIO,dbgNorm, ( "connect look=%d\n", lookResult ));
       }
 
-    #elif defined win_linux
+    #elif defined win_unix
       name.sin_family     = os9_word(net->ipRemote.fAddressType);
       name.sin_port       =          net->ipRemote.fPort;
       name.sin_addr.s_addr=          net->ipRemote.fHost;        /* no big/little endian change */
@@ -1078,12 +1085,12 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
       OTResult lookResult;
     #endif
         
-    #if defined win_linux || defined __MACH__
+    #ifdef win_unix
       SOCKADDR_IN name;
       int         len;
     #endif
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
     
@@ -1125,7 +1132,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           } /* if */
       } /* if */
     
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       len= sizeof(name);
           epNew= accept( net->ep, (__SOCKADDR_ARG)&name, &len );
       if (epNew==INVALID_SOCKET) {
@@ -1290,7 +1297,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     #if defined powerc && !defined __MACH__
       TUnitData udata;
       
-    #elif defined win_linux
+    #elif defined win_unix
 //    #define DEF_PACKET_SIZE  32        // Default packet size
 
       struct sockaddr_in name;
@@ -1299,7 +1306,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
 //    int datasize = DEF_PACKET_SIZE + sizeof(IcmpHeader); ;
     #endif
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
 
@@ -1325,7 +1332,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
 
       err= OTSndUData(net->ep, &udata);
       
-    #elif defined win_linux
+    #elif defined win_unix
       memset( (char*)&name, NUL, sizeof(name));
       name.sin_family     = os9_word(net->ipRemote.fAddressType);
       name.sin_port       =          net->ipRemote.fPort;
@@ -1359,9 +1366,9 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     long        start_time;
     net_typ*    net= &spP->u.net;
     
-    #ifdef WITH_NETWORK
-      IcmpHeader  *icmp;
-    #endif
+  //#ifdef NET_SUPPORT
+      IcmpHeader *icmp;
+  //#endif
     
     #if defined powerc && !defined __MACH__
       TUnitData   udata;
@@ -1371,7 +1378,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
       // we use this buffer to hold incoming ICMP packets
       UInt8 icmp_data[5000];
       
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       char icmp_data[ MAX_PACKET ];
       struct sockaddr_in   from;
       int fromlen = sizeof(from);
@@ -1381,7 +1388,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
     #endif
     
     
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       #pragma unused(a0)
       return E_UNKSVC;
     #endif
@@ -1417,13 +1424,13 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
               }
           }
           
-        #elif defined win_linux || defined __MACH__
+        #elif defined win_unix
           do {   
-              #ifdef __MACH__
-                err= 0; n= 0;
-              #else
+            //#ifdef __MACH__
+            //  err= 0; n= 0;
+            //#else
                 err= ioctl( net->ep, FIONREAD, &n );
-              #endif
+            //#endif
               
               debugprintf(dbgSpecialIO,dbgDetail, ( "NgPCmd err=%d n=%d\n", err,n ));
 
@@ -1453,7 +1460,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
               } /* if */
               
               #ifdef linux
-                 usleep( 1000000 ); /* sleep in milliseconds */
+                 usleep( 1000000 ); /* sleep in microseconds */
               #endif
           } while (GetSystemTick() < start_time+5*60);
           
@@ -1527,7 +1534,7 @@ os9err pNready( _pid_, syspath_typ* spP, ulong *n )
           } /* if */
       } /* if */
 
-    #elif defined win_linux
+    #elif defined win_unix
       err= ioctl( net->ep, FIONREAD, n );
       if (*n==0) {
       //       err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
@@ -1561,7 +1568,7 @@ os9err pNask( ushort pid, syspath_typ* spP )
     ulong    n;
     Boolean  ok;
 
-    #ifndef WITH_NETWORK
+    #ifndef NET_SUPPORT
       return E_UNKSVC;
     #endif
 
