@@ -1246,7 +1246,14 @@
     -------------------
     
           05-04-17  Bfo     Change to CodeWarrior V9 (nothing must be adapted).
-    3.27  05-??-??  Bfo     ...
+    3.27  05-06-19  Bfo     Further preparations for the Mach-O and 'ptoc' compilations.
+    -------------------
+
+          05-06-19  Bfo     Changed to new version
+          05-06-26  Bfo     Mach-O version runs with MGR now
+          05-06-30  Bfo     Mach-O version with param support
+          05-06-30  Bfo     Good old 68k version compiled again for test
+    3.28  05-??-??  Bfo     ...
     -------------------
        
 */
