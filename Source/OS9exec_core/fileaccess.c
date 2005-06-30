@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2005/05/13 17:23:26  bfo
+ *    SetSize access improved for Windows
+ *
  *    Revision 1.21  2005/01/22 16:22:30  bfo
  *    SS_Opt: fdPos info for foreign file system (problem with "diff" fixed).
  *
@@ -593,62 +596,60 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 
 
 
-#ifdef win_linux
+#ifdef win_unix
   static void Set_FileDate( syspath_typ* spP, time_t t )
   /* Set (Windows/Linux) file date */
   {
-      #ifdef windows32
-        Boolean    isFolder= false;
-        int        hh;
-        HANDLE     hFile;
-        LPWIN32_FIND_DATA data;
-        FILETIME   cr, lastA, lastW, lastL;
-        SYSTEMTIME sy;
-        struct tm  tim;
+    #ifdef windows32
+      Boolean    isFolder= false;
+      int        hh;
+      HANDLE     hFile;
+      LPWIN32_FIND_DATA data;
+      FILETIME   cr, lastA, lastW, lastL;
+      SYSTEMTIME sy;
+      struct tm  tim;
 
-        /* open as file or as current directory */
-            hh= _lopen( spP->fullName, OF_READWRITE );
-        if (hh!=-1) hFile= (HANDLE) hh;
-        else {
-            hFile= NULL;
-            if (PathFound(spP->fullName)) {
-                    isFolder= true;
-                    hFile= FindFirstFile( spP->fullName, &data);
-                if (hFile!=NULL) {
-                    FindNextFile( hFile, &data);
-                }
-            }
+      /* open as file or as current directory */
+          hh= _lopen( spP->fullName, OF_READWRITE );
+      if (hh!=-1) hFile= (HANDLE) hh;
+      else {
+        hFile= NULL;
+        if (PathFound(spP->fullName)) {
+          isFolder= true;
+              hFile=       FindFirstFile( spP->fullName, &data );
+          if (hFile!=NULL) FindNextFile ( hFile,         &data );
         }
-        if (hFile==NULL) return;
+      }
+      if (hFile==NULL) return;
         
-        GetFileTime( hFile, &cr, &lastA, &lastW );
-        FileTimeToLocalFileTime( &lastW, &lastL );
-        FileTimeToSystemTime   ( &lastL, &sy );
+      GetFileTime( hFile, &cr, &lastA, &lastW );
+      FileTimeToLocalFileTime( &lastW, &lastL );
+      FileTimeToSystemTime   ( &lastL, &sy );
         
-        if (t==0) GetTim  ( &tim );
-        else      TConv( t, &tim );
+      if (t==0) GetTim  ( &tim );
+      else      TConv( t, &tim );
         
-        sy.wYear  = tim.tm_year+1900;
-        sy.wMonth = tim.tm_mon+1;
-        sy.wDay   = tim.tm_mday;
-        sy.wHour  = tim.tm_hour;
-        sy.wMinute= tim.tm_min;
-        sy.wSecond= tim.tm_sec;
+      sy.wYear  = tim.tm_year+1900;
+      sy.wMonth = tim.tm_mon+1;
+      sy.wDay   = tim.tm_mday;
+      sy.wHour  = tim.tm_hour;
+      sy.wMinute= tim.tm_min;
+      sy.wSecond= tim.tm_sec;
         
-        SystemTimeToFileTime   ( &sy,    &lastL );
-        LocalFileTimeToFileTime( &lastL, &lastW );
-        SetFileTime( hFile, &cr, &lastA, &lastW );
+      SystemTimeToFileTime   ( &sy,    &lastL );
+      LocalFileTimeToFileTime( &lastL, &lastW );
+      SetFileTime( hFile, &cr, &lastA, &lastW );
 
-        if (isFolder) FindClose( hFile );
-        else       _lclose( (int)hFile );
+      if (isFolder) FindClose( hFile );
+      else       _lclose( (int)hFile );
 
-      #else
-        struct utimbuf buf;
+    #elif defined linux
+      struct utimbuf buf;
       
-        buf.actime = t;
-        buf.modtime= t;
-        utime( spP->fullName, &buf );
-      #endif
+      buf.actime = t;
+      buf.modtime= t;
+      utime( spP->fullName, &buf );
+    #endif
   } /* Set_FileDate */
 #endif
 
@@ -800,7 +801,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     #else
       FILE* stream;
       
-      #if defined win_linux || defined __MACH__
+      #ifdef win_unix
         char adapted[OS9PATHLEN];
       #endif
     #endif
@@ -925,7 +926,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
       
       spP->stream= stream; /* assign stream */
     
-      #ifdef win_linux
+      #ifdef win_unix
                 spP->dDsc= NULL; /* this is not a directory */
         strcpy( spP->fullName, pp );
       #endif
@@ -1098,7 +1099,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       char cmd[OS9PATHLEN];
     #endif
         
-    #if defined win_linux || defined __MACH__
+    #ifdef win_unix
       char adapted[OS9PATHLEN];
     #endif
     
@@ -1125,7 +1126,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
           HandleEvent();
       }
     
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       err     = AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname= adapted;
       
@@ -1165,20 +1166,20 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
     os9err err= 0;
     
-    #if defined win_linux || defined __MACH__
+    #ifdef win_linux
       int    fd= fileno( spP->stream );
       struct stat info;
     #endif
 
     
-    #ifdef MACFILES
+    #if defined MACFILES
       OSErr oserr= GetEOF( spP->u.disk.u.file.refnum, (long*)sizeP );
       err= host2os9err( oserr,E_SEEK );
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_linux
           err= fstat( fd,&info );
       if (err) return E_SEEK;
-      *sizeP= info.st_size;
+      *sizeP= info.st_size; // for __MACH__, <st_size> is unfortunately 0
       
     #else
       fpos_t tmp_pos;
@@ -1198,180 +1199,56 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
+    byte   b;
+    ulong  n;
+    ulong  p;
+    fpos_t tmp_pos= 0;
 
     #ifdef MACFILES
       OSErr oserr= SetEOF( spP->u.disk.u.file.refnum, (long)*sizeP );
-      err= host2os9err( oserr,E_SEEK );
+      err= host2os9err( oserr,E_SEEK ); if (err) return err;
 
     #else
       #ifdef windows32
+        int    fno;
         HANDLE hFile;
         DWORD  pos;
-        fpos_t tmp_pos;
-        int    fno;
-        byte   b;
-        ulong  n;
-        ulong  p;
-
+ 
         fgetpos( spP->stream, &tmp_pos );  // save current position
         fflush ( spP->stream );
         
         fno  = _fileno( spP->stream ); 
         hFile= (HANDLE)_get_osfhandle( fno );
-        upo_printf( "Set FileSize xxx: '%s' %d %08X %d\n", spP->fullName, fno, hFile, *sizeP );
-        
         pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
-        upo_printf( "XXX pos=%d err=%d\n", pos, errno );
-        
-        if (tmp_pos>*sizeP)  tmp_pos= *sizeP;
-        SetEndOfFile( hFile );
-        upo_printf( "YYY err=%d\n", errno );
-
-                                           n= sizeof(b);
-                                 p= *sizeP-n;
-        err= pFseek ( pid, spP, &p );
-        upo_printf( "S err=%d\n", err );
-        err= pFread ( pid, spP,           &n, &b );
-        upo_printf( "R err=%d %d\n", err, b );
-        
-                                           n= sizeof(b);
-                                 p= *sizeP-n;
-        err= pFseek ( pid, spP, &p );
-        upo_printf( "S err=%d\n", err );
-        err= pFwrite( pid, spP,           &n, &b );
-        upo_printf( "W err=%d\n", err );
-      
-        err= pFseek ( pid, spP, &tmp_pos );
-        upo_printf( "S err=%d\n", err );
-    
-      //fsetpos( spP->stream, &tmp_pos); // restore position
-      //fflush ( spP->stream );
-
-
-        /* ----------------------------------------------------
-        HANDLE hFile;
-        DWORD  pos;
-        fpos_t tmp_pos;
-
-        fgetpos( spP->stream, &tmp_pos );  // save current position
-        fclose ( spP->stream );
-        
-        hFile= CreateFile( spP->fullName, GENERIC_WRITE,FILE_SHARE_WRITE,NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0 );
-        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
-        SetEndOfFile( hFile );
-
-        if (hFile) CloseHandle( hFile );
-        if (tmp_pos>*sizeP) tmp_pos= *sizeP;
-        
-                spP->stream= fopen( spP->fullName,"rb+" ); // %% make it more precise !!
-        fsetpos(spP->stream, &tmp_pos); // restore position
-        */
-
-        /* -----------------------------------------------------
-        #define N_Tries 100
-        int     ii, n, cnt;
-        char    name[OS9NAMELEN];
-        FILE*   tmp;
-        byte    a;
-        Boolean doRead;
-        fpos_t  tmp_pos;
-    
-        HANDLE hFile;
-        DWORD  pos;
-      //void*  buf;
-        fpos_t tmp_pos;
-
-        fgetpos( spP->stream, &tmp_pos );  // save current position
-        fclose ( spP->stream );
-        
-        hFile= CreateFile( spP->fullName, GENERIC_WRITE,FILE_SHARE_WRITE,NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0 );
-      //d= GetLastError();
-      //upe_printf( "Set FileSize a): '%s' %08X %d %d\n", spP->fullName, hFile, *sizeP,d );
-        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
-      //upe_printf( "Set FileSize 1): '%s' %08X %d %d\n", spP->fullName, hFile, *sizeP,d );
-        SetEndOfFile( hFile );
-
-        (*
-        if (!hFile) {
-          FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_FROM_SYSTEM |
-                      FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL,d,0,
-                      (LPTSTR) &buf,0,NULL);
-
-          MessageBox(NULL, (LPTSTR)buf, NULL, MB_OK | MB_ICONINFORMATION);
-          // Free the buffer
-          LocalFree(buf);
-        }
-        *)
-        
-        if (hFile) CloseHandle( hFile );
-        if (tmp_pos>*sizeP) tmp_pos= *sizeP;
-        
-                spP->stream= fopen( spP->fullName,"rb+" ); // %% make it more precise !!
-      //d= GetLastError();
-      //upe_printf( "Set FileSize b): '%s' %08X %d %d\n", spP->fullName, spP->stream, *sizeP,d );
-        fsetpos(spP->stream, &tmp_pos); // restore position
-      //d= GetLastError();
-      //upe_printf( "Set FileSize b): '%s' %08X %d %d\n", spP->fullName, spP->stream, tmp_pos,d );
-        
-        (*     
-      //fgetpos( spP->stream, &tmp_pos );  // save current position
-      
-        // create a temporary file and copy until length
-        ii= 1;
-        for (ii=0; ii<N_Tries; ii++) { // try some tmp files
-            sprintf( name,".tmp.%d", ii++ );
-            
-                tmp= fopen( name,"wb+" );
-            if (tmp!=NULL) break;
-        }
-        if (tmp==NULL) return E_PNNF;
-        
-                               n= 0;
-        fsetpos( spP->stream, &n );
-        
-        doRead= true;
-        for (ii=0; ii<*sizeP; ii++) { // copy the file content
-            if (doRead) { // fill with NUL, if longer
-                    cnt= fread( &a, 1,1, spP->stream );
-                if (cnt==0) { a= NUL; doRead= false; }
-            } // if
-            
-            cnt= fwrite( &a, 1,1, tmp );
-        } // for
-
-        
-        fclose( spP->stream ); // close them both
-        fclose( tmp );
-    
-        // and change to original name
-        err= remove(        spP->fullName ); if (err) return E_PNNF;
-        err= rename( name,  spP->fullName ); if (err) return E_PNNF;
-        spP->stream= fopen( spP->fullName, "rb+" );
-
-        if     (tmp_pos!=*sizeP) {
-            if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
-          fsetpos(spP->stream, &tmp_pos); // restore position
-        }
-        *)
-        */
+        SetEndOfFile         ( hFile );
         
       #elif defined linux
         int fd;
         
         long tmp_pos= ftell( spP->stream ); /* make it compatible for gcc 3.2 */
 
-        fflush     ( spP->stream );        /* unbuffer everything */
-        fd = fileno( spP->stream );  /* <fd> used for "ftruncate" */
-        err= ftruncate( fd, *sizeP ); /* cut the file at <*sizeP> */
-        if     (tmp_pos!=*sizeP) {
-            if (tmp_pos >*sizeP)  tmp_pos= *sizeP;
-            fseek(spP->stream, tmp_pos, SEEK_SET); /* restore position */
-        }
+        fflush     ( spP->stream );                        /* unbuffer everything */
+        fd = fileno( spP->stream );                        /* <fd> used for "ftruncate" */
+        err= ftruncate( fd, *sizeP ); if (err) return err; /* cut the file at <*sizeP> */
       #endif
     #endif
+
+    /* just read and write back one char at the end to get the correct size */
+    do {                                 n= sizeof(b);
+                               p= *sizeP-n;
+      err= pFseek ( pid, spP, &p );               if (err) break;
+      err= pFread ( pid, spP,           &n, &b ); if (err) break;
+        
+                                         n= sizeof(b);
+                               p= *sizeP-n;
+      err= pFseek ( pid, spP, &p );               if (err) break;
+      err= pFwrite( pid, spP,           &n, &b ); if (err) break;
+      
+      if (tmp_pos>*sizeP)      tmp_pos= *sizeP;
+      err= pFseek ( pid, spP, &tmp_pos );
+    } while (false);
     
+    if    (err==E_EOF) err= E_FULL;
     return err;
 } /* pFsetsz */
  
@@ -1419,7 +1296,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #if defined MACOS9
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       char*       pathname;
       struct stat info;
       syspath_typ spRec;
@@ -1528,12 +1405,12 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     /* fill in constants */
     *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
 
-    #ifdef MACOS9
+    #if defined MACOS9
       /* now get info from CInfoPBRec */
       isFolder= cipbP->hFileInfo.ioFlAttrib & ioDirMask; /* is it a folder */
       if (cipbP->hFileInfo.ioFlAttrib & 0x01) *att &= 0xED; /* clear write attrs */
       
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       pathname= (char*)fdl;
             
       #ifdef windows32
@@ -1622,7 +1499,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     
     #if defined MACOS9
       u= cipbP->hFileInfo.ioFlCrDat + OFFS_1904; /* get creation time */
-    #elif defined linux || defined __MACH__
+    #elif defined win_unix
       #ifdef windows32
         if (isFolder) info.st_ctime= 0;
       #endif
@@ -1643,7 +1520,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #endif // NEW_LUZ_FD_IMPL
 
         
-    #ifdef MACOS9
+    #if defined MACOS9
       if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
           *sizeP= (ulong)(cipbP->dirInfo.ioDrNmFls+2)*DIRENTRYSZ;
       }
@@ -1651,7 +1528,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
           *sizeP= (ulong) cipbP->hFileInfo.ioFlLgLen;
       }
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       if (isFolder) {
           *sizeP= 0; /* by default */
           
@@ -1959,12 +1836,12 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     char*   p;
     char*   pp;
     
-    #ifdef MACFILES
+    #if defined MACFILES
       CInfoPBRec cipb;
       defdir_typ defdir;
       FSSpec*    spc= &spP->u.disk.spec;
       
-    #elif defined win_linux
+    #elif defined win_unix
       DIR*    d;
       char    adapted[OS9PATHLEN];
       Boolean ok;
@@ -1978,7 +1855,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     err     = parsepath( pid, &pastpath,hostpath, exedir ); if (err) return err;
     pp      = hostpath;
     
-    #ifdef MACOS9
+    #if defined MACOS9
       /* make an FSSpec for the directory */
                                    defdir= exedir ?_exe:_data;  
            err= getFSSpec( pid,pp, defdir, spc );
@@ -1989,11 +1866,11 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
           /* OS9TCP/ftp requires open dir for write !?! */
           // if (*modeP & 0x02) return os9error(E_FNA); /* can't open dir for write */
-      }
+      } // if
 
       debugprintf(dbgFiles,dbgDetail,("# pDopen: MakeFSSpec returned err=%d\n",err));
 
-    #elif defined win_linux
+    #elif defined win_unix
       err= AdjustPath( pp,adapted, false ); if (err) return err;
       pp = adapted;
 
@@ -2003,7 +1880,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
         if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
         #endif
         return E_FNA;
-      }
+      } // if
       
               spP->dDsc= d;
       strcpy( spP->fullName, adapted ); /* for later use with stat function */
@@ -2422,7 +2299,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
       long*   xD;
       short*  xV;
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       char    adapted[OS9PATHLEN];
       
     #else
@@ -2454,7 +2331,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
       debugprintf( dbgFiles,dbgNorm,("# I$ChgDir: ch%c: volID=%d, dirID=%ld (of new defdir)\n",
                    exedir ? 'x':'d', *xV,*xD ));
     
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       /* now do a OS changedir to "resolve" (and verify) location */
       err= AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname=                 adapted;
@@ -2484,7 +2361,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
       FSSpec     localFSSpec;
       defdir_typ defdir;
       long       newdirid;
-    #elif defined linux || defined __MACH__
+    #elif defined unix
       char adapted[OS9PATHLEN];
     #endif
 
@@ -2512,7 +2389,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Win path=%s\n",pathname));
       if (!CreateDirectory( pathname,NULL )) oserr=GetLastError();
 
-    #elif defined linux || defined __MACH__
+    #elif defined unix
           err= AdjustPath( pathname,adapted, true );
       if (err) return err;
       debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
@@ -2545,7 +2422,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       char   pathname[OS9PATHLEN]; 
       FSSpec delSpec;
         
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       char*  pp= spP->fullName;
       
       #ifdef windows32
@@ -2603,8 +2480,8 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       sprintf( cmd, "rmdir %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
-    #elif defined linux || defined __MACH__
-      oserr=  remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
+    #elif defined unix
+      oserr= remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
     #endif
       
     debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove err=%d\n", pp,err )); 
