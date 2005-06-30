@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2004/11/27 12:06:27  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.6  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -55,7 +58,7 @@
 
 #include "os9exec_incl.h"
 
-#if defined macintosh && !defined MPW && !defined USE_CARBON
+#if defined macintosh && !defined MPW && !defined USE_CARBON && !defined __MACH__
   #include "TermWindow.h"
   
   /* /VMod access  */
@@ -78,7 +81,7 @@ os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {
-    #if defined macintosh && !defined MPW && !defined USE_CARBON
+    #if defined macintosh && !defined MPW && !defined USE_CARBON && !defined __MACH__
       ushort       func;
       newwin_type* nw;
       GrafPtr      my_port;
@@ -127,7 +130,7 @@ os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
           default    : ; /* do nothing */
       }
 
-    #elif defined(windows32)
+    #elif defined windows32 || defined __MACH__
       #pragma unused(pid,d1,d2)
     #endif
     

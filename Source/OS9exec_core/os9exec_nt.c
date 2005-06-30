@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2005/05/13 17:26:46  bfo
+ *    Use <imgMode>
+ *
  *    Revision 1.43  2005/04/17 15:15:03  bfo
  *    Change to V3.27
  *
@@ -288,12 +291,13 @@ char     strtUPath[OS9PATHLEN];   /* next higher than start path */
   char    mdirPath[MAX_PATH];	  /* current mdir path */
 #endif
 
+
 /* the windows console definitions */
-#ifdef windows32
+#if defined windows32
   HANDLE hStdin;
 #endif
 
-#ifdef win_linux
+#if defined win_unix
   ttydev_typ   main_mco;
   short	       gConsoleNLExpand  = true;
   int   	     gConsoleID        =    0;
@@ -643,7 +647,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x27;
+	exec_revision= 0x28;
 	#endif
 } /* getversions */
 
@@ -656,33 +660,43 @@ void get_hw()
       hw_site= "Mac";
      
       #ifdef powerc
-        hw_name = "Apple PowerMac";  platform= "PPC";
+        platform= "PPC";
+        
+        #if   defined USE_CLASSIC
+          hw_name= "PowerMac Classic";       
+        #elif defined USE_CARBON
+          hw_name= "PowerMac Carbon";      
+        #elif defined __MACH__
+          hw_name= "PowerMac Mach-O";       
+        #else
+          hw_name= "PowerMac ???";    
+        #endif
       #else
-        hw_name = "Apple Macintosh"; platform= "68k";
+        hw_name= "Apple Macintosh"; platform= "68k";
       #endif
       
-    #elif defined(windows32)
-      hw_site = "PC";
-	  hw_name = "Windows - PC"; platform= "Windows";
+    #elif defined windows32
+      hw_site= "PC";
+	    hw_name= "Windows - PC"; platform= "Windows";
 	  
     #elif defined linux
-      hw_site = "PC";
-	  hw_name = "Linux - PC";   platform= "Linux";
+      hw_site= "PC";
+	    hw_name= "Linux - PC";   platform= "Linux";
        
     #else
     /* unknown */
-      hw_site = "?";
-	  hw_name = "?";            platform= "?";
+      hw_site= "?";
+	    hw_name= "?";            platform= "?";
     #endif
 } /* get_hw */
 
 
 
-#ifdef linux
+#ifdef unix
 void StartDir( char* pathname )
 {
 	char    acc   [OS9PATHLEN];
-    char    result[OS9PATHLEN];
+  char    result[OS9PATHLEN];
 	struct  stat info;
 	
 	strcpy( pathname,"" ); /* start with an empty string */
@@ -727,7 +741,7 @@ static os9err GetStartPath( char* pathname )
 		  if (spec.parID==1) return 0;
 	  } /* while */
 
-	#elif defined(windows32)
+	#elif defined windows32
 	  /* determine path to current directory */
 	  if (!GetCurrentDirectory(MAX_PATH,pathname))
 		  strcpy( pathname,"" ); // no default path for some reason
@@ -735,7 +749,7 @@ static os9err GetStartPath( char* pathname )
 	//	/* make sure it ends with slash */
 	//	if (pathname[strlen(pathname)-1]!=PATHDELIM ) strcat(pathname,PATHDELIM_STR );
 
-	#elif defined linux
+	#elif defined unix
 	  StartDir( pathname );
 	#else
 	  strcpy  ( pathname,"" );
@@ -778,12 +792,13 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	if    (p==NULL) return;
 	
 	strcpy( tmp,p ); p= tmp; /* make a local copy */
-		MakeOS9Path( p ); 
-    	drP->type= IO_Type( 1,           p,mode ); /* get device type: Mac/PC or RBF */
-    if (drP->type==fRBF) {
-		err= change_dir   ( 1,drP->type, p,mode ); /* set the types at procid 0 */
+	MakeOS9Path( p ); 
+  
+      drP->type= IO_Type( 1,           p,mode ); /* get device type: Mac/PC or RBF */
+  if (drP->type==fRBF) {
+		err=      change_dir( 1,drP->type, p,mode ); /* set the types at procid 0 */
 		return;
-	}
+	} // if
 	
 	#ifdef MACOS9
 	  p++;
@@ -819,8 +834,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 		  GetCurPaths( envname, mode, drP, false );
 		
 		  strcpy( startPath,svPath );
-	  }
-
+	  } // if
 	#endif
 } /* GetCurPaths */
 
@@ -960,8 +974,8 @@ static Boolean Dbg_SysCall( process_typ* cp, regs_type* crp )
 static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid )
 /* Exception or trap handler call */
 {				
-    ushort           vect;
-    traphandler_typ* tp;
+  ushort           vect;
+  traphandler_typ* tp;
 	mod_exec*        mp; /* module pointer */
    
 	if 		 (cp->vector==0xFAFA) { /* error exception */
@@ -1138,14 +1152,14 @@ static void debug_return( process_typ* cp, Boolean cwti )
 void os9exec_globinit(void)
 {
     /* --- global environment initialisation --- */
-    init_all_mem  ();          /* initialize memory handling */
-    init_fmgrs    ();          /* initialize all the file manager objects */
-	init_processes();          /* no processes yet */
-	init_modules  ();          /* clear module handle list */
+  init_all_mem  ();        /* initialize memory handling */
+  init_fmgrs    ();        /* initialize all the file manager objects */
+	init_processes();        /* no processes yet */
+	init_modules  ();        /* clear module handle list */
 	init_events   ();	       /* init OS-9 events */
-	init_alarms   ();		   /* init OS-9 alarms */
-	init_syspaths ();          /* prepare system paths, ready for usrpath print now */
-	init_L2       ();		   /* prepare the /L2 stuff */
+	init_alarms   ();		     /* init OS-9 alarms */
+	init_syspaths ();        /* prepare system paths, ready for usrpath print now */
+	init_L2       ();		     /* prepare the /L2 stuff */
 } /* os9exec_globinit */
 
    
@@ -1162,12 +1176,12 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	process_typ* cp;
 	regs_type*   crp;
 	save_type*   svd;
-    process_typ* sigp;
+  process_typ* sigp;
 	ulong        lastspin, my_tick;
 	dir_type*    drP;
 	char*        errnam;
 	char*        errdesc;
-    char*        argv_startup[2];
+  char*        argv_startup[2];
 	Boolean      cwti, last_arbitrate;
 	int          arb_cnt= 0;
 	char*		 my_toolname= (char*)toolname; /* do not change <toolname> directly */
@@ -1185,10 +1199,9 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	    char title[255];
 	  #endif
 	#endif
-
 		
-	ulong      res;	    /* llm_os9_go result */
-    ushort     err= 0;  /* MPW Error */
+	ulong    res;	    /* llm_os9_go result */
+  ushort   err= 0;  /* MPW Error */
 	OSErr    oserr;		/* Mac error */
 
 
@@ -1218,17 +1231,16 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#endif
 	
 
-	#if defined MACTERMINAL && defined powerc && !defined USE_CARBON
+	#if defined MACTERMINAL && defined USE_CLASSIC
 	  Install_AppleEvents(); /* do this as early as possible */
 	#endif
 
 	#ifdef windows32
-      hStdin= GetStdHandle(STD_INPUT_HANDLE);
-      SetConsoleCtrlHandler( CtrlC_Handler, true );
-      WindowTitle    ( &title,false ); /* adapt title line of DOS window */
-      SetConsoleTitle( &title );     	  
-    #endif
-
+    hStdin= GetStdHandle(STD_INPUT_HANDLE);
+    SetConsoleCtrlHandler( CtrlC_Handler, true );
+    WindowTitle    ( &title,false ); /* adapt title line of DOS window */
+    SetConsoleTitle( &title );     	  
+  #endif
   	
     // some global init moved from here to os9exec_globinit() to allow them being
     // called in os9main.c already	
@@ -1236,8 +1248,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	interactivepid=  0;        /* send aborts to first process by default */
 	sig_queue.cnt =  0;        /* no signal pending at the beginning */
 	
-    #if defined windows32 || defined macintosh
-      for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
+  #if defined windows32 || defined macintosh
+    for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
 	#endif
 	
 	debug_prep();
@@ -1255,7 +1267,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	    #ifndef USE_CARBON
   		  memcpy( &gFS,  &fs, sizeof(FSSpec) );
 	      while (!gDocDone) HandleEvent();
-		  memcpy(  &fs, &gFS, sizeof(FSSpec) );
+	      
+		  memcpy(    &fs, &gFS, sizeof(FSSpec) );
 		#endif
 		
 		/* If file has correct type and creator,
@@ -1373,7 +1386,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#endif
 
 	
-	#if defined win_linux || defined __MACH__
+	#if defined win_unix
 	  /* establish the virtual mdir (dir used to load modules from by default) */
 	      p= egetenv("OS9MDIR");    /* get path for default module loading dir */
 	      strcpy( mdirPath,p );
@@ -1407,29 +1420,29 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	#endif
 
 	
-    /* install asynchronous handlers */
-    atexit(&cleanup);
+  /* install asynchronous handlers */
+  atexit(&cleanup);
 
-    /* obtain package (os9exec) version */
+  /* obtain package (os9exec) version */
 	BootLoader  ( cpid );
 	CheckStartup( cpid, my_toolname, &argc, argv );
 
-    /* initialize spinning cursor */ 
-    lastspin= GetSystemTick();
-    eSpinCursor(0); /* reset cursor spinning */	
+  /* initialize spinning cursor */ 
+  lastspin= GetSystemTick();
+  eSpinCursor(0); /* reset cursor spinning */	
 
 	titles();
 
    /* init error tracking vars */
-    totalMem= max_mem(); /* get startup memory */
+  totalMem= max_mem(); /* get startup memory */
 	lastpathparsed=NULL;
 	lastsyscall=0;
 	
 	/* set-up MPW signal handling */
-    #ifdef MPW
-  	  mpwsignal=0; /* no signal received yet */
+  #ifdef MPW
+  	mpwsignal=0; /* no signal received yet */
 	  signal(SIGINT,&mpwSignalHandler); /* install handler */
-    #endif
+  #endif
     
 	/* prepare initial process */
 	    cp->oerr= prepLaunch( my_toolname, argv,argc,envp, memplus,prior );
@@ -1536,7 +1549,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
    
 			 // ----------------------
 				    async_area= true; 
-				if (async_pending) sigmask( cpid,0 ); /* disable signal mask */
+				if (async_pending) sig_mask( cpid,0 ); /* disable signal mask */
 				/* asynchronous signals are allowed here */
 				
 				/* execute syscall */

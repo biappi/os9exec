@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2005/04/15 11:39:33  bfo
+ *    RBF_ImgSize implemented here now
+ *
  *    Revision 1.20  2004/12/04 00:08:18  bfo
  *    MacOSX MACH adaptions
  *
@@ -189,7 +192,7 @@ Boolean RBF_ImgSize( long size );
   os9err GetRBFName( char* os9path, ushort mode, Boolean *isFolder, 
                      FSSpec  *fs, FSSpec *afs );
 #endif
-#if defined linux || defined __MACH__
+#ifdef unix
   os9err GetRBFName( char* os9path, ushort mdoe, Boolean *isFolder, 
                      char* rbfname );
 #endif

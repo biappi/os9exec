@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2005/05/13 17:25:13  bfo
+ *    Use <imgMode>
+ *
  *    Revision 1.22  2005/04/15 11:49:28  bfo
  *    Reduced size of RBF images is supported now
  *
@@ -139,6 +142,7 @@ void init_RBF ( fmgr_typ* f ); /* file_rbf */
 typedef      void (*init_func)( fmgr_typ* f );
 void conn_FMgr( ptype_typ type, fmgr_typ* f, init_func i );
 /* ------------------------------------------------ */
+
 
 
 /* routine dispatch table for path operations */
@@ -250,7 +254,7 @@ void init_fmgrs(void)
       conn_FMgr( fRBF, &fmgr_rbf,  init_RBF  ); /*    "    RBF              routines (file_rbf)   */
     #endif
     
-    #ifdef WITH_NETWORK /* network support */
+    #ifdef NET_SUPPORT /* network support */
       conn_FMgr( fNET, &fmgr_net,  init_Net  ); /*    "    network          routines (network)    */
     #endif
     
@@ -976,7 +980,7 @@ void init_syspaths()
     syspath_typ*  spP;
     process_typ*  cp= &procs[0];
         
-    #ifdef win_linux
+    #ifdef win_unix
       ttydev_typ* mco;
     #endif
     
@@ -1015,7 +1019,7 @@ void init_syspaths()
     #endif
     
     
-    #ifdef win_linux
+    #ifdef win_unix
       mco= &main_mco;
       mco->installed =  true;
       mco->spP       =   spP;
@@ -1495,6 +1499,7 @@ void upo_printf( const char* format, ... )
 
     usrpath_puts( currentpid,usrStdout,buffer, true );
 } /* upo_printf */
+
 
 
 void upho_printf( const char* format, ... )

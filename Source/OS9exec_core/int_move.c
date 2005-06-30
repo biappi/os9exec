@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2005/01/22 16:09:18  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.8  2004/12/03 23:59:19  bfo
  *    MacOSX MACH adaptions
  *
@@ -206,14 +209,14 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     char    pD [OS9PATHLEN];
     char    *destname;
     
-    #ifdef MACOS9
+    #if defined MACOS9
       OSErr      oserr;
       FSSpec     sourceSpec;
       FSSpec     destSpec;
       FSSpec     destDirSpec;
       CInfoPBRec cipb;
       
-    #elif defined win_linux
+    #elif defined win_unix
       char   adD[OS9PATHLEN];
       char   adS[OS9PATHLEN];
     #endif
@@ -282,7 +285,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
 //        /* using Window's command line shell to perform this task */
 //        return call_hostcmd("move", pid, argc-1,&argv[1]);
 
-        #elif defined win_linux
+        #elif defined win_unix
               err= AdjustPath( nameS, (char*)&adS, false );
           if (err) return _errmsg( err, "can't find \"%s\". ", adS );
 
@@ -341,7 +344,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
               }
           }
           
-        #elif defined win_linux
+        #elif defined win_unix
                err= AdjustPath( nameD, (char*)&adD, false );      
           if (!err) err= (!FileFound( adD ) && !PathFound( adD ));
           if (!err) {
@@ -445,7 +448,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
               }
           }
         
-        #elif defined win_linux
+        #elif defined win_unix
                     err= AdjustPath( nameD, (char*)&adD, true ); nameD= (char*)&adD;
           if (!err) err= rename( nameS,nameD );
           if  (err) return _errmsg( err, "can't open dest directory \"%s\".", nameD );

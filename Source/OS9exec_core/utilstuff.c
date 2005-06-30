@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2005/04/15 11:40:44  bfo
+ *    RBF_ImgSize implemented here now
+ *
  *    Revision 1.36  2005/01/22 16:13:38  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -416,7 +419,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
       debugprintf(dbgErrors,dbgNorm,("# ** Win32 error=%d%s\n",
                                       hosterr,known ? "" : "(not known, using suggestion)"));
 
-    #elif defined linux || defined __MACH__
+    #elif defined unix
       if     (hosterr==0) return 0;
       err= suggestion; known=false;
     
@@ -1019,9 +1022,11 @@ Boolean OpenTDir( const char* pathname, DIR** d )
       Boolean ok= false;
       
       #ifdef TFS_SUPPORT
-        char volname[OS9NAMELEN];
-
-             *d= opendir( pathname ); /* try to open */
+        #ifdef windows32
+          char volname[OS9NAMELEN];
+        #endif
+        
+             *d= (DIR*)opendir( pathname ); /* try to open */
         ok= (*d!=NULL);
 
         #ifdef windows32
@@ -1038,7 +1043,7 @@ Boolean OpenTDir( const char* pathname, DIR** d )
 
 dirent_typ* ReadTDir( DIR* d )
 {
-    #ifdef macintosh
+    #ifdef MACOS9
       #pragma unused(d)
       return NULL;
     
@@ -1056,7 +1061,7 @@ Boolean PathFound( const char* pathname )
     DIR* d;
     Boolean ok= OpenTDir( pathname, &d );
     
-    #if defined(win_linux) && defined(TFS_SUPPORT)
+    #if defined win_unix && defined TFS_SUPPORT
       if (d!=NULL) closedir( d );
     #endif
     
@@ -1122,7 +1127,7 @@ void CutUp( char* pathname, const char* prev )
             case NUL      : *q= NUL; break; /* cut "/."  at the end */
             
             /* avoid duplicate definition */
-            #ifndef linux
+            #ifndef unix
             case PATHDELIM:
             #endif
             case PSEP     : *q= NUL; strcat( pathname,qs ); break; /* cut "/./" anywhere */
@@ -1133,7 +1138,7 @@ void CutUp( char* pathname, const char* prev )
                                 case NUL:
 
                                 /* avoid duplicate definition */
-                                #ifndef linux
+                                #ifndef unix
                                 case PATHDELIM:
                                 #endif
                                 case PSEP     : while   (q>pathname) {
@@ -1180,7 +1185,7 @@ void EatBack( char* pathname )
             case '.'      : if (searchP)    eat++;                      break;
             
             /* avoid duplicate definition */
-            #ifndef linux
+            #ifndef unix
             case PATHDELIM:
             #endif
             case PSEP     : *p= NUL; eat--; eat0= eat;  searchP=  true; break;
@@ -1211,11 +1216,11 @@ void EatBack( char* pathname )
 
 os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
 {
-    #ifdef macintosh
+    #ifdef MACOS9
     #pragma unused(dEnt)
     #endif
 
-    #if defined(windows32) || defined macintosh
+    #if defined windows32 || defined MACOS9
       #define ATTR_DIR 0x0010
       char    tmp[MAX_PATH];
       int     ii;
@@ -1258,7 +1263,7 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
           
 //    printf( "'%s' %08X %s\n", tmp, id, isNew?"new":"exists" );
       
-    #elif defined linux
+    #elif defined unix
       *id= dEnt->d_ino;
       
     #else
@@ -1393,11 +1398,11 @@ int stat_( const char* pathname, struct stat *buf )
 {
     int err= -1 /* default */;
     
-    #if defined macintosh || defined linux
+    #if defined macintosh || defined unix
       /* do it the "normal" way */
       err= stat( pathname, buf );
 
-    #elif defined(windows32)
+    #elif defined windows32
       /* 'stat' at windows has a bug, it does not close correctly */
       FILE* stream;
       int   fd, cer;
@@ -1430,24 +1435,25 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result )
 {
     Boolean ok= false;
 
-    #ifdef macintosh
+    #ifdef MACOS9
       #pragma unused(pathname,fdsect,result)
     #endif
     
-    #ifdef win_linux
+    #ifdef win_unix
       DIR*        d;
       dirent_typ* dEnt;
       ulong       fd;
       
-          d= opendir( pathname ); /* search for the current inode */
+          d= (DIR*)opendir( pathname ); /* search for the current inode */
       if (d!=NULL) {
           while (true) {
                   dEnt= ReadTDir( d );
               if (dEnt==NULL) break;
               FD_ID( pathname,dEnt, &fd );
               
-              if (fd==fdsect) { /* this is it */
-                  strcpy( result, dEnt->d_name );
+            //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
+              if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
+                  strcpy(       result, dEnt->d_name );
                   ok= true; break;
               }   
           } /* while */
@@ -1715,7 +1721,17 @@ Boolean SCSI_Device( const char* os9path,
 #endif
 
 
-#ifdef win_linux
+/*
+#ifdef __MACH__
+  os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
+  {
+    return E_UNKSVC;
+  }
+#endif
+*/
+
+
+#ifdef win_unix
   void GetEntry( dirent_typ* dEnt, char* name, Boolean do_2e_conv )
   /* Get the <name> of dir entry <dEnt> */
   /* Convert 2e string, if <do_2e_conv> is true */
@@ -1748,7 +1764,7 @@ Boolean RBF_ImgSize( long size )
 } /* RBF_ImgSize */
 
 
-#ifdef MACOS9
+#if defined MACOS9
   os9err RBF_Rsc( FSSpec *fs )
   {
       os9err     err;
@@ -1806,7 +1822,7 @@ Boolean RBF_ImgSize( long size )
   } /* GetRBFName */
 
 
-#elif defined win_linux
+#elif defined win_unix
   os9err GetRBFName( char* os9path, ushort mode,
                      Boolean *isFolder, char* rbfname )
   {
@@ -1905,11 +1921,11 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     ushort sas,ssize;
     byte   pdtyp;
     
-    #if defined MACOS9
+    #ifdef MACOS9
       Boolean isFolder;
       FSSpec  fs,afs;
 
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       Boolean isFolder;
       char    rbfname[OS9PATHLEN];
     #endif
@@ -1932,13 +1948,13 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
                         err= GetRBFName(  os9path,   mode, &isFolder, &fs,&afs );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, &fs,&afs );
       
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
                         err= GetRBFName(  os9path,   mode, &isFolder, (char*)&rbfname );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, (char*)&rbfname );
 
     #else 
       /* %%% some fixed devices defined currently */
-      *isFolder= 0;
+      isFolder= false;
       if (ustrncmp( os9path,"/mt",3 )!=0 &&
           ustrncmp( os9path,"/c1",3 )!=0 &&
           ustrncmp( os9path,"/c2",3 )!=0 &&

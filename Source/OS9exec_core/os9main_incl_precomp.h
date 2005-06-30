@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2005/01/22 16:12:55  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.13  2004/12/04 00:11:43  bfo
  *    MacOSX MACH adaptions
  *
@@ -99,24 +102,6 @@
 #define CW7_MWERKS 0x2405 // V 2.4.5 = CW Pro 7
 #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
 
-
-/* make sure that this can also be compiled for MPW */
-/* when "macintosh" is not defined */
-#if !defined macintosh && !defined __INTEL__ && !defined linux
-  #define macintosh
-#endif
-
-/* define a special label for 68k/MacOS9/Carbon software */
-/* which is not compiled for the MACH kernel */
-#if defined macintosh && !defined __MACH__
-  #define MACOS9
-#endif
-
-#ifndef TERMINAL_CONSOLE
-  #define MPW
-#endif
-
-
 #ifdef MACOS9
   /* global feature switches */
   // #define PARTIALRETURNREGS /* returning 16/8-bit values only affects loword/lobyte of register */
@@ -141,29 +126,12 @@
   #endif
 #endif
 
-/* WINTEL can't be separated :-) */
-#ifdef __INTEL__
-  #define windows32
-#endif
-
-/* Support only for Linux on PC */
-/* makes life easier for them moment ... */
-#ifdef linux
-  #define __INTEL__
-#endif 
-
-/* either windows or linux */
-#if defined windows32 || defined linux
-  #define win_linux
-#endif
-
-
 /* these platforms are supported to use TCP/IP sockets */
-#ifdef NET_SUPPORT
-  #if defined powerc || defined win_linux
-    #define WITH_NETWORK 1
-  #endif
-#endif
+//#ifdef NET_SUPPORT
+//  #if defined powerc || defined win_linux
+//    #define WITH_NETWORK 1
+//  #endif
+//#endif
 
 
 #ifdef windows32
@@ -189,7 +157,7 @@
 /* platform includes for all project modules */
 /* ========================================= */
 
-#ifdef macintosh
+#ifdef MACOS9
   /* make sure apple extensions are enabled */
   #define __useAppleExts__ 1
   #define __xlC__ 1
@@ -197,7 +165,7 @@
   typedef int DIR; /* just dummy definitions */
 #endif
 
-#ifdef win_linux
+#ifdef win_unix
   #ifdef windows32
     #if __MWERKS__ < CW7_MWERKS
       // we need the dirent port
@@ -224,7 +192,11 @@
 
   #else
     #define  MAX_PATH 1024
-    struct   __dirstream {}; /* not visible */
+    
+    #ifndef __MACH__
+      struct __dirstream {}; /* not visible */
+    #endif
+    
     #include <dirent.h>
     #include <sys/stat.h>
     #include <unistd.h>
@@ -234,17 +206,10 @@
 typedef struct dirent dirent_typ;
 
 #ifdef __MACH__
-//#include <stdarg.h>
-//#include <stddef.h> // %%% added luz 2002-02-04
-//#include <StdIO.h>
-//#include <StdLib.h>
-//#include <Time.h>
-//#include <String.h>
-//#include <cstdarg>
-
-  #define _STDARG_H
-  #include <va_list.h>
-  #include <stdarg.h>    // N.B. Not cdstarg!
+//#define _STDARG_H
+//#include <va_list.h>
+  #include <mw_stdarg.h>    // N.B. Not cdstarg!
+  #include <stddef.h>
   #include <cstdio>
 //#include <cstdlib>
   #include <stat.h>
@@ -322,15 +287,16 @@ typedef struct dirent dirent_typ;
 
 
 // define type shortcuts
-#if !defined linux && !defined __MACH__
-  typedef unsigned int uint;
-#endif
-
-#if !defined linux
+#ifndef unix
+  typedef unsigned int      uint;
   typedef unsigned long int ulong;
 #endif
 
-#if !defined(windows32) || __MWERKS__ >= CW7_MWERKS
+#if defined __MACH__
+  typedef unsigned long ulong;
+#endif
+
+#if !defined windows32 || __MWERKS__ >= CW7_MWERKS
   typedef unsigned char byte;
 #endif
 

@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2005/01/22 16:12:19  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.9  2004/12/04 00:02:42  bfo
  *    MacOSX MACH adaptions
  *
@@ -98,7 +101,7 @@
   #include ":os9defs:errno_adapted.h"
 
 #else
-  #if defined __MACH__
+  #ifdef __MACH__
     #include "module_special.h"
   #else
     #include "module.h"

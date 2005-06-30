@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2005/04/15 11:43:04  bfo
+ *    Reduced size of RBF images is supported now
+ *
  *    Revision 1.16  2004/12/04 00:00:52  bfo
  *    MacOSX MACH adaptions
  *
@@ -85,7 +88,7 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 
-#ifdef macintosh
+#ifdef MACOS9
   static os9err int_debugger( _pid_, _argc_, _argv_ )
   /* internal debugger command */
   {
@@ -521,7 +524,7 @@ cmdtable_typ commandtable[] =
     { "dhelp",         debug_help,    "shows debug flag information" },
     { "debughalt/idbg",int_debughalt, "sets debug options/enters OS9exec's debug menu" },
 
-    #ifdef macintosh
+    #ifdef MACOS9
     { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
     #endif
 
@@ -640,11 +643,6 @@ os9err prepArgs( char *arglist, ushort *argcP, char*** argP )
     /* p now points behind last arg char */
     localargv[argc]= p; /* save as end pointer */
         
-//  #ifdef MACMEM
-//    pp=(char **)NewPtr(        (p-arglist+(argc+1)*sizeof(char**)+1)); 
-//  #else
-//    pp=(char **)malloc((size_t)(p-arglist+(argc+1)*sizeof(char**)+1));
-//  #endif
         pp= get_mem( p-arglist + (argc+1)*sizeof(char**) + 1 );
     if (pp==NULL) return os9error(E_NORAM);
     

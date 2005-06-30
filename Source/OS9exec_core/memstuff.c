@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.14  2004/09/15 19:57:13  bfo
  *    Up to date
  *
@@ -145,8 +148,8 @@ void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
       int diff, i;
     #endif
       
-    #ifdef macintosh
-    upo_printf("Macintosh Heap: MemFree=%ld, MaxBlock=%ld\n\n",FreeMem(),MaxBlock());
+    #ifdef MACOS9
+      upo_printf("Macintosh Heap: MemFree=%ld, MaxBlock=%ld\n\n",FreeMem(),MaxBlock());
     #endif
     
     if (mem_unused) {
@@ -207,11 +210,11 @@ void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
      	  MemLine( &k,     512000, "<=500kB" );
      	  MemLine( &k,    1048576, "<=  1MB" );
      	  MemLine( &k, 0xffffffff, ">   1MB" );
-		  upo_printf( "\n" );
+		    upo_printf( "\n" );
 
     	  			k= MAX_MEMALLOC;
      	  MemLine( &k, 0xffffffff, "  total" );
-   	    #endif
+   	  #endif
     	
     	return;
     } /* if mem_unused */
@@ -458,10 +461,10 @@ ulong max_mem()
 {
     ulong memsz;
     
-    #ifdef macintosh
+    #if defined MACOS9
       memsz= MaxBlock();
       
-    #elif defined win_linux
+    #elif defined win_unix
       memsz= 0;
       
     #else

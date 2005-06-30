@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.5  2003/05/17 10:14:41  bfo
  *    Disabled for USE_CARBON
  *
@@ -204,15 +207,20 @@ long ReadCharsFromPTY(char *buffer, long n, int consoleID)
 void WindowTitle( char* title, Boolean vmod )
 {
     char* p;
-    char  cons[20];
-    p="";
+    
+    #ifdef TERMINAL_CONSOLE
+      char cons[20];
+    #endif
+    
     #ifdef USE_UAEMU
-    p= " (UAE)" ;
+      p= " (UAE)" ;
+    #else
+      p="";
     #endif
     
     sprintf( title,"%s%s", OS9exec_Name(),p );
     
-    #if defined TERMINAL_CONSOLE
+    #ifdef TERMINAL_CONSOLE
     if (vmod) sprintf( title, "%s  /vmod - display for  \"%s\"", 
                        title, gTitle );
     else {    
@@ -225,53 +233,87 @@ void WindowTitle( char* title, Boolean vmod )
 
 
 
-#ifdef windows32
-  void HandleEvent( void )
-  {
-      #define STARTVAL -200
-      static int hvv= STARTVAL;
+#if defined windows32
+void HandleEvent( void )
+{
+  #define STARTVAL -200
+  static int hvv= STARTVAL;
 
-      char         c;
-      Boolean      ok;
-      INPUT_RECORD ir;
-      DWORD        n;
+  char         c;
+  Boolean      ok;
+  INPUT_RECORD ir;
+  DWORD        n;
     
-      if (hvv<0) hvv++;
-      else { 
-          hvv= STARTVAL; 
-          Sleep( 1 ); /* sleep in milliseconds */
-      }
+  if (hvv<0) hvv++;
+  else { 
+    hvv= STARTVAL; 
+    Sleep( 1 ); /* sleep in milliseconds */
+  } // if
     
-      /* is there any event ? */
-           ok= GetNumberOfConsoleInputEvents( hStdin, &n );
-      if (!ok || n==0) return;
+  /* is there any event ? */
+       ok= GetNumberOfConsoleInputEvents( hStdin, &n );
+  if (!ok || n==0) return;
 
-      /* if yes, get it. If it keydown, put char into input buffer */
-           ok= ReadConsoleInput( hStdin, &ir, 1, &n );
-      if (!ok || n==0) return;
+  /* if yes, get it. If it keydown, put char into input buffer */
+       ok= ReadConsoleInput( hStdin, &ir, 1, &n );
+  if (!ok || n==0) return;
     
-      if    (ir.EventType==KEY_EVENT && 
-             ir.Event.KeyEvent.bKeyDown) {
-          c= ir.Event.KeyEvent.uChar.AsciiChar;
-          if (c!=NUL) KeyToBuffer( &main_mco, c );
-      }
-  } /* HandleEvent */
+  if      (ir.EventType==KEY_EVENT && 
+           ir.Event.KeyEvent.bKeyDown) {
+        c= ir.Event.KeyEvent.uChar.AsciiChar;
+    if (c!=NUL) KeyToBuffer( &main_mco, c );
+  }
+} /* HandleEvent */
 #endif
 
 
 #if defined MPW || defined linux
-  void HandleEvent( void )
-  {
-  } /* empty implementation */
+void HandleEvent( void )
+{
+} /* empty implementation */
 #endif
 
+
+#if defined __MACH__
+void HandleEvent( void )
+{
+  /*
+  #define STARTVAL -200
+  static int hvv= STARTVAL;
+
+  int  n;
+  char c;
+    
+  if (hvv<0) hvv++;
+  else { 
+    hvv= STARTVAL; 
+    usleep( 1000 ); // sleep in microseconds
+  } // if
+
+  n= fread( &c,1,1, stdin );
+  if (n==0) return;
+  printf( "hallo=%d\n", n );
+  
+//if (feof  (stdin)) { printf( "eof\n"   ); return; }
+//if (ferror(stdin)) { printf( "error\n" ); return; }
+  
+//    n= getchar(); // problems with fread
+//printf( "hallo=%d\n", n );
+//if (n==-1) return;
+//c=  n;
+
+  printf( "hallo='%c'\n", c );
+  KeyToBuffer( &main_mco, c );
+  */
+} /* empty implementation */
+#endif
 
 
 
 /* CheckInputBuffers */
 void CheckInputBuffers(void)
 {
-    #if defined MACTERMINAL && !defined USE_CARBON
+    #if defined MACTERMINAL && defined USE_CLASSIC
       CheckInputBuffersSerial(); /* check characters from serial lines */
     #endif
     
@@ -291,12 +333,16 @@ Boolean DevReadyTerminal( long *count, ttydev_typ* mco )
 } /* DevReadyTerminal */
     
 
-#if defined(windows32) || defined linux
+#if defined win_unix
 Boolean DevReady( long *count )
 {   
     HandleEvent();
 
     #ifdef linux
+      *count= 1; return true; /* %%% not yet as it should be */
+    #endif
+
+    #ifdef __MACH__
       *count= 1; return true; /* %%% not yet as it should be */
     #endif
 

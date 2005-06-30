@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2005/01/22 16:10:07  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.10  2004/12/04 00:00:16  bfo
  *    MacOSX MACH adaptions
  *
@@ -111,7 +114,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     Boolean    asDir;
     char       oldPath [OS9PATHLEN];
 
-    #ifdef win_linux
+    #if defined win_unix
       char*    pp;
       char     newPath [OS9PATHLEN]; 
       char     adaptOld[OS9PATHLEN];
@@ -194,7 +197,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         err= usrpath_close  ( cpid, path );                       if (err) return err;
     }
     else {
-        #ifdef MACOS9
+        #if defined MACOS9
           /* now do the real stuff */
           /* first make FSSpec for file/dir to be renamed */
               err= getFSSpec( cpid,oldPath, exedir ?_exe:_data, &theFSSpec ); 
@@ -205,7 +208,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
           if (oserr==dupFNErr) _errmsg(0,"can't rename to \"%#s\"",newName);
           err= host2os9err(oserr,E_PNNF);
     
-        #elif defined win_linux
+        #elif defined win_unix
                            pp=  oldPath;
           err= AdjustPath( pp, adaptOld, false ); 
           pp=                  adaptOld;

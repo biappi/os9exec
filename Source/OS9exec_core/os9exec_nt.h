@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2005/05/13 17:25:59  bfo
+ *    Use <imgMode>
+ *
  *    Revision 1.36  2005/04/15 11:50:48  bfo
  *    Reduced size of RBF images is supported now, struct for SCSI
  *
@@ -298,19 +301,19 @@
 #define   PSEP_STR      "/"
 
 /* for the host system */
-#ifdef macintosh
+#if defined MACOS9
   #define PATHDELIM     ':'
   #define PATHDELIM_STR ":"
-#elif defined(windows32)
+#elif defined windows32
   #define PATHDELIM     '\\'
   #define PATHDELIM_STR "\\"
-#elif defined linux
+#elif defined unix
   #define PATHDELIM     '/'
   #define PATHDELIM_STR "/"
 #endif
 
 
-// omitted parameters
+// omitted parameters (does not really work with gcc)
 #ifdef linux
   #define _modeP_   ushort*      modeP
   #define _rp_      regs_type*   rp
@@ -600,7 +603,7 @@ typedef struct {
 #ifdef MACOS9
   typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
 #else
-  #if defined linux || defined __MACH__
+  #if defined unix
     typedef ulong     SOCKET;  /* make it visible for linux as std type */
   #endif
   
@@ -689,7 +692,7 @@ typedef struct {
       FILE*   stream;           /* the associated stream */
     #endif
         
-    #if defined win_linux || defined __MACH__
+    #if defined win_unix
       char    fullName[OS9PATHLEN]; /* direct access makes life easier */
       DIR*    dDsc;
     #endif
@@ -1205,7 +1208,7 @@ void    eAdvanceCursor(void);
 #define MAX_PRINTER 5 /* Com0..com4 */
 
 
-#ifdef win_linux
+#ifdef win_unix
   #define AppDo ".AppleDouble"   /* specific netatalk file names */
   #define AppDt ".AppleDesktop"  
   #define L_P   ":2e"            /* specific netatalk way for "." files */

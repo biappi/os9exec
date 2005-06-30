@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2005/01/22 16:19:37  bfo
+ *    Windows path search adaption
+ *
  *    Revision 1.9  2004/12/04 00:10:56  bfo
  *    MacOSX MACH adaptions
  *
@@ -143,12 +146,9 @@ char* egetenv( const char* name )
                                           "OS9MDIR=OS9MDIR:",
                                            NULL };
     #else
-      #ifndef __MACH__ 
-        Boolean u_disk, u_cmds, u_mdir;
-        char*   q;
-        char*   sv;
-      #endif
-      
+      Boolean u_disk, u_cmds, u_mdir;
+      char*   q;
+      char*   sv;      
       char*   rslt;
       Boolean cm= false;
       
@@ -193,12 +193,12 @@ char* egetenv( const char* name )
       /* getenv for use under MPW and for PC/Linux version */
       rslt= getenv( name );
       
-      #ifdef macintosh
+      #ifdef MACOS9
         strcpy( tmp,rslt ); /* make a local copy !! */
         rslt=   tmp;
       #endif
 
-      #ifdef win_linux
+      #ifdef win_unix
         u_disk= (ustrcmp( name,"OS9DISK")==0);
         u_cmds= (ustrcmp( name,"OS9CMDS")==0);
         u_mdir= (ustrcmp( name,"OS9MDIR")==0);
@@ -297,10 +297,13 @@ void eSpinCursor (short incr)
       }
 
     #else
-      #ifdef macintosh
+      #if defined __MACH__
+        // sleep(1);
+         
+      #elif defined macintosh
         SpinCursor(incr);
         
-      #elif defined(windows32)
+      #elif defined windows32
         #pragma unused(incr)
         // sleep(1);
         
@@ -424,7 +427,7 @@ void os9_main( int argc, char **argv, char **envp )
 
     /* set default options */
     /* - debug options */
-    debug[dbgNorm  ]= 0;
+    debug[dbgNorm  ]= 0; /* normal debug flags */
     debug[dbgDetail]= 0;
     debug[dbgDeep  ]= 0;
     debughalt       = 0;
