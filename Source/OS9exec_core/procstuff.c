@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2004/11/20 11:42:31  bfo
+ *    System load problem because of zombie fixed.
+ *
  *    Revision 1.25  2003/06/09 21:55:06  bfo
  *    Signals can be sent only to process ids < MAXPROCESSES
  *
@@ -638,7 +641,7 @@ os9err send_signal(ushort spid, ushort signal)
 
 
 
-os9err sigmask( ushort cpid, int level )
+os9err sig_mask( ushort cpid, int level )
 {
     os9err err;
     process_typ* cp= &procs[cpid];  /* ptr to procs descriptor */
@@ -690,7 +693,7 @@ os9err sigmask( ushort cpid, int level )
 //  } /* if */
     
     return 0;
-} /* sigmask */
+} /* sig_mask */
 
 
 
@@ -726,7 +729,7 @@ static void wait_for_signal( ushort pid )
                 spP= get_syspath( pid,sp );
             if (spP!=NULL && 
                 spP->type==fNET) {
-                #ifdef WITH_NETWORK
+                #ifdef NET_SUPPORT
                       sig= pNask( pid, spP );
                   if (sig) send_signal( pid,sig );
                 #endif
@@ -842,7 +845,7 @@ void do_arbitrate(void)
                 sprocess->pW_age= NewAge;
             
         	    async_area= true; 
-			    if (async_pending) sigmask( spid,0 ); /* disable signal mask */
+			    if (async_pending) sig_mask( spid,0 ); /* disable signal mask */
 			    /* asynchronous signals are allowed here */
 			
                 wait_for_signal( spid );
@@ -1012,10 +1015,13 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
           release_mem( arguments );
           
           pp->pd._cid= cp->pd._sid; /* restore former child id */
-          
-          cp->exiterr= err;
+          cp->exiterr= 0;
           kill_process( newpid );
-          return 0; /* internal-tool "fork" successful */
+          return err; /* internal-tool "fork" return value */
+         
+      //  cp->exiterr= err;
+      //  kill_process( newpid );
+      //  return 0; /* internal-tool "fork" successful */
       } /* if isintcommand */
     #endif
 
@@ -1046,8 +1052,8 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
    
     /* -- prepare data area */
     debugprintf(dbgProcess,dbgDetail,("# prepFork: extra memory=%ld (= paramsiz:%ld + memplus:%ld)\n",memplus+paramsiz,paramsiz,memplus));
-    err= prepData( newpid,theModule,memplus+paramsiz,&memsiz,&mp );
-    if (err!=0) return err; /* no room for data */
+    err= prepData( newpid,theModule,memplus+paramsiz,&memsiz,&mp ); if (err) return err; /* no room for data */
+    
     cp->memstart=(ulong)mp; /* save static storage start address */
     rp->a[6]=(ulong)mp+0x8000; /* biased A6 */
     rp->membase=mp; /* unbiased static storage pointer */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.4  2003/05/17 11:20:32  bfo
  *    (CVS header included)
  *
@@ -57,7 +60,7 @@ void   kill_processes(void);
 os9err  new_process( ushort parentid, ushort *newpid, ushort numpaths );
 os9err kill_process( ushort pid );
 os9err send_signal ( ushort pid, ushort signal );
-os9err sigmask     ( ushort pid, int    level  );
+os9err sig_mask    ( ushort pid, int    level  );
 
 void do_arbitrate(void);
 void stop_os9exec(void);
