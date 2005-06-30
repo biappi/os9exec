@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2004/11/27 12:03:49  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.27  2004/11/20 11:44:06  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -277,7 +280,7 @@ os9err OS9_F_SRqMem( regs_type *rp, ushort cpid )
     ulong   memsz= rp->d[0];
     
     if (memsz==0xFFFFFFFF) { /* get max mem */
-      #ifdef win_linux
+      #ifdef win_unix
         memsz= 0x00800000; /* %%% a large portion */
       #else
         memsz= MaxBlock()-15;  
@@ -417,7 +420,7 @@ os9err OS9_F_STime( regs_type *rp, ushort cpid )
     if    (days<0)  { days= 0; secs= 0; }
     secs+= SecsPerDay*days;
     
-    #ifdef macintosh
+    #ifdef MACOS9
       SetDateTime( secs );
     #endif
     
@@ -685,7 +688,7 @@ os9err OS9_F_RTE( _rp_, ushort cpid )
         }
     } /* if */
     
-    sigmask( cpid,0 ); /* disable signal mask */
+    sig_mask( cpid,0 ); /* disable signal mask */
     return err;
 } /* OS9_F_RTE */
 
@@ -896,14 +899,14 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
       case D_TckSec  : v=             TICKS_PER_SEC; break;
     
       case D_68881   : 
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
         /* Gestalt( gestaltFPUType,         &v ); not all defs visible for MPW ... */
            Gestalt( FOUR_CHAR_CODE('fpu '), &v );
            if ( v==3 ) v= 1;           /* this value is handled differently on Mac */
-        #elif defined win_linux
-           v=  0;  /* FPU not yet supported */
-        #else
+        #elif defined win_unix
            v= 40;  /* just a fixed value for 68040 */
+        #else
+           v=  0;  /* FPU not yet supported */
         #endif
         
         #ifdef USE_UAEMU /* 68881 FPU available with emulator */
@@ -934,7 +937,7 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
       case D_DevTbl  : v=  (ulong)            &devs; break; /* I/O device table ptr */
       
       case D_MPUTyp  : 
-        #ifdef powerc
+        #if defined powerc && !defined __MACH__
         /* Gestalt( gestaltNativeCPUtype,   &v ); not all defs visible for MPW ... */
            Gestalt( FOUR_CHAR_CODE('cput'), &v );
         #else
@@ -1407,7 +1410,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
 {
     ushort       k;
     ushort       activeChild;
-    os9err       err= sigmask( cpid,0 ); /* disable signal mask */
+    os9err       err= sig_mask( cpid,0 ); /* disable signal mask */
     process_typ* cp;
 
     if (dummyfork) {
@@ -1470,8 +1473,8 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
  * Notes: - Acts as dummy counterpart to F$Fork if dummyfork is non-zero.
  */
 {
-    os9err       err      = sigmask( cpid,0 ); /* disable signal mask */
-    process_typ* cp       = &procs [ cpid ];
+    os9err       err      = sig_mask( cpid,0 ); /* disable signal mask */
+    process_typ* cp       = &procs  [ cpid ];
     int          sleeptime= rp->d[0];
     int          sleep_x  = sleeptime & 0x7fffffff;
     int          ticks;
@@ -1540,8 +1543,8 @@ os9err OS9_F_Alarm( regs_type *rp, ushort cpid )
 os9err OS9_F_Sigmask( regs_type *rp, ushort cpid )
 /* F$SigMask */
 {
-    int            level= rp->d[1];
-    sigmask( cpid, level );
+    int             level= rp->d[1];
+    sig_mask( cpid, level );
     return 0;
 } /* OS9_F_Sigmask*/
 
@@ -1558,7 +1561,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
     process_typ* cp= &procs[cpid];
     
     cp->exiterr= loword(rp->d[1]);
-    sigmask( cpid,0 ); /* activate queued intercepts */
+    sig_mask( cpid,0 ); /* activate queued intercepts */
     
     /* -- kill the process */
     kill_process( cpid );
