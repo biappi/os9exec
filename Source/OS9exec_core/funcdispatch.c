@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2004/11/27 12:11:10  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.14  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -528,10 +531,10 @@ ulong GetSystemTick(void)
 {
     ulong t;
 
-    #ifdef macintosh
+    #if defined MACOS9
       t=  TickCount();
                   
-    #elif defined(windows32)
+    #elif defined windows32
       t= GetTickCount()/10; /* take 100 instead of 1000 on PC */
 
     #elif defined linux
@@ -543,6 +546,9 @@ ulong GetSystemTick(void)
       t=         tv.tv_sec - sec0;
       t= 100*t + tv.tv_usec/10000;
 
+    #elif defined __MACH__
+      t= 0;
+      
     #else
       #error Not yet implemented GetSystemTick()
     #endif
@@ -813,28 +819,30 @@ os9err int_systime(ushort pid, int argc, char **argv)
                     case 'r': init_syscalltimers();
      						  upho_printf("Activated and resetted timing measurement\n"); break;
                     case 'd': logtiming= false;
-                              upho_printf("Disabled timing measurement\n");    break;
+                              upho_printf("Disabled timing measurement\n");   break;
                     case 'e': logtiming=  true;
-                              upho_printf("Re-enabled timing measurement\n");  break;
+                              upho_printf("Re-enabled timing measurement\n"); break;
                                
-                    case 'n': switch (p[1]) {
+                    case 'n': switch (p[ 1 ]) {
                                   case '=': strcpy( systime_prog,&p[2] );
-                                             p= p+strlen(p)-1; /* skip rest */ break;
-                                  default : strcpy( systime_prog,"" );         break;
-                              }
-                              break;
+                                            p= p+strlen(p)-1; /* skip rest */ break;
+                                  default : strcpy( systime_prog,"" );        break;
+                              } // switch
                               
-                    case 'f': mode |= STIM_FCALLS;                             break;
-                    case 'i': mode |= STIM_ICALLS;                             break;
-                    case 'o': mode |= STIM_OS9;                                break;
-                    case 's': mode  = STIM_ICALLS | STIM_FCALLS | STIM_OS9;    break;
+                    case 'f': mode |= STIM_FCALLS;                            break;
+                    case 'i': mode |= STIM_ICALLS;                            break;
+                    case 'o': mode |= STIM_OS9;                               break;
+                    case 's': mode  = STIM_ICALLS | STIM_FCALLS | STIM_OS9;   break;
 
-                    case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks   */
-                              if (p[1]!='=' || sscanf(&p[2],"%d", &ticksLim)<1) ticksLim= 1;
-                              p= p+strlen(p)-1; /* skip rest */
-                              break;
+                    case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks */
                     
-                    case 'p': mode |= STIM_PERCENT;   /* >=1 percent */        break;
+                              switch (p[ 1 ]) {
+                                case '=': if (sscanf( &p[2],"%d", &ticksLim )<1) ticksLim= 1;
+                                          p= p+strlen(p)-1; /* skip rest */   break;
+                                default : ticksLim= 1;                        break;
+                              } // switch
+                     
+                    case 'p': mode |= STIM_PERCENT;   /* >=1 percent */       break;
                     
                     default : upe_printf("Error: unknown option '%c'!\n",*p); 
                               usage(argv[0],pid); return 1;
