@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2004/11/27 12:00:39  bfo
+ *    _XXX_ introduced
+ *
  *    Revision 1.8  2004/11/20 11:44:06  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -272,12 +275,13 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE* stream, Boolean wrln)
 Boolean ConsGetc( char* c )
 {
     int n;
+    
     if (gConsoleID>=TTY_Base) {
         n= ReadCharsFromPTY( c,1, gConsoleID);
         return (n>0) && devIsReady;
     } /* if */
 
-    #if defined(windows32) // || defined linux
+    #if defined windows32 // || defined __MACH__ // || defined linux
       HandleEvent();
       n= ReadCharsFromTerminal( c,1, &main_mco );
       return (n>0) && devIsReady;
@@ -287,9 +291,16 @@ Boolean ConsGetc( char* c )
 //      *c= getchar();
 //  if (*c==0x00 || !devIsReady) return false;
 
-    if (fread( c,1,1,stdin )!=1 || !devIsReady) return false;
-    debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
-
+    #ifdef __MACH__
+      n= getchar(); // problems with fread
+           devIsReady= (n!=-1);
+      if (!devIsReady) return false;
+      *c= n;
+    #else
+      if (fread( c,1,1, stdin )!=1 || !devIsReady) return false;
+      debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
+    #endif
+    
     /* now swap 0x0A and 0x0D */
     if      (*c==LF) *c= CR; /* convert LF to OS-9 style CR */
     else if (*c==CR) *c= LF; /* convert CR to LF, in case we need it */
@@ -774,7 +785,7 @@ os9err pCready( _pid_, syspath_typ* spP, ulong *n )
     }
     else { 
         #ifdef TERMINAL_CONSOLE
-          if (DevReady ( n )) return 0;
+          if (DevReady( n )) return 0;
         #endif
     }
     

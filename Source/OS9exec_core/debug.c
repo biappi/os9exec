@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2005/01/22 15:47:40  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.14  2004/12/03 23:54:06  bfo
  *    MacOSX MACH adaptions
  *
@@ -366,16 +369,18 @@ static int disasm=0;
 /* wait for debug confirmation */
 ushort debugwait( void )
 {
-    #define  INPLEN 100
-    char inp[INPLEN];
+    #ifdef TERMINAL_CONSOLE
+      char *cp;
+    #endif
+
+    #define    INPLEN 100
+    char   inp[INPLEN];
     ushort temp,temp2;
     int    numitems;
-    ushort extra;
-    char   *cp;
+    ushort extra= false;
     
-    extra=false;
     #ifdef USE_UAEMU
-    m68k_os9trace=false;
+      m68k_os9trace=false;
     #endif
     
     do {
@@ -430,7 +435,7 @@ ushort debugwait( void )
                        kill_process(temp);
                        break;
                                          
-            #ifdef macintosh
+            #ifdef MACOS9
               case 'b': if (tolower(inp[1])=='b') {
                             Debugger();
                             break;
@@ -443,7 +448,7 @@ ushort debugwait( void )
                         regs_in_debugger(&procs[temp].os9regs); break;
 
               #ifndef USE_UAEMU
-              case 't': Debugger(); goto goon;
+                case 't': Debugger(); goto goon;
               #endif
             #endif
 
