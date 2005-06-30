@@ -3,10 +3,7 @@
 // determine target file name
 #pragma precompile_target "os9App_emu_CW9_classic.mch"
 
-// include all headers that are suitable for precompiled
-// - target global options
-#include "target_options.h"
-// - headers
+// include all headers that are suitable for precompiled headers
 #include "os9main_incl_precomp.h"
 
 // eof
