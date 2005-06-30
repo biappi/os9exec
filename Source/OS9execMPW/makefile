@@ -49,6 +49,7 @@ toolnameFat Ä
 PROJHEADERS = ¶
         "{os9mpw}target_options.h" ¶
         "{platforms}net_platform.h" ¶
+        "{platforms}macfiles.h" ¶
         "{os9exec}os9main_incl.h" ¶
         "{os9exec}os9_llm.h" ¶
         "{os9exec}os9funcs.h" ¶
@@ -68,7 +69,6 @@ PROJHEADERS = ¶
         "{os9exec}fileaccess.h" ¶
         "{os9exec}filescsi.h" ¶
         "{os9exec}file_rbf.h" ¶
-        "{os9exec}macfiles.h" ¶
         "{os9exec}filestuff.h" ¶
         "{os9exec}fcalls.h" ¶
         "{os9exec}icalls.h" ¶
@@ -176,8 +176,8 @@ Objects¥68K  = ¶
         "{ObjDir¥68k}int_rename.c.o" ¶
         "{ObjDir¥68K}macfiles.c.o" ¶
         "{ObjDir¥68K}memstuff.c.o" ¶
-        "{ObjDir¥68K}network.c.o" ¶
-        "{ObjDir¥68K}net_mac.c.o" ¶
+#       "{ObjDir¥68K}network.c.o" ¶
+#       "{ObjDir¥68K}net_mac.c.o" ¶
         "{ObjDir¥68K}alarms.c.o" ¶
         "{ObjDir¥68K}events.c.o" ¶
         "{ObjDir¥68K}modstuff.c.o" ¶
@@ -311,8 +311,8 @@ doAddRes = ¶
 "{ObjDir¥PPC}file_rbf.c.x" Ä {¥MondoBuild¥} "{os9exec}file_rbf.c"
     {PPCC} "{os9exec}file_rbf.c" -o {Targ} {PPCCOptions}
 
-"{ObjDir¥PPC}macfiles.c.x" Ä {¥MondoBuild¥} "{os9exec}macfiles.c"
-    {PPCC} "{os9exec}macfiles.c" -o {Targ} {PPCCOptions}
+"{ObjDir¥PPC}macfiles.c.x" Ä {¥MondoBuild¥} "{platforms}MAC:macfiles.c"
+    {PPCC} "{platforms}MAC:macfiles.c" -o {Targ} {PPCCOptions}
 
 "{ObjDir¥PPC}filestuff.c.x" Ä {¥MondoBuild¥} "{os9exec}filestuff.c"
     {PPCC} "{os9exec}filestuff.c" -o {Targ} {PPCCOptions}
@@ -405,8 +405,8 @@ doAddRes = ¶
 "{ObjDir¥68K}file_rbf.c.o" Ä {¥MondoBuild¥} "{os9exec}file_rbf.c"
     {C} "{os9exec}file_rbf.c" -o {Targ} {COptions}
 
-"{ObjDir¥68K}macfiles.c.o" Ä {¥MondoBuild¥} "{os9exec}macfiles.c"
-    {C} "{os9exec}macfiles.c" -o {Targ} {COptions}
+"{ObjDir¥68K}macfiles.c.o" Ä {¥MondoBuild¥} "{platforms}MAC:macfiles.c"
+    {C} "{platforms}MAC:macfiles.c" -o {Targ} {COptions}
 
 "{ObjDir¥68K}filestuff.c.o" Ä {¥MondoBuild¥} "{os9exec}filestuff.c"
     {C} "{os9exec}filestuff.c" -o {Targ} {COptions}
@@ -432,11 +432,11 @@ doAddRes = ¶
 "{ObjDir¥68K}memstuff.c.o" Ä {¥MondoBuild¥} "{os9exec}memstuff.c"
     {C} "{os9exec}memstuff.c" -o {Targ} {COptions}
 
-"{ObjDir¥68K}network.c.o" Ä {¥MondoBuild¥} "{os9exec}network.c"
-    {C} "{os9exec}network.c" -o {Targ} {COptions}
+#Ê"{ObjDir¥68K}network.c.o" Ä {¥MondoBuild¥} "{os9exec}network.c"
+#     {C} "{os9exec}network.c" -o {Targ} {COptions}
 
-"{ObjDir¥68K}net_mac.c.o" Ä {¥MondoBuild¥} "{platforms}MAC:net_mac.c"
-    {C} "{platforms}MAC:net_mac.c" -o {Targ} {COptions}
+#Ê"{ObjDir¥68K}net_mac.c.o" Ä {¥MondoBuild¥} "{platforms}MAC:net_mac.c"
+#     {C} "{platforms}MAC:net_mac.c" -o {Targ} {COptions}
 
 "{ObjDir¥68K}alarms.c.o" Ä {¥MondoBuild¥} "{os9exec}alarms.c"
     {C} "{os9exec}alarms.c" -o {Targ} {COptions}

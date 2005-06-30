@@ -19,9 +19,10 @@
 //
 
 
-#define MPW
-
 // Target options
+  #define MPW
+  #define REUSE_MEM      // do not deallocate memory after use
+
   #define INT_CMD         // internal commands       supported
   #define CON_SUPPORT     // conole and TTYs         supported
   #define PIP_SUPPORT     // pipes and PTYs          supported
@@ -29,6 +30,10 @@
   #define TFS_SUPPORT     // transparent file system supported
   #define RBF_SUPPORT     // RBF acesss is           supported
   #define RAM_SUPPORT     // RAM disk                supported
-  #define NET_SUPPORT     // TCP/IP sockets          supported
+  
+  #ifdef powerc
+    #define NET_SUPPORT   // TCP/IP sockets          supported
+  #endif
+  
 //#define PRINTER_SUPPORT // LPT printers            supported
 

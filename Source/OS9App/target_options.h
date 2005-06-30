@@ -19,23 +19,22 @@
 //
 
 // Target options
-
-#ifdef macintosh
   #define REUSE_MEM      // do not deallocate memory after use
-#endif
 
-#define INT_CMD          // internal commands       supported
-#define CON_SUPPORT      // conole and TTYs         supported
-#define PIP_SUPPORT      // pipes and PTYs          supported
 
-#define TERMINAL_CONSOLE // can do single char I/O
-#define TFS_SUPPORT      // transparent file system supported
-#define RBF_SUPPORT      // RBF acesss is           supported
-#define RAM_SUPPORT      // RAM disk                supported
+  #define INT_CMD          // internal commands       supported
+  #define CON_SUPPORT      // conole and TTYs         supported
+  #define PIP_SUPPORT      // pipes and PTYs          supported
 
-#ifdef powerc
-  #define NET_SUPPORT    // TCP/IP sockets          supported
-#endif
+  #define TERMINAL_CONSOLE // can do single char I/O
+  #define TFS_SUPPORT      // transparent file system supported
+  #define RBF_SUPPORT      // RBF acesss is           supported
+  #define RAM_SUPPORT      // RAM disk                supported
 
-#define PRINTER_SUPPORT  // LPT printers Win        supported   
+  #ifdef powerc
+    #define NET_SUPPORT    // TCP/IP sockets          supported
+  #endif
 
+  #define PRINTER_SUPPORT  // LPT printers Win        supported   
+
+/* eof */

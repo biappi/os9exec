@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2005/06/30 11:48:59  bfo
+ *    68k adaption (NET_SUPPORT)
+ *
  *    Revision 1.18  2005/01/22 16:11:06  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -1197,8 +1200,8 @@ modulefound:
         if (ustrcmp(realmodname,"le0"   )==0 ||
             ustrcmp(realmodname,"inetdb")==0) {
         	#ifdef NET_SUPPORT
-              err= MyInetAddr( &my_inetaddr, &dns1,&dns2, domainName ); /* assign my internet address */
-            #endif
+            err= MyInetAddr( &my_inetaddr, &dns1,&dns2, domainName ); /* assign my internet address */
+          #endif
         } /* if */
               
         if (ustrcmp(realmodname,"init"  )==0) adapt_init  ( theModuleP );
