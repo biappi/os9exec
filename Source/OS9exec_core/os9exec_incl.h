@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2005/06/30 11:49:38  bfo
+ *    Mach-O support
+ *
  *    Revision 1.10  2005/01/22 16:12:19  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -79,7 +82,7 @@
 
 // include global options (external file to make
 // things more clear to look at, specific for each target)
-#include "target_options.h"
+// #include "target_options.h"
 
 
 // Note: Inclusion of all non-OS9exec includes has been moved
