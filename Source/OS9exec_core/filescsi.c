@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2005/04/15 11:16:09  bfo
+ *    SCSI params are combined in one struct now
+ *
  *    Revision 1.14  2005/01/22 15:50:31  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -238,7 +241,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
     os9err err;
     char*  s;
 
-    #if defined macintosh && !defined USE_CARBON 
+    #if defined USE_CLASSIC
       #pragma unused(scsiAdapt,scsiBus,scsiLUN)
       
       OSErr  oserr, ocerr= 0;
@@ -273,7 +276,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
 	      err= host2os9err(oserr,E_NOTRDY);
 	  } while (false);
 
-    #elif defined(windows32)      
+    #elif defined windows32  
       HANDLE fileHandle;
 
       DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;  // default
