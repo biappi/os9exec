@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.2  2004/12/04 00:13:50  bfo
+ *    <nBytes> adaption
+ *
  *    Revision 1.1  2004/11/27 12:19:49  bfo
  *    "net_platform" introduced
  *
@@ -51,29 +54,20 @@
 #include "net_platform.h"
 
 /* specific network definitions */
-#ifdef linux
-  #include <sys/utsname.h>
-  #include <netdb.h>
-  #include <netinet/in.h>
-  #include <sys/socket.h>
-  #include <asm/ioctls.h>
-  #define INVALID_SOCKET (-1)
-  #define SOCKET_ERROR   (-1)
+#include <sys/utsname.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
   
-  typedef struct sockaddr_in SOCKADDR_IN;
+#ifdef linux
+  #include <asm/ioctls.h>
 #endif
+  
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR   (-1)
+  
+typedef struct sockaddr_in SOCKADDR_IN;
 
-
-/*
-// Newer socket libraries require these types
-#if !defined __SOCKADDR_ARG
-  #define    __SOCKADDR_ARG SOCKADDR_IN*
-#endif
-
-#if !defined __CONST_SOCKADDR_ARG
-  #define    __CONST_SOCKADDR_ARG SOCKADDR_IN*
-#endif
-*/
 
 
 os9err NetInstall(void)
@@ -90,9 +84,6 @@ os9err NetInstall(void)
 os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
                                     ulong *dns2Addr, char* domainName )
 {
-  SOCKADDR_IN        a;
-  int                af, s;
-  socklen_t          len;
   struct utsname     sysname= { 0 };
   struct hostent     *hostPtr;  
   struct sockaddr_in serverName= { 0 };
@@ -163,8 +154,10 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
     fclose( stream );
   } /* if */
 
-  hostPtr= gethostbyaddr( (void*)&serverName.sin_addr.s_addr,sizeof(ulong), AF_INET );
-  strcpy( hostName, hostPtr->h_name );
+      hostPtr= gethostbyaddr( (void*)&serverName.sin_addr.s_addr,sizeof(ulong), AF_INET );
+  if (hostPtr==NULL) strcpy( hostName, "unknown" );
+  else               strcpy( hostName, hostPtr->h_name );
+  
   dom= strstr( hostName,domainName );
   if (dom!=NULL && strlen(dom)==strlen(domainName)) {
       dom--; if (*dom=='.') *dom= '\0';
