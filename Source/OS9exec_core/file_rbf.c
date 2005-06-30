@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2005/05/13 17:21:48  bfo
+ *    mount -I is supported now
+ *
  *    Revision 1.42  2005/04/15 11:13:04  bfo
  *    Reduced size of RBF images is supported now
  *
@@ -556,6 +559,30 @@ static void ReleaseBuffers( syspath_typ* spP )
 
 
 
+static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
+{
+    os9err   err     = 0;
+    Boolean isRAMDisk= false;
+    
+ // #ifdef RAM_SUPPORT
+          isRAMDisk= dev->isRAM;
+      if (isRAMDisk) release_mem( dev->ramBase );
+ // #endif
+    
+    if  (!isRAMDisk) {    
+        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img );
+    }
+    
+    if (!err) {       dev->installed= false;
+         release_mem( dev->tmp_sct );
+                      dev->tmp_sct= NULL;
+    }
+    
+    return err;
+} /* ReleaseIt */
+
+
+
 static os9err DevSize( rbfdev_typ* dev )
 /* get the size of the device as numbers of sectors
    and adjust either device's sector size if possible, otherwise
@@ -616,9 +643,9 @@ static os9err ChkIntegrity( rbfdev_typ* dev, syspath_typ* spP,
 
 
 
-static void GetTop( ushort pid, rbfdev_typ* dev )
+static os9err GetTop( ushort pid, rbfdev_typ* dev )
 {
-  os9err err;
+  os9err err = 0;
   short  sp  = dev->sp_img;
   ulong  sect= dev->sctSize;
   ulong  map = dev->mapSize;
@@ -636,9 +663,9 @@ static void GetTop( ushort pid, rbfdev_typ* dev )
   
   // search for the last allocated position at the allocation map
   while (pos>=sect) {
-    err= syspath_seek( pid,  sp,  pos );                       if (err) break;
+    err= syspath_seek( pid,  sp,  pos );                       if (err) return err;
                                   len= sect;
-    err= syspath_read( pid,  sp, &len, dev->tmp_sct, false );  if (err) break;
+    err= syspath_read( pid,  sp, &len, dev->tmp_sct, false );  if (err) return err;
     
     while (last>0) {
           b= dev->tmp_sct[ --last ];
@@ -665,12 +692,13 @@ static void GetTop( ushort pid, rbfdev_typ* dev )
   } // if
   
 /**/upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
+  return err;
 } /* GetTop */
 
 
-static void GetFull( ushort pid, rbfdev_typ* dev )
+static os9err GetFull( ushort pid, rbfdev_typ* dev )
 {
-  os9err err;
+  os9err err = 0;
   short  sp  = dev->sp_img;
   ulong  sect= dev->sctSize;
   ulong  img = dev->totScts*sect;
@@ -679,6 +707,7 @@ static void GetFull( ushort pid, rbfdev_typ* dev )
   if (!err) dev->imgScts= dev->totScts;
   
   upo_printf( "FULL AGAIN err=%d\n", err );
+  return err;
 } /* GetFull */
 
 
@@ -721,7 +750,6 @@ static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore 
         ReleaseBuffers( spP );
         
         /* and get the new buffers with the new sector size */
-     // dev->tmp_sct= get_mem( dev->sctSize, false );
         dev->tmp_sct= get_mem( dev->sctSize>MIN_TMP_SCT_SIZE ? dev->sctSize : MIN_TMP_SCT_SIZE );
         GetBuffers( dev,spP );
 
@@ -729,17 +757,14 @@ static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore 
         dev->last_alloc= 0; /* initialize allocater pointer */
     } /* loop */
     
- // upo_printf( "RootLSN a img=%d tot=%d\n", dev->imgScts, dev->totScts );
     l= (ulong *)&dev->tmp_sct[ TOT_POS ]; dev->totScts    = os9_long(*l) >> BpB;
     if (dev->imgScts==0)                  dev->imgScts    = dev->totScts;
     w= (ushort*)&dev->tmp_sct[ MAP_POS ]; dev->mapSize    = os9_word(*w);
     w= (ushort*)&dev->tmp_sct[ BIT_POS ]; dev->clusterSize= os9_word(*w);
     l= (ulong *)&dev->tmp_sct[ DIR_POS ]; dev->root_fd_nr = os9_long(*l) >> BpB;
     
-//  upo_printf( "RootLSN b img=%d tot=%d\n", dev->imgScts, dev->totScts );
     spP->u.rbf.fd_nr=  dev->root_fd_nr;
     err= ChkIntegrity( dev,spP, dev->tmp_sct, ignore );
-//  if (!dev->isRAM && !IsSCSI( dev ) && dev->reducedImg) GetTop( pid, dev );
     return err;
 } /* RootLSN */
 
@@ -777,12 +802,12 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
           q=           pathName + len-lr0;
           if (ustrcmp( q, R0 )==0 ) return E_UNIT;
         #endif
-        upe_printf( "OpenImage1 '%s'\n", pathName );
+      //upe_printf( "OpenImage1 '%s'\n", pathName );
        
         err= syspath_open   ( pid, &sp, type,pathName,mode ); if (err) return err;
-        upe_printf( "OpenImage2 '%s' err=%d\n", pathName, err );
+      //upe_printf( "OpenImage2 '%s' err=%d\n", pathName, err );
         err= syspath_gs_size( pid,  sp, &iSize );             if (err) break;
-        upe_printf( "iSize=%d\n", iSize );
+      //upe_printf( "iSize=%d\n", iSize );
         if (!RBF_ImgSize( iSize )) { err= E_FNA; break; }
       
                                          len= sizeof(bb);
@@ -799,7 +824,7 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
       //upo_printf( "name1='%s' size=%d %d\n", pathname, imgScts, totScts );
 
              tSize= totScts*sctSize;
-        upe_printf( "totScts=%d\n", tSize );
+      //upe_printf( "totScts=%d\n", tSize );
         if ((tSize %    2048)!=0 ||
              tSize <    8192     ||
             (iSize % sctSize)!=0) { err= E_FNA; break; }
@@ -831,7 +856,7 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
     } // if
     
     EatBack( dev->img_name );
-    upe_printf( "EndImgName '%s'\n", dev->img_name );
+  //upe_printf( "EndImgName '%s'\n", dev->img_name );
     return 0;                                                         
 } /* Open_Image */
 
@@ -1001,9 +1026,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     int          ii, n;
     Boolean      abs, isSCSI, isRAMDisk= false, wProtect;
     
-    #ifndef __MACH__
+  //#ifndef __MACH__
       Boolean    isFolder;
-    #endif
+  //#endif
     
     process_typ* cp    = &procs[pid];
     
@@ -1018,10 +1043,11 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     Boolean      mock  = *mnt_name!=NUL;
     Boolean      fu    = spP->fullsearch;
     Boolean      fum   = fu && mock;
+    Boolean      opened= false;
         
     #ifdef MACFILES
       FSSpec fs, afs;
-    #elif defined win_linux || defined __MACH__
+    #elif defined win_unix
       char rbfname[OS9PATHLEN];
     #endif
 
@@ -1069,7 +1095,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             if (!isRAMDisk) {
                 #ifdef MACFILES
                   err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
-                #elif defined win_linux
+                #elif defined win_unix
                   err= GetRBFName( pathname,mode, &isFolder, (char*)&rbfname );
                 #endif
                 
@@ -1112,7 +1138,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
                       p2cstr    ( cmp );
                       if (strcmp( cmp,ali )==0) strcpy( ali,"" );
             
-                    #elif defined win_linux || defined __MACH__
+                    #elif defined win_unix
                       if (err) return E_UNIT; /* GetRBFName called earlier */
                       strcpy( cmp,rbfname );
               
@@ -1281,7 +1307,6 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         type    = IO_Type( pid, pathname, poRead );
         wProtect= mnt_wProtect;
             
-    //  upe_printf( "INSTALL %s %s %d\n", TypeStr(type), pathname, spP->nr );
         /* inherit write protection to sub device */
         if (!wProtect && type==fRBF && InstalledDev( pathname,curpath, false, &cdv ))
              wProtect= rbfdev[cdv].wProtected;
@@ -1289,10 +1314,11 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         /* try to open in read/write mode first (if not asking for wProtection */
         /* if not possible, open it readonly */
         if (!wProtect) {
-             err= Open_Image( pid,dev, type,pathname, poUpdate ); if (!err) break;
+               err= Open_Image( pid,dev, type,pathname, poUpdate ); 
+          if (!err) { opened= true; break; }
         }
-             err= Open_Image( pid,dev, type,pathname, poRead );
-        if (!err)                 dev->wProtected= true;
+               err= Open_Image( pid,dev, type,pathname, poRead );
+        if   (!err) { opened= true; dev->wProtected= true; }
     } while (false);
 
     do {                                    if (err) break;
@@ -1301,23 +1327,25 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         *new_inst= true;
     } while (false);
 
-    if (err) {
-      dev->installed= false;
-      release_mem( dev->tmp_sct );
-                   dev->tmp_sct= NULL;
-    }
-    else {
+    if (!err) {
       if ((dev->imgMode==Img_Reduced ||
           (dev->imgMode==Img_Unchanged && dev->imgScts<dev->totScts)) && 
           !dev->isRAM && !IsSCSI( dev )) {
-        upo_printf( "vor TOPALLOC\n" );
-        GetTop( pid, dev );
-        upo_printf( "TOPALLOC=%d of %d\n", dev->imgScts, dev->totScts );
+        err= GetTop( pid, dev );
+        upo_printf( "TOPALLOC=%d of %d err=%d\n", dev->imgScts, dev->totScts, err );
       } // if
       
       if (dev->imgMode==Img_FullSize) {
-        GetFull( pid, dev );
+        err= GetFull( pid, dev );
       } // if
+    } // if
+
+    if (err) {
+      if (opened) ReleaseIt( pid, dev );
+      
+      dev->installed= false;
+      release_mem( dev->tmp_sct );
+                   dev->tmp_sct= NULL;
     } // if
         
     sprintf( ers,"  #000:%03d", err );
@@ -1336,7 +1364,8 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "Function: mount an RBF image file\n" );
     upe_printf( "Options:  \n" );
     upe_printf( "    -w         open with write protection on\n" );
-    upe_printf( "    -i         allow reduced image size\n" );
+    upe_printf( "    -i         adapt for reduced image size\n" );
+    upe_printf( "    -f         adapt for full    image size\n" );
     
     #ifdef windows32
     upe_printf( "    -ah        show all SCSI devices on all adaptors and buses\n" );
@@ -1367,7 +1396,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     /* commented out: wil be done at "filestuff.c" */
 //  MakeOS9Path( name );
 
-    upe_printf( "Mounty1 '%s'\n", mnt_dev );
+  //upe_printf( "Mounty1 '%s'\n", mnt_dev );
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
     /* NOTE: mnt_name is only valid within this context here */
@@ -1409,9 +1438,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
         
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' type='%s'\n", 
                                           name, mnt_name,TypeStr(type) ));
-        upe_printf( "Mounty2 '%s'\n", mnt_dev );
         err= syspath_open( pid, &sp,type, name, poDir );
-        upe_printf( "Mounty3 '%s' err=%d\n", mnt_dev, err );
         debugprintf(dbgUtils,dbgNorm,("# mount: name='%s', mnt_name='%s' err=%d\n",
                                           name, mnt_name,err ));
     } // if
@@ -1423,7 +1450,6 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     mnt_ramSize = 0;
     
     if   (!err) err= syspath_close( pid, sp );
-    upe_printf( "Mounty4 '%s' err=%d\n", mnt_dev, err );
     return err;
 } /* MountDev */
 
@@ -1453,12 +1479,12 @@ os9err int_mount( ushort pid, int argc, char** argv )
              p= argv[ k ];    
         if (*p=='-') { 
             p++;
-            switch (*p) {
+            switch (tolower(*p)) {
                 case '?' : mount_usage( argv[0], pid ); return 0;
 
                 case 'w' : wProtect= true;         break;
                 case 'i' : imgMode = Img_Reduced;  break;
-                case 'I' : imgMode = Img_FullSize; break;
+                case 'f' : imgMode = Img_FullSize; break;
 
 				        #ifdef windows32
                   case 'a' : if (*(p+1)=='h') {
@@ -1535,9 +1561,8 @@ os9err int_mount( ushort pid, int argc, char** argv )
     /* nargv[1] is the name of the mounted device */
         err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, 
                        ramSize, wProtect, imgMode );
-    upe_printf( "int_mount done err=%d\n", err );
-    if (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
-    return 0;
+    if    (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
+    return err;
 } /* int_mount */
 
 
@@ -1549,29 +1574,6 @@ static void unmount_usage( char* name, _pid_ )
     upe_printf( "Function: unmount an RBF image file\n" );
     upe_printf( "Options:  None\n" );
 } /* unmount_usage */
-
-
-static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
-{
-    os9err   err     = 0;
-    Boolean isRAMDisk= false;
-    
- // #ifdef RAM_SUPPORT
-          isRAMDisk= dev->isRAM;
-      if (isRAMDisk) release_mem( dev->ramBase );
- // #endif
-    
-    if  (!isRAMDisk) {    
-        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img );
-    }
-    
-    if (!err) {       dev->installed= false;
-         release_mem( dev->tmp_sct );
-                      dev->tmp_sct= NULL;
-    }
-    
-    return err;
-} /* ReleaseIt */
 
 
 os9err int_unmount( ushort pid, int argc, char** argv )
