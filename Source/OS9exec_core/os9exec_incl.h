@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2005/06/30 15:32:33  bfo
+ *    Adapted for universal use
+ *
  *    Revision 1.11  2005/06/30 11:49:38  bfo
  *    Mach-O support
  *
@@ -231,7 +234,12 @@
 #include "utilstuff.h"
 
 #ifdef MACOS9
-  #include "macfiles.h"
+  #ifdef MPW
+    #include "::Platforms:MAC:macfiles.h"
+  #else
+    #include "macfiles.h"
+  #endif
+  
 #elif defined linux
   #include "linuxfiles.h"
 #endif

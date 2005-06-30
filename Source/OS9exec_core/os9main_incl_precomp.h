@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2005/06/30 15:39:33  bfo
+ *    Adapted for universal use
+ *
  *    Revision 1.16  2005/06/30 15:22:44  bfo
  *    Adapted for universal use
  *
@@ -130,10 +133,6 @@
   /* make sure that this can also be compiled for MPW */
   /* when "macintosh" is not defined */
   #define macintosh
-  
-  #ifndef __MACH__
-    #define MPW
-  #endif
 #endif
 
 /* define a special label for 68k/MacOS9/Carbon software */
