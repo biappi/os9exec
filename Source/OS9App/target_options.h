@@ -18,29 +18,6 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
-
-// Decide about the system
-#if !defined macintosh && !defined __INTEL__ && !defined linux
-  /* make sure that this can also be compiled for MPW */
-  /* when "macintosh" is not defined */
-  #define macintosh
-  
-  #ifndef __MACH__
-    #define MPW
-  #endif
-#endif
-
-/* define a special label for 68k/MacOS9/Carbon software */
-/* which is not compiled for the MACH kernel */
-#if defined macintosh && !defined __MACH__
-  #define MACOS9
-  
-  #ifndef USE_CARBON
-    #define USE_CLASSIC
-  #endif
-#endif
-
-
 // Target options
 
 #ifdef macintosh

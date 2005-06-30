@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2005/06/30 11:53:47  bfo
+ *    Mach-O support
+ *
  *    Revision 1.14  2005/01/22 16:12:55  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -86,6 +89,66 @@
 
 #ifndef OS9MAIN_INCL_PRECOMP_H
 #define OS9MAIN_INCL_PRECOMP_H
+
+
+
+/* WINTEL can't be separated :-) */
+#ifdef __INTEL__
+  // except for the bright future
+  #ifndef macintosh
+    #define windows32
+  #endif
+#endif
+
+/* Support only for Linux on PC */
+/* makes life easier for them moment ... */
+#ifdef linux
+  #define __INTEL__
+#endif 
+
+/* the UNIX systems */
+#if defined linux || defined __MACH__
+  #define unix
+#endif
+
+/* either windows or linux */
+#if defined windows32 || defined linux
+  #define win_linux
+#endif
+
+/* all modern systems combined */
+#if defined win_linux || defined unix
+  #define win_unix
+#endif
+
+
+// Decide about the system
+#if !defined macintosh && !defined __INTEL__ && !defined linux
+  /* make sure that this can also be compiled for MPW */
+  /* when "macintosh" is not defined */
+  #define macintosh
+  
+  #ifndef __MACH__
+    #define MPW
+  #endif
+#endif
+
+/* define a special label for 68k/MacOS9/Carbon software */
+/* which is not compiled for the MACH kernel */
+#if defined macintosh && !defined __MACH__
+  #define MACOS9
+  
+  #ifndef USE_CARBON
+    #define USE_CLASSIC
+  #endif
+#endif
+
+
+// ----------------------------------------------------------------------------
+// the target specific things
+#include "target_options.h"
+// ----------------------------------------------------------------------------
+
 
 // Identifier for CW Pro identification
 // 0xXXYY meaning Compiler Version X.X, rev YY
@@ -255,7 +318,7 @@ typedef struct dirent dirent_typ;
 
 #ifdef MACOS9
   #ifdef MPW
-        /* MPW include files */
+    /* MPW include files */
     #pragma push
     #pragma align=mac68k
     #pragma d0_pointers on
@@ -267,8 +330,6 @@ typedef struct dirent dirent_typ;
     #pragma pop
   #endif
 
-  /* Mac OS include files */
-  // #include <MacRuntime.h>
   #include <Memory.h>
   #include <Resources.h>
   #include <Errors.h>
