@@ -18,23 +18,47 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
-// Target options
 
-   #define TERMINAL_CONSOLE // can do single char I/O
-
-#ifdef macintosh
-   #define REUSE_MEM        // do not deallocate memory after use
+// Decide about the system
+#if !defined macintosh && !defined __INTEL__ && !defined linux
+  /* make sure that this can also be compiled for MPW */
+  /* when "macintosh" is not defined */
+  #define macintosh
+  
+  #ifndef __MACH__
+    #define MPW
+  #endif
 #endif
 
-   #define INT_CMD          // internal commands       supported
-   #define CON_SUPPORT      // conole and TTYs         supported
-   #define TFS_SUPPORT      // transparent file system supported
-   #define PIP_SUPPORT      // pipes and PTYs          supported
+/* define a special label for 68k/MacOS9/Carbon software */
+/* which is not compiled for the MACH kernel */
+#if defined macintosh && !defined __MACH__
+  #define MACOS9
+  
+  #ifndef USE_CARBON
+    #define USE_CLASSIC
+  #endif
+#endif
 
 
+// Target options
 
-   #define RBF_SUPPORT      // RBF acesss is           supported
-   #define RAM_SUPPORT      // RAM disk                supported
-   #define NET_SUPPORT      // TCP/IP sockets          supported
-   #define PRINTER_SUPPORT  // LPT printers Win        supported   
+#ifdef macintosh
+  #define REUSE_MEM      // do not deallocate memory after use
+#endif
+
+#define INT_CMD          // internal commands       supported
+#define CON_SUPPORT      // conole and TTYs         supported
+#define PIP_SUPPORT      // pipes and PTYs          supported
+
+#define TERMINAL_CONSOLE // can do single char I/O
+#define TFS_SUPPORT      // transparent file system supported
+#define RBF_SUPPORT      // RBF acesss is           supported
+#define RAM_SUPPORT      // RAM disk                supported
+
+#ifdef powerc
+  #define NET_SUPPORT    // TCP/IP sockets          supported
+#endif
+
+#define PRINTER_SUPPORT  // LPT printers Win        supported   
 
