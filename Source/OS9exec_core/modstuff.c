@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2005/01/22 16:11:06  bfo
+ *    Renamed to ifdef MACOS9
+ *
  *    Revision 1.17  2004/12/04 00:01:25  bfo
  *    MacOSX MACH adaptions
  *
@@ -82,7 +85,10 @@
 
 
 #include "os9exec_incl.h"
-#include "net_platform.h"
+
+#ifdef NET_SUPPORT
+  #include "net_platform.h"
+#endif
 
 /* additional memory for all processes */
 ulong memplusall;
@@ -1190,7 +1196,7 @@ modulefound:
         /* special treatment for the "le0" and "inetdb" module: set internet address */
         if (ustrcmp(realmodname,"le0"   )==0 ||
             ustrcmp(realmodname,"inetdb")==0) {
-        	#ifdef WITH_NETWORK
+        	#ifdef NET_SUPPORT
               err= MyInetAddr( &my_inetaddr, &dns1,&dns2, domainName ); /* assign my internet address */
             #endif
         } /* if */
