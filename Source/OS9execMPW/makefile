@@ -432,11 +432,11 @@ doAddRes = ¶
 "{ObjDir¥68K}memstuff.c.o" Ä {¥MondoBuild¥} "{os9exec}memstuff.c"
     {C} "{os9exec}memstuff.c" -o {Targ} {COptions}
 
-#Ê"{ObjDir¥68K}network.c.o" Ä {¥MondoBuild¥} "{os9exec}network.c"
+# "{ObjDir¥68K}network.c.o" Ä {¥MondoBuild¥} "{os9exec}network.c"
 #     {C} "{os9exec}network.c" -o {Targ} {COptions}
 
 #Ê"{ObjDir¥68K}net_mac.c.o" Ä {¥MondoBuild¥} "{platforms}MAC:net_mac.c"
-#     {C} "{platforms}MAC:net_mac.c" -o {Targ} {COptions}
+#Ê    {C} "{platforms}MAC:net_mac.c" -o {Targ} {COptions}
 
 "{ObjDir¥68K}alarms.c.o" Ä {¥MondoBuild¥} "{os9exec}alarms.c"
     {C} "{os9exec}alarms.c" -o {Targ} {COptions}
