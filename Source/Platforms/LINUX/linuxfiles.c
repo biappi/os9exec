@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2004/11/20 17:53:42  bfo
+ *    Changed to version V3.25 as well
+ *
  *    Revision 1.4  2002/10/15 17:59:09  bfo
  *    'CutUp' adapted with Prev parameter
  *

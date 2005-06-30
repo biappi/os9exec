@@ -41,27 +41,19 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
- *    Revision 1.4  2003/05/17 11:27:41  bfo
+ *    Revision 1.5  2004/11/20 17:53:42  bfo
+ *    Changed to version V3.25 as well
+ *
+ *    Revision 1.4  2003/05/17 11:25:01  bfo
  *    (CVS header included)
  *
  *
  */
 
 
-/* Mac specific I/O routines */
-typedef enum { _start, _appl, _root,_rootX, _data,_exe, _mdir } defdir_typ;
 
-
-os9err getCipb        ( CInfoPBRec* cipbP, FSSpec *fspP );
-os9err setCipb        ( CInfoPBRec* cipbP, FSSpec *fspP );
-
-os9err Resolved_FSSpec( short  volID,   long  dirID,   char* pathname, 
-                        Boolean *isFolder, FSSpec *fsP, FSSpec *afsP );
-
-os9err getFSSpec      ( ushort pid,                    char* pathname, 
-                        defdir_typ defdir, FSSpec *fsP );
-
-os9err get_dirid      ( short *volID_P, long *dirID_P, char* pathname);
+/* Linux specific I/O routines */
+os9err  AdjustPath( const char* pathname, char* adname, Boolean creFile );
 
 /* eof */
 
