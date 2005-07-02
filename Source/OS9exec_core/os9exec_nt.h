@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2005/06/30 11:50:20  bfo
+ *    Mach-O support
+ *
  *    Revision 1.37  2005/05/13 17:25:59  bfo
  *    Use <imgMode>
  *
@@ -551,7 +554,7 @@ typedef struct {
 typedef struct {
             ulong pos;                  /* the emulated directory "file"'s position for fDir */
 
-            #ifdef win_linux
+            #ifdef win_unix
               ulong fdcur;
             #endif
         } dir_typ;              
@@ -622,11 +625,10 @@ typedef struct {
   typedef struct InetAddress InetAddress;
 #endif
 
-#ifdef linux
+#ifdef unix
   #define kTransferBufferSize 256
 #else
   #define kTransferBufferSize 4096
-// enum { kTransferBufferSize = 4096 };
 #endif
 
 
@@ -1122,8 +1124,8 @@ extern ulong   startTick;
 extern ulong    lastTick;
 extern int        syCorr;
 
-#ifdef linux
-  ulong sec0;
+#ifdef unix
+  extern ulong sec0;
 #endif
 
 /* error traceback */

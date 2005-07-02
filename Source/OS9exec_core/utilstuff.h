@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2005/06/30 11:44:15  bfo
+ *    Mach-O support
+ *
  *    Revision 1.21  2005/04/15 11:39:33  bfo
  *    RBF_ImgSize implemented here now
  *
@@ -151,7 +154,7 @@ void    EatBack            ( char* pathname );
 os9err  FD_ID        ( const char* pathname, dirent_typ* dEnt, ulong *id );
 
 
-#ifdef win_linux
+#ifdef win_unix
   os9err DirNthEntry       ( syspath_typ*, int n );
   os9err RemoveAppledouble ( syspath_typ* );
   void   seekD0            ( syspath_typ* );

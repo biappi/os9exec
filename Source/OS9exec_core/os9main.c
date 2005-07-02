@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2005/06/30 11:54:36  bfo
+ *    Mach-O support
+ *
  *    Revision 1.10  2005/01/22 16:19:37  bfo
  *    Windows path search adaption
  *
@@ -444,7 +447,7 @@ void os9_main( int argc, char **argv, char **envp )
     getversions();
     sw_name= "OS-9/68k Emulator";
     
-    #ifdef linux
+    #ifdef unix
       sec0= 0;
     #endif
 
@@ -608,15 +611,14 @@ void os9_main( int argc, char **argv, char **envp )
         toolname= argv[kX];
     }
 
-	if (fullScreen) {
-		screenW= 0; /* full screen mode */
-		screenH= 0;
-	}
+	  if (fullScreen) {
+		  screenW= 0; /* full screen mode */
+		  screenH= 0;
+	  } // if
 
-	#if defined linux || defined USE_CARBON
-	  userOpt= true; /* %%% currently misused for Spectrapot software in Linux */
-	#endif
-
+	  #if defined unix || defined USE_CARBON
+	    userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
+	  #endif
 
     /* now here starts the os9 command line: go execute it */
     debug_prep(); /* make sure debug info is adjusted */
