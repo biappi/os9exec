@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2005/06/30 11:45:17  bfo
+ *    Mach-O support
+ *
  *    Revision 1.37  2005/04/15 11:40:44  bfo
  *    RBF_ImgSize implemented here now
  *
@@ -517,14 +520,14 @@ void TConv( time_t u, struct tm* tim )
 {
 	struct tm *tp;
 
-	#if __MWERKS__ >= CW7_MWERKS
+	#if __MWERKS__ >= CW7_MWERKS && !defined __MACH__
 	  u -= (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
 	#endif
 	
     tp= localtime( (time_t*)&u );
     memcpy( tim,tp, sizeof(struct tm) ); /* copy it, as it might be overwritten */
 	
-	#if __MWERKS__ >= CW7_MWERKS
+	#if __MWERKS__ >= CW7_MWERKS && !defined __MACH__
 	  tim->tm_year += 2; 
 	#endif
 } /* TConv */
@@ -535,13 +538,13 @@ time_t UConv( struct tm* tim )
 {
 	time_t u;
 	
-	#if __MWERKS__ >= CW7_MWERKS
+	#if __MWERKS__ >= CW7_MWERKS && !defined __MACH__
 	  tim->tm_year -= 2; 
 	#endif
 
     u= mktime( tim );              /* set modification time */
 
-	#if __MWERKS__ >= CW7_MWERKS
+	#if __MWERKS__ >= CW7_MWERKS && !defined __MACH__
 	  u += (72*365+17)*SecsPerDay; /* corrected bug of CW7, leap years included */
 	#endif
 	
@@ -1263,8 +1266,12 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
           
 //    printf( "'%s' %08X %s\n", tmp, id, isNew?"new":"exists" );
       
-    #elif defined unix
+    #elif defined linux
       *id= dEnt->d_ino;
+    
+    #elif defined __MACH__
+      *id= dEnt->d_ino;
+      if (*id==1) *id= 2; // adapt for top dir searching
       
     #else
       *id= 0;
@@ -1275,7 +1282,7 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
 
   
   
-#ifdef win_linux
+#ifdef win_unix
 os9err DirNthEntry( syspath_typ* spP, int n )
 /* prepare directory to read the <n>th entry */
 {   
@@ -1361,8 +1368,6 @@ void seekD0( syspath_typ* spP )
 
 
 
-  
-
 ulong DirSize( syspath_typ* spP )
 /* get the virtual OS-9 dir size in bytes */
 {
@@ -1389,7 +1394,6 @@ ulong DirSize( syspath_typ* spP )
     return cnt*DIRENTRYSZ;
 } /* DirSize */
 #endif
-
 
 
 
@@ -1433,36 +1437,95 @@ int stat_( const char* pathname, struct stat *buf )
 
 Boolean DirName( const char* pathname, ulong fdsect, char* result )
 {
-    Boolean ok= false;
+  Boolean ok= false;
 
-    #ifdef MACOS9
-      #pragma unused(pathname,fdsect,result)
-    #endif
+  #ifdef MACOS9
+    #pragma unused(pathname,fdsect,result)
+  #endif
     
-    #ifdef win_unix
-      DIR*        d;
-      dirent_typ* dEnt;
-      ulong       fd;
+  #ifdef win_unix
+    DIR*        d;
+    dirent_typ* dEnt;
+    ulong       fd;
+
+    #ifdef __MACH__
+      char   p [OS9PATHLEN];
+      char   q [OS9PATHLEN];
+      char   sv[OS9PATHLEN];
+      struct stat qInfo;
+      struct stat pInfo;
+      int    len, err;
       
-          d= (DIR*)opendir( pathname ); /* search for the current inode */
-      if (d!=NULL) {
-          while (true) {
-                  dEnt= ReadTDir( d );
-              if (dEnt==NULL) break;
-              FD_ID( pathname,dEnt, &fd );
-              
-            //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
-              if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
-                  strcpy(       result, dEnt->d_name );
-                  ok= true; break;
-              }   
-          } /* while */
-          
-          closedir( d );
-      } /* if */
+      strcpy( sv, result ); 
     #endif
+     
+        d= (DIR*)opendir( pathname ); /* search for the current inode */
+    if (d!=NULL) {
+      while (true) {
+            dEnt= ReadTDir( d );
+        if (dEnt==NULL) break;
+        FD_ID( pathname,dEnt, &fd );
+              
+      //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
+        if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
+          strcpy( result,         dEnt->d_name );
+          ok= true; break;
+        }   
+      } // loop
+          
+      closedir( d );
+      
+      
+      if (!ok) {
+        strcpy( result, "?" ); // in case of not found
+      
+        #ifdef __MACH__
+          do {
+            // prepare comparison of one higher inode
+            strcpy( q,  pathname );
+            len= strlen(pathname); if (len<=6) break;
+            q[ len-6 ]= 0;
+          
+          //upo_printf( "q='%s' sv='%s'\n", q, sv );
+		        err= stat_ ( q, &qInfo ); if (err) break;
+          //upo_printf( "q='%s' ino=%d err=%d\n", q, qInfo.st_ino, err );
+              
+                d= (DIR*)opendir( pathname ); /* search for the current inode */
+            if (d!=NULL) {
+              while (true) {
+                    dEnt= ReadTDir( d );
+                if (dEnt==NULL) break;
+              //upo_printf( "name='%s'\n", dEnt->d_name );
+		                        
+                strcpy( p, pathname );
+		            strcat( p, PATHDELIM_STR );
+		            strcat( p, dEnt->d_name );
+		            strcat( p, PATHDELIM_STR );
+		            strcat( p, sv );
+		          
+		            // get inode and compare it
+		                 err= stat_ ( p, &pInfo );
+                if (!err) {
+               // upo_printf( "name='%s' ino=%d\n", p, pInfo.st_ino );
+                  if (pInfo.st_ino==qInfo.st_ino) { 
+                    strcpy( result, dEnt->d_name );
+                    ok= true;
+                    break;
+                  } // if
+                } // if
+              } // loop
+        
+              closedir( d );
+            } // if
+          } while (false);
+        #endif
+      } // if
+      
+    //upo_printf( "'%s' %s => '%s'\n\n", pathname, ok ? "OK":"NOT OK", result ); 
+    } /* if */
+  #endif
   
-    return ok;
+  return ok;
 } /* DirName */
 
 
