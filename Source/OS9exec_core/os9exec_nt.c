@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2005/06/30 11:51:48  bfo
+ *    Mach-O support
+ *
  *    Revision 1.44  2005/05/13 17:26:46  bfo
  *    Use <imgMode>
  *
@@ -338,7 +341,7 @@ ulong  startTick= 0;
 ulong   lastTick= 0;
 int       syCorr= 0;
 
-#ifdef linux
+#ifdef unix
   ulong sec0;
 #endif
 
@@ -696,23 +699,27 @@ void get_hw()
 void StartDir( char* pathname )
 {
 	char    acc   [OS9PATHLEN];
+	char    sv    [OS9PATHLEN];
   char    result[OS9PATHLEN];
 	struct  stat info;
 	
 	strcpy( pathname,"" ); /* start with an empty string */
 	strcpy( acc,    "." ); /* and take current dir for start */
+  strcpy( result,  "" );
 
 	while (true) {
 		stat_  ( acc, &info );
 		strcat ( acc,"/.." );
 		DirName( acc,  info.st_ino, (char*)&result );
 		if (strcmp( result,".")==0) {
-			strcpy( result,"" ); break;
-		}
+			  strcpy( result,"" ); break;
+		} // if
 
-		strcat( result,  pathname );
-		strcpy( pathname,PATHDELIM_STR );
+    strcpy( sv, pathname );
+    strcpy( pathname,PATHDELIM_STR );
 		strcat( pathname,result );
+		strcat( pathname,    sv );
+  //upo_printf( "result='%s'\n", pathname );
 	} /* while */
 }  
 #endif
@@ -920,11 +927,14 @@ static void titles( void )
    /* - Apperance (CTB-terminal, Win32 or Linux Console or MPW tool) */
    #ifdef TERMINAL_CONSOLE
      #ifdef macintosh
-       #ifndef SERIAL_INTERFACE
-       upho_printf("- CTB Console Version, 'Termconsole'      (c) 1996 by Joseph J. Strout\n");
+       #if defined USE_CLASSIC && !defined SERIAL_INTERFACE
+         upho_printf("- CTB Console Version, 'Termconsole'      (c) 1996 by Joseph J. Strout\n");
        #endif
-       upho_printf("- Mac Serial Interface Version            (c) 2000 by B. Forster\n");
-     
+       
+       #ifdef MACOS9
+         upho_printf("- Mac Serial Interface Version            (c) 2000 by B. Forster\n");
+       #endif
+       
      #elif defined windows32
        upho_printf("- Windows Console Version\n");
      #elif defined linux
@@ -1310,7 +1320,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
     upho_printf( "Copyright (C) 2005 Lukas Zeller / Beat Forster\n" );
     upho_printf( "This program is distributed under the terms of\n" ); 
-    upho_printf( "        the GNU General Public License\n" );
+    upho_printf( "       the GNU General Public License         \n" );
     upho_printf( "\n" );
 
    	/* prepare low-level magic, to allow using llm_xxx() routines */
