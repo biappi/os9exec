@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2005/06/30 11:40:43  bfo
+ *    Mach-O support / systime -t : more consistent support
+ *
  *    Revision 1.15  2004/11/27 12:11:10  bfo
  *    _XXX_ introduced
  *
@@ -531,13 +534,13 @@ ulong GetSystemTick(void)
 {
     ulong t;
 
-    #if defined MACOS9
+    #ifdef MACOS9
       t=  TickCount();
                   
     #elif defined windows32
       t= GetTickCount()/10; /* take 100 instead of 1000 on PC */
 
-    #elif defined linux
+    #elif defined unix
       struct timeval  tv;
       struct timezone tz;
       
@@ -546,8 +549,8 @@ ulong GetSystemTick(void)
       t=         tv.tv_sec - sec0;
       t= 100*t + tv.tv_usec/10000;
 
-    #elif defined __MACH__
-      t= 0;
+  //#elif defined __MACH__
+  //  t= 0;
       
     #else
       #error Not yet implemented GetSystemTick()
@@ -826,8 +829,9 @@ os9err int_systime(ushort pid, int argc, char **argv)
                     case 'n': switch (p[ 1 ]) {
                                   case '=': strcpy( systime_prog,&p[2] );
                                             p= p+strlen(p)-1; /* skip rest */ break;
-                                  default : strcpy( systime_prog,"" );        break;
+                                  default : strcpy( systime_prog,"" );
                               } // switch
+                              break;
                               
                     case 'f': mode |= STIM_FCALLS;                            break;
                     case 'i': mode |= STIM_ICALLS;                            break;
@@ -839,9 +843,10 @@ os9err int_systime(ushort pid, int argc, char **argv)
                               switch (p[ 1 ]) {
                                 case '=': if (sscanf( &p[2],"%d", &ticksLim )<1) ticksLim= 1;
                                           p= p+strlen(p)-1; /* skip rest */   break;
-                                default : ticksLim= 1;                        break;
+                                default : ticksLim= 1;
                               } // switch
-                     
+                              break;
+                    
                     case 'p': mode |= STIM_PERCENT;   /* >=1 percent */       break;
                     
                     default : upe_printf("Error: unknown option '%c'!\n",*p); 
