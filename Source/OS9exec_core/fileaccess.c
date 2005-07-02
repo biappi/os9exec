@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2005/06/30 11:37:43  bfo
+ *    .tmp.X eliminated / Mach-O support
+ *
  *    Revision 1.22  2005/05/13 17:23:26  bfo
  *    SetSize access improved for Windows
  *
@@ -538,9 +541,8 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
       fd |= objid & IDMASK;
 
       l= &buffer[ PD_FD ]; *l= os9_long(fd)<<BpB; /* LSN of file */
-    #endif
-
-    #ifdef win_linux
+      
+    #elif defined win_unix
       dirent_typ  dEnt;
       ulong       fdpos;
       ulong*      l;
@@ -580,13 +582,34 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       
       debugprintf(dbgFiles,dbgDetail,("# pFvolnam: name='%s', free bytes=%ld\n",volname,free));
 
-    #elif defined(windows32)
-      volname[0]= toupper( spP->fullName[0] ); /* first char only */       
-      volname[1]= NUL;     
+    #elif defined windows32
+      volname[ 0 ]= toupper( spP->fullName[ 0 ] ); /* first char only */       
+      volname[ 1 ]= NUL;     
     
     #elif defined linux
       strcpy( volname,"" ); /* none for Linux, top directory structure is different */
-    
+      
+    #elif defined __MACH__
+      /* MacOSX has a very special structure */
+      #define VV "/volumes/"
+      char* w= &spP->fullName;
+      char* v= w;
+
+      if (ustrncmp( w,VV, strlen(VV) )==0) {
+        if  (*v==PATHDELIM) v++; // cut slash at the beginning
+        strcpy( volname, v );
+        
+        w= volname + strlen(VV)-1;
+        v= strstr( w, PATHDELIM_STR );
+        if (v!=NULL) *v= NUL;   /* Keep "/Volumes/XXX" */
+      } // if 
+      else {
+        strcpy( volname, "" );
+        
+     // v= &volname[ strlen(volname)-1 ];
+     // if (*v==PATHDELIM) *v= NUL; // cut slash at the end
+      }
+      
     #else
       return E_UNKSVC;
     #endif
@@ -901,14 +924,16 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
       }
       else {
           /* --- open */
-          #ifdef win_linux
+          #ifdef win_unix
             /* object exists, but make sure it is not a directory */
             #ifdef windows32
-            SetLastError(ERROR_SUCCESS);
+              SetLastError(ERROR_SUCCESS);
             #endif
+            
             if (PathFound( pp )) return os9error(E_FNA);
+
             #ifdef windows32
-            if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+              if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
             #endif
           #endif
         
@@ -1450,7 +1475,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #ifdef MACOS9
       u= cipbP->hFileInfo.ioFlMdDat + OFFS_1904; /* get modification time */
     
-    #elif defined win_linux
+    #elif defined win_unix
       u= info.st_mtime;
       
       #ifdef windows32
@@ -1595,7 +1620,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
 
     #ifdef MACFILES
       cipbP->hFileInfo.ioFlMdDat= (ulong)u-OFFS_1904; /* fill it into Mac's record */
-    #elif defined win_linux
+    #elif defined win_unix
       Set_FileDate( spP, u );
     #endif
 
@@ -1630,7 +1655,7 @@ os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
       err= getCipb( &cipb, &spP->u.disk.spec ); if (err) return err;
       fdl=          &cipb;
     
-    #elif defined win_linux
+    #elif defined win_unix
       fdl= &spP->fullName; /* use this for linux */
     
     #else
@@ -1662,7 +1687,7 @@ os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
                     fdl= &cipb;
       err= getCipb( fdl, spc ); if (err) return err;
 
-    #elif defined win_linux
+    #elif defined win_unix
       fdl= NULL;
 
     #else
@@ -1741,7 +1766,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
       OSErr       oserr;
       Boolean     conv;
           
-    #elif defined win_linux
+    #elif defined win_unix
       char        name  [OS9PATHLEN];
       char        result[OS9PATHLEN];
     #endif
@@ -1801,7 +1826,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
       /* prepare an FD from it */
       fdl= &pbu.cipb;
     
-    #elif defined win_linux
+    #elif defined win_unix
       fdl= NULL;
       if      (DirName( spP->fullName, *fdinf, (char*)&result )) {
           strcpy( name, spP->fullName );
@@ -1906,7 +1931,7 @@ os9err pDclose( _pid_, syspath_typ* spP )
 {
     os9err err= 0;
 
-    #ifdef win_linux
+    #ifdef win_unix
       DIR* d= spP->dDsc;
       if  (d!=NULL) { err= closedir( d ); spP->dDsc= NULL; }
       debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", 
@@ -2079,7 +2104,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
     ulong  cnt, nbytes;
     os9direntry_typ os9dirent;
     
-    #ifdef win_linux
+    #ifdef win_unix
       dirent_typ*  dEnt;
       int          len;
       ulong        fdpos;
@@ -2102,7 +2127,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
         #ifdef MACFILES
           err= get_dir_entry( index, &os9dirent, spP );
           
-        #elif defined win_linux
+        #elif defined win_unix
           err= 0;
           memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
           
@@ -2223,7 +2248,7 @@ os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
       *sizeP=(cipb.dirInfo.ioDrNmFls + 2) * DIRENTRYSZ; /* calc size (don't forget two more for . and .. */
       debugprintf(dbgFiles,dbgDetail,("# pDsize: number of files=%ld\n",cipb.dirInfo.ioDrNmFls));
 
-    #elif defined win_linux
+    #elif defined win_unix
       *sizeP= DirSize( spP );
       
     #else
@@ -2239,10 +2264,10 @@ os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
 /* set read position */
 os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
 {
-    #ifdef macintosh
+    #ifdef MACOS9
       ulong       size;
       os9err      err;
-    #elif defined win_linux
+    #elif defined win_unix
       int         cnt, n;
       dirent_typ* dEnt;
     #else
@@ -2250,12 +2275,12 @@ os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
     #endif
     
     
-    #ifdef macintosh
+    #ifdef MACOS9
       err= pDsize( pid,spP, &size ); if (err) return err;
       debugprintf(dbgFiles,dbgNorm,("# pDseek: dir size is = $%lX, seek request to $%lX\n",size,*posP));
       if (*posP>size) return os9error(E_SEEK);
 
-    #elif defined win_linux
+    #elif defined win_unix
       seekD0( spP ); /* start at the beginning */
 
       n= 0;    cnt= *posP/DIRENTRYSZ;
@@ -2293,7 +2318,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
     process_typ* cp= &procs[pid];
     char*        defDir_s;
     
-    #if defined MACFILES
+    #ifdef MACFILES
       short   vref;
       long    dirID;
       long*   xD;
@@ -2437,7 +2462,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 
     if (*attr & 0x80 ) return 0; /* it is already a directory */
       
-    #ifdef win_linux
+    #ifdef win_unix
           err= RemoveAppledouble( spP ); /* because this file is not visible */
       if (err) return err;
     #endif
