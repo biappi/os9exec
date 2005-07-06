@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2005/06/30 11:47:20  bfo
+ *    Mach-O support
+ *
  *    Revision 1.17  2005/04/15 11:43:04  bfo
  *    Reduced size of RBF images is supported now
  *
@@ -748,7 +751,7 @@ os9err callcommand(char *name, ushort pid, int argc, char **argv)
 
 
 /* call of external Win/DOS commands for OS9exec/nt */
-os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv)
+os9err call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv )
 {
     #ifdef windows32
       PROCESS_INFORMATION procinfo;
@@ -801,6 +804,13 @@ os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv)
       }
       
       return host2os9err( GetLastError(),E_IFORKP );
+    
+    #elif defined __MACH__
+      os9err err;
+      
+      #pragma unused(pid,moreargs,argv)
+      err= system( cmdline );
+      return host2os9err( err,E_IFORKP );
     
     #else
       #ifndef linux
