@@ -32,6 +32,18 @@
 
 
 
+#define USE_UAEMU            // use UAE-68k emulator
+
+#ifdef macintosh
+   #define REUSE_MEM         // do not deallocate memory after use
+#endif
+  
+#define INT_CMD              // internal commands       supported
+#define CON_SUPPORT          // conole and TTYs         supported
+#define PIP_SUPPORT          // pipes  and PTYs         supported
+
+
+
 #ifdef windows32
   #define TERMINAL_CONSOLE   // can do single char I/O
   #define TFS_SUPPORT        // transparent file system supported
@@ -41,6 +53,17 @@
   #define PRINTER_SUPPORT    // LPT printers            supported
 #endif
 
+#ifdef linux
+  #define TERMINAL_CONSOLE   // can do single char I/O
+  #define TFS_SUPPORT        // transparent file system supported
+  #define RBF_SUPPORT        // RBF acesss              supported
+  #define RAM_SUPPORT        // RAM disk                supported
+  #define NET_SUPPORT        // TCP/IP sockets          supported
+//#define PRINTER_SUPPORT    // LPT printers            supported
+#endif
+
+
+// three different Mac versions
 #ifdef USE_CLASSIC
   #define TERMINAL_CONSOLE   // can do single char I/O
   #define TFS_SUPPORT        // transparent file system supported
