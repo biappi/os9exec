@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2005/07/02 14:20:36  bfo
+ *    Adapted for Mach-O / time correction for files / Volume name catch extension
+ *
  *    Revision 1.38  2005/06/30 11:45:17  bfo
  *    Mach-O support
  *
@@ -422,7 +425,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
       debugprintf(dbgErrors,dbgNorm,("# ** Win32 error=%d%s\n",
                                       hosterr,known ? "" : "(not known, using suggestion)"));
 
-    #elif defined unix
+    #elif defined UNIX
       if     (hosterr==0) return 0;
       err= suggestion; known=false;
     
@@ -1130,7 +1133,7 @@ void CutUp( char* pathname, const char* prev )
             case NUL      : *q= NUL; break; /* cut "/."  at the end */
             
             /* avoid duplicate definition */
-            #ifndef unix
+            #ifndef UNIX
             case PATHDELIM:
             #endif
             case PSEP     : *q= NUL; strcat( pathname,qs ); break; /* cut "/./" anywhere */
@@ -1141,7 +1144,7 @@ void CutUp( char* pathname, const char* prev )
                                 case NUL:
 
                                 /* avoid duplicate definition */
-                                #ifndef unix
+                                #ifndef UNIX
                                 case PATHDELIM:
                                 #endif
                                 case PSEP     : while   (q>pathname) {
@@ -1188,7 +1191,7 @@ void EatBack( char* pathname )
             case '.'      : if (searchP)    eat++;                      break;
             
             /* avoid duplicate definition */
-            #ifndef unix
+            #ifndef UNIX
             case PATHDELIM:
             #endif
             case PSEP     : *p= NUL; eat--; eat0= eat;  searchP=  true; break;
@@ -1402,7 +1405,7 @@ int stat_( const char* pathname, struct stat *buf )
 {
     int err= -1 /* default */;
     
-    #if defined macintosh || defined unix
+    #if defined macintosh || defined UNIX
       /* do it the "normal" way */
       err= stat( pathname, buf );
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2005/07/02 14:21:30  bfo
+ *    Adapted for Mach-O
+ *
  *    Revision 1.38  2005/06/30 11:50:20  bfo
  *    Mach-O support
  *
@@ -310,7 +313,7 @@
 #elif defined windows32
   #define PATHDELIM     '\\'
   #define PATHDELIM_STR "\\"
-#elif defined unix
+#elif defined UNIX
   #define PATHDELIM     '/'
   #define PATHDELIM_STR "/"
 #endif
@@ -606,7 +609,7 @@ typedef struct {
 #ifdef MACOS9
   typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
 #else
-  #if defined unix
+  #if defined UNIX
     typedef ulong     SOCKET;  /* make it visible for linux as std type */
   #endif
   
@@ -625,7 +628,7 @@ typedef struct {
   typedef struct InetAddress InetAddress;
 #endif
 
-#ifdef unix
+#ifdef UNIX
   #define kTransferBufferSize 256
 #else
   #define kTransferBufferSize 4096
@@ -1124,7 +1127,7 @@ extern ulong   startTick;
 extern ulong    lastTick;
 extern int        syCorr;
 
-#ifdef unix
+#ifdef UNIX
   extern ulong sec0;
 #endif
 

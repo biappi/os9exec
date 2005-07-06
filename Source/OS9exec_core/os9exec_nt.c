@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2005/07/02 14:22:50  bfo
+ *    Adapted for Mach-O / Title output adapted (reduced)  for real situation
+ *
  *    Revision 1.45  2005/06/30 11:51:48  bfo
  *    Mach-O support
  *
@@ -341,7 +344,7 @@ ulong  startTick= 0;
 ulong   lastTick= 0;
 int       syCorr= 0;
 
-#ifdef unix
+#ifdef UNIX
   ulong sec0;
 #endif
 
@@ -695,7 +698,7 @@ void get_hw()
 
 
 
-#ifdef unix
+#ifdef UNIX
 void StartDir( char* pathname )
 {
 	char    acc   [OS9PATHLEN];
@@ -756,7 +759,7 @@ static os9err GetStartPath( char* pathname )
 	//	/* make sure it ends with slash */
 	//	if (pathname[strlen(pathname)-1]!=PATHDELIM ) strcat(pathname,PATHDELIM_STR );
 
-	#elif defined unix
+	#elif defined UNIX
 	  StartDir( pathname );
 	#else
 	  strcpy  ( pathname,"" );

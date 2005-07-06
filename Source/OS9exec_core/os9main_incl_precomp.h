@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2005/06/30 15:46:13  bfo
+ *    Adapted for universal use
+ *
  *    Revision 1.17  2005/06/30 15:39:33  bfo
  *    Adapted for universal use
  *
@@ -114,7 +117,7 @@
 
 /* the UNIX systems */
 #if defined linux || defined __MACH__
-  #define unix
+  #define UNIX
 #endif
 
 /* either windows or linux */
@@ -123,7 +126,7 @@
 #endif
 
 /* all modern systems combined */
-#if defined win_linux || defined unix
+#if defined win_linux || defined UNIX
   #define win_unix
 #endif
 
@@ -350,7 +353,7 @@ typedef struct dirent dirent_typ;
 
 
 // define type shortcuts
-#ifndef unix
+#ifndef UNIX
   typedef unsigned int      uint;
   typedef unsigned long int ulong;
 #endif

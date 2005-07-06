@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2005/07/02 14:23:42  bfo
+ *    Adapted for Mach-O
+ *
  *    Revision 1.11  2005/06/30 11:54:36  bfo
  *    Mach-O support
  *
@@ -447,7 +450,7 @@ void os9_main( int argc, char **argv, char **envp )
     getversions();
     sw_name= "OS-9/68k Emulator";
     
-    #ifdef unix
+    #ifdef UNIX
       sec0= 0;
     #endif
 
@@ -616,7 +619,7 @@ void os9_main( int argc, char **argv, char **envp )
 		  screenH= 0;
 	  } // if
 
-	  #if defined unix || defined USE_CARBON
+	  #if defined UNIX || defined USE_CARBON
 	    userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
 	  #endif
 

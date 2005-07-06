@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2005/07/02 14:18:46  bfo
+ *    Adapted for Mach-O
+ *
  *    Revision 1.22  2005/06/30 11:44:15  bfo
  *    Mach-O support
  *
@@ -195,7 +198,7 @@ Boolean RBF_ImgSize( long size );
   os9err GetRBFName( char* os9path, ushort mode, Boolean *isFolder, 
                      FSSpec  *fs, FSSpec *afs );
 #endif
-#ifdef unix
+#ifdef UNIX
   os9err GetRBFName( char* os9path, ushort mdoe, Boolean *isFolder, 
                      char* rbfname );
 #endif

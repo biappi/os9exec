@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2005/06/30 13:13:23  bfo
+ *    Mach-O adaptions
+ *
  *    Revision 1.31  2005/04/17 20:46:49  bfo
  *    MPW is supported again
  *
@@ -149,7 +152,7 @@
   #define WSA_ASYNC WM_USER+1
 #endif
 
-#ifdef unix
+#ifdef UNIX
   #include <sys/utsname.h>
   #include <netdb.h>
   #include <netinet/in.h>
@@ -563,7 +566,7 @@ os9err pNclose( _pid_, syspath_typ* spP )
           err= closesocket( net->ep ); 
           release_mem     ( net->transferBuffer );
          
-        #elif defined unix
+        #elif defined UNIX
        // err= shutdown( net->ep, SHUT_RDWR );
           err= close   ( net->ep );
           release_mem  ( net->transferBuffer );
@@ -932,7 +935,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
       SOCKADDR_IN  name;
     #endif
     
-    #ifdef unix
+    #ifdef UNIX
       int  id, u_err;
     #endif
    
@@ -982,7 +985,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
           if (isRaw) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
           else       { ty= SOCK_STREAM; proto= IPPROTO_TCP;  }
 
-          #ifdef unix
+          #ifdef UNIX
             if (isRaw) {
                 id= geteuid();        // printf( "%d\n",     id    );
                 u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
@@ -991,7 +994,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
           
           net->ep= socket( af, ty, proto );
           
-          #ifdef unix
+          #ifdef UNIX
             if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
                 u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
             }

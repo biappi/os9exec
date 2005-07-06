@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2005/07/02 14:17:12  bfo
+ *    Adapted for Mach-O / break after switch for 'systime' options
+ *
  *    Revision 1.16  2005/06/30 11:40:43  bfo
  *    Mach-O support / systime -t : more consistent support
  *
@@ -540,7 +543,7 @@ ulong GetSystemTick(void)
     #elif defined windows32
       t= GetTickCount()/10; /* take 100 instead of 1000 on PC */
 
-    #elif defined unix
+    #elif defined UNIX
       struct timeval  tv;
       struct timezone tz;
       

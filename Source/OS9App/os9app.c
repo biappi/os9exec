@@ -50,7 +50,7 @@
   } /* main */
 
 
-#elif defined unix
+#elif defined UNIX
   int main( int argc, char* argv[] )
   {
     char *envp[] = {
