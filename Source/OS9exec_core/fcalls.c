@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2005/06/30 11:30:47  bfo
+ *    Mach-O support / use sig_mask (name clash) / FPU support info
+ *
  *    Revision 1.28  2004/11/27 12:03:49  bfo
  *    _XXX_ introduced
  *
@@ -903,14 +906,16 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
         /* Gestalt( gestaltFPUType,         &v ); not all defs visible for MPW ... */
            Gestalt( FOUR_CHAR_CODE('fpu '), &v );
            if ( v==3 ) v= 1;           /* this value is handled differently on Mac */
-        #elif defined win_unix
-           v= 40;  /* just a fixed value for 68040 */
         #else
-           v=  0;  /* FPU not yet supported */
+           v= 0; /* FPU not yet supported */
         #endif
         
         #ifdef USE_UAEMU /* 68881 FPU available with emulator */
-           v=  1;  /* still some problems ? */
+          v= 1;  /* still some problems ? */
+           
+        //#ifdef __MACH__
+        //   v= 0;
+        //#endif
         #endif
         break;
          
