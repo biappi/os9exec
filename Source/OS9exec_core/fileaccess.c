@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2005/07/06 21:01:13  bfo
+ *    defined UNIX / fSetsz adaptions
+ *
  *    Revision 1.24  2005/07/02 14:15:50  bfo
  *    Adapted for Mach-O / Special handling for /Volumes/XXX
  *
@@ -1264,7 +1267,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
           err= fseek    ( spP->stream,0,SEEK_SET ); if (err) return err; /* go to beginning */
           fflush        ( spP->stream );                             /* unbuffer everything */
           fd = fileno   ( spP->stream );                       /* <fd> used for "ftruncate" */
-          err= ftruncate( fd, *sizeP  ); if (err) return err;   /* cut the file at <*sizeP> */
+          err= ftruncate( fd, *sizeP  );                        /* cut the file at <*sizeP> */
         }
       #endif
     #endif
