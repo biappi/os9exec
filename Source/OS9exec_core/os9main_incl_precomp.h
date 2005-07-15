@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2005/07/06 21:09:44  bfo
+ *    defined UNIX
+ *
  *    Revision 1.18  2005/06/30 15:46:13  bfo
  *    Adapted for universal use
  *
@@ -233,6 +236,8 @@
   typedef int DIR; /* just dummy definitions */
 #endif
 
+#include <math.h>
+
 #ifdef win_unix
   #ifdef windows32
     #if __MWERKS__ < CW7_MWERKS
@@ -267,13 +272,17 @@
     
     #include <dirent.h>
     #include <sys/stat.h>
-    #include <unistd.h>
+    
+    #ifndef __MACH__
+      #include <unistd.h>
+    #endif
   #endif
 #endif
 
 typedef struct dirent dirent_typ;
 
 #ifdef __MACH__
+  #define  NULL 0L
 //#define _STDARG_H
 //#include <va_list.h>
   #include <mw_stdarg.h>    // N.B. Not cdstarg!
