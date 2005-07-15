@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2005/07/06 21:02:14  bfo
+ *    defined UNIX
+ *
  *    Revision 1.17  2005/07/02 14:17:12  bfo
  *    Adapted for Mach-O / break after switch for 'systime' options
  *
@@ -85,6 +88,10 @@
 
 #ifdef linux
   #include <time.h>
+#endif
+
+#ifdef __MACH__
+  #include <unistd.h>
 #endif
 
 
