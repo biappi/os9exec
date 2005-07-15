@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2005/07/10 19:24:07  bfo
+ *    Ignore truncate error
+ *
  *    Revision 1.25  2005/07/06 21:01:13  bfo
  *    defined UNIX / fSetsz adaptions
  *
@@ -1256,6 +1259,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       #elif defined UNIX
         long curSize;
         int  fd;
+        OSErr oserr= 0;
         
         tmp_pos= ftell( spP->stream );                 /* make it compatible for gcc >= 3.2 */
         err= fseek    ( spP->stream,0,SEEK_END ); if (err) return err;         /* go to EOF */
@@ -1268,12 +1272,22 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
           fflush        ( spP->stream );                             /* unbuffer everything */
           fd = fileno   ( spP->stream );                       /* <fd> used for "ftruncate" */
           err= ftruncate( fd, *sizeP  );                        /* cut the file at <*sizeP> */
+          fflush        ( spP->stream );
         }
       #endif
     #endif
 
     /* just read and write back one char at the end to get the correct size */
-    do {           // do not change the content if smaller -> read it first    
+    do {           // do not change the content if smaller -> read it first
+      #ifdef UNIX
+        if (*sizeP==0) {
+          fclose( spP->stream );
+          oserr=          remove( spP->fullName );
+              spP->stream= fopen( spP->fullName,"wb+" ); /* create for update, use binary mode (bfo) ! */
+          if (spP->stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
+        }
+      #endif
+      
       if (*sizeP>0) {
         #ifdef UNIX
           if (*sizeP<=curSize) {              n= sizeof(b);
@@ -1291,6 +1305,8 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       
       if (tmp_pos>*sizeP)      tmp_pos= *sizeP; // adapt current pos, if now smaller
       err= pFseek ( pid, spP, &tmp_pos );
+    //upe_printf( "'%s' new  pos=%d err=%d\n", spP->name, tmp_pos, err );
+      fflush ( spP->stream );
     } while (false);
     
     if    (err==E_EOF) err= E_FULL;
