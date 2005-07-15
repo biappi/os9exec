@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2005/06/30 15:46:13  bfo
+ *    Adapted for universal use
+ *
  *    Revision 1.12  2005/06/30 15:32:33  bfo
  *    Adapted for universal use
  *
@@ -107,11 +110,11 @@
   #include ":os9defs:errno_adapted.h"
 
 #else
-  #ifdef __MACH__
-    #include "module_special.h"
-  #else
+//#ifdef __MACH__
+//  #include "module_special.h"
+//#else
     #include "module.h"
-  #endif
+//#endif
   
   #if defined windows32 && __MWERKS__ >= CW8_MWERKS
     #include "procid_special.h"
