@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2005/07/15 10:23:14  bfo
+ *    Empty file problem fixed
+ *
  *    Revision 1.26  2005/07/10 19:24:07  bfo
  *    Ignore truncate error
  *
@@ -1306,7 +1309,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       if (tmp_pos>*sizeP)      tmp_pos= *sizeP; // adapt current pos, if now smaller
       err= pFseek ( pid, spP, &tmp_pos );
     //upe_printf( "'%s' new  pos=%d err=%d\n", spP->name, tmp_pos, err );
-      fflush ( spP->stream );
+    //fflush ( spP->stream );
     } while (false);
     
     if    (err==E_EOF) err= E_FULL;
