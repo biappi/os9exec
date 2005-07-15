@@ -1253,6 +1253,12 @@
           05-06-26  Bfo     Mach-O version runs with MGR now
           05-06-30  Bfo     Mach-O version with param support
           05-06-30  Bfo     Good old 68k version compiled again for test
+          05-06-30  Bfo     sigmask name clash fixed => sig_mask
+          05-06-30  Bfo     os9app.c: Combined version for all operating systems
+          05-07-06  Bfo     System call supported for the unix world
+          05-07-06  Bfo     defined UNIX
+          05-07-10  Bfo     Do FPU handling as before
+          05-07-12  Bfo     Empty file problem (Mach-O) fixed
     3.28  05-??-??  Bfo     ...
     -------------------
        
