@@ -27,7 +27,7 @@
 /*    main include file for all versions      */
 /*                                            */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2005/07/15 22:24:00  bfo
+ *    <math.h> / <unistd.h> and NULL adaptions for OS9exec/PtoC
+ *
  *    Revision 1.19  2005/07/06 21:09:44  bfo
  *    defined UNIX
  *
@@ -102,6 +105,9 @@
 #ifndef OS9MAIN_INCL_PRECOMP_H
 #define OS9MAIN_INCL_PRECOMP_H
 
+
+// This is OS9exec !!
+#define OS9EXEC 1 
 
 
 /* WINTEL can't be separated :-) */
@@ -212,11 +218,11 @@
   #define WINMEM      /* use Mac Memory manager calls instead of C-level calloc()/free() */
 #endif
 
-#ifdef __INTEL__
+#if defined __INTEL__ || defined UNIX
   #define TICKS_PER_SEC 100 /* Number of Ticks per sec (as reported by GetTickCount()) */
 #endif
 
-#ifdef macintosh
+#ifdef MACOS9
   #if __MWERKS__ >= CW7_MWERKS
     #define TICKS_PER_SEC 60 /* CLOCKS_PER_SEC seems to buggy in CW7 */
   #else
@@ -283,12 +289,9 @@ typedef struct dirent dirent_typ;
 
 #ifdef __MACH__
   #define  NULL 0L
-//#define _STDARG_H
-//#include <va_list.h>
   #include <mw_stdarg.h>    // N.B. Not cdstarg!
   #include <stddef.h>
   #include <cstdio>
-//#include <cstdlib>
   #include <stat.h>
 #endif
 
@@ -374,7 +377,6 @@ typedef struct dirent dirent_typ;
 #if !defined windows32 || __MWERKS__ >= CW7_MWERKS
   typedef unsigned char byte;
 #endif
-
 
 #endif // OS9MAIN_INCL_PRECOMP_H
 
