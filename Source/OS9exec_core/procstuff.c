@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2005/06/30 11:57:42  bfo
+ *    sig_mask adaption
+ *
  *    Revision 1.26  2004/11/20 11:42:31  bfo
  *    System load problem because of zombie fixed.
  *
@@ -126,11 +129,12 @@ void show_processes(void)
                 case pDead     : sta='D'; break;
                 case pSleeping : sta='S'; break;
                 case pWaiting  : sta='W'; break;
-                case pIntUtil  : sta='I'; break;
+            //  case pIntUtil  : sta='I'; break;
                 case pSysTask  : sta='T'; break;
                 case pWaitRead : sta='S'; break;
                 default        : sta='?'; break;
-            }
+            } // switch
+            if (cp->isIntUtil)   sta='I';
 
             if (k==currentpid) mName= "iprocs";
             else {             mName= "<none>";
@@ -168,7 +172,7 @@ void init_processes()
     ulong   sz= sizeof(procid);
     
     for (k=0; k<MAXPROCESSES; k++) {   /* assign all the constant values which never change */
-        pd= &procs[k].pd; 
+        pd= &procs[ k ].pd; 
         memset( pd,0, sz );            /* cleanup the whole proc descriptor */
         
         pd->_id    = os9_word(k);
@@ -198,6 +202,7 @@ void init_processes()
      // for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* invisible at DevPak von 68K OS-9 V1.2 */
         
         set_os9_state( k, pUnused );   /* invalidate this process  */
+        procs[k].isIntUtil= false;
         prDBT[k]= 0;                   /* and also the table entry */
     } /* for */
     
@@ -409,6 +414,8 @@ os9err kill_process( ushort pid )
     regs_type*   rp;
     ushort       parentid,k;
     
+  //upe_printf( "kill id=%d %d\n", pid, cp->state );
+    
     if (cp->state==pUnused) return os9error(E_IPRCID); /* process does not exist */
     debugprintf(dbgProcess,dbgNorm,("# kill_process: killing pid=%d, parentid=%d, exiterr=%d\n",
                                        pid, os9_word(cp->pd._pid),cp->exiterr));
@@ -418,6 +425,7 @@ os9err kill_process( ushort pid )
     debugprintf(dbgProcess,dbgNorm,("# kill_process: usrpaths closed\n" ));
     unlink_traphandlers( pid );
     debugprintf(dbgProcess,dbgNorm,("# kill_process: traphandlers unlinked\n" ));
+  //cp->isIntUtil= false;
     
     /* first orphan eventual children of the process */
     for (k=0; k<MAXPROCESSES; k++) {
@@ -438,14 +446,17 @@ os9err kill_process( ushort pid )
     
     if (parentid>0 &&
         parentid<MAXPROCESSES) {
-        /* there is a parent process */
-        set_os9_state( pid, pDead ); /* keep it there until parent recognizes */
-        if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
-        AssignNewChild( parentid,pid );
+    //upe_printf( "dead id=%d\n", pid );
+      /* there is a parent process */
+      set_os9_state( pid, pDead ); /* keep it there until parent recognizes */
+      if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
+      AssignNewChild( parentid,pid );
     }
-    else 
-        set_os9_state( pid, pUnused ); /* there's no parent => invalidate descriptor */
-   
+    else {
+    //upe_printf( "unused id=%d\n", pid );
+      set_os9_state( pid, pUnused ); /* there's no parent => invalidate descriptor */
+    } // if
+    
     debugprintf(dbgProcess,dbgNorm,("# kill_process: process killed\n" ));
 
     /* module can't be unlinked as long as process is not pDead or pUnused */
@@ -491,10 +502,10 @@ os9err kill_process( ushort pid )
 /* send a signal to a process */
 os9err send_signal(ushort spid, ushort signal)
 {
-    process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
-    process_typ* sigp;                     /* ptr to procs dsc to which the signal will be sent */
-    sig_typ*     s   = &sig_queue;
-    save_type*   svd;
+  process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
+  process_typ* sigp;                     /* ptr to procs dsc to which the signal will be sent */
+  sig_typ*     s   = &sig_queue;
+  save_type*   svd;
 	int          k;
 	Boolean      wRead;
 	regs_type*   v;
@@ -511,132 +522,149 @@ os9err send_signal(ushort spid, ushort signal)
 	} /* if */
 
 	if (spid>=MAXPROCESSES) return E_IPRCID;         /* check the validity of <spid> first */
-    sigp= &procs[spid];               /* ptr to procs dsc to which the signal will be sent */
+  sigp= &procs[spid];               /* ptr to procs dsc to which the signal will be sent */
 
-    if (currentpid==0) cp= sigp;
-    debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d (%s) from currentpid=%d\n",
-                                       signal,spid, PStateStr(sigp), currentpid ));
+  if (currentpid==0) cp= sigp;
+  debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d (%s) from currentpid=%d\n",
+                                     signal,spid, PStateStr(sigp), currentpid ));
 
-    if (sigp->state==pUnused || /* bad process */
-        sigp->state==pDead) return os9error(E_IPRCID);
+  if (sigp->state==pUnused || /* bad process */
+      sigp->state==pDead) return os9error(E_IPRCID);
 
-    if (signal==S_Kill) {
-        /* unconditionally kill process */
-        sigp->exiterr= os9error(E_PRCABT); /* process aborted */
-        kill_process( spid );
-        return 0;
-    }
+  if (signal==S_Kill) {
+    /* unconditionally kill process */
+    sigp->exiterr= os9error(E_PRCABT); /* process aborted */
+    kill_process( spid );
+    return 0;
+  } // if
 
-    if (signal==S_Wake && spid==currentpid) return 0; /* ignore this */
+  if (signal==S_Wake && spid==currentpid) return 0; /* ignore this */
+   
+//if (sigp->isIntUtil) return 0; /* ignore this as well for the moment */
     
-    /* signal will be delayed, if receiving process in pWaitRead mode */
-    wRead= ( sigp->state==pWaitRead && !sigp->pwr_brk );
+  /* signal will be delayed, if receiving process in pWaitRead mode */
+  wRead= ( sigp->state==pWaitRead && !sigp->pwr_brk );
     
-    /* some of the signals must be stored in a queue */
-    if    (cp->way_to_icpt || sigp->masklevel>0 || wRead || !async_area) {
-        if (signal==S_Wake && sigp->masklevel>0) return 0; /* needn't to be stored in this case */
+  /* some of the signals must be stored in a queue */
+  if  (cp->way_to_icpt || sigp->masklevel>0 || wRead || !async_area) {
+    if (signal==S_Wake && sigp->masklevel>0) return 0; /* needn't to be stored in this case */
         
-        if (wRead && signal<=Pwr_Signal) sigp->pwr_brk= true; /* special break condition */
+    if (wRead && signal<=Pwr_Signal) sigp->pwr_brk= true; /* special break condition */
         
-        s= &sig_queue; /* store it, but don't do anything */
-        s->pid   [s->cnt]= spid;
-        s->signal[s->cnt]= signal;
+    s= &sig_queue; /* store it, but don't do anything */
+    s->pid   [s->cnt]= spid;
+    s->signal[s->cnt]= signal;
         
-        if (s->cnt<MAXSIGNALS) s->cnt++;
-//      upe_printf("# send signal=%d to pid=%d queued (level=%d) %d\n",
+    if (s->cnt<MAXSIGNALS) s->cnt++;
+//  upe_printf("# send signal=%d to pid=%d queued (level=%d) %d\n",
 //                                         signal,spid, s->cnt, sigp->pwr_brk );
-        debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d queued (level=%d)\n",
+    debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d queued (level=%d)\n",
                                            signal,spid, s->cnt ));
-        /* synchronise it (must be inside the os9exec area) */
-        if (!async_area && sigp->masklevel==0) async_pending= true;
-        return 0;
-    } /* if */
+    /* synchronise it (must be inside the os9exec area) */
+    if (!async_area && sigp->masklevel==0) async_pending= true;
+    return 0;
+  } /* if */
     
-    /* now it's time to clear the flag again */
-    if (signal<=Pwr_Signal) sigp->pwr_brk= false; /* switch it off again */
+  /* now it's time to clear the flag again */
+  if (signal<=Pwr_Signal) sigp->pwr_brk= false; /* switch it off again */
     
-    cp->icpt_pid   = spid;    /* keep it save */
-    cp->icpt_signal= signal;
+  cp->icpt_pid   = spid;    /* keep it save */
+  cp->icpt_signal= signal;
+  
+  if (procs[cp->icpt_pid].isIntUtil)
+    printf( "%d wer sendet denn da %d\n", currentpid, signal ); /* %bfo% */
         
-    /* first, wakeup process, if sleeping */
-    if (sigp->state==pSleeping) {
-        debugprintf(dbgProcess,dbgNorm,("# send_signal: waking pid=%d from sleep\n",spid));
-        set_os9_state( spid, pActive );
-        sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
-        sigp->os9regs.sr &= ~CARRY; /* error-free return */
-        sigp->way_to_icpt = true;   /* activate both */
-          cp->way_to_icpt = true;
-        arbitrate= false;           /* don't arbitrate, continue with woken-up process */
+  /* first, wakeup process, if sleeping */
+  if (sigp->state==pSleeping) {
+    debugprintf(dbgProcess,dbgNorm,("# send_signal: waking pid=%d from sleep\n",spid));
+    set_os9_state( spid, pActive );
+    sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
+    sigp->os9regs.sr &= ~CARRY; /* error-free return */
+    sigp->way_to_icpt = true;   /* activate both */
+      cp->way_to_icpt = true;
+    arbitrate= false;           /* don't arbitrate, continue with woken-up process */
     
-        if (currentpid==0 && signal==S_Wake) {
-            currentpid= spid;
-            arbitrate = true;
-        }
-    }
+    if (currentpid==0 && signal==S_Wake) {
+      if (sigp->isIntUtil) { 
+        cp->way_to_icpt= false; return 0; /* don't switch */
+      } // if
+      
+      currentpid= spid;
+      arbitrate = true;
+    } // if
+  } // if
 
-    if (signal!=S_Wake) {
-        /* not wake, additional processing required */
-        if (sigp->pd._signal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
-                  /* should never be called, because now a signal queue is implemented */
+  if (signal!=S_Wake) {
+    /* not wake, additional processing required */
+    if (sigp->pd._signal!=0) return os9error(E_USIGP); /* behave like old OS9 <2.2 */
+              /* should never be called, because now a signal queue is implemented */
 
-        if (sigp->state==pWaiting) {
-            debugprintf(dbgProcess,dbgDetail,("# send_signal: receiving pid=%d was waiting\n",spid));
-            retword(sigp->os9regs.d[0])= 0; /* return 0 means that no process has died (pid=0's death can't be awaited) */
-            retword(sigp->os9regs.d[1])= 0; /* no signal code !!! returning signal code is wrong (bfo) */
-            sigp->os9regs.sr &= ~CARRY;     /* error-free return */
-        } /* if */      
+    if (sigp->state==pWaiting) {
+      debugprintf(dbgProcess,dbgDetail,("# send_signal: receiving pid=%d was waiting\n",spid));
+      retword(sigp->os9regs.d[0])= 0; /* return 0 means that no process has died (pid=0's death can't be awaited) */
+      retword(sigp->os9regs.d[1])= 0; /* no signal code !!! returning signal code is wrong (bfo) */
+      sigp->os9regs.sr &= ~CARRY;     /* error-free return */
+    } /* if */      
                 
-        arbitrate= false;
-        sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
+    arbitrate= false;
+    sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
-        /* now, check if target can catch signal */
-        if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
-            sigp->way_to_icpt = true;    /* activate both */
-              cp->way_to_icpt = true;
-            if (sigp->state==pWaitRead) {
-                                  svd= &sigp->savread; 
-                sigp->rtevector=  svd->vector;   /* save original info */
-                sigp->rtefunc  =  svd->func;
-                              v= &svd->r;        /* all original regs */
-            }
-            else {
-                sigp->rtevector=  sigp->vector;  /* save some additional info */
-                sigp->rtefunc  =  sigp->func;
-                              v= &sigp->os9regs; /* all regs */
-            }
+    /* now, check if target can catch signal */
+    if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
+        sigp->way_to_icpt= true;    /* activate both */
+          cp->way_to_icpt= true;
+      if (sigp->state==pWaitRead) {
+                          svd= &sigp->savread; 
+        sigp->rtevector=  svd->vector;   /* save original info */
+        sigp->rtefunc  =  svd->func;
+                      v= &svd->r;        /* all original regs */
+      }
+      else {
+        sigp->rtevector=  sigp->vector;  /* save some additional info */
+        sigp->rtefunc  =  sigp->func;
+                      v= &sigp->os9regs; /* all regs */
+      }
             
-            memcpy( (void*)&sigp->rteregs, (void*)v, sizeof(regs_type) ); /* save all regs */
+      memcpy( (void*)&sigp->rteregs, (void*)v, sizeof(regs_type) ); /* save all regs */
             
-            /* signal causes wakeup */
-            if (sigp->state!=pWaitRead) set_os9_state( spid, pActive );   /* activate for all other cases */
-            sigp->rtestate= sigp->state;                                  /* save it, active after signal */
-            set_os9_state( spid, pActive );                               /* now activate it */
+      /* signal causes wakeup */
+      if (sigp->state!=pWaitRead) set_os9_state( spid, pActive );   /* activate for all other cases */
+      sigp->rtestate= sigp->state;                                  /* save it, active after signal */
+      set_os9_state( spid, pActive );                               /* now activate it */
            
-            sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
-            sigp->os9regs.a[6]= sigp->icpta6;
-            sigp->os9regs.d[1]= signal;
+      sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
+      sigp->os9regs.a[6]= sigp->icpta6;
+      sigp->os9regs.d[1]= signal;
             
-            if (currentpid==0) { /* for this special case we have to do it here */
-                currentpid= spid;
-                arbitrate = true;
-            }
+      if (currentpid==0) { /* for this special case we have to do it here */
+        if (sigp->isIntUtil) { 
+          cp->way_to_icpt= false; return 0; /* don't switch */
+        }
+        
+        currentpid= spid;
+        arbitrate = true;
+      } // if
             
-            debugprintf(dbgProcess,dbgNorm,("# send_signal=%d => continuing in icpt routine of pid=%d\n", 
+      debugprintf(dbgProcess,dbgNorm,("# send_signal=%d => continuing in icpt routine of pid=%d\n", 
                                                signal,spid ));
-            /* execution will continue in intercept routine */
-        }
-        else {
-            /* abort process */
-            debugprintf(dbgProcess,dbgNorm,("# send_signal=%d => pid=%d has no icpt routine, so it will be killed\n",
-                                               signal,spid ));
-            sigp->exiterr= signal; /* return signal as abort code */
-            kill_process( spid );            
-            sigp->way_to_icpt = false; /* don't handle it as intercept */
-              cp->way_to_icpt = false;
-        }
-    }   
+      /* execution will continue in intercept routine */
+    }
+    else {
+      if (sigp->isIntUtil) { 
+        printf( "%d abortli\n", currentpid );  /* %bfo% */
+      } // if
 
-    return 0; /* signal sent successfully */
+      /* abort process */
+      debugprintf(dbgProcess,dbgNorm,("# send_signal=%d => pid=%d has no icpt routine, so it will be killed\n",
+                                               signal,spid ));
+      sigp->exiterr= signal; /* return signal as abort code */
+      kill_process( spid );            
+      sigp->way_to_icpt= false; /* don't handle it as intercept */
+        cp->way_to_icpt= false;
+    }
+  } // if  
+
+  return 0; /* signal sent successfully */
 } /* send_signal */
 
 
@@ -677,21 +705,6 @@ os9err sig_mask( ushort cpid, int level )
         } /* if */
     } /* for */
 
-   
-//  if (*plv<=0 && s->cnt>0) {
-//      pid   = s->pid   [0]; /* use it as a fifo, save them first */
-//      signal= s->signal[0];
-//        
-//                    s->cnt--;
-//      for (ii=0; ii<s->cnt; ii++) { /* remove one element from stack */
-//          s->pid   [ii]= s->pid   [ii+1];
-//          s->signal[ii]= s->signal[ii+1];
-//      } /* for */
-//        
-//      if (s->cnt<=0) async_pending= false;
-//      err= send_signal( pid,signal );
-//  } /* if */
-    
     return 0;
 } /* sig_mask */
 
@@ -744,155 +757,184 @@ static void wait_for_signal( ushort pid )
  * Note: checks global flag "arbitrate" to see if global "currentpid"
  *       should be changed to next waiting/active process
  */
-void do_arbitrate(void)
+void do_arbitrate( void )
 {
-    ushort       pid, cpid, spid;
-    ushort       sleepingpid, deadpid;
-    process_typ  *cp, *sprocess;
-    Boolean      done    = false;
-    Boolean      chkAll  = false; /* 2nd run when all sleeping */
-    Boolean      atLeast1;        /* at least one process is sleeping */
+  ushort       cpid       = currentpid;
+  ushort       pid, spid;
+  process_typ* cp;
+  process_typ* sprocess;
+  ushort       sleepingpid= MAXPROCESSES; /* assume none sleeping */
+  ushort       deadpid    = MAXPROCESSES; /* assume none dead */
+  Boolean      done       = false;
+  Boolean      chkAll     = false;        /* 2nd run when all sleeping */
+  Boolean      atLeast1;                  /* at least one process is sleeping */
     
-    debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",currentpid,arbitrate));
-    sleepingpid= MAXPROCESSES; /* assume none sleeping */
-    deadpid    = MAXPROCESSES; /* assume none dead */
-    cpid       = currentpid; /* save */
+  debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
+                                          currentpid, arbitrate));
+                                              
+  /* first, check if current process is valid at all (if not, force arbitration) */
+  if (cpid>=MAXPROCESSES) { 
+    arbitrate = true;      /* arbitrate anyway, start at first process */
+    currentpid= 0;
+    cpid      = 0;
+  } // if
     
-    /* first, check if current process is valid at all (if not, force arbitration) */
-    if (cpid>=MAXPROCESSES) { arbitrate=true; currentpid=cpid=0; } /* arbitrate anyway, start at first process */
-    cp= &procs[cpid];
+  cp= &procs[cpid];
+  if (cp->isIntUtil)
+    printf( "%d nicht gut !!\n", currentpid ); /* %bfo% */
 
-    if (!arbitrate) {
-        if (cp->state==pSysTask ||                 /* we need aritration or we'll get stuck in systasks */
-            cp->state==pUnused  ||                 /* unused, arbitrating needed */
-            cp->state==pWaitRead) arbitrate= true; /* give a chance to other processes */
-    }
+  if (!arbitrate) {
+    if (cp->state==pSysTask ||                 /* we need aritration or we'll get stuck in systasks */
+        cp->state==pUnused  ||                 /* unused, arbitrating needed */
+        cp->state==pWaitRead) arbitrate= true; /* give a chance to other processes */
+  } // if
     
-    /* now arbitrate if needed */
-    spid    =  currentpid;
-    sprocess= &procs[spid];
-    atLeast1= (sprocess->state==pSleeping);
+  /* now arbitrate if needed */
+  spid    =  currentpid;
+  sprocess= &procs[spid];
+  atLeast1= (sprocess->state==pSleeping);
     
-    debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: after correction: current pid=%d (state=%d), arbitrate=%d\n",
-                                            cpid,PStateStr(cp),      arbitrate));
-    do {
-        debugprintf(dbgTaskSwitch,dbgDeep,("# arbitrate: checking pid=%d (state=%d), arbitrate=%d\n",
+  debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: after correction: current pid=%d (state=%d), arbitrate=%d\n",
+                                          cpid,PStateStr(cp),      arbitrate));
+  do {
+    debugprintf(dbgTaskSwitch,dbgDeep,("# arbitrate: checking pid=%d (state=%d), arbitrate=%d\n",
                                             spid,PStateStr(sprocess),arbitrate));
-        if (arbitrate) {
-            /* next process */
-                spid++;
-            if (spid>=MAXPROCESSES) spid= 0; /* wrap */
-            if (spid==1) spid++;             /* avoid process 1 */
-            sprocess= &procs[spid]; /* do it in correct order */
-            
-            /* --- test if all processes tested */
-            if (cpid==spid) {
-                /* -- no other process found to run */
-                if (!chkAll) {
-                    if (atLeast1) chkAll= true;
-                    else          done  = true; 
-                }
-                else {
-                    debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: checked all, now pid=%d must be startable\n",spid));
-                    if  (sprocess->state==pSleeping) {
-                        #if defined macintosh || defined windows32
-                          ulong ticks   = GetSystemTick();
-                          HandleEvent();
-                          slp_idleticks+= GetSystemTick()-ticks;
-                                          
-                        #elif defined linux
-                          usleep( 1 ); /* sleep in milliseconds */
-                          slp_idleticks++;
-                        #endif
-                    } 
-                    else {
-                        done= true; /* don't stop if sleeping in slow mode */
-                    }
-                } /* if !chkAll */
-            }
-            else if (sprocess->state==pUnused) continue; /* fast forward */
-        } /* if arbitrate */
-        
-        /* --- test if process can be run */
-     // if (sprocess->state==pWaiting ||
-     //     sprocess->state==pWaitRead) {
-        if (sprocess->state==pWaiting) {
-            /* --- search if there is a dead child of that process */
-            for (pid=0; pid<MAXPROCESSES; pid++) {
-                if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
-                    deadpid= pid;
-                    break;
-                } /* if */
-            } /* for */
-            if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
-        } /* if */
-        
-        /* --- check if process can be activated */
-        if     (sprocess->state==pActive  ||       /* process can run, if one of these states */
-                sprocess->state==pSysTask) break;
-
-        if     (sprocess->state==pWaitRead) {            /* only every nth time for this mode */
-            if (sprocess->pW_age--<=0) { 
-                sprocess->pW_age= NewAge;  break;
-            }
-            done= false;
+    if (arbitrate) {
+      /* next process */
+          spid++;
+      if (spid>=MAXPROCESSES) spid= 0; /* wrap */
+      if (spid==1) spid++;             /* avoid process 1 */
+          sprocess= &procs[spid]; /* do it in correct order */
+    //if (sprocess->isIntUtil) continue;
+          
+      /* --- test if all processes tested */
+    //if (cpid==spid &&  sprocess->state!=pIntUtil) {
+    //if (cpid==spid && !sprocess->isIntUtil) {
+      if (cpid==spid) {
+        /* -- no other process found to run */
+        if (!chkAll && !sprocess->isIntUtil) {
+          if (atLeast1) chkAll= true;
+          else          done  = true; 
         }
+        else {
+          debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: checked all, now pid=%d must be startable\n",spid));
+          #ifdef THREAD_SUPPORT
+            if (sprocess->isIntUtil && ptocThread) 
+              pthread_mutex_unlock( &sysCallMutex );
+          #endif
 
-        if (sprocess->state==pSleeping) {
-            atLeast1= true;              /* at least one process is sleeping -> don't break ! */
-
-            if (sprocess->pW_age--<=0 || chkAll) {                     /* slow down also here */
-                sprocess->pW_age= NewAge;
-            
-        	    async_area= true; 
-			    if (async_pending) sig_mask( spid,0 ); /* disable signal mask */
-			    /* asynchronous signals are allowed here */
-			
-                wait_for_signal( spid );
-  			    async_area= false; 
-			    /* asynchronous signals are no longer allowed */
-                        
-                if (sprocess->wakeUpTick < GetSystemTick()) {
-                    sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
-                    sprocess->os9regs.sr &= ~CARRY; /* error-free return */
-                    set_os9_state( spid, pActive ); break;
-                }
-
-                sleepingpid= spid; /* remember sleeping process */ 
-            } /* if slow down */
-        } /* if sleeping */
+          if  (sprocess->state==pSleeping ||
+               sprocess->isIntUtil) {
+            #if defined macintosh || defined windows32
+              ulong ticks   = GetSystemTick();
+              HandleEvent();
+              slp_idleticks+= GetSystemTick()-ticks;
+            #elif defined linux
+              usleep( 1 ); /* sleep in milliseconds */
+              slp_idleticks++;
+            #endif
+          } 
+          else {
+            done= true; /* don't stop if sleeping in slow mode */
+          }
+          
+          #ifdef THREAD_SUPPORT
+            if (sprocess->isIntUtil && ptocThread)
+              pthread_mutex_lock( &sysCallMutex );
+          #endif
+        } /* if !chkAll */
+      }
+      else if (sprocess->state==pUnused) continue; /* fast forward */
+    } /* if arbitrate */
         
-        if (sprocess->way_to_icpt) break;
+    /* --- test if process can be run */
+    if (sprocess->state==pWaiting) {
+      /* --- search if there is a dead child of that process */
+      for (pid=0; pid<MAXPROCESSES; pid++) {
+        if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
+          deadpid= pid; break;
+        } /* if */
+      } /* for */
+      if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
+    } /* if */
     
-//      /* --- b.t.w, remember sleeping processes */        
-//      if (cp->state==pSleeping) sleepingpid=currentpid; /* remember sleeping process */   
+    if   (sprocess->isIntUtil) {
+      arbitrate= true; continue;  /* don't break as internal utility */
+    } // if
+    
+    /* --- check if process can be activated */
+    if   (sprocess->state==pActive  ||       /* process can run, if one of these states */
+          sprocess->state==pSysTask) break;
 
-        /* --- after one round, arbitration starts anyway */
-        arbitrate= true; /* now advance anyway */
-        if  (done) spid= MAXPROCESSES; /* should have exited via break by now */
-    } while(!done);
+    if   (sprocess->state==pWaitRead) {            /* only every nth time for this mode */
+      if (sprocess->pW_age--<=0) { 
+          sprocess->pW_age= NewAge;  break;
+      }
+      done= false;
+    } // if
+
+    if (sprocess->state==pSleeping) {
+      atLeast1= true;              /* at least one process is sleeping -> don't break ! */
+
+      if (sprocess->pW_age--<=0 || chkAll) {                     /* slow down also here */
+          sprocess->pW_age= NewAge;
+            
+            async_area= true; 
+	      if (async_pending) sig_mask( spid,0 ); /* disable signal mask */
+		    /* asynchronous signals are allowed here */
+			
+        wait_for_signal( spid );
+  	    async_area= false; 
+	      /* asynchronous signals are no longer allowed */
+                        
+        if (sprocess->wakeUpTick < GetSystemTick()) {
+            sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
+            sprocess->os9regs.sr &= ~CARRY; /* error-free return */
+          set_os9_state( spid, pActive ); break;
+        } // if
+
+        sleepingpid= spid; /* remember sleeping process */ 
+      } /* if slow down */
+    } /* if sleeping */
+        
+    if (sprocess->way_to_icpt) break;
+//  if (sprocess->way_to_icpt && 
+//     !sprocess->isIntUtil)   break;
     
-    /* assign */
-    currentpid= spid;
+//  /* --- b.t.w, remember sleeping processes */        
+//  if (cp->state==pSleeping) sleepingpid=currentpid; /* remember sleeping process */   
+
+    /* --- after one round, arbitration starts anyway */
+    arbitrate= true; /* now advance anyway */
+    if    (done) spid= MAXPROCESSES; /* should have exited via break by now */
+  } while(!done);
+  
+  if (done && sprocess->isIntUtil)
+    printf( "%d ALLARM !!\n", currentpid ); /* %bfo% */
+    
+  /* assign */
+  currentpid= spid;
+  if (procs[currentpid].isIntUtil)
+    printf( "%d NOCHN ALLARM !!\n", currentpid ); /* %bfo% */
     
     
-    /* now, if currentpid<MAXPROCESSES, there is a process to run or unwait-and-run
-     * otherwise, only sleeping processes (if sleepingpid<MAXPROCESSES)
-     * or no processes at all are left. 
-     */
-    if (currentpid<MAXPROCESSES) {
-            cp= &procs[currentpid];
-        if (cp->state==pWaiting && deadpid<MAXPROCESSES) {
-            /* -- we need to terminate waiting first */
-            retword(cp->os9regs.d[0])=       deadpid;          /* ID of dead child */
-            retword(cp->os9regs.d[1])= procs[deadpid].exiterr; /* exit error of child */
-            debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate: waiting pid=%d gets active because child pid=%d is dead (exiterr=%d)\n",currentpid,deadpid,procs[deadpid].exiterr));
-            set_os9_state( deadpid,    pUnused );
-            set_os9_state( currentpid, pActive ); /* process is now active */
-            cp->os9regs.sr &= ~CARRY; /* error-free return */
-        }           
-    }
-    else currentpid= sleepingpid; /* is there a sleeping process ? */
+  /* now, if currentpid<MAXPROCESSES, there is a process to run or unwait-and-run
+   * otherwise, only sleeping processes (if sleepingpid<MAXPROCESSES)
+   * or no processes at all are left. 
+   */
+  if (currentpid<MAXPROCESSES) {
+        cp= &procs[currentpid];
+    if (cp->state==pWaiting && deadpid<MAXPROCESSES) {
+      /* -- we need to terminate waiting first */
+      retword(cp->os9regs.d[0])=       deadpid;          /* ID of dead child */
+      retword(cp->os9regs.d[1])= procs[deadpid].exiterr; /* exit error of child */
+      debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate: waiting pid=%d gets active because child pid=%d is dead (exiterr=%d)\n",currentpid,deadpid,procs[deadpid].exiterr));
+      set_os9_state( deadpid,    pUnused );
+      set_os9_state( currentpid, pActive ); /* process is now active */
+      cp->os9regs.sr &= ~CARRY; /* error-free return */
+    } // if           
+  }
+  else currentpid= sleepingpid; /* is there a sleeping process ? */
 } /* do_arbitrate */
 
 
@@ -966,16 +1008,17 @@ os9err setprior(ushort pid, ushort newprior)
  */
 os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
                  byte*  paramptr, ulong  paramsiz, ulong memplus,
-                 ushort numpaths, ushort grp, ushort usr, ushort prior, Boolean *intCmd )
+                 ushort numpaths, ushort grp, ushort usr, ushort prior )
 {
     byte         *mp,*p,*p2;
     ulong*       a;
-    ulong        memsiz,cnt;
-    ushort       err, mty;
+    ulong        memsiz, cnt;
+    ushort       err, mty, svid;
     mod_exec*    theModule;
     process_typ* cp= &procs[newpid];
     process_typ* pp= &procs[os9_word(cp->pd._pid)];  
     regs_type*   rp= &cp->os9regs;
+    Boolean      asThread;
 
     #ifdef INT_CMD
       ushort     argc;
@@ -991,44 +1034,59 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     cp->pd._group= os9_word(grp);
     cp->pd._user = os9_word(usr);
     
-    *intCmd= false; /* no internal command by default */
-    #ifdef INT_CMD
-          *intCmd= (isintcommand(mpath)>=0);
-      if (*intCmd) {
-          set_os9_state( newpid, pIntUtil ); /* internal utility */
-          cp->mid= 0;                 /* assign "OS9exec" module */
+    /* -- get pointer to main module */
+    theModule= os9mod( mid );
 
-          /* prepare args */
-          prepArgs( paramptr, &argc,&arguments );
-          arguments[0]= (char*)mpath;  /* set module name */
+    /* -- prepare data area, for internal commands as well */
+    debugprintf(dbgProcess,dbgDetail,("# prepFork: extra memory=%ld (= paramsiz:%ld + memplus:%ld)\n",
+                                    memplus+paramsiz, paramsiz,memplus));
+    err= prepData( newpid,theModule,memplus+paramsiz, &memsiz, &mp ); if (err) return err; /* no room for data */
+
+    /* -- copy parameter area, for internal commands as well */
+    p= paramptr;       p2= mp+memsiz-paramsiz;
+  //current_a5 = (ulong)p2; /* parameter area start */
+    cp->my_args= (ulong)p2;
+    
+    regcheck( newpid,"Param writing start",(ulong)p2,           RCHK_MEM );
+    regcheck( newpid,"Param writing end",  (ulong)p2+paramsiz-1,RCHK_MEM );
+    for (cnt=0; cnt<paramsiz; cnt++) *(p2++)= *(p++);
+    
+    cp->isIntUtil= false; /* no internal command by default */
+    #ifdef INT_CMD
+          cp->isIntUtil= isintcommand( mpath )>=0;
+      if (cp->isIntUtil) {
+        set_os9_state( newpid, pActive  );
+      //set_os9_state( newpid, pIntUtil ); /* internal utility */
+        cp->mid= 0;                 /* assign "OS9exec" module */
+
+        /* prepare args */
+        prepArgs( paramptr, &argc,&arguments );
+        arguments[0]= (char*)mpath;  /* set module name */
                     
-          if (pp->pd._cid!=0)       /* already children available */
-              cp->pd._sid= pp->pd._cid;  /* take child as sibling */
+        if (pp->pd._cid!=0)       /* already children available */
+            cp->pd._sid= pp->pd._cid;  /* take child as sibling */
+        
+        svid= currentpid;  
+        pp->pd._cid= os9_word(newpid); /* this is the child */
+        currentpid =          newpid;  /* use the correct identification */
           
-          pp->pd._cid= os9_word(newpid); /* this is the child */
-          currentpid =          newpid;  /* use the correct identification */
-          
-          /* execute command */
-          err= callcommand( mpath,newpid, argc,arguments );
-            
-          /* simulate successful F$Exit of dummy process */
-          release_mem( arguments );
+        /* execute command */
+        err= callcommand( mpath,newpid, argc,arguments, &asThread );
+        release_mem( arguments );
+        
+        if (asThread) 
+          currentpid= svid; // don't change current pid for threads
+        else {
+          /* simulate successful F$Exit of internal command */
           
           pp->pd._cid= cp->pd._sid; /* restore former child id */
           cp->exiterr= 0;
           kill_process( newpid );
-          return err; /* internal-tool "fork" return value */
+        } // if
          
-      //  cp->exiterr= err;
-      //  kill_process( newpid );
-      //  return 0; /* internal-tool "fork" successful */
+        return err; /* internal-tool "fork" return value */
       } /* if isintcommand */
     #endif
-
-    
-           
-    /* -- get pointer to main module */
-    theModule= os9mod( mid );
 
     /* check if module is executeable and */
     /* check if this module is not in the "black list" of OS9exec */
@@ -1050,23 +1108,28 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     rp->d[2]= prior;     /* priority */
     rp->d[3]= numpaths;  /* number of paths inherited */
    
-    /* -- prepare data area */
+    /*
+    // -- prepare data area
     debugprintf(dbgProcess,dbgDetail,("# prepFork: extra memory=%ld (= paramsiz:%ld + memplus:%ld)\n",memplus+paramsiz,paramsiz,memplus));
-    err= prepData( newpid,theModule,memplus+paramsiz,&memsiz,&mp ); if (err) return err; /* no room for data */
+    err= prepData( newpid,theModule,memplus+paramsiz,&memsiz,&mp ); if (err) return err; // no room for data
+    */
     
     cp->memstart=(ulong)mp; /* save static storage start address */
     rp->a[6]=(ulong)mp+0x8000; /* biased A6 */
     rp->membase=mp; /* unbiased static storage pointer */
 
-    /* -- copy parameter area */
+    /*
+    // -- copy parameter area
     p=paramptr; p2=mp+memsiz-paramsiz;
     regcheck( newpid,"Param writing start",(ulong)p2,           RCHK_MEM );
     regcheck( newpid,"Param writing end",  (ulong)p2+paramsiz-1,RCHK_MEM );
-    for (cnt=0;cnt<paramsiz;cnt++) *(p2++)=*(p++);
-
+    for (cnt=0; cnt<paramsiz; cnt++) *(p2++)=*(p++);
+    */
+    
     /* set up parameter area regs */
-    rp->a[5]= rp->a[7]=   (ulong)(mp+memsiz-paramsiz); /* parameter area start, top of stack */
-    rp->a[1]= cp->memtop= (ulong)(mp+memsiz);          /* memory end */
+    rp->a[5]= cp->my_args;
+    rp->a[7]= rp->a[5];                        /* top of stack */
+    rp->a[1]= cp->memtop= (ulong)(mp+memsiz);  /* memory end */
     rp->d[5]= paramsiz; /* parameter size */
     rp->d[6]= memsiz; /* total initial memory allocation */
 
