@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2005 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2005/07/15 22:13:56  bfo
+ *    "fflush" no longer active
+ *
  *    Revision 1.27  2005/07/15 10:23:14  bfo
  *    Empty file problem fixed
  *
@@ -164,7 +167,7 @@ void init_File( fmgr_typ* f )
     f->write      = (pathopfunc_typ)pFwrite;
     f->writeln    = (pathopfunc_typ)pFwriteln;
     f->seek       = (pathopfunc_typ)pFseek;
-    f->delete     = (pathopfunc_typ)pFdelete;
+    f->del        = (pathopfunc_typ)pFdelete;
     f->makdir     = (pathopfunc_typ)pDmakdir; /* access to directory will be done via fFile */
     
     /* getstat */
@@ -563,7 +566,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
       FD_ID( spP->fullName,&dEnt, &fdpos );
     //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
       
-      l= &buffer[ PD_FD ]; *l= os9_long(fdpos); /* LSN of file */
+      l= (ulong*)&buffer[ PD_FD ]; *l= os9_long(fdpos); /* LSN of file */
     #endif
     
     return err;
