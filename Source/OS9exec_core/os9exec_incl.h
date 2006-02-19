@@ -27,7 +27,7 @@
 /*    main include file for all versions      */
 /*                                            */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2005/07/15 22:22:06  bfo
+ *    "module_special.h" no longer needed
+ *
  *    Revision 1.13  2005/06/30 15:46:13  bfo
  *    Adapted for universal use
  *
@@ -101,20 +104,15 @@
 #undef E_ABORT
 
 /* OS-9 include files */
-/* errno_adapted.h: errno -> errno2 */
 #ifdef MPW
 /* search path for MPW is different */
-  #include ":os9defs:module.h"
+  #include ":os9defs:module.h"         /* must be before "procid.h" */
   #include ":os9defs:procid.h"
   #include ":os9defs:sgstat.h"
-  #include ":os9defs:errno_adapted.h"
+  #include ":os9defs:errno_adapted.h"  /* errno_adapted.h: errno -> errno2 */
 
 #else
-//#ifdef __MACH__
-//  #include "module_special.h"
-//#else
-    #include "module.h"
-//#endif
+  #include "module.h"
   
   #if defined windows32 && __MWERKS__ >= CW8_MWERKS
     #include "procid_special.h"
@@ -208,8 +206,9 @@
 /* one single lowlevel include file for all types */
 /* use either UAE emulator */
 /* or  built-in interface to Mac 68k emulator */
-#include "os9_ll.h"
-
+#ifndef __cplusplus
+  #include "os9_ll.h"
+#endif
 
 
 /* project headers */
