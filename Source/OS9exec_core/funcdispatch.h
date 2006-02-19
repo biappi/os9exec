@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.4  2002/10/09 20:35:38  bfo
  *    "show_timing" call with additional parameter <ticksLim>
  *
@@ -95,7 +98,22 @@ void xxx_to_arb( ushort func, ushort pid );
 void arb_to_os9( Boolean last_arbitrate  );
 
 
-os9err exec_syscall(ushort func, ushort pid, regs_type *rp);
+Boolean Dbg_SysCall ( ushort pid, regs_type* rp );
+void    debug_comein( ushort pid, regs_type* rp );
+void    debug_return( ushort pid, regs_type* rp, Boolean cwti );
+
+// ---- accessible for the C++ world as well ----
+#if defined __cplusplus
+  extern "C" {
+#endif
+
+ushort pthread_pid();
+os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean intUtil );
+
+#if defined __cplusplus
+  } // end extern "C"
+#endif
+// -----------------------------------------------
 
 void   init_L2(void);
 void   init_syscalltimers(void);

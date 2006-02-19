@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2005/07/15 22:20:13  bfo
+ *    unistd.h implemented only here for MACH
+ *
  *    Revision 1.18  2005/07/06 21:02:14  bfo
  *    defined UNIX
  *
@@ -455,43 +458,175 @@ void arb_to_os9( Boolean last_arbitrate )
 
 
 
+Boolean Dbg_SysCall( ushort pid, regs_type* rp )
+{
+  process_typ* cp= &procs[pid];
+  
+	if (!debugcheck(dbgSysCall,dbgNorm)) return false;
+	 
+	// OS9_I_WritLn
+	return cp->func!=0x8c || loword(rp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
+} /* Dbg_SysCall */
+
+
+void debug_comein( ushort pid, regs_type* rp )
+{
+  process_typ* cp= &procs[pid];
+	const funcdispatch_entry* fdeP= getfuncentry(cp->func);
+	Boolean                   msk = cp->masklevel>0;
+
+  if (!Dbg_SysCall( pid,rp )) return;
+	if (cp->state==pWaitRead)   return; /* avoid dbg display in pWaitRead mode */
+
+	/* (enclosed in another if to avoid get_syscall_name invocation */
+	/* in nodebug case!) */
+	uphe_printf( ">>>%cPid=%02d: OS9 %s : ",msk ? '*':' ', pid,fdeP->name );
+	show_maskedregs( rp,fdeP->inregs );
+	upe_printf ( "\n" );
+} /* debug_comein */
+
+
+
+void debug_return( ushort pid, regs_type* crp, Boolean cwti )
+{	
+  process_typ* cp= &procs[pid];
+	const funcdispatch_entry* fdeP= getfuncentry(cp->func);
+	char      *errnam,*errdesc;
+	mod_exec* mod;
+	char*     p;
+	char      item[OS9NAMELEN];
+  Boolean msk= cp->masklevel  >0;
+	Boolean hdl= cp->pd._sigvec!=0;
+	Boolean strt;
+		
+  if (!Dbg_SysCall( pid,crp )) return;
+	if (cwti) {
+		uphe_printf( "<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
+						msk ? '*':' ',currentpid,
+						hdl ? "" :" (no handler)", PStateStr(cp) );
+							 
+		show_maskedregs( &cp->os9regs, d_w(1)+a_l(6) );
+		upe_printf ( "\n" );
+	}
+	else {
+		if ((cp->state==pActive  || // internal utilities can be active now as well
+		  // cp->state==pIntUtil || // internal utilities as well !
+		     cp->oerr) &&
+			   cp->state!=pWaitRead) { /* avoid dbg display in pWaitRead mode */
+
+			/* D1.w/carry error reporting will be done when process is active or syscall delivered error, */
+			/* otherwise, d1.w will be updated when suspended process gets active again */
+			    strt= (ustrcmp(fdeP->name,"START")==0);
+			if (strt) {
+				mod= (mod_exec *)cp->os9regs.a[3];
+				p  =  Mod_Name( mod );
+				strcpy( item,"\"" );
+				strcat( item, p  );
+				strcat( item,"\"" );
+			}
+
+			uphe_printf("<<<%cPid=%02d: OS9 %s %s",msk ? '*':' ',
+			                currentpid,fdeP->name, strt ? item:"returns: " );
+
+			if (cp->oerr) {
+				get_error_strings(cp->oerr, &errnam,&errdesc);
+			//  errnam= "XXX"; errdesc= "";
+				upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
+			}
+			else {
+				show_maskedregs( &cp->os9regs,fdeP->outregs );
+				upe_printf( "\n" );
+			}
+		} 
+	} /* if (cwti) */
+} /* debug_return */
+
+
+ushort pthread_pid()
+{
+  #ifdef THREAD_SUPPORT
+    ulong tid= pthread_self();
+    int   i;
+    
+    for (i= 0; i<MAXPROCESSES; i++) {
+      if (procs[ i ].tid==tid) return i;
+    } // if
+  #endif
+  
+  return currentpid;
+} // pthread_pid
+
 
 /* perform system call */
-os9err exec_syscall( ushort func, ushort pid, regs_type *rp )
+os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil )
 {
-    os9err  err;
-    procid* pd= &procs[pid].pd;
-    const   funcdispatch_entry* fdeP= getfuncentry(func);
-    char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
-    char*   fSS  = "";
+  os9err  err;
+  process_typ* cp= &procs[pid];
+  procid* pd= &cp->pd;
+  const   funcdispatch_entry* fdeP= getfuncentry(func);
+  char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
+  char*   fSS  = "";
 
-    if (logtiming) {
-        os9_to_xxx( pid, "" );
+  #ifdef THREAD_SUPPORT
+    if (withinIntUtil) {
+      if (ptocThread) pthread_mutex_lock( &sysCallMutex );
+      currentpid= pid;
+      
+      if (cp->state==pDead) {
+        if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+        throw_exception( cp->exiterr );
+      } // if
+    } // if
+  #endif
+  
+  if (logtiming) {
+    os9_to_xxx( pid, "" );
         
-        if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as name for debugging */
-            fSS= get_stat_name(loword(rp->d[1]));
+    if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as name for debugging */
+      fSS= get_stat_name(loword(rp->d[1]));
 
-        debugprintf(dbgSysCall,dbgDetail,("# %s %s\n", fName,fSS )); /* fName+fSS would be eliminated by compiler */
-    } /* if (logtiming) */
-
-
-    /* execute syscall */
-    err= (fdeP->func)(rp,pid);
+    debugprintf(dbgSysCall,dbgDetail,("# %s %s\n", fName,fSS )); /* fName+fSS would be eliminated by compiler */
+  } /* if (logtiming) */
 
 
-    if (logtiming) {
-        xxx_to_arb( func,pid );
-    } /* if (logtiming) */
+  /* execute syscall */
+  if (withinIntUtil) {
+    // make the debug logging for systemcalls within int commands here
+    cp->func= func;
+    debug_comein( pid,rp );
+  } // if
+  
+  err= (fdeP->func)(rp,pid);
+  
+  if (withinIntUtil) {
+    // make the debug logging for systemcalls within int commands here
+    cp->oerr= err;
+    memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
+    debug_return( pid,rp, false );
+  } // if
+
+  if (logtiming) {
+    xxx_to_arb( func,pid );
+  } /* if (logtiming) */
 
 
-    if (fdeP!=&invalidcall) {
-        if     (func<NUMFCALLS) os9_long_inc( &pd->_fcalls, 1 ); /* "procs -a" uses it */
-        else  { func-=0x80;
-            if (func<NUMICALLS) os9_long_inc( &pd->_icalls, 1 ); 
-        }
+  if (fdeP!=&invalidcall) {
+    if     (func<NUMFCALLS) os9_long_inc( &pd->_fcalls, 1 ); /* "procs -a" uses it */
+    else  { func-=0x80;
+      if   (func<NUMICALLS) os9_long_inc( &pd->_icalls, 1 ); 
     }
+  } // if
+
+  #ifdef THREAD_SUPPORT
+    if (withinIntUtil) {
+      if (currentpid!=pid)
+        printf( "%d %d GRAUSAM\n", currentpid, pid );
+        
+      if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+    } // if
+  #endif
     
-    return err;
+  return err;
 } /* exec_syscall */
 
 
