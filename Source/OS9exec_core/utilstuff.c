@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2005/07/06 21:05:19  bfo
+ *    defined UNIX
+ *
  *    Revision 1.39  2005/07/02 14:20:36  bfo
  *    Adapted for Mach-O / time correction for files / Volume name catch extension
  *
@@ -269,11 +272,13 @@ void set_os9_state( ushort cpid, pstate_typ state )
         case pDead     : pd->_state = os9_word(0x9100); pd->_queueid = '-'; break;
         case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
         case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
-        case pIntUtil  : pd->_state = 0;                pd->_queueid = 'i'; break;
+    //  case pIntUtil  : pd->_state = 0;                pd->_queueid = 'i'; break;
         case pSysTask  : pd->_state = 0;                pd->_queueid = 't'; break;
         case pWaitRead : pd->_state = os9_word(0xA000); pd->_queueid = 'r'; break;
         default        : pd->_state = 0;                pd->_queueid = '?';
-    }
+    } // switch
+    
+    if (cp->isIntUtil) { pd->_state = 0;                pd->_queueid = 'i'; }
 } /* set_os9_state */
 
 
@@ -574,13 +579,18 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
                Boolean asGregorian, Boolean withTicks )
 {
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    byte      tc[4];
-    ulong*    tcp= (ulong*)&tc[0];
-    ulong     ct0;
-    int       y, m, d, tsm, ssm, syTick;
+    byte   tc[4];
+    ulong* tcp= (ulong*)&tc[0];
+    ulong  ct0;
+    int    y, m, d, tsm, ssm, syTick;
+    
+  //process_typ* cp= &procs[ currentpid ];
     
     /* Get consistent time/date and ticks */
-    if      (withTicks) { syTick= GetSystemTick(); *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
+    if      (withTicks) { syTick= GetSystemTick(); 
+                    *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
+    else            *currentTick= 0;
+    
     do {
         if  (withTicks) ct0= *currentTick;
         
@@ -589,30 +599,31 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
         m=       tim.tm_mon +   1;
         d=       tim.tm_mday;
         
-        if  (withTicks) { syTick= GetSystemTick(); *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
-    } while (withTicks && *currentTick<ct0);
+        if  (withTicks) { syTick= GetSystemTick();
+                    *currentTick= (syTick+syCorr) % TICKS_PER_SEC; }
+    } while (withTicks && *currentTick<ct0); // must be within the same second
 
     ssm= tim.tm_hour*3600
         +tim.tm_min *  60
         +tim.tm_sec;        /* seconds since midnight */
         
+  //if (withTicks && cp->state!=pIntUtil) {
     if (withTicks) {
             tsm= (syTick+syCorr)/TICKS_PER_SEC;
         if (tsm>ssm) { 
-        //  upe_printf( "> %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
-            syCorr= (ssm+1)*TICKS_PER_SEC - syTick-1;
-            *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
-        //  upe_printf( "  %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
-        }
+        //upe_printf( "> %10d %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr,*currentTick );
+          syCorr= (ssm+1)*TICKS_PER_SEC - syTick-1;
+          *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        //upe_printf( "  %10d %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr,*currentTick );
+        } // if
           
         if (tsm<ssm) {   
-        //  upe_printf( "< %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
-            syCorr=  ssm*   TICKS_PER_SEC - syTick;
-            *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
-        //  upe_printf( "  %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr );
-        }
-        
-    } /* if */
+        //upe_printf( "< %10d %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr,*currentTick );
+          syCorr=  ssm*   TICKS_PER_SEC - syTick;
+          *currentTick= (syTick+syCorr) % TICKS_PER_SEC;
+        //upe_printf( "  %10d %10d %10d %10d %10d\n", tsm,ssm, syTick,syCorr,*currentTick );
+        } // if
+    } // if
    
     if (asGregorian) {
 		/* gregorian format */
@@ -631,7 +642,7 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
       	/* julian format */
       	*cTime= ssm;             /* seconds since midnight */
       	*cDate= j_date( d,m,y ); /* julian date, intenral clock starts 1904 */
-    }
+    } // if
 
     *dayOfWk= tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
 } /* Get_Time */
@@ -706,7 +717,6 @@ ulong Min( ulong a, ulong b )
 } /* Min */
 
 
-
 ulong Max( ulong a, ulong b )
 /* returns the larger of two ulongs */
 {   if (a>b) return a;
@@ -775,7 +785,7 @@ static struct _sgs init_consoleopts = {
         0,      /* PD_UPC   0 = upper and lower cases, 1 = upper case only */
         1,      /* PD_BSO   0 = BSE, 1 = BSE-SP-BSE */
         0,      /* PD_DLO   delete sequence */
-        1,      /* PD_EKO   0 = no echo */
+        0,      /* PD_EKO   0 = no echo */
         1,      /* PD_ALF   0 = no auto line feed */
         0,      /* PD_NUL   end of line null count */
         0,      /* PD_PAU   0 = no end of page pause */
@@ -1732,9 +1742,9 @@ Boolean SCSI_Device( const char* os9path,
         }
         // no more room in SCSI table
         return false; 
-    }
-
-    /* is false, but useful anyway */
+    } // if
+    
+    // is false, but useful anyway
     if     (ustrcmp( p,  "SCF"     )==0) { *typeP= fSCF;
         if (ustrcmp( dvn,"vmod"    )==0)   *typeP= fVMod; return false; }
     if     (ustrcmp( p,  "SOCKMAN" )==0 ||
@@ -2078,10 +2088,12 @@ char* PStateStr( process_typ* cp )
         case pSleeping: nam="pSleeping"; break;
         case pWaiting : nam="pWaiting";  break;
         case pSysTask : nam="pSysTask";  break;
-        case pIntUtil : nam="pIntUtil";  break;
+    //  case pIntUtil : nam="pIntUtil";  break;
         case pWaitRead: nam="pWaitRead"; break;
         default       : nam="unknown";
-    }
+    } // switch
+    
+    if (cp->isIntUtil)  nam="pIntUtil";
     
     return nam;
 } /* PStateStr */
@@ -2169,7 +2181,10 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
                && atoi(&os9path[4])<=99)) { type= fPTY; break; }
         #endif
  
-        if (OS9_Device( os9path,mode, &type )) break;
+        /* "/vmod" is built-in */ 
+        if    (ustrcmp( os9path,"/vmod" )==0) { type= fVMod; break; }
+        if (OS9_Device( os9path,mode,          &type ))      break;
+        
         if (IsDir(mode)) type= fDir;
         else             type= fFile;
     } while (false);
