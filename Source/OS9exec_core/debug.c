@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2005/06/30 11:07:24  bfo
+ *    Mach-O support
+ *
  *    Revision 1.15  2005/01/22 15:47:40  bfo
  *    Renamed to ifdef MACOS9
  *
@@ -223,7 +226,8 @@ void _debugprintf(char *format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
     
-    upe_printf(buffer);
+    if (procs[currentpid].isIntUtil) printf( buffer );
+    else                         upe_printf( buffer );
 
     /* look if also halt enabled for that class */
     debug_halt( tempmask );
