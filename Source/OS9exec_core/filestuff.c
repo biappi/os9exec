@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2005/06/30 11:39:20  bfo
+ *    Mach-O support
+ *
  *    Revision 1.23  2005/05/13 17:25:13  bfo
  *    Use <imgMode>
  *
@@ -165,7 +168,7 @@ void init_None( fmgr_typ* f )
     f->readln      = (pathopfunc_typ)pUnimp;
     f->seek        = (pathopfunc_typ)pUnimp;
     f->chd         = (pathopfunc_typ)pNoModule; /* E_MNF, as in OS-9 */
-    f->delete      = (pathopfunc_typ)pUnimp;
+    f->del         = (pathopfunc_typ)pUnimp;
     f->makdir      = (pathopfunc_typ)pUnimp;
 
 
@@ -1566,7 +1569,7 @@ void main_printf( const char* format, ... )
 /* copyright notice */
 void copyright(void)
 {
-    upe_printf( "(c) 1993-2004 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
+    upe_printf( "(c) 1993-2006 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
 } /* copyright */
 
 
@@ -1881,7 +1884,7 @@ os9err change_dir ( ushort pid, ptype_typ type, const char* pathname, ushort mod
 
 os9err delete_file( ushort pid, ptype_typ type, const char* pathname, ushort mode )
 /* Delete a file */
-{   return doCmd( fmgr_op[type]->delete, pid,type, mode,pathname, "delete_file" );
+{   return doCmd( fmgr_op[type]->del, pid,type, mode,pathname, "delete_file" );
 } /* delete_file */
 
 
