@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.7  2003/05/21 20:31:39  bfo
  *    Allocate 512k blocks / Additional parameter <mem_fulldisp> for "show_mem"
  *
@@ -54,24 +57,57 @@
  */
 
 
-/* Memory management for OS9 processes */
-void init_all_mem(void);
+#if !defined __cplusplus 
+  /* Memory management for OS9 processes */
+  void init_all_mem(void);
 
-void show_mem( ushort pid, Boolean mem_unused, Boolean mem_fulldisp );
-void show_unused   ( void );
+  void show_mem( ushort pid, Boolean mem_unused, Boolean mem_fulldisp );
+  void show_unused   ( void );
 
-void init_mem( ushort pid );
-void free_mem( ushort pid );
+  void init_mem( ushort pid );
+  void free_mem( ushort pid );
 
-ushort install_memblock( ushort pid, void* base, ulong size );
-void   release_memblock( ushort pid, ushort memblocknum );
+  ushort install_memblock( ushort pid, void* base, ulong size );
+  void   release_memblock( ushort pid, ushort memblocknum );
 
-ulong    max_mem( void );
-void    *get_mem( ulong memsz   );
-void release_mem( void* membase );
+  ulong    max_mem( void );
+  void*    get_mem( ulong memsz   );
+  void release_mem( void* membase );
+#endif
 
-void *os9malloc( ushort pid,                ulong memsz );
+
+// ----------------------------------------------------------------
+#if defined __cplusplus
+  extern "C" {
+#endif
+
+void* os9malloc( ushort pid,                ulong memsz );
 os9err  os9free( ushort pid, void* membase, ulong memsz );
+
+
+// missing "atof" operation for "cclib", temporary placed here
+Boolean StrToReal    ( float*  f, const char* s );
+Boolean StrToLongReal( double* f, const char* s );
+
+// missing "sprintf" operations for "cclib", temporary placed here
+void IntToStr  ( char* s, int    i );
+void IntToStrN ( char* s, int    i, int n );
+
+void UIntToStr ( char* s, unsigned int h );
+void UIntToStrN( char* s, unsigned int h, int n );
+
+void BoolToStr ( char* s, Boolean bo );
+void BoolToStrN( char* s, Boolean bo, int n );
+
+void RealToStr ( char* s, double d,        int res );
+
+/*
+void RealToStrN( char* s, double d, int n, int res );
+*/
+
+#if defined __cplusplus
+  } // end extern "C"
+#endif
 
 /* eof */
 

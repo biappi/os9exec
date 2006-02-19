@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2005/06/30 11:48:07  bfo
+ *    Mach-O support
+ *
  *    Revision 1.15  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -79,6 +82,8 @@
  */
 
 #include "os9exec_incl.h"
+#define MAXINTEGER 32767
+
 
 /* Memory management for OS9 processes */
 /* =================================== */
@@ -393,14 +398,13 @@ void release_mem( void* membase )
     } /* for */
     
     #ifdef REUSE_MEM
-      if (memsz==0) printf( "STRANGE BLOCK at %08X\n", membase );
-      if (memsz==1) printf( "UNUSED  BLOCK at %08X\n", membase );
-      else {
-      	  if (release_ok( membase,memsz )) {
-              debugprintf(dbgMemory,dbgNorm,("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
-                          membase,memsz, totalMem ));
-              return;
-          } /* if */
+      if (memsz==0) { printf( "STRANGE BLOCK at %08X\n", membase ); return; }
+      if (memsz==1) { printf( "UNUSED  BLOCK at %08X\n", membase ); return; }
+      
+      if (release_ok( membase,memsz )) {
+        debugprintf(dbgMemory,dbgNorm,("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
+                                          membase,memsz, totalMem ));
+        return;
       } /* if */
     #endif  
             
@@ -480,7 +484,7 @@ ulong max_mem()
 
 
 
-void *get_mem( ulong memsz )
+void* get_mem( ulong memsz )
 /* process independent part of memory allocation */
 {
     void* pp= NULL;
@@ -580,7 +584,7 @@ void *get_mem( ulong memsz )
 
 
 /* memory allocation for OS-9 */
-void *os9malloc( ushort pid, ulong memsz )
+void* os9malloc( ushort pid, ulong memsz )
 {
     void *pp;
     int   k;
@@ -630,6 +634,94 @@ os9err os9free( ushort pid, void* membase, ulong memsz )
                                                      membase,memsz, pid));
     return os9error(E_BPADDR); /* no memory was allocated here */
 } /* os9free */
+
+
+static IsZero( const char* s )
+{
+  while (*s!=NUL) {
+    if  (*s <'0' && *s >'9' && *s!='.' && 
+         *s!='E' && *s!='-' && *s!='+') return false;
+    s++;
+  } // while
+  
+  return true;
+} // IsZero
+
+
+Boolean StrToReal( float* f, const char* s ) {
+  *f= atof( s );
+  return *f==0 && !IsZero( s );
+} // StrToReal
+
+
+Boolean StrToLongReal( double* d, const char* s ) {
+  *d= atof( s );
+  return *d==0 && !IsZero( s );
+} // StrToLongReal
+
+
+// missing "sprintf" operations for "cclib", temporary placed here
+void IntToStr( char* s, int i ) {
+  sprintf( s, "%d", i );
+} // IntToStr
+
+
+void IntToStrN( char* s, int i, int n )
+{
+  char form[ 20 ]; // format string
+  
+  if (n==MAXINTEGER) { IntToStr( s, i ); return; }
+
+  sprintf   ( form, "%s%dd", "%", n );
+  sprintf( s, form, i );
+} // IntToStrN
+
+
+void UIntToStr( char* s, unsigned int i ) {
+  sprintf( s, "%X", i );
+} // UIntToStr
+
+
+void UIntToStrN( char* s, unsigned int i, int n )
+{
+  char form[ 20 ]; // format string
+  
+  if (n==MAXINTEGER) { UIntToStr( s, i ); return; }
+  
+  sprintf   ( form, "%s0%dX", "%", n );
+  sprintf( s, form, i );
+} // UIntToStrN
+
+
+void BoolToStr ( char* s, Boolean bo ) {
+  sprintf( s, "%s", bo ? "TRUE":"FALSE" );
+} // BoolToStr
+
+
+void BoolToStrN( char* s, Boolean bo, int n )
+{
+  char form[ 20 ]; // format string
+  
+  if (n==MAXINTEGER) { BoolToStr( s, bo ); return; }
+
+  sprintf   ( form, "%s%ds", "%", n );
+  sprintf( s, form, bo ? "TRUE":"FALSE" );
+} // BoolToStrN
+
+
+void RealToStr( char* s, double d, int res )
+{
+  char form[ 20 ]; // format string
+  
+  switch (res) {
+    case MAXINTEGER: sprintf( form, "%sE",    "%" ); break;
+    case 0         : sprintf( form, "%s.0f.", "%" ); break;
+    default        : sprintf( form, "%s.%df", "%", res );
+  } // switch
+  
+  sprintf( s, form, d );
+} // RealToStr
+
 
 
 /* eof */
