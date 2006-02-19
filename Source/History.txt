@@ -1262,8 +1262,24 @@
           05-08-XX  Bfo     Integration of the PtoC system
           05-09-XX  Bfo           "      "  "    "     "
     3.28  05-10-XX  Bfo           "      "  "    "     "
-          05-11-26  Bfo     Thread support for PtoC system
-    3.29  05-??-??  Bfo     ...
+          05-11-XX  Bfo     Thread support for PtoC system
+    3.29  05-12-XX  Bfo     ...
+          06-02-19  Bfo     Checkin again after a long while (header changes to 2006)
+    3.30  06-02-19  Bfo     Version changed to V3.30
+          06-02-19  Bfo     ptoc vars and pthread support things added (some debug things are still in)         
+          06-02-19  Bfo     os9defs adaptions / system definition changes       
+          06-02-19  Bfo     network.c      : Some comments switched off again
+          06-02-19  Bfo     modstuff.c     : void* for MoveBlk
+          06-02-19  Bfo     filestuff.c    : f->del (instead of f->delete) / type casting
+          06-02-19  Bfo     debug.c        : use <isIntUtil>
+          06-02-19  Bfo     fcalls.c       : use <isIntUtil> / OS9_F_Exit thread save
+          06-02-19  Bfo     file_rbf.c     : printf commented out / reformatted
+          06-02-19  Bfo     int_command.c  : 'Is_PtoC' visible from ouside / PtoC + thread support added
+          06-02-19  Bfo     funcdispatch.c : Thread support added
+          06-02-19  Bfo     memstuff.c     : Some PtoC routines are implemented here now  
+          06-02-19  Bfo     pipefiles.c    : use <isIntUtil>
+          06-02-19  Bfo     utilstuff.c    : use <isIntUtil> / echo mode off by default
+          06-02-19  Bfo     procstuff.c    : thread support added
     -------------------
        
 */
