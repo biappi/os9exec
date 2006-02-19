@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2005/07/06 21:07:57  bfo
+ *    defined UNIX
+ *
  *    Revision 1.12  2005/07/02 14:23:42  bfo
  *    Adapted for Mach-O
  *
@@ -392,7 +395,7 @@ static void os9_usage(char *name)
     upho_printf("\n");
 
     upho_printf("%s\n", OS9exec_Name() );
-    upho_printf("1993-2004 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
+    upho_printf("1993-2006 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
      upo_printf("\n");
 } /* os9_usage */
 
@@ -448,7 +451,12 @@ void os9_main( int argc, char **argv, char **envp )
 
     get_hw(); /* make this very very early in program */
     getversions();
-    sw_name= "OS-9/68k Emulator";
+    
+    #ifdef USE_UAEMU
+      sw_name= "OS-9/68k Emu UAE";
+    #else
+      sw_name= "OS-9/68k Emulator";
+    #endif
     
     #ifdef UNIX
       sec0= 0;

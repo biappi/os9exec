@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2005/07/06 21:04:38  bfo
+ *    defined UNIX
+ *
  *    Revision 1.23  2005/07/02 14:18:46  bfo
  *    Adapted for Mach-O
  *
@@ -99,7 +102,7 @@ void set_os9_state( ushort cpid, pstate_typ state );
 
 os9err host2os9err( OSErr hosterr, ushort suggestion );
 os9err c2os9err   ( int   cliberr, ushort suggestion );
-os9err os9error   ( os9err    err );
+os9err os9error   ( os9err err );
 
 
 ulong  j_date  (            int  d,  int  m,  int  y  );
@@ -119,7 +122,6 @@ ulong GetScreen( char mode );
   char* p2cstr( unsigned char* s );
   unsigned char* c2pstr( char* s );
 #endif
-
 
 ulong Min( ulong a, ulong b );
 ulong Max( ulong a, ulong b );
