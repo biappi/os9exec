@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2004/11/20 11:44:07  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.4  2003/05/17 11:25:21  bfo
  *    (CVS header included)
  *
@@ -67,11 +70,12 @@ os9err int_wincmd( ushort pid, int argc, char **argv );
 
 
 /* utility */
-os9err _errmsg( os9err err, char* format, ...);
-int    isintcommand( char *name );
-os9err prepArgs    ( char *arglist, ushort *argcP, char*** argP);
-os9err callcommand ( char *name,    ushort pid, int argc,     char **argv );
-os9err call_hostcmd( char *cmdline, ushort pid, int moreargs, char **argv );
+os9err  _errmsg( os9err err, char* format, ...);
+Boolean Is_PtoC     ( char* name );
+int     isintcommand( char* name );
+os9err  prepArgs    ( char* arglist, ushort *argcP, char*** argP);
+os9err  callcommand ( char* name,    ushort pid, int argc,     char **argv, Boolean* asThread );
+os9err  call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv );
 
 #endif
 

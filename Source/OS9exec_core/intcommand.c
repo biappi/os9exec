@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2005/07/06 21:03:26  bfo
+ *    system call supported for the unix world
+ *
  *    Revision 1.18  2005/06/30 11:47:20  bfo
  *    Mach-O support
  *
@@ -80,6 +83,15 @@
 
 /* global includes */
 #include "os9exec_incl.h"
+
+#ifdef PTOC_SUPPORT
+  #include "int_ptoc.h"
+#endif
+
+#ifdef THREAD_SUPPORT
+  #include <types.h>
+#endif
+
 
 /* global vars */
 ushort icmpid; /* current internal command's PID */
@@ -468,12 +480,149 @@ static os9err int_devs( ushort pid, int argc, char** argv )
 } /* int_devs */
 
 
+#ifdef PTOC_SUPPORT
+  static os9err int_on      ( _pid_, _argc_, _argv_ ) { ptocActive= true;  return 0; }
+  static os9err int_off     ( _pid_, _argc_, _argv_ ) { ptocActive= false; return 0; }
+  static os9err int_thread  ( _pid_, _argc_, _argv_ ) { ptocThread= true;  return 0; }
+  static os9err int_nothread( _pid_, _argc_, _argv_ ) { ptocThread= false; return 0; }
+  static os9err int_arb     ( _pid_, _argc_, _argv_ ) { fullArb   = true;  return 0; }
+  static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
+  
+  
+  static os9err ptoc_prep( ushort pid, _argc_, char** argv )
+  {
+    os9err err;
+    ushort mid;
+    char*  name= argv[ 0 ];
+    
+    #ifdef THREAD_SUPPORT
+      // mutex lock for systemcalls
+      if (ptocThread) pthread_mutex_lock( &sysCallMutex );
+      currentpid= pid;
+    #endif
+
+         err=   load_module( pid, name, &mid, true,true ); 
+    if (!err) OS9exec_Globs( pid, os9modules[ mid ].modulebase, procs[pid].my_args );
+    
+    #ifdef THREAD_SUPPORT
+      // mutex unlock for systemcalls
+      if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+    #endif
+
+    return err;
+  } // ptoc_prep
+
+
+// ---------------------------------------------------------------
+  static os9err int_breaker( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_breaker_call();
+    return    err;
+  } // int_breaker
+  
+  
+  static os9err int_definit( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_definit_call();
+    return    err;
+  } // int_definit
+
+
+  static os9err int_globalvars( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_globalvars_call();
+    return    err;
+  } // int_globalvars
+
+
+  static os9err int_info( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_info_call();
+    return    err;
+  } // int_info
+
+
+  static os9err int_pascal( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_pascal_call();
+    return    err;
+  } // int_pascal
+
+
+  static os9err int_pentominos( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_pentominos_call();
+    return    err;
+  } // int_pentominos
+
+
+  static os9err int_printenv( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_printenv_call();
+    return    err;
+  } // int_printenv
+
+
+  static os9err int_ptoc( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_ptoc_call();
+    return    err;
+  } // int_ptoc
+
+
+  static os9err int_show( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_show_call();
+    return    err;
+  } // int_show
+
+
+  static os9err int_stacks( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_stacks_call();
+    return    err;
+  } // int_stacks
+
+
+  static os9err int_strout( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_strout_call();
+    return    err;
+  } // int_strout
+
+
+  static os9err int_tcheck( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_tcheck_call();
+    return    err;
+  } // int_tcheck
+
+
+  static os9err int_trapsli( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_trapsli_call();
+    return    err;
+  } // int_trapsli
+#endif
+
 
 
 static os9err int_quit( _pid_, _argc_, _argv_ )
 {   quitFlag= true; return 0;
 } /* int_quit */
-
 
 
 static os9err int_ignored( _pid_, _argc_, _argv_ )
@@ -488,53 +637,75 @@ static os9err int_ignored( _pid_, _argc_, _argv_ )
 
 typedef os9err (*intcmdfunc)(ushort pid, int argc, char **argv);
 
-/* MWC: removed const %%% */
 typedef struct {
-                char*      name;
-                intcmdfunc routine;
-                char*      helptext;
-               } cmdtable_typ;
+          char*      name;
+          intcmdfunc routine;
+          char*      helptext;
+        } cmdtable_typ;
 
 
 
 cmdtable_typ commandtable[] =
 {
-    { "rename",        int_rename,    "renames a file or directory (100% compatible)" },
-    { "move",          int_move,      "moves files and directories" },
-    { "ls",            int_dir,       "shows dir in [extended] format" },
+  { "rename",        int_rename,     "renames a file or directory (100% compatible)" },
+  { "move",          int_move,       "moves files and directories" },
+  { "ls",            int_dir,        "shows dir in [extended] format" },
 
-    #ifdef RBF_SUPPORT
-    { "mount",         int_mount,     "mount   (RBF) device" },
-    { "unmount",       int_unmount,   "unmount (RBF) device" },
+  #ifdef RBF_SUPPORT
+  { "mount",         int_mount,      "mount   (RBF) device" },
+  { "unmount",       int_unmount,    "unmount (RBF) device" },
 	#endif
 	
-    #ifdef windows32
-    { "cmd",           int_wincmd,    "calls Windows Command Line / DOS command" },
-    #endif
+  #ifdef windows32
+  { "cmd",           int_wincmd,     "calls Windows Command Line / DOS command" },
+  #endif
     
-    { "systime",       int_systime,   "emulation timing management/display" },
-    { "iprocs",        int_procs,     "shows OS9exec's processes" },
-    { "imdir",         int_mdir,      "shows OS9exec's loaded OS-9 modules" },
-    { "ipaths",        int_paths,     "shows OS9exec's path list" },
-    { "imem",          int_mem,       "shows OS9exec's memory block list" },
+  { "systime",       int_systime,    "emulation timing management/display" },
+  { "iprocs",        int_procs,      "shows OS9exec's processes" },
+  { "imdir",         int_mdir,       "shows OS9exec's loaded OS-9 modules" },
+  { "ipaths",        int_paths,      "shows OS9exec's path list" },
+  { "imem",          int_mem,        "shows OS9exec's memory block list" },
     
-    #ifdef REUSE_MEM
-    { "iunused",       int_unused,    "shows OS9exec's unused block list" },
-    #endif
+  #ifdef REUSE_MEM
+  { "iunused",       int_unused,     "shows OS9exec's unused block list" },
+  #endif
     
-    { "idevs",         int_devs,      "shows OS9exec's devices" },
-    { "ihelp/icmds",   int_help,      "shows this help text" },
-    { "dhelp",         debug_help,    "shows debug flag information" },
-    { "debughalt/idbg",int_debughalt, "sets debug options/enters OS9exec's debug menu" },
+  { "idevs",         int_devs,       "shows OS9exec's devices" },
+  { "ihelp/icmds",   int_help,       "shows this help text" },
+  { "dhelp",         debug_help,     "shows debug flag information" },
+  { "debughalt/idbg",int_debughalt,  "sets debug options/enters OS9exec's debug menu" },
 
-    #ifdef MACOS9
-    { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
-    #endif
+  #ifdef PTOC_SUPPORT
+  { "ion",           int_on,         "Switch on   built-in PtoC utilities (default)" },
+  { "ioff",          int_off,        "Switch off  built-in PtoC utilities" },
+  { "ithread",       int_thread,     "Threading   built-in PtoC utilities" },
+  { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
+  { "iarb",          int_arb,        "Full arbitration" },
+  { "inoarb",        int_noarb,      "Std  arbitration (default)" },
 
-    { "iquit",         int_quit,      "sets flag to quit directly" },
-    { "dch/diskcache", int_ignored,   "simply ignored, because not supported by OS9exec" },
+  { "breaker",       int_breaker,    "PtoC breaker"    },
+  { "definit",       int_definit,    "PtoC definit"    },
+  { "globalvars",    int_globalvars, "PtoC globalvars" },
+  { "info",          int_info,       "PtoC info"       },
+//{ "pascal",        int_pascal,     "PtoC pascal"     },
+  { "pentominos",    int_pentominos, "PtoC pentominos" },
+  { "printenv",      int_printenv,   "PtoC printenv"   },
+  { "ptoc",          int_ptoc,       "PtoC ptoc"       },
+  { "show",          int_show,       "PtoC show"       },
+  { "stacks",        int_stacks,     "PtoC stacks"     },
+  { "strout",        int_strout,     "PtoC strout"     },
+  { "tcheck",        int_tcheck,     "PtoC tcheck"     },
+  { "trapsli",       int_trapsli,    "PtoC trapsli"    },
+  #endif
 
-    { NULL, NULL, NULL } /* terminator */
+  #ifdef MACOS9
+  { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
+  #endif
+
+  { "iquit",         int_quit,      "sets flag to quit directly" },
+  { "dch/diskcache", int_ignored,   "simply ignored, because not supported by OS9exec" },
+    
+  { NULL, NULL, NULL } /* terminator */
 };
 
 
@@ -559,39 +730,57 @@ os9err int_help( ushort pid, _argc_, _argv_ )
 /* Routines */
 /* -------- */
 
+static Boolean IntCmdOK( char* name, int* index )
+{
+  cmdtable_typ* cp;
+  char          *p, *q;
+  char          part[OS9NAMELEN];
+
+  *index= 0;
+  while (true) {
+       cp= &commandtable[ *index ];
+    p= cp->name; if (p==NULL) return false;
+
+    do {  q= strstr( p,PSEP_STR ); /* more than one part ? */
+      if (q!=NULL) {
+        strncpy( part,p, q-p );
+        part[ q-p ]= NUL; /* nul termination */
+        p= part;
+      } // if
+
+      if (strcmp( p,name )==0) return true;
+            
+      p= q+1;
+    } while (q!=NULL);
+        
+    (*index)++;
+  } /* loop */
+} // IntCmdOK
+
+
+Boolean Is_PtoC( char* name )
+{
+  int           index;
+  cmdtable_typ* cp;
+
+  if (!IntCmdOK( name, &index )) return false;
+  
+                 cp= &commandtable[ index ];
+  return strstr( cp->helptext,"PtoC " )==cp->helptext;
+} // Is_PtoC
+
+
 
 /* checks if command is internal
  * -1 if not,
  * command index otherwise
  */
-int isintcommand(char *name)
+int isintcommand( char* name)
 {
-    cmdtable_typ* cp;
-    int           index= 0;
-    char          *p, *q;
-    char          part[OS9NAMELEN];
-    
-    if (!with_intcmds) return -1;
-    
-    while (true) {
-           cp= &commandtable[index];
-        p= cp->name; if (p==NULL) break;
-
-        do {    q= strstr( p,PSEP_STR ); /* more than one part ? */
-            if (q!=NULL) {
-                strncpy( part,p, q-p );
-                part[q-p]= NUL; /* nul termination */
-                p= part;
-            }
-
-            if (strcmp( p,name )==0) return index;
-            p= q+1;
-        } while (q!=NULL);
-        
-        index++;
-    } /* loop */
-    
-    return -1;
+  int                  index;
+  if (IntCmdOK( name, &index ) && 
+     (ptocActive || !Is_PtoC( name ))) return index;
+  else                                 return -1;
 } /* isintcommand */
 
 
@@ -633,7 +822,7 @@ os9err prepArgs( char *arglist, ushort *argcP, char*** argP )
         if (argc>MAXARGS) return os9error(E_NORAM);
         if (!scanarg) {
             if (*p!=0x20) {
-                localargv[argc]=p; /* remember beginning of next arg */
+                localargv[argc]= p; /* remember beginning of next arg */
                 argc++;
                 scanarg=true; /* now scanning argument */
             }
@@ -660,8 +849,8 @@ os9err prepArgs( char *arglist, ushort *argcP, char*** argP )
     debugprintf(dbgUtils,dbgDeep,("# prepArgs: prepared argc=%d, params @ $%08lX\n",
                                      argc,(ulong)pp));
     /* return args */
-    *argP=&pp[0];
-    *argcP=argc+1; /* include argv[0] */
+    *argP = &pp[0];
+    *argcP= argc+1; /* include argv[0] */
     return 0;
 } /* prepArgs */
 
@@ -704,47 +893,149 @@ static void large_pipe_connect( ushort pid, syspath_typ* spC )
 
 
 
+#ifdef THREAD_SUPPORT
+  typedef struct {
+    ushort pid;
+    int    index;
+    int    argc;
+    char** argv;
+  } ThreadVars;
+
+   
+  // The POSIX thread function, must be passed the Thread Object address as parameter
+  //extern "C" void * IntCmdThread( void* threadVars );
+  void* IntCmdThread( ThreadVars* t )
+  {
+    os9err       err;
+    process_typ* cp= &procs[ t->pid ];
+    process_typ* pp;      
+    cp->tid= pthread_self();
+    
+    err= (commandtable[t->index].routine)( t->pid,t->argc,t->argv );
+
+    // mutex lock for systemcalls
+    pthread_mutex_lock( &sysCallMutex );
+    currentpid= t->pid;
+    
+    pp= &procs[ os9_word(cp->pd._pid) ];  
+    pp->pd._cid= cp->pd._sid; /* restore former child id */
+  //upe_printf( "end of %d: %d\n", t->pid, err );
+    cp->exiterr= err;
+    sig_mask    ( t->pid, 0 ); /* activate queued intercepts */
+    kill_process( t->pid    );
+    free        ( t );
+    cp->tid= NULL;
+
+    // mutex unlock for systemcalls
+    pthread_mutex_unlock( &sysCallMutex );
+    
+    // Exit thread now
+    pthread_exit( (void*)0 );
+    return NULL;
+  } // IntCmdThread
+
+
+  static void PrepareParams( ushort pid, int index, int argc, char** argv, ThreadVars** t )
+  {
+    int   blk = sizeof(ThreadVars) + argc*sizeof(void*);
+    int   size= blk;
+    char* p;
+    
+    int   i;
+    for  (i= 0; i<argc; i++) {
+      size+= strlen( argv[ i ] )+1;
+      if ((size % 2)==1) size++;
+    } // for
+  
+     *t= malloc( size );
+    (*t)->pid  = pid;
+    (*t)->index= index;
+    (*t)->argc = argc;
+    (*t)->argv = (*t)+1;
+  
+    p= (char*)*t + blk;
+  
+    for (i= 0; i<argc; i++) {
+      (*t)->argv[ i ]= p;
+      strcpy         ( p, argv[ i ] );
+      p+=      strlen( p )+1;
+      if      (((ulong)p % 2)==1) p++;
+    } // for
+  } // PrepareParams
+#endif
+
+
 /* executes internal command */
-os9err callcommand(char *name, ushort pid, int argc, char **argv)
+os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asThread )
 {
     os9err       err;
     int          index;
     ushort       sp;
     syspath_typ* spP;
     syspath_typ* spC;
-
+    
+    #ifdef THREAD_SUPPORT
+      ulong       rslt;
+      pthread_t   threadID;
+      ThreadVars* t;
+    #endif
+    
     icmpid = pid; /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
+    
+     *asThread= ptocThread;
+     #ifdef THREAD_SUPPORT
+      *asThread= *asThread && Is_PtoC( name );
+     #endif
     
         index= isintcommand(name);
     if (index<0) return os9error(E_PNNF);
 
-    /* there is a problem: during internal commands, multitasking can't
-       be active. If intcommands are used via telnet, the tty/pty connection
-       will not work. The only solution is to make the tty/pty buffer large
-       enough that the whole output can be written into this buffer.
-       After intcommand is finished, buffer will be emptied normally. If
-       the buffer is empty for the first time, this buffer will be released
-       again. The following sequence creates the larger buffer.
-       the same problems occurs with normal pipes also */
-    sp = procs[pid].usrpaths[usrStdout];
-    spC= NULL; /* not ye in use */
-    spP= get_syspathd( pid,sp ); 
+    /* There is a problem: during internal commands, multitasking can't
+     * be active. If intcommands are used via telnet, the tty/pty connection
+     * will not work. The only solution is to make the tty/pty buffer large
+     * enough that the whole output can be written into this buffer.
+     * After intcommand is finished, buffer will be emptied normally. If
+     * the buffer is empty for the first time, this buffer will be released
+     * again. The following sequence creates the larger buffer.
+     * the same problems occurs with normal pipes also.
+     * 
+     * There is 2nd solution for this problem: If THREAD_SUPPORT is active,
+     * the internal command(s) runs as a thread(s) in parallel to the rest, so
+     * the tty/pty will run normally. To avoid parallel access to kernel
+     * routines, a mutex will be set up, to have only one process there
+     * at the same time.
+     */
+    if (!*asThread) {
+      sp = procs[pid].usrpaths[usrStdout];
+      spC= NULL; /* not yet in use */
+      spP= get_syspathd( pid,sp ); 
 
-    if (spP->type==fTTY ) spC= get_syspathd( pid,spP->u.pipe.pchP->sp_lock );
-    if (spP->type==fPipe) spC= spP; /* no crossover */
+      if (spP->type==fTTY ) spC= get_syspathd( pid,spP->u.pipe.pchP->sp_lock );
+      if (spP->type==fPipe) spC= spP; /* no crossover */
     
-    if (spC!=NULL) large_pipe_connect( pid,spC );
-
+      if (spC!=NULL) large_pipe_connect( pid,spC );
+    } // if
 
     if (logtiming) { xxx_to_arb( F_Fork, pid );
                      arb_to_os9( false ); }
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
-    err= (commandtable[index].routine)( pid,argc,argv );
-        
+    #ifdef THREAD_SUPPORT
+      if (*asThread) {
+        PrepareParams              ( pid, index, argc, argv, &t );
+        rslt= pthread_create( &threadID, NULL, IntCmdThread,  t );
+        err = 0;
+      } // if
+    #endif
+    
+    if (!*asThread) {
+      currentpid= pid;
+      err= (commandtable[index].routine)( pid,argc,argv );
+    } // if
+    
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming)   os9_to_xxx( pid, name );
+    if (logtiming) os9_to_xxx( pid, name );
 
     return err;
 } /* callcommand */
