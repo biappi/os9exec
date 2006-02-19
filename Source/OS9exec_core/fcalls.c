@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2005/07/10 19:23:04  bfo
+ *    go back to the old way
+ *
  *    Revision 1.29  2005/06/30 11:30:47  bfo
  *    Mach-O support / use sig_mask (name clash) / FPU support info
  *
@@ -125,6 +128,41 @@
 
 /* OS-9 system call routines */
 /* ========================= */
+
+
+
+os9err OS9_F_Exit( regs_type *rp, ushort cpid )
+/* F$Exit
+ * Input:   d1.w=exit status
+ * Output:  none, process does not continue
+ *
+ */ 
+{
+    /* -- save exit code */
+    process_typ*        cp= &procs[cpid];
+    unsigned short exiterr= loword( rp->d[1] );
+    
+    #ifdef PTOC_SUPPORT
+      /* -- kill internal command by exception */
+      if (cp->isIntUtil) {
+        // don't forget to open the mutex for this special case
+        #ifdef THREAD_SUPPORT
+           if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+        #endif
+        
+        throw_exception( exiterr ); // this is the only way to leave the program
+      }
+    #endif
+  
+    /* -- kill the process */
+    cp->exiterr= exiterr;
+    sig_mask    ( cpid, 0 ); /* activate queued intercepts */
+    kill_process( cpid    );
+    
+    debugprintf(dbgProcess,dbgNorm,("# pid=%d (%s) exited thru F$Exit, exit-code=%d\n",
+                                       cpid,PStateStr(cp),cp->exiterr));
+    return 0;
+} /* OS9_F_Exit */
 
 
 
@@ -385,7 +423,7 @@ os9err OS9_F_Time( regs_type *rp, _pid_ )
 {
     ushort  mode       = loword(rp->d[0]);
     Boolean asGregorian= (mode & 0x1)==0;
-    Boolean withTicks  = (mode & 0x2);
+    Boolean withTicks  = (mode & 0x2)!=0;
     ulong   aTime, aDate;
     int     dayOfWk, currentTick;
     
@@ -674,7 +712,7 @@ os9err OS9_F_RTE( _rp_, ushort cpid )
                 pds= os9_word(cp->pd._signal);
             if (pds>0 && pds<=32) {
                 cp->os9regs.d[1]= pds;
-			    cp->os9regs.sr |= CARRY;
+			          cp->os9regs.sr |= CARRY;
                 set_os9_state( cpid, pActive );  /* only for some cases */
             }
             else arbitrate= true;
@@ -851,7 +889,7 @@ os9err OS9_F_GBlkMp( regs_type *rp, _pid_ )
 
 
 
-os9err OS9_F_SetSys( regs_type *rp, _pid_ )
+os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
 /* F$SetSys:
  * Input:   d0.w=offset
  *          d1.l=size (1,2 or 4 bytes, negative if read, positive if write)
@@ -888,9 +926,10 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
 	#define D_UserOpt  0x1010   /* User defined option -u                   */
 	
     
-    ulong  offs= loword(rp->d[0]);
-    int    size= (int)  rp->d[1];
-    ulong  b   = (ulong) &mdirField;
+    ulong        offs= loword(rp->d[0]);
+    int          size= (int)  rp->d[1];
+    ulong        b   = (ulong) &mdirField;
+    process_typ* cp  = &procs[cpid];
 
     ulong  v;
     ulong* ptr;
@@ -968,7 +1007,9 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
         
         break;
         
-      case D_IPID    : v= 42; break; /* allow programs to identify os9exec/nt as environment (Beat Forsters's sources) */
+      case D_IPID    : v= 42; /* allow programs to identify os9exec/nt as environment (Beat Forsters's sources) */
+                       if ( cp->isIntUtil) v+= 0x0100;                   /* special mode for internal utilities */
+                       break;
       
       case D_ScreenW : v= GetScreen( 'w' ); break; /* not according to OS-9 */
       case D_ScreenH : v= GetScreen( 'h' ); break;
@@ -1001,7 +1042,7 @@ os9err OS9_F_SetSys( regs_type *rp, _pid_ )
 os9err OS9_F_GModDr( regs_type *rp, _pid_ )
 /* F$GModDr:
  * Input:   d1.l = Maximum number of bytes to copy
-            (a0) = Buffer pointer
+ *          (a0) = Buffer pointer
  * Output:  d1.l = Actual number of bytes copied.
  *                   
  */
@@ -1024,9 +1065,9 @@ os9err OS9_F_GModDr( regs_type *rp, _pid_ )
 os9err OS9_F_CpyMem( regs_type *rp, _pid_ )
 /* F$CpyMem:
  * Input:   d0.w = process ID of external memory's owner
-            d1.l = number of bytes to copy
-            (a0) = address of memory in external process to copy
-            (a1) = caller's destination buffer pointer
+ *          d1.l = number of bytes to copy
+ *          (a0) = address of memory in external process to copy
+ *          (a1) = caller's destination buffer pointer
  * Output:  none
  *                   
  */
@@ -1102,7 +1143,6 @@ os9err OS9_F_TLink( regs_type *rp, ushort cpid )
 
 
 
-
 os9err OS9_F_DatMod( regs_type *rp, _pid_ )
 /* F$DatMod:
  * Input:   d0.l=size of data reuired (not including header or CRC)
@@ -1120,6 +1160,7 @@ os9err OS9_F_DatMod( regs_type *rp, _pid_ )
  *          d1.w = error
  */
 {
+
 //  #ifdef macintosh
 //    Handle    theModuleH;
 //    ulong     hsize;
@@ -1230,87 +1271,85 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
  *          later as a MPW script
  */
 {
-    char         mpath[OS9PATHLEN], *p;
-    ushort       newpid,newmid;
-    long         n;
-    os9err       err;
-    ushort       numpaths= loword(rp->d[3]);
-    ushort       grp,usr, prior;
-    process_typ* cp= &procs[cpid];
-    process_typ* np;
-    Boolean      intCmd;
+  char         mpath[OS9PATHLEN], *p;
+  ushort       newpid,newmid;
+  long         n;
+  os9err       err;
+  ushort       numpaths= loword(rp->d[3]);
+  ushort       grp,usr, prior;
+  process_typ* cp= &procs[cpid];
+  process_typ* np;
+     
+  /* get module name */
+  rp->a[0]= (ulong)nullterm( mpath, (char*)rp->a[0],OS9PATHLEN );
    
-   
-    /* get module name */
-    rp->a[0]= (ulong)nullterm( mpath, (char*)rp->a[0],OS9PATHLEN );
-   
-    /* now fork */
-    if (dummyfork) {
-        /* --- dummy fork, no new process */
-        fflush(stdout);
-        uphe_printf("Program executed F$Fork: Command line equivalent is:\n");
+  /* now fork */
+  if (dummyfork) {
+    /* --- dummy fork, no new process */
+    fflush(stdout);
+    uphe_printf("Program executed F$Fork: Command line equivalent is:\n");
     
-        if (dummyfork==2) printf("os9 -i -fo ");
-        printf("%s ",mpath); /* show program name */
+    if (dummyfork==2) printf("os9 -i -fo ");
+    printf("%s ",mpath); /* show program name */
     
-        /* --- scan and display parameters */
-        p= (char*)rp->a[1];
-        n= rp->d[2];
+    /* --- scan and display parameters */
+    p= (char*)rp->a[1];
+    n= rp->d[2];
 
-        while (n-->0) {
-            if (*p<' ') break;
-            if (*p=='/') putchar ('¶'); /* quote slashes, as they are MPW shell quotes */
-            putchar(*p++);
-        } /* while */
+    while (n-->0) {
+      if (*p<' ') break;
+      if (*p=='/') putchar ('¶'); /* quote slashes, as they are MPW shell quotes */
+      putchar(*p++);
+    } /* while */
 
-        puts(" ;\n");
-        fflush(stdout);
+    puts(" ;\n");
+    fflush(stdout);
     
-        /* --- fake return values */  
-        retword(rp->d[0])= cpid+1; /* next process ID */
-        return 0;
-    } /* if dummyfork */
+    /* --- fake return values */  
+    retword(rp->d[0])= cpid+1; /* next process ID */
+    return 0;
+  } /* if dummyfork */
     
         
-    /* --- multitasking enabled, fork program as process */
-    /* --- check if "OS9exec" module is about to be launched, */
-    grp= os9_word( cp->pd._group ); /* inherit grp.usr from parent's process */
-    usr= os9_word( cp->pd._user  );
+  /* --- multitasking enabled, fork program as process */
+  /* --- check if "OS9exec" module is about to be launched, */
+  grp= os9_word( cp->pd._group ); /* inherit grp.usr from parent's process */
+  usr= os9_word( cp->pd._user  );
         
-        prior= loword(rp->d[4]);
-    if (prior==0) prior= os9_word( cp->pd._prior );
+      prior= loword(rp->d[4]);
+  if (prior==0) prior= os9_word( cp->pd._prior );
 
-    /* exe dir only, link style first, then load style */
-              err= new_process( cpid,      &newpid,numpaths ); if (err) return err;
-              err= link_load  ( cpid,mpath,&newmid );       
-    if (!err) err= prepFork ( newpid,mpath, newmid,
-                              (byte*)rp->a[1],rp->d[2],rp->d[1], 
-                              numpaths, grp,usr, prior, &intCmd );
+  /* exe dir only, link style first, then load style */
+            err= new_process( cpid,      &newpid,numpaths ); if (err) return err;
+            err= link_load  ( cpid,mpath,&newmid );       
+  if (!err) err= prepFork ( newpid,mpath, newmid,
+                            (byte*)rp->a[1],rp->d[2],rp->d[1], 
+                            numpaths, grp,usr, prior );
 
 	np= &procs[newpid]; /* is valid, even if error */
-    if (!err) {
-        retword(rp->d[0])= newpid; /* return forked process' ID */
+  if (!err) {
+    retword(rp->d[0])= newpid; /* return forked process' ID */
                 
-        /* --- now actually cause process switch */
-        if (!intCmd) {
-        	if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
+    /* --- now actually cause process switch */
+    if  (!np->isIntUtil) {
+      if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
 
-        	cp->pd._cid= os9_word(newpid);                  /* this is the child */
-            currentpid =          newpid;  /* continue execution in new process  */
-            set_os9_state       ( newpid, pActive ); /* make this process active */
-        }
+      cp->pd._cid= os9_word( newpid );                  /* this is the child */
+      currentpid =           newpid;  /* continue execution in new process  */
+      set_os9_state        ( newpid, pActive ); /* make this process active */
+    } // if
         
-        arbitrate= true;
-    }
+    arbitrate= true;
+  } // if
     
-    if  (err) {
-        /* -- save exit code */
-        close_usrpaths( newpid );
-        set_os9_state ( newpid, pUnused ); /* unused again because of error */
-        np->exiterr= err;
-    }
+  if  (err) {
+    /* -- save exit code */
+    close_usrpaths( newpid );
+    set_os9_state ( newpid, pUnused ); /* unused again because of error */
+    np->exiterr= err;
+  } // if
             
-    return err;
+  return err;
 } /* OS9_F_Fork */
 
 
@@ -1339,7 +1378,6 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
     ushort       numpaths, k, grp,usr, prior, sp, sib;
     byte*        paramptr;
     ulong        paramsiz;
-    Boolean      intCmd;
     
     /* no error so far */
     err= 0;
@@ -1384,7 +1422,7 @@ os9err OS9_F_Chain( regs_type *rp, ushort cpid )
     if (!err) err= link_load( cpid, mpath, &newmid );
     if (!err) err= prepFork ( cpid, mpath,  newmid,
                               paramptr, rp->d[2], rp->d[1], 
-                              numpaths, grp,usr, prior, &intCmd );
+                              numpaths, grp,usr, prior );
     cp->pd._sid= os9_word(sib); /* restore it */
 
     /* return the parameter memory block, it is now allocated at the process */
@@ -1413,58 +1451,60 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
  * Notes: - Acts as dummy counterpart to F$Fork if dummyfork is non-zero.
  */
 {
-    ushort       k;
-    ushort       activeChild;
-    os9err       err= sig_mask( cpid,0 ); /* disable signal mask */
-    process_typ* cp;
+  ushort       k;
+  ushort       activeChild;
+  os9err       err= sig_mask( cpid,0 ); /* disable signal mask */
+  process_typ* cp;
 
-    if (dummyfork) {
-        /* wait for dummy fork */
-       retword(rp->d[0])= cpid+1; /* previously "forked" child's process ID */
-       retword(rp->d[1])= 0;      /* exit status */
-       return 0;
-    }
-    else {
-        /* check if there are childs at all */
-        activeChild=MAXPROCESSES;
-        for (k=2; k<MAXPROCESSES; k++) { /* start at process 2  */
-                cp=  &procs[k];
-            if (cp->state   !=pUnused && 
-                os9_word(cp->pd._pid)==cpid) {
+  if (dummyfork) {
+    /* wait for dummy fork */
+    retword(rp->d[0])= cpid+1; /* previously "forked" child's process ID */
+    retword(rp->d[1])= 0;      /* exit status */
+    return 0;
+  }
+  else {
+    /* check if there are childs at all */
+    activeChild=MAXPROCESSES;
+    for (k=2; k<MAXPROCESSES; k++) { /* start at process 2  */
+          cp=  &procs[k];
+      if (cp->state!=pUnused && 
+        os9_word(cp->pd._pid)==cpid) {
                 
-                /* this is a child */
-                if (cp->state==pDead) {
-                    /* child is dead, report that */
-                    retword(rp->d[0])= k; /* ID of dead child */
-                    retword(rp->d[1])= procs[k].exiterr; /* exit error of child */
-                    debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
-                    set_os9_state( k, pUnused );
-                    return 0; /* process already died, no need to wait */
-                }
-                else {
-                    /* there is a non-dead child */
-                    debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d is active\n",k));
-                    activeChild= k; /* remember its id */
-                }
-            }
-        }
-        
-        if (activeChild<MAXPROCESSES) { /* there is (at least) one child, but it's not yet dead */
-            retword(rp->d[0])= 0; /* no child, should never be used !! */
-            retword(rp->d[1])= 0; /* no error */
-                        
-            debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
-            set_os9_state( cpid, pWaiting ); /* put myself to wait state */
-            currentpid= activeChild; /* activate that child */
-        	arbitrate= true;
-            return 0; /* continue execution with another process */
+        /* this is a child */
+        if (cp->state==pDead) {
+          /* child is dead, report that */
+          retword(rp->d[0])= k; /* ID of dead child */
+          retword(rp->d[1])= procs[k].exiterr; /* exit error of child */
+          debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
+          set_os9_state( k, pUnused );
+          return 0; /* process already died, no need to wait */
         }
         else {
-            /* there are no children */
-            debugprintf(dbgProcess,dbgNorm,("# F$Wait: pid=%d has no children to wait for\n",cpid));
-            return os9error(E_NOCHLD);
-        }
-    }           
+          /* there is a non-dead child */
+          debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d is active\n",k));
+          activeChild= k; /* remember its id */
+          break;
+        } // if
+      } // if
+    } // for
+        
+    if (activeChild<MAXPROCESSES) { /* there is (at least) one child, but it's not yet dead */
+      retword(rp->d[0])= 0; /* no child, should never be used !! */
+      retword(rp->d[1])= 0; /* no error */
+                        
+      debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
+      set_os9_state( cpid, pWaiting ); /* put myself to wait state */
+      if (!cp->isIntUtil) currentpid= activeChild; /* activate that child */
+      
+      arbitrate= true;
+      return 0; /* continue execution with another process */
+    }
+    else {
+      /* there are no children */
+      debugprintf(dbgProcess,dbgNorm,("# F$Wait: pid=%d has no children to wait for\n",cpid));
+      return os9error(E_NOCHLD);
+    } // if
+  } // if          
 } /* OS9_F_Wait */
 
 
@@ -1483,6 +1523,9 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     int          sleeptime= rp->d[0];
     int          sleep_x  = sleeptime & 0x7fffffff;
     int          ticks;
+
+    if (cp->isIntUtil)
+      printf( "%d Int Sleep\n", cpid );
 
     if (cp->way_to_icpt) return 0; /* don't sleep if signaled */
     
@@ -1552,28 +1595,6 @@ os9err OS9_F_Sigmask( regs_type *rp, ushort cpid )
     sig_mask( cpid, level );
     return 0;
 } /* OS9_F_Sigmask*/
-
-
-
-os9err OS9_F_Exit( regs_type *rp, ushort cpid )
-/* F$Exit
- * Input:   d1.w=exit status
- * Output:  none, process does not continue
- *
- */ 
-{
-    /* -- save exit code */
-    process_typ* cp= &procs[cpid];
-    
-    cp->exiterr= loword(rp->d[1]);
-    sig_mask( cpid,0 ); /* activate queued intercepts */
-    
-    /* -- kill the process */
-    kill_process( cpid );
-    debugprintf(dbgProcess,dbgNorm,("# pid=%d (%s) exited thru F$Exit, exit-code=%d\n",
-                                       cpid,PStateStr(cp),cp->exiterr));
-    return 0;
-} /* OS9_F_Exit */
 
 
 
