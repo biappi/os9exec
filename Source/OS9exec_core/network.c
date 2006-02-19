@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2005/07/06 21:04:03  bfo
+ *    defined UNIX
+ *
  *    Revision 1.32  2005/06/30 13:13:23  bfo
  *    Mach-O adaptions
  *
@@ -604,7 +607,8 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
        
                 err= netReadBlock( pid,net, &nBytes );
             if (err || nBytes==0) {                      
-                if (net->closeIt) return E_EOF;
+                if (net->closeIt) 
+                  return E_EOF;
             
                 cp->saved_state= cp->state;
                 set_os9_state( pid, pWaitRead );
@@ -675,7 +679,8 @@ static os9err netWrite( ushort pid, syspath_typ* spP, ulong *lenP,
         if (net->closeIt) return 0;
         
             err= netWriteBlock( pid,net, &nBytes );
-        if (err) return err;
+        if (err) 
+          return err;
                     
         pp    += nBytes; /* bytesSent */
         remain-= nBytes;
@@ -1349,7 +1354,7 @@ os9err pNsPCmd( _pid_, syspath_typ *spP, ulong *a0 )
                        (struct sockaddr*)&name, sizeof(name) );
       }
 
-      upe_printf( "wait a little bit ...\n" );
+//    upe_printf( "wait a little bit ...\n" );
 //    upe_printf( "sendto err=%d\n", err );
       if (err>0) err= 0;
     #endif
@@ -1423,7 +1428,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
               
               if (err==kOTLookErr) {
                   lookResult= OTLook(net->ep);
-                  upe_printf( "lookResult=%d\n", lookResult );
+              // upe_printf( "lookResult=%d\n", lookResult );
               }
           }
           
