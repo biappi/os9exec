@@ -27,7 +27,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -85,7 +85,7 @@
     #if !defined USE_CARBON
       TermWinScrolls     = 1;      // use scroll bars
       gConsoleQuickInput = true;   // get single chars
-      gConsoleEcho       = 0;      // no echo
+      gConsoleEcho       = false;  // no echo
       gConsoleNLExpand   = false;  // no NL expand
     #endif
     
