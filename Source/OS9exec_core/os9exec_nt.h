@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2005/07/06 21:10:30  bfo
+ *    defined UNIX
+ *
  *    Revision 1.39  2005/07/02 14:21:30  bfo
  *    Adapted for Mach-O
  *
@@ -154,6 +157,10 @@
 #ifndef __os9exec_nt_h
 #define __os9exec_nt_h
 
+#ifdef THREAD_SUPPORT
+  #include <types.h>
+#endif
+
                 
 /* constants */
 /* ========= */
@@ -166,6 +173,8 @@
 #define DAYS_SINCE_0000 1721059L
 #define SecsPerDay      (24*60*60)
 
+/* 16 bit integer */
+//#define MAXINT 32767
 
 /* bytes */
 #define KByte 1024  /* one     kByte */
@@ -372,12 +381,7 @@ typedef ushort os9err;
 
 /* an (internal) module directory entry */
 typedef struct {
-//          #ifdef macintosh
-//            Handle modulehandle;
-//          #else
-              void* modulebase;
-//          #endif
-            
+            void*   modulebase;            
             Boolean isBuiltIn; /* set, if module compiled into code (such as 'OS9exec' module) */
             short   linkcount;
          } module_typ;
@@ -638,7 +642,6 @@ typedef struct {
 /* variant for network objects */
 typedef struct {
             SOCKET      ep;             /* end point reference */
-         // SOCKET      ls;             /* listener's end point */
             Ptr         transferBuffer; /* OpenTransport's network buffer */
             Ptr         b_local;        /* local buffer */
             ulong       bsize;          /* local buffer size */     
@@ -794,7 +797,7 @@ typedef struct {
                            seek,
                            
                            chd,
-                           delete,
+                           del,
                            makdir;
                            
             gs_typ         gs;
@@ -823,7 +826,7 @@ typedef enum {
             pSleeping, 
             pWaiting, 
             pSysTask, 
-            pIntUtil,
+          //pIntUtil,
             pWaitRead 
         } pstate_typ;
 
@@ -910,15 +913,17 @@ typedef struct {
 
 /* the process descriptor */
 typedef struct {
+                regs_type       os9regs;    /* the process' register stack */
+                save_type       savread;    /* saved variables during read */
+
                 procid pd;                  /* this is the 1:1 process descriptor image */
                 
                 /* general state */
-                pstate_typ state;           /* process' state */
-                ushort mid;                /* the process' module ID */
+                pstate_typ        state;    /* process' state */
+                Boolean       isIntUtil;    /* Internal utility flag */
+                ushort              mid;    /* the process' primary module ID */
 
                 os9err          exiterr;    /* process' exit OS9 error */
-                regs_type       os9regs;    /* the process' register stack */
-                save_type       savread;    /* saved variables during read */
                 systaskfunc_typ systask;    /* the system task function if state=pSysTask */
                 void      *systaskdataP;    /* system task data pointer */
                 ulong      systask_offs;    /* offset for rewrite call (from tty/pty) */
@@ -954,7 +959,6 @@ typedef struct {
                 os9err oerr;                /* OS9 error */
     
                 /* signal handling */
-             // ushort lastsignal;          /* last signal received, 0 if none */
                 regs_type  rteregs;         /* saved main thread registers during intercept processing, valid if lastsignal!=0 */
                 pstate_typ rtestate;        /* saved process' state */
                 ushort     rtevector;       /* saved vector */
@@ -962,7 +966,6 @@ typedef struct {
                 
                 int     masklevel;
                 Boolean pwr_brk;            /* pWaitRead break for signals <= 32 */
-             // ulong   icptroutine;        /* the intercept routine, NULL if none */
                 ulong   icpta6;             /* value to pass in A6 to intercept routine */
 
                 Boolean way_to_icpt;        /* is true on the way to icpt */
@@ -980,6 +983,9 @@ typedef struct {
                 /* Stdin saved buffer */
                 int        saved_cnt;
                 pstate_typ saved_state;     /* saved process' state */
+                
+                ulong my_args;              /* arguments pointer */
+                int   tid;                  /* thread ID */
             } process_typ;
             
 
@@ -1061,7 +1067,17 @@ extern  ulong  newEventId;
 #define EvOffs 0x00010001
 
 /* the currently executing process, MAXPROCESSES if none */
-extern  ushort currentpid; /* currently executing process */
+#if defined __cplusplus
+  extern "C" {
+#endif
+
+extern   ushort currentpid; // id of current process
+//extern ulong  current_a5; // register a5 at process start
+
+#if defined __cplusplus
+  } // end extern "C"
+#endif
+
 extern  short  arbitrate;  /* set if arbitrate() should switch away from one running process to next */
 extern  ushort interactivepid; /* process that will get keyboard abort signals */
 
@@ -1113,6 +1129,11 @@ extern int      without_pid;
 extern int     justthis_pid;
 extern Boolean quitFlag;
 extern Boolean userOpt;
+
+extern Boolean ptocActive;
+extern Boolean ptocThread;
+extern Boolean fullArb;
+
 extern Boolean logtiming;
 extern Boolean logtiming_disp;
 extern Boolean async_area;
@@ -1184,6 +1205,10 @@ extern  Boolean mnt_imgMode;
 
 /* additional memory for all processes */
 extern ulong memplusall;
+
+#ifdef THREAD_SUPPORT
+extern  pthread_mutex_t sysCallMutex;
+#endif
 
 
 /* externally defined routines */
