@@ -1259,7 +1259,11 @@
           05-07-06  Bfo     defined UNIX
           05-07-10  Bfo     Do FPU handling as before
           05-07-12  Bfo     Empty file problem (Mach-O) fixed
-    3.28  05-??-??  Bfo     ...
+          05-08-XX  Bfo     Integration of the PtoC system
+          05-09-XX  Bfo           "      "  "    "     "
+    3.28  05-10-XX  Bfo           "      "  "    "     "
+          05-11-26  Bfo     Thread support for PtoC system
+    3.29  05-??-??  Bfo     ...
     -------------------
        
 */
