@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2005/06/30 11:35:41  bfo
+ *    Mount reduced AND full / Mach-O support
+ *
  *    Revision 1.43  2005/05/13 17:21:48  bfo
  *    mount -I is supported now
  *
@@ -233,7 +236,7 @@ void init_RBF( fmgr_typ* f )
     f->writeln   = (pathopfunc_typ)pRwriteln;
     f->seek      = (pathopfunc_typ)pRseek;
     f->chd       = (pathopfunc_typ)pRchd;
-    f->delete    = (pathopfunc_typ)pRdelete;
+    f->del       = (pathopfunc_typ)pRdelete;
     f->makdir    = (pathopfunc_typ)pRmakdir;
     
     /* getstat */
@@ -657,7 +660,7 @@ static os9err GetTop( ushort pid, rbfdev_typ* dev )
   ulong  sv= dev->imgScts;
   ulong img;
   
-/**/upo_printf( "map=%d sect=%d pos=%d\n", map, sect, pos );
+//upo_printf( "map=%d sect=%d pos=%d\n", map, sect, pos );
   
   if (last==0) last= sect;
   
@@ -679,19 +682,19 @@ static os9err GetTop( ushort pid, rbfdev_typ* dev )
   
   while (b) { b= b<<1; offs++; }
 
-/**/upo_printf( "GetTop v img=%d tot=%d\n", dev->imgScts, dev->totScts );
+//upo_printf( "GetTop v img=%d tot=%d\n", dev->imgScts, dev->totScts );
   dev->imgScts= ( ( pos-sect+last )*BpB + offs )*dev->clusterSize;
-/**/upo_printf( "GetTop n img=%d tot=%d\n", dev->imgScts, dev->totScts );
+//upo_printf( "GetTop n img=%d tot=%d\n", dev->imgScts, dev->totScts );
   
   if (sv>dev->imgScts) {
-/**/  upo_printf( "REDUCE\n" );
+//  upo_printf( "REDUCE\n" );
     img= dev->imgScts*sect;
-/**/  upo_printf( "REDUCE img=%d\n",  img );
+//  upo_printf( "REDUCE img=%d\n",  img );
     err= syspath_setstat( pid, sp, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
-/**/  upo_printf( "REDUCED err=%d\n", err );
+//  upo_printf( "REDUCED err=%d\n", err );
   } // if
   
-/**/upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
+//upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect, pos, last, img, dev->totScts-img );
   return err;
 } /* GetTop */
 
@@ -706,7 +709,7 @@ static os9err GetFull( ushort pid, rbfdev_typ* dev )
   err= syspath_setstat( pid, sp, SS_Size, NULL,NULL, NULL,NULL,&img,NULL );
   if (!err) dev->imgScts= dev->totScts;
   
-  upo_printf( "FULL AGAIN err=%d\n", err );
+//upo_printf( "FULL AGAIN err=%d\n", err );
   return err;
 } /* GetFull */
 
@@ -802,12 +805,9 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
           q=           pathName + len-lr0;
           if (ustrcmp( q, R0 )==0 ) return E_UNIT;
         #endif
-      //upe_printf( "OpenImage1 '%s'\n", pathName );
        
         err= syspath_open   ( pid, &sp, type,pathName,mode ); if (err) return err;
-      //upe_printf( "OpenImage2 '%s' err=%d\n", pathName, err );
         err= syspath_gs_size( pid,  sp, &iSize );             if (err) break;
-      //upe_printf( "iSize=%d\n", iSize );
         if (!RBF_ImgSize( iSize )) { err= E_FNA; break; }
       
                                          len= sizeof(bb);
@@ -824,7 +824,6 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
       //upo_printf( "name1='%s' size=%d %d\n", pathname, imgScts, totScts );
 
              tSize= totScts*sctSize;
-      //upe_printf( "totScts=%d\n", tSize );
         if ((tSize %    2048)!=0 ||
              tSize <    8192     ||
             (iSize % sctSize)!=0) { err= E_FNA; break; }
@@ -856,7 +855,6 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
     } // if
     
     EatBack( dev->img_name );
-  //upe_printf( "EndImgName '%s'\n", dev->img_name );
     return 0;                                                         
 } /* Open_Image */
 
@@ -1079,7 +1077,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             if (*dev->name2==NUL) { strcpy( dev->name2,mnt_name ); break; }
             if (*dev->name3==NUL) { strcpy( dev->name3,mnt_name ); break; }
             return E_DEVBSY;
-        }
+        } // if
         
         /* existing relative path ? */
         if (!abs && cdv!=0 && mnt_scsiID==NO_SCSI) break;
@@ -1332,7 +1330,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
           (dev->imgMode==Img_Unchanged && dev->imgScts<dev->totScts)) && 
           !dev->isRAM && !IsSCSI( dev )) {
         err= GetTop( pid, dev );
-        upo_printf( "TOPALLOC=%d of %d err=%d\n", dev->imgScts, dev->totScts, err );
+      //upo_printf( "TOPALLOC=%d of %d err=%d\n", dev->imgScts, dev->totScts, err );
       } // if
       
       if (dev->imgMode==Img_FullSize) {
@@ -1396,7 +1394,6 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     /* commented out: wil be done at "filestuff.c" */
 //  MakeOS9Path( name );
 
-  //upe_printf( "Mounty1 '%s'\n", mnt_dev );
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
     /* NOTE: mnt_name is only valid within this context here */
@@ -1987,55 +1984,57 @@ static os9err AllocateBlocks( syspath_typ* spP, ulong uscs, ulong *posP, ulong *
                                                 ulong prefpos )
 /* allocate <uscs> sectors and. Result is <posP>,<scsP>. */
 {
-    os9err      err;
-    rbfdev_typ* dev  = &rbfdev[spP->u.rbf.devnr];
-    ulong       mxsct= (dev->mapSize-1)/dev->sctSize + 1;
-    ulong       mpsct, s1;
-    ulong       pdc  = prefpos        /dev->clusterSize/BpB;  
-    ulong       lst  = dev->last_alloc/dev->clusterSize/BpB;  
-    ulong       mploc;
-    Boolean     first, found;
+  os9err      err;
+  rbfdev_typ* dev  = &rbfdev[spP->u.rbf.devnr];
+  ulong       mxsct= (dev->mapSize-1)/dev->sctSize + 1;
+  ulong       mpsct, s1;
+  ulong       pdc  = prefpos        /dev->clusterSize/BpB;  
+  ulong       lst  = dev->last_alloc/dev->clusterSize/BpB;  
+  ulong       mploc;
+  Boolean     first, found;
 
-    *posP= 0;
-    *scsP= 0;
+  *posP= 0;
+  *scsP= 0;
 
-    if (prefpos!=0) {
-            mpsct= 1 + pdc / dev->sctSize;
-            mploc=     pdc % dev->sctSize;
-        if (mpsct>=mxsct) mpsct= 1;
+  if (prefpos!=0) {
+        mpsct= 1 + pdc / dev->sctSize;
+        mploc=     pdc % dev->sctSize;
+    if (mpsct>=mxsct) mpsct= 1;
 
-            err= BlkSearch( dev, uscs, mpsct,mploc, &found, posP,scsP ); 
-//      printf( "Ask=%5X get=%4X pos=%06X fnd=%d err=%d\n", uscs,*scsP,*posP, found, err );
-        if (err) return err;
-    }
+        err= BlkSearch( dev, uscs, mpsct,mploc, &found, posP,scsP ); 
+//  printf( "Ask=%5X get=%4X pos=%06X fnd=%d err=%d\n", uscs,*scsP,*posP, found, err );
+    if (err) return err;
+  }
 
-    if (*scsP==0 || *posP!=prefpos) { /* no preferred allocation */
-            mpsct= 1 + lst / dev->sctSize; 
-            mploc=     lst % dev->sctSize;
-        if (mpsct>mxsct) mpsct= 1;
-        s1= mpsct;
+  if (*scsP==0 || *posP!=prefpos) { /* no preferred allocation */
+        mpsct= 1 + lst / dev->sctSize; 
+        mploc=     lst % dev->sctSize;
+    if (mpsct>mxsct) mpsct= 1;
+    s1= mpsct;
 
-        first= true;
-        while (true) { /* run through for one whole round */
-                err= BlkSearch( dev, uscs, mpsct,mploc, &found, posP,scsP );
-//          printf( "ask=%5X get=%4X pos=%06X fnd=%d err=%d\n", uscs,*scsP,*posP, found, err );
-            if (err)   return err;
-            if (found) break;
+    first= true;
+    while (true) { /* run through for one whole round */
+          err= BlkSearch( dev, uscs, mpsct,mploc, &found, posP,scsP );
+//    printf( "ask=%5X get=%4X pos=%06X fnd=%d err=%d\n", uscs,*scsP,*posP, found, err );
+      if (err)   return err;
+      if (found) break;
 
-            if (!first &&    mpsct==s1) break; /* all done */
-            if (mpsct<mxsct) mpsct++;
-            else             mpsct= 1;
+      if (!first &&    mpsct==s1) break; /* all done */
+      if (mpsct<mxsct) mpsct++;
+      else             mpsct= 1;
 
-            first= false;
-            mploc= 0; /* from now on search from beginning */
-        } /* while (true) */
-    }
+      first= false;
+      mploc= 0; /* from now on search from beginning */
+    } /* while (true) */
+  } // if
 
-    if (*scsP==0) return E_FULL;
+  if (*scsP==0) return E_FULL;
 
-//  printf( "FND=%5X get=%4X pos=%06X\n", uscs,*scsP,*posP );
-    dev->last_alloc=     *posP + *scsP; /* next search position */
-    return GetThem( dev, *posP,  *scsP, true );
+//printf( "FND=%5X get=%4X pos=%06X\n", uscs,*scsP,*posP );
+  dev->last_alloc=   *posP + *scsP; /* next search position */
+  err= GetThem( dev, *posP,  *scsP, true );
+//printf( "GetThem err=%d\n", err );
+  return err;
 } /* AllocateBlocks */
 
 
@@ -2117,58 +2116,58 @@ static os9err ReleaseBlocks( syspath_typ* spP, ulong lastPos )
 
 static os9err AdaptAlloc_FD( syspath_typ* spP, ulong pos, ulong scs )
 {
-    #define     LimScsPerSegment 0x8000 /* number of sectors per segment must be less than this */
-    #define     First  16
-    #define     Second First+SegSize
-    os9err      err;
-    rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    int         ii;
-    ulong       *lp,  prev_l,  blk, mx;
-    ushort      *sp, *prev_sp, psp, size= 0;
-    ulong       lpos= pos; /* treat them locally, because 'Get_Them' uses it also */
-    ushort      lscs= scs;
+  #define     LimScsPerSegment 0x8000 /* number of sectors per segment must be less than this */
+  #define     First  16
+  #define     Second First+SegSize
+  os9err      err;
+  rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
+  int         ii;
+  ulong       *lp,  prev_l,  blk, mx;
+  ushort      *sp, *prev_sp, psp, size= 0;
+  ulong       lpos= pos; /* treat them locally, because 'Get_Them' uses it also */
+  ushort      lscs= scs;
 
-    prev_sp= &size; /* initial value */
-    for (ii=First; ii+SegSize <= dev->sctSize; ii+=SegSize) {
-        lp= (ulong *)&spP->fd_sct[ii  ];
-        sp= (ushort*)&spP->fd_sct[ii+3];
+  prev_sp= &size; /* initial value */
+  for (ii=First; ii+SegSize <= dev->sctSize; ii+=SegSize) {
+    lp= (ulong *)&spP->fd_sct[ii  ];
+    sp= (ushort*)&spP->fd_sct[ii+3];
 
-        if (*sp==0) {          /* zero is zero for big/little endian */
-                psp= os9_word(*prev_sp);
-            if (psp>0 && prev_l+psp==lpos) {  /* combine it */
-                if (ii==Second)    mx= LimScsPerSegment-1; /* assuming clusterSize is divideable */
-                else               mx= LimScsPerSegment-dev->clusterSize;
-                blk= Min( psp+lscs,mx ); /* but not larger than the max allowed size */
-                *prev_sp= os9_word(blk);
+    if (*sp==0) {          /* zero is zero for big/little endian */
+          psp= os9_word(*prev_sp);
+      if (psp>0 && prev_l+psp==lpos) {  /* combine it */
+        if (ii==Second)    mx= LimScsPerSegment-1; /* assuming clusterSize is divideable */
+        else               mx= LimScsPerSegment-dev->clusterSize;
+        blk= Min( psp+lscs,mx ); /* but not larger than the max allowed size */
+        *prev_sp= os9_word(blk);
                 
-                lpos+= blk-psp;
-                lscs-= blk-psp; /* adjust the number of blocks */
-            }
+        lpos+= blk-psp;
+        lscs-= blk-psp; /* adjust the number of blocks */
+      } // if
                 
-            if (lscs>0) {
-                if (ii==First) mx= LimScsPerSegment-1; /* assuming clusterSize is divideable */
-                else           mx= LimScsPerSegment-dev->clusterSize;
-                blk= Min( lscs,mx );
+      if (lscs>0) {
+        if (ii==First) mx= LimScsPerSegment-1; /* assuming clusterSize is divideable */
+        else           mx= LimScsPerSegment-dev->clusterSize;
+        blk= Min( lscs,mx );
                                 
-                *lp= os9_long(lpos<<BpB);
-                *sp= os9_word(blk); /* one byte overlapping */
+        *lp= os9_long(lpos<<BpB);
+        *sp= os9_word(blk); /* one byte overlapping */
 
-                lpos+= blk;
-                lscs-= blk;
-            }
+        lpos+= blk;
+        lscs-= blk;
+      } // if
             
-            if (lscs==0) {
-                err= WriteFD( spP ); if (err) return err;
-                return 0;
-            }
-        } /* if */
+      if (lscs==0) {
+        err= WriteFD( spP ); if (err) return err;
+        return 0;
+      } // if
+    } /* if */
         
-        prev_l = os9_long(*lp)>>BpB;
-        prev_sp= sp; 
-    } /* for */
+    prev_l = os9_long(*lp)>>BpB;
+    prev_sp= sp; 
+  } /* for */
 
-    GetThem( dev, pos,scs, false );
-    return E_SLF;
+  GetThem( dev, pos,scs, false );
+  return E_SLF;
 } /* AdaptAlloc_FD */
 
 
@@ -2403,7 +2402,6 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
         
         remain-= maxc; /* adapt them for the next loop */
         boffs += maxc;
-//      if (dev->multiSct) upe_printf( " remain boffs maxc      %7d %7d %7d\n", remain,boffs,maxc );
     } while (remain>0);
     
     if (err==E_FULL) {
@@ -2583,7 +2581,7 @@ static os9err CreateNewFile( syspath_typ* spP, byte fileAtt, char* name, ulong c
     ulong       clu=  dev->clusterSize;
     ulong       dfd=  rbf->fd_nr;
     ulong*      d  = &rbf->deptr;
-    ulong       fd, scs, ascs;
+    ulong       fd, scs, ascs, sTmp;
 
     if (strlen(name)>DIRNAMSZ) return E_BPNAM;
     
@@ -2591,16 +2589,24 @@ static os9err CreateNewFile( syspath_typ* spP, byte fileAtt, char* name, ulong c
     scs= (csize+sct-1)/sct+1;
     scs=       (scs-1)/clu+1; /* and adapt for cluster granularity */
     scs=        scs   *clu;
+  //printf( "a) scs=%d\n", scs );
+    err= AllocateBlocks ( spP, scs, &fd,  &ascs, 0 ); if (err) return err;
+  //printf( "c) err=%d, ascs=%d\n", err, ascs );
+         spP->u.rbf.fd_nr=          fd; /* access them correctly */
+         spP->u.rbf.fddir=     dfd;     
+    err= Create_FD      ( spP,         fileAtt, 0 ); if (err) return err;
+    err= Access_DirEntry( dev, dfd, fd,   name, d ); if (err) return err;
 
-    err=     AllocateBlocks ( spP, scs, &fd,  &ascs, 0 ); if (err) return err;
-             spP->u.rbf.fd_nr=           fd; /* access them correctly */
-             spP->u.rbf.fddir=     dfd;     
-    err=     Create_FD      ( spP,          fileAtt, 0 ); if (err) return err;
-    err=     Access_DirEntry( dev, dfd,  fd,   name, d ); if (err) return err;
-
-    if  (scs>1) { /* get the remaining part */
-        err= AdaptAlloc_FD  ( spP,       fd+1, ascs-1  ); if (err) return err;
-    }
+    sTmp= ascs; // get a copy before changing 
+    if  (scs>1) { fd++; ascs--; } /* get the remaining part */
+    err= AdaptAlloc_FD  ( spP,      fd,   ascs    ); if (err) return err;
+    
+    while (sTmp<scs) {
+    //printf( "remania=%d\n", scs-sTmp );
+      err= AllocateBlocks( spP, scs-sTmp, &fd, &ascs, 0 ); if (err) return err;
+      err= AdaptAlloc_FD ( spP,            fd,  ascs    ); if (err) return err;
+      sTmp+= ascs;
+    } // while
     
            err= touchfile_RBF( spP,true );
     if   (!err) strcpy( spP->name, name ); /* assign file name, if everything is ok */
@@ -2608,11 +2614,10 @@ static os9err CreateNewFile( syspath_typ* spP, byte fileAtt, char* name, ulong c
 } /* CreateNewFile */
 
 
-
 static os9err ConvertToDir( syspath_typ* spP )
 {
-    Set_FDAtt     ( spP, 0xbf );  /* as directory */    
-    return WriteFD( spP );
+  Set_FDAtt     ( spP, 0xbf );  /* as directory */    
+  return WriteFD( spP );
 } /* ConvertToDir */
 
 
