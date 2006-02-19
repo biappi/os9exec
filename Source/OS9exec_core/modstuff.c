@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2005/06/30 16:33:38  bfo
+ *    Up to date
+ *
  *    Revision 1.19  2005/06/30 11:48:59  bfo
  *    68k adaption (NET_SUPPORT)
  *
@@ -309,8 +312,30 @@ void Update_MDir( void )
 }
 
 
-
+/*
 void MoveBlk( byte* dst, byte* src, ulong size )
+// copy the block with <size> form <src> to <dst
+// forward and backward mode supported (in case of overlapping structures
+{
+    ulong n;
+    byte *s;
+    byte *d;
+    
+    if (src>=dst) { // condition for forward/backward copy
+        s=   src;   // normal forward copy
+        d=   dst;
+        for ( n=0; n<size; n++ ) { *d= *s; s++; d++; }
+    }
+    else {          // reverse ordered copy
+        s=  (char*)src + size - 1;
+        d=  (char*)dst + size - 1;
+        for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
+    }
+} // MoveBlk
+*/
+
+
+void MoveBlk( void* dst, void* src, ulong size )
 /* copy the block with <size> form <src> to <dst */
 /* forward and backward mode supported (in case of overlapping structures */
 {
@@ -319,15 +344,15 @@ void MoveBlk( byte* dst, byte* src, ulong size )
     byte *d;
     
     if (src>=dst) { /* condition for forward/backward copy */
-        s=   src;   /* normal forward copy */
-        d=   dst;
+        s= (byte*)src; /* normal forward copy */
+        d= (byte*)dst;
         for ( n=0; n<size; n++ ) { *d= *s; s++; d++; }
     }
-    else {          /* reverse ordered copy */  
-        s=  (char*)src + size - 1;
-        d=  (char*)dst + size - 1;
+    else {             /* reverse ordered copy */  
+        s= (byte*)( (ulong)src + size-1 );
+        d= (byte*)( (ulong)dst + size-1 );
         for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
-    }
+    } // if
 } /* MoveBlk */
 
 

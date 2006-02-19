@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -42,6 +42,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2004/11/20 11:44:08  bfo
+ *    Changed to version V3.25 (titles adapted)
+ *
  *    Revision 1.6  2002/10/02 19:10:21  bfo
  *    Update_MDir implementation at "modstuff" (taken partly from OS9_F_GModDr)
  *
@@ -56,8 +59,8 @@ mod_exec* os9mod      ( int k );
 char*     Mod_Name    ( mod_exec* mod );
 void      Update_MDir ( void );
 
-void      MoveBlk     ( byte *dst, byte *src, ulong size );
-Boolean   SameBlk     ( byte *a,   byte *b,   ulong size );
+void      MoveBlk     ( void* dst, void* src, ulong size );
+Boolean   SameBlk     ( byte* a,   byte* b,   ulong size );
 ulong     DatMod_Size ( ulong namsize, ulong datsize );
 void      FillTemplate( mod_exec* m, short access, short tylan, short attrev );
 
