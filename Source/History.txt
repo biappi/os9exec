@@ -1280,6 +1280,7 @@
           06-02-19  Bfo     pipefiles.c    : use <isIntUtil>
           06-02-19  Bfo     utilstuff.c    : use <isIntUtil> / echo mode off by default
           06-02-19  Bfo     procstuff.c    : thread support added
+          06-02-20  Bfo     utilstuff.c    : echo mode off for Linux only / F$Time hour problem fixed
     -------------------
        
 */
