@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/02/19 16:36:23  bfo
+ *    use <isIntUtil> / echo mode off by default
+ *
  *    Revision 1.40  2005/07/06 21:05:19  bfo
  *    defined UNIX
  *
@@ -579,8 +582,8 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
                Boolean asGregorian, Boolean withTicks )
 {
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    byte   tc[4];
-    ulong* tcp= (ulong*)&tc[0];
+  //byte   tc[4];
+  //ulong* tcp= (ulong*)&tc[0];
     ulong  ct0;
     int    y, m, d, tsm, ssm, syTick;
     
@@ -627,16 +630,28 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
    
     if (asGregorian) {
 		/* gregorian format */
+		    *cTime= 0x10000*tim.tm_hour + 
+		              0x100*tim.tm_min  +
+		                    tim.tm_sec;
+		    /*
         tc[0]= 0;
       	tc[1]= tim.tm_hour;
       	tc[2]= tim.tm_min;
       	tc[3]= tim.tm_sec;
       	*cTime= os9_long( *tcp );
-      
+        */
+        
+		    *cDate= 0x10000*y + 
+		              0x100*m +
+		                    d;
+        /*
       	*((ushort*) &tc[0])= os9_word( y );
       	tc[2]= m;
       	tc[3]= d;
       	*cDate= os9_long( *tcp );
+      	*/
+      //debugprintf(dbgSysCall,dbgNorm,
+      //       ("here we are: hour=%d %08X\n", tim.tm_hour, *cTime));      
     }
     else {
       	/* julian format */
@@ -777,7 +792,6 @@ Boolean IsTrDir( ushort umode )
 
 
 
-
 /* ------------------------------------------------------------------------ */
 /* default options for Console/non-Console SCF I$GetStt */
 static struct _sgs init_consoleopts = {
@@ -785,7 +799,13 @@ static struct _sgs init_consoleopts = {
         0,      /* PD_UPC   0 = upper and lower cases, 1 = upper case only */
         1,      /* PD_BSO   0 = BSE, 1 = BSE-SP-BSE */
         0,      /* PD_DLO   delete sequence */
+        
+      #ifdef linux
         0,      /* PD_EKO   0 = no echo */
+      #else
+        1,
+      #endif
+      
         1,      /* PD_ALF   0 = no auto line feed */
         0,      /* PD_NUL   end of line null count */
         0,      /* PD_PAU   0 = no end of page pause */
