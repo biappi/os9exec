@@ -75,13 +75,13 @@ OS9Linux:
  CC="gcc"  LD="gcc"  AR="ar -crs"  SIZE="size" LIBS+="/usr/lib/libm.a"
 
 os9linux: ${OBJS_OS9Linux} 
-	${CC} ${LDFLAGS} -o ../../Output/os9linux ${OBJS_OS9Linux} ${LIBS}
+	${CC} ${LDFLAGS} -m32 -o ../../Output/os9linux ${OBJS_OS9Linux} ${LIBS}
 
 
 ifeq (${TARGET}, os9linux)
 
 %.c.o: %.c
-	gcc -c ${CFLAGS_OS9Linux} $< -o $@ -MMD
+	gcc -c ${CFLAGS_OS9Linux} -m32 $< -o $@ -MMD
 include $(c_SRC_OS9Linux:.c=.d)
 
 %.d: %.c
