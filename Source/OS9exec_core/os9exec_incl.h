@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2006/02/19 16:06:29  bfo
+ *    os9defs adaptions
+ *
  *    Revision 1.14  2005/07/15 22:22:06  bfo
  *    "module_special.h" no longer needed
  *
@@ -112,6 +115,7 @@
   #include ":os9defs:errno_adapted.h"  /* errno_adapted.h: errno -> errno2 */
 
 #else
+  #include <string.h>  /* according to Martin Gregorie's proposal */
   #include "module.h"
   
   #if defined windows32 && __MWERKS__ >= CW8_MWERKS
