@@ -1282,6 +1282,11 @@
           06-02-19  Bfo     procstuff.c    : thread support added
           06-02-20  Bfo     utilstuff.c    : echo mode off for Linux only / F$Time hour problem fixed
     -------------------
+
+          06-03-12  Bfo     string.h and sys/types.h included according to Martin Gregorie's proposals
+          06-03-12  Bfo     'ReadToStrN' added
+    3.31  06-??-??  Bfo
+    -------------------
        
 */
 
