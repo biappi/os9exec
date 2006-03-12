@@ -57,7 +57,7 @@
 #else
   #ifdef linux
     /* include file for empty interface */
-    #include <types.h>
+    #include <sys/types.h>   /* according to Martin Gregorie's proposal */
     #include <stdio.h>
     #include <stdarg.h>
     #include <time.h>
