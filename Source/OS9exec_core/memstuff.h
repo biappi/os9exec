@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/02/19 16:33:20  bfo
+ *    Some PtoC routines are implemented here now
+ *
  *    Revision 1.8  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -100,6 +103,7 @@ void BoolToStr ( char* s, Boolean bo );
 void BoolToStrN( char* s, Boolean bo, int n );
 
 void RealToStr ( char* s, double d,        int res );
+void RealToStrN( char* s, double d, int n, int res );
 
 /*
 void RealToStrN( char* s, double d, int n, int res );

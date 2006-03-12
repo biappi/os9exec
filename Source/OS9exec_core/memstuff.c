@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/02/19 16:33:21  bfo
+ *    Some PtoC routines are implemented here now
+ *
  *    Revision 1.16  2005/06/30 11:48:07  bfo
  *    Mach-O support
  *
@@ -717,6 +720,20 @@ void RealToStr( char* s, double d, int res )
     case MAXINTEGER: sprintf( form, "%sE",    "%" ); break;
     case 0         : sprintf( form, "%s.0f.", "%" ); break;
     default        : sprintf( form, "%s.%df", "%", res );
+  } // switch
+  
+  sprintf( s, form, d );
+} // RealToStr
+
+
+void RealToStrN( char* s, double d, int n, int res )
+{
+  char form[ 20 ]; // format string
+  
+  switch (res) {
+    case MAXINTEGER: sprintf( form, "%s%dE",    "%", n ); break;
+    case 0         : sprintf( form, "%s%d.0f.", "%", n ); break;
+    default        : sprintf( form, "%s%d.%df", "%", n, res );
   } // switch
   
   sprintf( s, form, d );
