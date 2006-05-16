@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2006/02/19 16:25:26  bfo
+ *    printf commented out / reformatted
+ *
  *    Revision 1.44  2005/06/30 11:35:41  bfo
  *    Mount reduced AND full / Mach-O support
  *
@@ -2597,16 +2600,18 @@ static os9err CreateNewFile( syspath_typ* spP, byte fileAtt, char* name, ulong c
     err= Create_FD      ( spP,         fileAtt, 0 ); if (err) return err;
     err= Access_DirEntry( dev, dfd, fd,   name, d ); if (err) return err;
 
-    sTmp= ascs; // get a copy before changing 
-    if  (scs>1) { fd++; ascs--; } /* get the remaining part */
-    err= AdaptAlloc_FD  ( spP,      fd,   ascs    ); if (err) return err;
+    if (scs>1) { // Adaption for scs>1 only
+      sTmp= ascs; // get a copy before changing 
+      fd++; ascs--; // get the remaining part
+      err=   AdaptAlloc_FD ( spP,            fd,  ascs    ); if (err) return err;
     
-    while (sTmp<scs) {
-    //printf( "remania=%d\n", scs-sTmp );
-      err= AllocateBlocks( spP, scs-sTmp, &fd, &ascs, 0 ); if (err) return err;
-      err= AdaptAlloc_FD ( spP,            fd,  ascs    ); if (err) return err;
-      sTmp+= ascs;
-    } // while
+      while (sTmp<scs) {
+      //printf( "remania=%d\n", scs-sTmp );
+        err= AllocateBlocks( spP, scs-sTmp, &fd, &ascs, 0 ); if (err) return err;
+        err= AdaptAlloc_FD ( spP,            fd,  ascs    ); if (err) return err;
+        sTmp+= ascs;
+      } // while
+    } // if
     
            err= touchfile_RBF( spP,true );
     if   (!err) strcpy( spP->name, name ); /* assign file name, if everything is ok */
