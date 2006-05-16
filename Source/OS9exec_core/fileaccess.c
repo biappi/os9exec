@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2006/02/19 16:17:53  bfo
+ *    f->del (instead of f->delete) / type casting
+ *
  *    Revision 1.28  2005/07/15 22:13:56  bfo
  *    "fflush" no longer active
  *
@@ -563,7 +566,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
       ulong*      l;
 
       strcpy( dEnt.d_name, spP->name );
-      FD_ID( spP->fullName,&dEnt, &fdpos );
+      FD_ID ( spP,spP->fullName, &dEnt, &fdpos, false,false );
     //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
       
       l= (ulong*)&buffer[ PD_FD ]; *l= os9_long(fdpos); /* LSN of file */
@@ -602,11 +605,17 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       volname[ 1 ]= NUL;     
     
     #elif defined linux
-      strcpy( volname,"" ); /* none for Linux, top directory structure is different */
+      int  ii; // get the current top path as name
+      for (ii= 0; ii<strlen( spP->fullName ); ii++) {
+        volname[ ii ]= spP->fullName[ ii+1 ];
+        if ( ii>0 && volname[ ii ]=='/' ) { volname[ ii ]= NUL; break; }
+      } // for
+      
+    //strcpy( volname,spP->fullName ); /* none for Linux, top directory structure is different */
       
     #elif defined __MACH__
       /* MacOSX has a very special structure */
-      #define VV "/volumes/"
+      #define VV "/Volumes/"
       char* w= &spP->fullName;
       char* v= w;
 
@@ -1870,7 +1879,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
     
     #elif defined win_unix
       fdl= NULL;
-      if      (DirName( spP->fullName, *fdinf, (char*)&result )) {
+      if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
           strcpy( name, spP->fullName );
           strcat( name, PATHDELIM_STR );
           strcat( name, result );
@@ -1939,6 +1948,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
     #elif defined win_unix
       err= AdjustPath( pp,adapted, false ); if (err) return err;
+    //printf( "adapted='%s'\n" );
       pp = adapted;
 
            ok= OpenTDir( pp, &d );
@@ -2000,8 +2010,8 @@ static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long d
         strcpy( fName, deP->name );
         fName[ strlen(fName)-1 ] &= 0x7f;
         
-        sprintf( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
-        FD_ID  ( hashV, dEnt, &objid );
+        sprintf    ( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
+        FD_ID( NULL, hashV, dEnt, &objid, false,false );
         debugprintf( dbgAnomaly,dbgNorm,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
                                            objid, -IDSIGN,IDSIGN-1, deP->name ));
                       
@@ -2151,7 +2161,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
       int          len;
       ulong        fdpos;
       Boolean      topFlag= false;
-      Boolean      de_call;
+   // Boolean      de_call;
       
       #ifdef windows32
         dirent_typ dField;
@@ -2173,61 +2183,101 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
           err= 0;
           memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
           
-      //  #ifdef windows32
-            de_call= true;      /* do it always */
-      //  #else
-      //      de_call= (offs!=0); /* strange reading, e.g. in "dump" */
-      //  #endif
-          
-          if (de_call) {
-              err= DirNthEntry( spP,index ); if (err) return err;
-          }
-          
-          /* ".." and "." are swapped in UXIX !! */
-          if (*pos-offs==DIRENTRYSZ) { /* if 2nd entry */
-               strncpy( (char*)&os9dirent.name,".", DIRNAMSZ );
-               fdpos= spP->u.disk.u.dir.fdcur; /* get current dir info */
-          }
-          else {
-              while (true) { /* ignore ".AppleDouble" */
-                      dEnt= ReadTDir( spP->dDsc );
-                  if (dEnt==NULL ||
-                      ustrcmp( (char*)dEnt->d_name,AppDo )!=0 ) break;
-              } /* while */
-                  
-              if (*pos-offs==0) { /* if 1st entry */
-                  #ifdef windows32
-                    if (dEnt==NULL) {
-                        dEnt= &dField;
-                        strcpy( dEnt->d_name,"" ); /* virtual field */
-                    }
-                    
-                    if (dEnt!=NULL &&
-                        ustrcmp( (char*)dEnt->d_name,"." )!=0 ) {
-                        strcpy( dEnt->d_name,"." );
-                        topFlag= true;
-                    //  printf( "top '%s' '%s'\n", spP->fullName,dEnt->d_name );
-                    }
-                  #endif
-                  
-                  FD_ID( spP->fullName,dEnt, &spP->u.disk.u.dir.fdcur );
-                  if (topFlag) strcpy( dEnt->d_name,".." );
-                  else dEnt= ReadTDir( spP->dDsc );
-              } /* if (*pos-offs==0) */
+          err= DirNthEntry( spP,index, &dEnt );
+          #ifdef windows32
+            if (dEnt==NULL && err==E_EOF && index<=1) {
+                dEnt= &dField; /* virtual field */
               
-              if (dEnt!=NULL) {
-                  GetEntry( dEnt,os9dirent.name, true );
-                  FD_ID( spP->fullName,dEnt, &fdpos );                      
-                  if (topFlag) { seekD0( spP ); topFlag= false; }
-              }
-              else err= E_EOF;
-          } /* if (*pos-offs==DIRENTRYSZ) */
+              if (index==0) strcpy( dEnt->d_name,".." );
+              if (index==1) strcpy( dEnt->d_name,"."  );
+              err= 0;
+            } // if
+          #endif
+          
+        //printf( "nth=%d err=%d '%s' '%s'\n", index, err, spP->fullName,
+        //         dEnt==NULL ? "<NULL>" : dEnt->d_name );
+          if (err) return err;
+       
+          /* ".." and "." are swapped in UXIX !! */
+        //if (*pos-offs==DIRENTRYSZ) { /* if 2nd entry */
+        //  strncpy( (char*)&os9dirent.name,".", DIRNAMSZ );
+        //  fdpos= spP->u.disk.u.dir.fdcur; /* get current dir info */
+        //}
+        //else {
+            /*
+            if (index>1 || ( dEnt!=NULL &&
+                     strcmp( dEnt->d_name,".." )!=0 &&
+                     strcmp( dEnt->d_name,"."  )!=0 )) {
+              dEnt= ReadTDir( spP->dDsc );         
+            } // if
+            
+            // ignore ".AppleDouble"
+            while (dEnt!=NULL && ustrcmp( (char*)dEnt->d_name,AppDo )==0) {
+                   dEnt= ReadTDir( spP->dDsc );
+            } // while
+            */
+
+            /*
+            do {     dEnt= ReadTDir( spP->dDsc );
+            } while (dEnt!=NULL && ustrcmp( (char*)dEnt->d_name,AppDo )==0);
+            */
+            /* ignore ".AppleDouble" */
+            
+            /*  
+            while (true) { // ignore ".AppleDouble"
+                     dEnt= ReadTDir( spP->dDsc );
+                 if (dEnt==NULL ||
+                     ustrcmp( (char*)dEnt->d_name,AppDo )!=0 ) break;
+            } // while
+            */
+            
+            if (*pos-offs==0) { /* if 1st entry, ".." expected */
+              #ifdef windows32
+                if (dEnt==NULL) {
+                    dEnt= &dField;
+                    strcpy( dEnt->d_name,"" ); /* virtual field */
+                } // if
+                    
+                if (dEnt!=NULL &&
+                  ustrcmp( (char*)dEnt->d_name,"." )!=0 ) {
+                  strcpy( dEnt->d_name,"." );
+                  topFlag= true;
+               // printf( "top '%s' '%s'\n", spP->fullName,dEnt->d_name );
+                }
+              #endif
+                  
+            //FD_ID( spP,spP->fullName,dEnt, &spP->u.disk.u.dir.fdcur, true );
+              if (topFlag) strcpy( dEnt->d_name,".." );
+              
+              /*
+              else {
+                do {     dEnt= ReadTDir( spP->dDsc ); // the ".." entry can come later
+                } while( dEnt!=NULL && strcmp( dEnt->d_name,".." )!=0 );
+              } // if
+              */
+            }
+            
+            /*
+            else {
+              while (dEnt!=NULL && (strcmp( dEnt->d_name,".." )==0 ||
+                                    strcmp( dEnt->d_name,"."  )==0)) // ignore it, if later
+                     dEnt= ReadTDir( spP->dDsc );
+            } // if
+            */
+            
+            if (dEnt!=NULL) {
+              GetEntry( dEnt,os9dirent.name, true );
+              FD_ID( spP,spP->fullName,dEnt, &fdpos, false,false );                      
+              if (topFlag) { seekD0( spP ); topFlag= false; }
+            }
+            else err= E_EOF;
+        //} /* if (*pos-offs==DIRENTRYSZ) */
           
           if (!err) {
-          //   printf( "==> '%s' %08X\n", os9dirent.name, fdpos );
-               len= strlen(os9dirent.name);
-               os9dirent.name[len-1] |= 0x80; /* set old-style terminator */
-               os9dirent.fdsect= os9_long( fdpos );
+          //printf( "==> '%s' %08X\n", os9dirent.name, fdpos );
+            len= strlen( os9dirent.name );
+            os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
+            os9dirent.fdsect= os9_long( fdpos );
           }
       
         #else
