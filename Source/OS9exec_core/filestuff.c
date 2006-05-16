@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/02/19 16:16:50  bfo
+ *    f->del (instead of f->delete)
+ *
  *    Revision 1.24  2005/06/30 11:39:20  bfo
  *    Mach-O support
  *
@@ -314,8 +317,10 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
         case fTTY :
         case fPTY : 
         case fPipe: if (p==NULL) sprintf( aa, "->NULL" );
-                    else       { n=  p->pwp-p->prp;
-                                 if (p->pwp<p->prp) n+= p->size; /* wrapper */
+                    else       { // n=  p->pwp-p->prp;
+                                 // if (p->pwp<p->prp) n+= p->size; /* wrapper */
+                                 n= Pipe_NReady( p );
+
                                  sprintf( aa, "%c>%d:%1.0fk",
                                                p->broken? '/':'-',
                                                p->sp_lock, (float)(p->size/1024) );
@@ -1323,33 +1328,36 @@ os9err usrpath_new( ushort pid, ushort* up, ptype_typ type )
 os9err syspath_open( ushort pid, ushort *sp, ptype_typ type, const char* pathname, ushort mode )
 /* open system path */
 {
-    os9err       err= 0;
-    syspath_typ* spP;
+  os9err       err= 0;
+  syspath_typ* spP;
     
-    if (type==fNIL || type==fVMod) { /* don't waste new paths for NIL/vmod */
-        switch (type) {
-            case fNIL : *sp= sysStdnil; break;
-            case fVMod: *sp= sysVMod;   break;
-        }
-        spP= &syspaths[ *sp ];
-        spP->linkcount++; /* and hold it */
-    }
-    else {
-        /* prepare new syspath record */
-        err= syspath_new  ( sp,type ); if (err) return err;
-        spP=     &syspaths[*sp];                            /* this is a free syspath */
-        err= (fmgr_op[spP->type]->open)( pid,spP,(void*)&mode,pathname ); /* specific */
+  if (type==fNIL || type==fVMod) { /* don't waste new paths for NIL/vmod */
+    switch (type) {
+      case fNIL : *sp= sysStdnil; break;
+      case fVMod: *sp= sysVMod;   break;
+    } // switch
+      
+    spP= &syspaths[ *sp ];
+    spP->linkcount++; /* and hold it */
+  }
+  else {
+    /* prepare new syspath record */
+    err= syspath_new  ( sp,type ); if (err) return err;
+    spP=     &syspaths[*sp];                                /* this is a free syspath */
+    spP->mode   = mode;                                         /* store this as well */
+    spP->fileAtt= procs[ pid ].fileAtt;
+    err= (fmgr_op[spP->type]->open)( pid, spP, (void*)&mode, pathname );  /* specific */
     
-        /* successful ? */
-        if (err) {                           /* in E_PLINK case, syspath open routine */
-            if (err==E_PLINK) *sp= mode;               /* returns *sp with mode param */
-            spP->type= fNone;  /* not sucessfully opened, in case of E_PLINK: no need */
-        } /* if */
-    }
+    /* successful ? */
+    if (err) {                               /* in E_PLINK case, syspath open routine */
+      if (err==E_PLINK) { *sp= mode; err= 0; }         /* returns *sp with mode param */
+      spP->type= fNone;        /* not sucessfully opened, in case of E_PLINK: no need */
+    } /* if */
+  }
     
-    debugprintf(dbgFiles,dbgNorm,("# syspath_open: '%s' %s; sp=%d, type=%d, err=%d\n",
-                                     pathname, err ? "failed":"ok", *sp,type,err));
-    return err;
+  debugprintf(dbgFiles,dbgNorm,("# syspath_open: '%s' %s; sp=%d, type=%d, err=%d\n",
+                                   pathname, err ? "failed":"ok", *sp,type,err));
+  return err;
 } /* syspath_open */
 
 
