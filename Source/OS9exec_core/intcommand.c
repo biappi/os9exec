@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/02/19 16:28:56  bfo
+ *    'Is_PtoC' visible from ouside / PtoC + thread support added
+ *
  *    Revision 1.19  2005/07/06 21:03:26  bfo
  *    system call supported for the unix world
  *
@@ -554,6 +557,14 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_pascal
 
 
+  static os9err int_pcall( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_pcall_call();
+    return    err;
+  } // int_pcall
+
+
   static os9err int_pentominos( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
@@ -688,6 +699,7 @@ cmdtable_typ commandtable[] =
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
 //{ "pascal",        int_pascal,     "PtoC pascal"     },
+//{ "pcall",         int_pcall,      "PtoC pcall"      },
   { "pentominos",    int_pentominos, "PtoC pentominos" },
   { "printenv",      int_printenv,   "PtoC printenv"   },
   { "ptoc",          int_ptoc,       "PtoC ptoc"       },
@@ -875,9 +887,11 @@ static void large_pipe_connect( ushort pid, syspath_typ* spC )
             
           /* is there still something in the buffer ? */
           while (true) {
-              n=  p->pwp-p->prp;
-              if (p->pwp<p->prp) n+= p->size; /* wrapper */
-              if (n<=0) break;
+            //n=  p->pwp-p->prp;
+            //if (p->pwp<p->prp) n+= p->size; /* wrapper */
+
+                  n= Pipe_NReady( p );
+              if (n==0) break;
                 
               *(q->pwp++)= *(p->prp++);   /* put into the new buffer */
               if  (p->prp >= p->buf+p->size) p->prp= p->buf; /* wrap */
