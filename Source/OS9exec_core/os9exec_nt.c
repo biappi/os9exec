@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2006/02/19 16:04:45  bfo
+ *    ptoc vars and pthread support things added (some debug things are still in)
+ *
  *    Revision 1.47  2005/07/06 21:08:56  bfo
  *    defined UNIX
  *
@@ -237,7 +240,7 @@ alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#if defined(windows32) || defined macintosh
+#if defined(windows32) || defined macintosh || defined linux
   char*     dirtable[MAXDIRS];
 #endif
 
@@ -669,7 +672,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x30;
+	exec_revision= 0x31;
 	#endif
 } /* getversions */
 
@@ -717,29 +720,31 @@ void get_hw()
 #ifdef UNIX
 void StartDir( char* pathname )
 {
-	char    acc   [OS9PATHLEN];
-	char    sv    [OS9PATHLEN];
+  char    acc   [OS9PATHLEN];
+  char    sv    [OS9PATHLEN];
   char    result[OS9PATHLEN];
-	struct  stat info;
+  struct  stat info;
+
+//strcpy( pathname, "/home/forsterb/OS9EXEC/Output" ); return;
 	
-	strcpy( pathname,"" ); /* start with an empty string */
-	strcpy( acc,    "." ); /* and take current dir for start */
+  strcpy( pathname,"" ); /* start with an empty string */
+  strcpy( acc,    "." ); /* and take current dir for start */
   strcpy( result,  "" );
 
-	while (true) {
-		stat_  ( acc, &info );
-		strcat ( acc,"/.." );
-		DirName( acc,  info.st_ino, (char*)&result );
-		if (strcmp( result,".")==0) {
-			  strcpy( result,"" ); break;
-		} // if
+  while (true) {
+    stat_  ( acc, &info );
+    strcat ( acc,"/.." );
+    DirName( acc,  info.st_ino, (char*)&result, true );
+    if (strcmp( result,".")==0) {
+	    strcpy( result,"" ); break;
+    } // if
 
     strcpy( sv, pathname );
     strcpy( pathname,PATHDELIM_STR );
-		strcat( pathname,result );
-		strcat( pathname,    sv );
+    strcat( pathname,result );
+    strcat( pathname,    sv );
   //upo_printf( "result='%s'\n", pathname );
-	} /* while */
+  } /* while */
 }  
 #endif
 
