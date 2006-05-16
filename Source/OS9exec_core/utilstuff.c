@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2006/02/20 21:40:31  bfo
+ *    no echo for Linux /term ; cTime/cDate assignment implented in a clean way
+ *
  *    Revision 1.41  2006/02/19 16:36:23  bfo
  *    use <isIntUtil> / echo mode off by default
  *
@@ -953,6 +956,12 @@ char* OS9exec_Name( void )
 } /* OS9exec_Name */
 
 
+ulong Pipe_NReady( pipechan_typ* p )
+{
+  ulong  n= p->pwp-p->prp;
+  if       (p->pwp<p->prp) n+= p->size; /* wrapper */
+  return n;
+} /* Pipe_NReady */
 
 
 
@@ -1250,28 +1259,48 @@ void EatBack( char* pathname )
 
 
 
-os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
+os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt, 
+              ulong *id, Boolean isFirst, Boolean useInodes )
 {
     #ifdef MACOS9
-    #pragma unused(dEnt)
+    #pragma unused(spP,dEnt,isFirst,useInodes)
     #endif
 
-    #if defined windows32 || defined MACOS9
+    #if defined windows32 || defined MACOS9 || defined linux
       #define ATTR_DIR 0x0010
       char    tmp[MAX_PATH];
       int     ii;
       char**  m;
       Boolean isNew= false;
+    #endif
+    
+    #ifdef linux
+      if (useInodes) {
+        if (spP!=NULL) {
+        //if (dEnt!=NULL) printf( "gugus: '%s'\n", dEnt->d_name );
       
+          while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
+                 dEnt= ReadTDir( spP->dDsc ); 
+          } // while
+        } // if
+      
+        if (dEnt==NULL) *id= 0;
+        else            *id= dEnt->d_ino;
+        
+        return 0;
+      }
+    #endif
+
+    #if defined windows32 || defined MACOS9 || defined linux
       strcpy( tmp,pathname );
+    //printf( "tmp='%s'\n", tmp );
       
-      #ifdef windows32
+      #if defined windows32 || defined linux
         if      (tmp[strlen(tmp)-1]!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
         strcat ( tmp, dEnt->d_name );
         EatBack( tmp );
       #endif
-      
-          
+                
 //    if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
       
       *id= (ulong)-1; /* undefined */
@@ -1286,21 +1315,30 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
           } /* if */
               
           if (ustrcmp( *m,tmp )==0) {
-              #ifdef windows32
-                *id= (ulong)m;
-              #else
+            //#ifdef windows32
+            //  *id= (ulong)m;
+            //#else
                 *id= (ulong)ii+1;
-              #endif  
+            //#endif  
                 
               break;
           } /* if */
       } /* for */
       if (*id==(ulong)-1) return E_NORAM;
           
-//    printf( "'%s' %08X %s\n", tmp, id, isNew?"new":"exists" );
+    //printf( "'%s' %d %s\n", tmp, *id, isNew ? "new":"exists" );
       
-    #elif defined linux
-      *id= dEnt->d_ino;
+    #elif defined linux_INODE
+      if (spP!=NULL) {
+      //if (dEnt!=NULL) printf( "gugus: '%s'\n", dEnt->d_name );
+      
+        while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
+               dEnt= ReadTDir( spP->dDsc ); 
+        } // while
+      } // if
+      
+      if (dEnt==NULL) *id= 0;
+      else            *id= dEnt->d_ino;
     
     #elif defined __MACH__
       *id= dEnt->d_ino;
@@ -1316,37 +1354,97 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt, ulong *id )
   
   
 #ifdef win_unix
-os9err DirNthEntry( syspath_typ* spP, int n )
+os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
 /* prepare directory to read the <n>th entry */
 {   
-    dirent_typ* dEnt;
-    Boolean     first= true;
+//dirent_typ* dEnt;
+//Boolean     first= true;
+  int         m= n;
+  int         i= 0;
     
-    seekD0( spP );  /* start at the beginning */
-    while (n>0) {   /* search for the nth entry */
-            dEnt= ReadTDir( spP->dDsc ); 
-        if (dEnt==NULL) {
-            #ifdef windows32
-              if (first) return 0; /* empty root directory */
-            #endif
+  debugprintf(dbgFiles,dbgNorm,("# DirEntry: ---\n" )); 
+  seekD0( spP );
+  while (m>0) {
+        *dEnt= ReadTDir( spP->dDsc ); 
+    if (*dEnt==NULL) break;
+    debugprintf(dbgFiles,dbgNorm,("# DirEntry: '%s'\n", (*dEnt)->d_name )); 
+    m--;
+  } // while
+  debugprintf(dbgFiles,dbgNorm,("# DirEntry: ---\n" )); 
+  
+  
+  seekD0( spP );  // start at the beginning
+  do {
+  //printf( "nn=%d\n", n );
+    
+    if (n==0) {     // search for ".."
+      do     *dEnt= ReadTDir( spP->dDsc ); 
+      while (*dEnt!=NULL && strcmp( (*dEnt)->d_name,".." )!=0);
+
+      break;
+    } // if
+
+    if (n==1) {     // search for "."
+      do     *dEnt= ReadTDir( spP->dDsc ); 
+      while (*dEnt!=NULL && strcmp( (*dEnt)->d_name,"."  )!=0);
+
+      /*
+      #ifdef windows32
+        if  (*dEnt==NULL) return 0; // empty root directory
+      #endif
+      */
+      
+      break;
+    } // if
+    
+    i= 1; // starting after ".." and "."
+    do {  *dEnt= ReadTDir( spP->dDsc );
+      if (*dEnt==NULL) break;
+      
+      if (strcmp( (*dEnt)->d_name,".."  )!=0 &&
+          strcmp( (*dEnt)->d_name,"."   )!=0 &&
+         ustrcmp( (*dEnt)->d_name,AppDo )!=0) i++;
+    } while ( i<n );
+  } while (false);
+  
+//printf( "aha=%d\n", i );
+  if (*dEnt==NULL) return E_EOF;
+  else             return 0;
+
+  /*
+  m= n; 
+  seekD0( spP );  // start at the beginning
+  while (n>0) {   // search for the nth entry
+          dEnt= ReadTDir( spP->dDsc ); 
+      if (dEnt==NULL) {
+          #ifdef windows32
+            if (first) return 0; // empty root directory
+          #endif
             
-            return os9error(E_SEEK);
-        }
+          return os9error(E_SEEK);
+      } // if
         
-        /* the top directory at Windows has no "." or ".." */
-        #ifdef windows32
-          if (first && ustrcmp(dEnt->d_name,".")!=0) {
-              n=  n-2;
-              if (n<=0) seekD0( spP );
-          }
+      // the top directory at Windows has no "." or ".."
+      #ifdef windows32
+        if (first && ustrcmp(dEnt->d_name,".")!=0) {
+            n=  n-2;
+            if (n<=0) seekD0( spP );
+        }
           
-          first= false;
-        #endif
+        first= false;
+      #endif
+        
+      if (i<=1 && ustrcmp( dEnt->d_name,".." )!=0
+               && ustrcmp( dEnt->d_name,"."  )!=0) {
+        if (n==1) { seekD0( spP ); n= --m; i= 0; continue; }
+      } // if
           
-        if (ustrcmp( dEnt->d_name,AppDo )!=0 ) n--; /* ignore ".AppleDouble" */
-    } /* while */
+      if (ustrcmp( dEnt->d_name,AppDo )!=0 ) n--; // ignore ".AppleDouble"
+      i++;
+  } // while
     
-    return 0;
+  return 0;
+  */
 } /* DirNthEntry */
 
 
@@ -1359,11 +1457,11 @@ os9err RemoveAppledouble( syspath_typ* spP )
     char        app [OS9PATHLEN];
     char        fnam[OS9PATHLEN];
     
-    err= DirNthEntry( spP,2 ); if (err) return err; /* start after "." and ".." */
-    while (true) {
-            dEnt= ReadTDir( spP->dDsc ); 
-        if (dEnt==NULL) break;
-        if (ustrcmp( dEnt->d_name,AppDo )!=0 ) return 0; /* there are more entries */
+    err= DirNthEntry( spP,2, &dEnt ); if (err) return err; // start after "." and ".."
+
+    while (dEnt!=NULL) {
+      if (ustrcmp( dEnt->d_name,AppDo )!=0 ) return 0; /* there are still more entries */
+      dEnt= ReadTDir( spP->dDsc ); 
     } /* loop */
 
     strcpy( app,spP->fullName );
@@ -1468,12 +1566,12 @@ int stat_( const char* pathname, struct stat *buf )
 
 
 
-Boolean DirName( const char* pathname, ulong fdsect, char* result )
+Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useInodes )
 {
   Boolean ok= false;
 
   #ifdef MACOS9
-    #pragma unused(pathname,fdsect,result)
+    #pragma unused(pathname,fdsect,result,useInodes)
   #endif
     
   #ifdef win_unix
@@ -1497,7 +1595,8 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result )
       while (true) {
             dEnt= ReadTDir( d );
         if (dEnt==NULL) break;
-        FD_ID( pathname,dEnt, &fd );
+      //printf( "DirName='%s'\n", pathname );
+        FD_ID( NULL,pathname,dEnt, &fd, false,useInodes );
               
       //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
         if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
@@ -1588,8 +1687,9 @@ ulong My_Ino( const char* pathname )
                   dEnt= ReadTDir( d );
               if (dEnt==NULL) break;
               if (ustrcmp(dEnt->d_name,q)==0) {
-                  FD_ID( p,dEnt, &ino );
-                  break;
+                printf( "MyIno='%s'\n", p );
+                FD_ID( NULL, p,dEnt, &ino, false,false );
+                break;
               }
           } /* while */
           

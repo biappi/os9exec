@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/02/19 15:52:52  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.24  2005/07/06 21:04:38  bfo
  *    defined UNIX
  *
@@ -141,7 +144,7 @@ os9err  pRBFopt     ( ushort pid, syspath_typ*, byte* buffer );
 void    LastCh_Bit7 ( char* name, Boolean setIt);
 void    Console_Name( int term_id, char* consname );
 char*   OS9exec_Name( void );
-
+ulong   Pipe_NReady ( pipechan_typ* p );
 
 Boolean AbsPath      ( const char* pathname );
 void    GetOS9Dev    ( const char* pathname, char* cmp_entry );
@@ -155,12 +158,13 @@ Boolean PathFound    ( const char* pathname );
 Boolean FileFound    ( const char* pathname );
 
 void    CutUp( char* pathname, const char* prev );
-void    EatBack            ( char* pathname );
-os9err  FD_ID        ( const char* pathname, dirent_typ* dEnt, ulong *id );
+void    EatBack                      ( char* pathname );
+os9err  FD_ID( syspath_typ* spP, const char* pathname, 
+               dirent_typ* dEnt, ulong *id, Boolean isFirst, Boolean useInodes );
 
 
 #ifdef win_unix
-  os9err DirNthEntry       ( syspath_typ*, int n );
+  os9err DirNthEntry       ( syspath_typ*, int n, dirent_typ** dEnt );
   os9err RemoveAppledouble ( syspath_typ* );
   void   seekD0            ( syspath_typ* );
   ulong  DirSize           ( syspath_typ* );
@@ -168,7 +172,7 @@ os9err  FD_ID        ( const char* pathname, dirent_typ* dEnt, ulong *id );
 
 
 int     stat_        ( const char* pathname, struct stat *buf );
-Boolean DirName      ( const char* pathname, ulong fdsect, char* result );
+Boolean DirName      ( const char* pathname, ulong fdsect, char* result, Boolean useInodes );
 ulong   My_Ino       ( const char* pathname );
 void    MakeOS9Path  (       char* pathname );
 
