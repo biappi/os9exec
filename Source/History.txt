@@ -1285,6 +1285,10 @@
 
           06-03-12  Bfo     string.h and sys/types.h included according to Martin Gregorie's proposals
           06-03-12  Bfo     'ReadToStrN' added
+          06-05-09  Bfo     Linux: Inodes system changed to full path tree
+          06-05-12  Bfo     scs>1 problem fixed
+          06-05-13  Bfo     Support for named pipes
+          06-05-14  Bfo     Named pipes directory display implemented
     3.31  06-??-??  Bfo
     -------------------
        
