@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/02/19 16:01:57  bfo
+ *    ptoc vars and pthread support things added
+ *
  *    Revision 1.40  2005/07/06 21:10:30  bfo
  *    defined UNIX
  *
@@ -254,8 +257,10 @@
 #define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
 
 /* number of dirs */
-#if defined(windows32) || defined macintosh
-#define MAXDIRS       10000
+#if defined macintosh
+  #define MAXDIRS     10000
+#elif defined windows32 || defined linux
+  #define MAXDIRS     50000
 #endif
 
 /* number of statistics entries */
@@ -524,16 +529,18 @@ typedef struct {
 /* NOTE: this is structure is also used for the tty/pty system which is in fact   */
 /* a cross connected pipe (writing will be done into (each other's) sp_lock pipe) */
 typedef struct {
-            ulong   size;               /* size of pipe buffer */
-            byte    *buf;               /* pointer to pipe buffer */
-            byte    *prp;               /* pipe read pointer */
-            byte    *pwp;               /* pipe write pointer */
-            ulong   bread;              /* number of bytes read so far */
-            ulong   bwritten;           /* number of bytes read so far */
-            ushort  consumers;          /* number of waiting consumers for this pipe */
-            ushort  sp_lock;            /* if <> 0, tty/pty to this system path nr */
-            Boolean do_lf;
-            Boolean broken;             /* broken pipe or tty/pty */
+            ulong     size;               /* size of pipe buffer */
+            byte*     buf;                /* pointer to pipe buffer */
+            byte*     prp;                /* pipe read pointer */
+            byte*     pwp;                /* pipe write pointer */
+            ulong     bread;              /* number of bytes read so far */
+            ulong     bwritten;           /* number of bytes read so far */
+            ushort    consumers;          /* number of waiting consumers for this pipe */
+            ushort    sp_lock;            /* if <> 0, tty/pty to this system path nr */
+            Boolean   do_lf;
+            Boolean   broken;             /* broken pipe or tty/pty */
+            ushort    pipeDirCnt;         /* pipe dir count */
+            struct tm pipeTim;
         } pipechan_typ;
 
 
@@ -677,6 +684,8 @@ typedef struct {
 typedef struct {
     /* common for all types */
     ptype_typ type;             /* the path's type */
+    ushort    mode;             /* the path's mode */
+    ushort    fileAtt;          /* file attributes */
     ushort    nr;               /* the own syspath number */        
     ushort    linkcount;        /* the link count */
     char      name[OS9NAMELEN]; /* file name */
@@ -949,7 +958,7 @@ typedef struct {
 
                 /* create init size */
                 ushort fileAtt;             /* here because I$Create is not able */
-                ulong  cre_initsize;        /* to call with this param */
+                ulong  cre_initsize;        /* to call with these params */
 
                 dir_type d;                 /* current      directory */
                 dir_type x;                 /* current exec directory */
@@ -1029,7 +1038,7 @@ extern  alarm_typ   alarms     [MAXALARMS];
 extern  alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#if defined(windows32) || defined macintosh
+#if defined(windows32) || defined macintosh || defined linux
 extern  char*       dirtable[MAXDIRS];
 #endif
 
