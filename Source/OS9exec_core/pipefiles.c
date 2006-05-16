@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/02/19 16:34:38  bfo
+ *    use <isIntUtil>
+ *
  *    Revision 1.9  2004/11/27 12:13:57  bfo
  *    _XXX_ introduced
  *
@@ -72,33 +75,36 @@
 /* --- local procedure definitions for object definition ------------------- */
 /* --- pipes */
 void   init_Pipe( fmgr_typ* f );
-os9err pPopen   ( ushort pid, syspath_typ*, ushort *modeP, char* pathname );
+os9err pPopen   ( ushort pid, syspath_typ*, ushort *modeP,  char* pathname );
 os9err pPclose  ( ushort pid, syspath_typ* );
-os9err pPreadln ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pPread   ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pPwriteln( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pPwrite  ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
+os9err pPreadln ( ushort pid, syspath_typ*, ulong  *n,      char* buffer   );
+os9err pPread   ( ushort pid, syspath_typ*, ulong  *n,      char* buffer   );
+os9err pPwriteln( ushort pid, syspath_typ*, ulong  *n,      char* buffer   );
+os9err pPwrite  ( ushort pid, syspath_typ*, ulong  *n,      char* buffer   );
+os9err pPdelete ( ushort pid, syspath_typ*, ushort *modeP,  char* pathname );
 
 os9err pPsize   ( ushort pid, syspath_typ*, ulong  *sizeP );
-os9err pPopt    ( ushort pid, syspath_typ*,                byte* buffer );
+os9err pPopt    ( ushort pid, syspath_typ*,                 byte* buffer   );
 os9err pPeof    ( ushort pid, syspath_typ* );
 os9err pPready  ( ushort pid, syspath_typ*, ulong  *n     );
+os9err pPFDInf  ( ushort pid, syspath_typ*, ulong  *maxbytP, 
+                                            ulong  *fdinf,  byte* buffer   );
 os9err pPsetsz  ( ushort pid, syspath_typ*, ulong  *sizeP );
 
 
 /* --- ptys */
-void   init_PTY ( fmgr_typ* f );
-os9err pKopen   ( ushort pid, syspath_typ*, ushort *modeP, char* pathname );
-os9err pKclose  ( ushort pid, syspath_typ* );
-os9err pKread   ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pKreadln ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pKwrite  ( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
-os9err pKwriteln( ushort pid, syspath_typ*, ulong  *n,     char* buffer );
+void   init_PTY  ( fmgr_typ* f );
+os9err pKopen    ( ushort pid, syspath_typ*, ushort *modeP, char* pathname );
+os9err pKclose   ( ushort pid, syspath_typ* );
+os9err pKread    ( ushort pid, syspath_typ*, ulong  *n,     char* buffer   );
+os9err pKreadln  ( ushort pid, syspath_typ*, ulong  *n,     char* buffer   );
+os9err pKwrite   ( ushort pid, syspath_typ*, ulong  *n,     char* buffer   );
+os9err pKwriteln ( ushort pid, syspath_typ*, ulong  *n,     char* buffer   );
 
-os9err pKopt    ( ushort pid, syspath_typ*,                byte* buffer );
-os9err pKpos    ( ushort pid, syspath_typ*, ulong  *posP );
-os9err pKready  ( ushort pid, syspath_typ*, ulong  *n    );
-os9err pKlock   ( ushort pid, syspath_typ*, ulong  *d0,    ulong *d1    );
+os9err pKopt     ( ushort pid, syspath_typ*,                byte* buffer   );
+os9err pKpos     ( ushort pid, syspath_typ*, ulong  *posP );
+os9err pKready   ( ushort pid, syspath_typ*, ulong  *n    );
+os9err pKlock    ( ushort pid, syspath_typ*, ulong  *d0,    ulong *d1      );
 /* ------------------------------------------------------------------------- */
 
 void init_Pipe( fmgr_typ* f )
@@ -115,6 +121,7 @@ void init_Pipe( fmgr_typ* f )
     f->write     = (pathopfunc_typ)pPwrite;
     f->writeln   = (pathopfunc_typ)pPwriteln;
     f->seek      = (pathopfunc_typ)pNop;      /* ignored */
+    f->del       = (pathopfunc_typ)pPdelete;
     
     /* getstat */
     gs->_SS_Size = (pathopfunc_typ)pPsize;
@@ -123,6 +130,7 @@ void init_Pipe( fmgr_typ* f )
     gs->_SS_Pos  = (pathopfunc_typ)pUnimpOk;      /* ??? */
     gs->_SS_EOF  = (pathopfunc_typ)pPeof;
     gs->_SS_Ready= (pathopfunc_typ)pPready;
+    gs->_SS_FDInf= (pathopfunc_typ)pPFDInf;
 
     /* setstat */
     ss->_SS_Size = (pathopfunc_typ)pPsetsz;
@@ -188,6 +196,7 @@ os9err getPipe( _pid_, syspath_typ* spP, ulong buffsize )
 //  p->sp_win    = 0;        /* no windows info at the beginning */
     p->do_lf     = false;    /* auto linefeed support */
     p->broken    = false;    /* not yet broken */
+    p->pipeDirCnt= 0;        /* pipe dir count */
     
     debugprintf( dbgFiles,dbgDetail,("# getPipe: (name='%s') created with buffer[%ld] @ $%lX\n",
                  spP->name, buffsize, buf));
@@ -273,10 +282,10 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char* name)
         name[0]!=NUL) {
         /* first see if another descriptor exists for that pipe name */
         for (k=1; k<MAXSYSPATHS; k++) {
-            if (syspaths[k].type==fPipe) {
-                if (syspaths[k].name[0]!=0) {
+            if (syspaths[ k ].type==fPipe) {
+                if (syspaths[ k ].name[ 0 ]!=NUL) {
                     /* this is a named pipe */
-                    if (ustrcmp(name,syspaths[k].name)==0) {
+                    if (ustrcmp(name,syspaths[ k ].name)==0) {
                         /* pipe with specified name exists */
                         debugprintf(dbgFiles,dbgDetail,("# pPopen: named pipe '%s' already exists as sp=%d\n",name,k));
                         break;
@@ -331,12 +340,55 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char* name)
 os9err pPclose( ushort pid, syspath_typ* spP )
 /* close pipe */
 {       
-    pipe_typ* pp= &spP->u.pipe;
-    
-    if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, true );    
-    releasePipe( pid,spP ); return 0;
+  pipe_typ* pp= &spP->u.pipe;
+  
+  if (spP->name[ 0 ]!=NUL) { // named pipe and not yet empty ?
+    if   (pp->i_svd_pchP!=NULL) {
+      if (pp->i_svd_pchP->prp!=
+          pp->i_svd_pchP->pwp) return 1;
+    } // if
+      
+    if (pp->pchP->prp!=
+        pp->pchP->pwp) return 1;
+  } // if
+  
+  
+  if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, true );    
+  releasePipe( pid,spP ); 
+  return 0;
 } /* pPclose */
 
+
+os9err pPdelete ( _pid_, _spP_, ushort *modeP, char* pathname )
+/* delete pipe */
+{
+  char pipename[ OS9NAMELEN ];
+  int  k;
+  syspath_typ* spK;
+  
+  debugprintf(dbgFiles,dbgNorm,("# pPdelete '%s' (%d)", pathname, *modeP ));
+  nullterm( pipename,&pathname[ 6 ],OS9NAMELEN );
+  if       (pipename[ 0 ]==NUL) return 0;
+  
+  /* first see if another descriptor exists for that pipe name */
+  for (k=1; k<MAXSYSPATHS; k++) {
+        spK= &syspaths[ k ];
+    if (spK->type==fPipe &&
+        spK->name[ 0 ]!=NUL) { /* this is a named pipe */
+      if (ustrcmp( pipename, spK->name)==0) {
+        /* pipe with specified name exists */
+        debugprintf(dbgFiles,dbgDetail,("# pPopen: named pipe '%s' already exists as sp=%d\n", pipename, k ));
+        if (spK->linkcount>0 ||
+            spK->u.pipe.pchP->consumers>0) return E_SHARE; // its in use at the moment
+        
+        spK->type= fNone; // delete it really
+        return 0;
+      }
+    } // if
+  } // for
+
+  return E_PNNF;
+} /* pPdelete */
 
 
 static void PipePutc( pipechan_typ* p, char c )
@@ -358,7 +410,7 @@ static void Reactivate( ushort pid, process_typ* cp )
 static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP, 
                                 ulong *lenP, char* buffer, Boolean wrln, systaskfunc_typ wr_func )
 {
-    int           numfree,remaining,bytes,nn;
+    int           numfree, remaining, bytes, nn;
     byte*         buf;
     pipechan_typ* p= spP->u.pipe.pchP;
     char          c;
@@ -367,14 +419,18 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     Boolean       wrln_break;
     process_typ*  cp= &procs[pid];
     
+    if (spP->name[ 0 ]!=NUL) {
+      GetTim( &p->pipeTim );
+    } // if
 
     /* find out how many bytes are free in the buffer; leave always one free */
-    if (p->prp<=p->pwp) numfree= p->prp-p->pwp + p->size-SAFETY; /* CR safety */
-    else                numfree= p->prp-p->pwp          -SAFETY; 
+  //if (p->prp<=p->pwp) numfree= p->prp-p->pwp + p->size-SAFETY; /* CR safety */
+  //else                numfree= p->prp-p->pwp          -SAFETY; 
+    numfree= p->size - Pipe_NReady( p ) - SAFETY;
 
     /* first, copy as much as possible into the buffer */
     remaining= *lenP - p->bwritten; /* remaining to be written */
-    bytes= remaining>numfree ? numfree : remaining; /* what we can write now */
+    bytes= numfree < remaining ? numfree : remaining; /* what we can write now */
     debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe (ln=%s): %ld bytes still requested by pid=%ld, %ld already written, %ld free in pipe\n",
                                        wrln ? "true":"false", remaining, pid, p->bwritten, numfree));
         
@@ -536,8 +592,9 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
     if (pp->i_svd_pchP!=NULL) releasePipe_svd( pid, spP, false );    
     
     /* find out how many bytes are here to be read */
-    if (p->prp>p->pwp) numready= p->pwp-p->prp + p->size;
-    else               numready= p->pwp-p->prp;
+  //if (p->prp>p->pwp) numready= p->pwp-p->prp + p->size;
+  //else               numready= p->pwp-p->prp;
+    numready= Pipe_NReady( p );
 
     /* first, copy as much as wanted or ready */
     remaining= *lenP - p->bread; /* remaining to be read */
@@ -645,34 +702,70 @@ static os9err pReadSysTaskLn( ushort pid, syspath_typ* spP, regs_type* rp )
 } /* pReadSysTaskLn */
 
 
+static os9err ShowPipeDir( syspath_typ* spP, char* buffer )
+{
+  os9direntry_typ os9dirent;
+  int len, k, n= 0;
+  Boolean found= false;
+  syspath_typ* spK;
+  
+  for (k=1; k<MAXSYSPATHS; k++) {
+        spK= &syspaths[ k ];
+    if (spK->type==fPipe &&
+        spK->name[ 0 ]!=NUL) { /* this is a named pipe */
+      if (n>=spP->u.pipe.pchP->pipeDirCnt) { found= true; break; }
+      n++;  
+    } // if
+  } // for
+ 
+  if (!found) return E_EOF;
+  
+  strcpy( os9dirent.name, spK->name );
+  spP->u.pipe.pchP->pipeDirCnt++;
+  
+  len= strlen( os9dirent.name );
+  os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
+  os9dirent.fdsect= os9_long( k );
+  
+  memcpy( buffer, (byte*)&os9dirent, DIRENTRYSZ );
+  return 0;
+} // ShowPipeDir
+
 
 /* read from pipe buffer */
 os9err pPread( ushort pid, syspath_typ* spP, ulong *n, char* buffer )
 {
-    pipechan_typ* p= spP->u.pipe.pchP;
-    if (p->broken) return E_EOF;
+  pipechan_typ* p= spP->u.pipe.pchP;
     
-    debugprintf( dbgFiles,dbgDetail,("# pPread: requests %ld bytes\n",*n ));
-    p->bread= 0;    /* start of new read request */
-    p->consumers++; /* I'm now a consumer, too */
+  if (spP->mode & 0x80) { // treat it as directory ?
+    if (*n<DIRENTRYSZ) return E_EOF;
+    *n=    DIRENTRYSZ;
+    return ShowPipeDir( spP, buffer );
+  } // if
+    
+  if (p->broken) return E_EOF;
+    
+  debugprintf( dbgFiles,dbgDetail,("# pPread: requests %ld bytes\n",*n ));
+  p->bread= 0;    /* start of new read request */
+  p->consumers++; /* I'm now a consumer, too */
    
-    /* system task routine will do the rest */
-    return pReadSysTaskExe( pid,spP, n,buffer, false, (systaskfunc_typ)pReadSysTask );
+  /* system task routine will do the rest */
+  return pReadSysTaskExe( pid,spP, n,buffer, false, (systaskfunc_typ)pReadSysTask );
 } /* pPread */
         
     
 /* readln from pipe buffer */
 os9err pPreadln( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
 {
-    pipechan_typ* p= spP->u.pipe.pchP;
-    if (p->broken) return E_EOF;
+  pipechan_typ* p= spP->u.pipe.pchP;
+  if (p->broken) return E_EOF;
     
-    debugprintf( dbgFiles,dbgDetail,("# pPreadln: requests %ld bytes\n",*n ));
-    p->bread=0;     /* start of new read request */
-    p->consumers++; /* I'm now a consumer, too */
+  debugprintf( dbgFiles,dbgDetail,("# pPreadln: requests %ld bytes\n",*n ));
+  p->bread=0;     /* start of new read request */
+  p->consumers++; /* I'm now a consumer, too */
 
-    /* system task routine will do the rest */
-    return pReadSysTaskExe( pid,spP, n,buffer, true,  (systaskfunc_typ)pReadSysTaskLn );
+  /* system task routine will do the rest */
+  return pReadSysTaskExe( pid,spP, n,buffer, true,  (systaskfunc_typ)pReadSysTaskLn );
 } /* pPreadln */
         
 
@@ -709,8 +802,9 @@ os9err pPeof( _pid_, syspath_typ *spP )
     pipechan_typ* p= spP->u.pipe.pchP;
     
     /* number of chars ready to be read in the pipe */
-    if (p->prp>p->pwp) numready= p->pwp-p->prp + p->size;
-    else               numready= p->pwp-p->prp;
+  //if (p->prp>p->pwp) numready= p->pwp-p->prp + p->size;
+  //else               numready= p->pwp-p->prp;
+    numready= Pipe_NReady( p );
 
     debugprintf(dbgFiles,dbgDetail,("# pPeof: numready=%ld, linkcount=%d\n",
                 numready,spP->linkcount));
@@ -727,8 +821,10 @@ os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
     pipe_typ*     pp= &spP->u.pipe;
     pipechan_typ* p =  pp->pchP;
     
-    *n= p->pwp-p->prp;
-    if (p->pwp<p->prp) *n+= p->size; /* wrapper */
+  //*n= p->pwp-p->prp;
+  //if (p->pwp<p->prp) *n+= p->size; /* wrapper */
+    
+        *n= Pipe_NReady( p );
     if (*n!=0) return 0; /* ready */
 
     /* release large pipe if allocated at an internal command */    
@@ -741,6 +837,46 @@ os9err pPready( ushort pid, syspath_typ* spP, ulong *n )
     return os9error(E_NOTRDY);
 } /* pPready */
 
+
+os9err pPFDInf( _pid_, _spP_, ulong *maxbytP, 
+                              ulong *fdinf,  byte* buffer )
+{
+  #define       FDS 16
+  byte          fdbeg[FDS];                  /* buffer for preparing FD */
+  syspath_typ*  spK= &syspaths[ *fdinf ];
+  pipechan_typ* p;
+  struct tm*    tim; 
+  ulong*        sizeP= (ulong*)&fdbeg[9];    /* the position of the size field */
+
+  if  (spK==NULL) return E_UNKSVC;
+  p  = spK->u.pipe.pchP; 
+  tim= &p->pipeTim; 
+  
+  fdbeg[  0 ]= (byte)spK->fileAtt;
+  fdbeg[  1 ]= 0;
+  fdbeg[  2 ]= 0;
+  fdbeg[  3 ]= tim->tm_year;
+  fdbeg[  4 ]= tim->tm_mon+1; /* somewhat different month notation */
+  fdbeg[  5 ]= tim->tm_mday;
+  fdbeg[  6 ]= tim->tm_hour;
+  fdbeg[  7 ]= tim->tm_min;
+  fdbeg[  8 ]= 0;
+  fdbeg[  9 ]= 0;
+  fdbeg[ 10 ]= 0;
+  fdbeg[ 11 ]= 0;
+  fdbeg[ 12 ]= 0;
+  fdbeg[ 13 ]= 0;
+  fdbeg[ 14 ]= 0;
+  fdbeg[ 15 ]= 0;
+  fdbeg[ 13 ]= tim->tm_year;
+  fdbeg[ 14 ]= tim->tm_mon+1;
+  fdbeg[ 15 ]= tim->tm_mday;
+  
+  *sizeP= os9_long( Pipe_NReady( p ) );
+  
+  memcpy( buffer, fdbeg, *maxbytP>FDS ? FDS : *maxbytP );
+  return 0;
+} /* pPFDInf */
 
 
 /* get pipe size */
