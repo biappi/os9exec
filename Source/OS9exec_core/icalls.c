@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/02/19 15:46:07  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.9  2004/11/27 12:07:01  bfo
  *    _XXX_ introduced
  *
@@ -104,12 +107,13 @@ static os9err OS9_I_OpenCreate( regs_type *rp, ushort cpid, Boolean cre )
     if (type==fPipe) {
         switch (os9_path[5]) {
             case NUL: /* unnamed pipe or directory of named pipes */
-                      if (mode & 0x80) return E_FNA; /* pipe directory / %%% to be implemented */
+                      if (mode==0x00) return E_FNA; /* force 2nd open for pipe dir */
+                    //if (mode & 0x80) return E_FNA; /* pipe directory / %%% to be implemented */
                       strcpy( os9_path,"" );
                       break;
                           
             case '/': /* named pipe */
-                      nullterm( pipename,&os9_path[6],OS9NAMELEN );
+                      nullterm( pipename,&os9_path[ 6 ],OS9NAMELEN );
                       strcpy( os9_path,pipename );
                       break;
                           
