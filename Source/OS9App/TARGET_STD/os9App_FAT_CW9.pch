@@ -1,0 +1,14 @@
+// precompiled headers source file
+
+// determine target file name
+#ifdef powerc
+  #pragma precompile_target "os9App_FAT_CW9_ppc.mch"
+#else
+  #error "undefined target, cannot set precompiled header file name"
+#endif
+
+// include all headers that are suitable for precompiled headers
+#include <MacHeaders.h>
+#include "os9main_incl_precomp.h"
+
+// eof
