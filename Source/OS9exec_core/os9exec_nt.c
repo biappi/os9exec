@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/05/16 13:06:45  bfo
+ *    Version changed to V3.31, def. extension for linux
+ *
  *    Revision 1.48  2006/02/19 16:04:45  bfo
  *    ptoc vars and pthread support things added (some debug things are still in)
  *
@@ -672,7 +675,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x31;
+	exec_revision= 0x32;
 	#endif
 } /* getversions */
 
