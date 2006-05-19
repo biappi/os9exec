@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/02/19 16:22:35  bfo
+ *    use <isIntUtil> / OS9_F_Exit thread save
+ *
  *    Revision 1.30  2005/07/10 19:23:04  bfo
  *    go back to the old way
  *
@@ -821,11 +824,11 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     for (k=0; k<NUMEXCEPTIONS; k++) {
         ep = &cp->ErrorTraps[k];
         
-        #if defined(windows32) && __MWERKS__ >= CW8_MWERKS
-           pd.except[k]= (byte*)os9_long((ulong)ep->handleraddr);
-        #else
-          pd._except[k]= (byte*)os9_long((ulong)ep->handleraddr);
-        #endif
+      //#if defined(windows32) && __MWERKS__ >= CW8_MWERKS
+         pd.except[k]= (byte*)os9_long( (ulong)ep->handleraddr );
+      //#else
+      //  pd._except[k]= (byte*)os9_long((ulong)ep->handleraddr);
+      //#endif
         
         pd._exstk [k]= (byte*)os9_long((ulong)ep->handlerstack);
     }

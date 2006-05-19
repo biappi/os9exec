@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2006/03/12 19:25:24  bfo
+ *    string.h included, according to Martin Gregorie's proposal
+ *
  *    Revision 1.15  2006/02/19 16:06:29  bfo
  *    os9defs adaptions
  *
@@ -118,11 +121,11 @@
   #include <string.h>  /* according to Martin Gregorie's proposal */
   #include "module.h"
   
-  #if defined windows32 && __MWERKS__ >= CW8_MWERKS
-    #include "procid_special.h"
-  #else
-    #include "procid.h"
-  #endif
+//#if defined windows32 && __MWERKS__ >= CW8_MWERKS
+  #include "procid_adapted.h"
+//#else
+//  #include "procid.h"
+//#endif
    
   #include "sgstat.h"
   #include "errno_adapted.h"
