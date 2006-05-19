@@ -34,10 +34,10 @@
  
 resource 'vers' (1, purgeable) {
     0x3,
-    0x30,
+    0x32,
     final,
     0x1,
     verGrSwiss,
-    "3.30",
-    "OS9exec V3.30   © 1993-2006   luz@synthesis.ch / bfo@synthesis.ch"
+    "3.32",
+    "OS9exec V3.32   © 1993-2006   luz@synthesis.ch / bfo@synthesis.ch"
 };

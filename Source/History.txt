@@ -1,6 +1,6 @@
 // 
 //    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
-//    Copyright (C) 1993-2004  Lukas Zeller / Beat Forster
+//    Copyright (C) 1993-2006  Lukas Zeller / Beat Forster
 //    Available under http://www.synthesis.ch/os9exec
 // 
 //    This program is free software; you can redistribute it and/or 
@@ -1263,8 +1263,8 @@
           05-09-XX  Bfo           "      "  "    "     "
     3.28  05-10-XX  Bfo           "      "  "    "     "
           05-11-XX  Bfo     Thread support for PtoC system
-    3.29  05-12-XX  Bfo     ...
-          06-02-19  Bfo     Checkin again after a long while (header changes to 2006)
+          05-12-XX  Bfo     ...
+    3.29  06-02-19  Bfo     Checkin again after a long while (header changes to 2006)
           06-02-19  Bfo     Version changed to V3.30
           06-02-19  Bfo     ptoc vars and pthread support things added (some debug things are still in)         
           06-02-19  Bfo     os9defs adaptions / system definition changes       
@@ -1291,7 +1291,12 @@
           06-05-14  Bfo     Named pipes directory display implemented
     3.31  06-05-16  Bfo     V3.31 released
     -------------------
-       
+
+          06-05-19  Bfo     Version changed to V3.32
+          06-05-19  Bfo     Use "procid_adapted.h" / "errno_adapted.h"
+    3.32  06-??-??  Bfo
+    ------------------- 
+      
 */
 
 
@@ -1309,7 +1314,6 @@
 
    (+)  Take tty00/pty00 first (problems with arbitration)
    (+)  setime_Y2K version with param passing --> 1900
-   (-)  'pragma unused' not possible with gcc (Linux): cuts the file there !!
 */
 
 
@@ -1319,9 +1323,7 @@
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
     -   direct line editing on linux (over network)
-    -   inode support instead of file lists for Windows file access, at least faster lists
     -   CtrlC/CtrlE support for Linux not yet done
-    -   Console echo off mode for Linux not implemented.
     -   gs_ready Linux for CR
     -   Faster directory read (Windows)
     -   Implement internal command "ls" in UNIX style: "ls -la".
@@ -1331,7 +1333,6 @@
     -   termcap support for the DOS window.
     -   fix the msnap mouse blocker problem.
     -   fix the "mmore" MGR scroll problem.
-    -   Support for MACH
 
    (+)  return of d1.l from pipe-systasks
    (+)  passing of d2.l to pipe open
