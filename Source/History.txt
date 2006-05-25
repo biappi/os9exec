@@ -1294,6 +1294,7 @@
 
           06-05-19  Bfo     Version changed to V3.32
           06-05-19  Bfo     Use "procid_adapted.h" / "errno_adapted.h"
+          06-05-25  Bfo     Some path movements for PtoC system
     3.32  06-??-??  Bfo
     ------------------- 
       
