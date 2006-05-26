@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2006/05/16 13:09:57  bfo
+ *    Linux full path name adaption / Named pipe adaption
+ *
  *    Revision 1.29  2006/02/19 16:17:53  bfo
  *    f->del (instead of f->delete) / type casting
  *
@@ -783,14 +786,15 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 	      if (TCCWIE( &v, ".h"   ))                   return; // include files
 	      if (TCCWIE( &v, ".c"   ) ||
 	          TCCWIE( &v, ".cp"  ) ||
-	          TCCWIE( &v, ".cpp" ))                   return; // C/C++ source
-	      if (TCCWIE( &v, ".p"   ))                   return; // Pascal source
-	      if (TCCWIE( &v, ".m"   ))                   return; // Pascal module source
+	          TCCWIE( &v, ".cpp" ) ||
+	          TCCWIE( &v, ".r"   ) ||
+	          TCCWIE( &v, ".pch" ))                   return; // C/C++ source
+	      if (TCCWIE( &v, ".p"   ) ||
+	          TCCWIE( &v, ".m"   ) ||
+	          TCCWIE( &v, ".x"   ))                   return; // Pascal source
 	      if (TCCWIE( &v, ".f"   ))                   return; // Pascal include files
 	      if (TCCWIE( &v, ".a"   ))                   return; // Assembler
 	      if (TCCWIE( &v, ".d"   ))                   return; // Assembler include files
-	      if (TCSuff( &v, ".r",      'CWIE','MPLF' )) return; 
-	      if (TCSuff( &v, ".x",      'CWIE','MPLF' )) return;
 	      if (TCSuff( &v, ".tm",     'CWIE','MPLF' )) return;
 
 								  /* creator type */
