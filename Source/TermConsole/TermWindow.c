@@ -65,7 +65,7 @@
     #include "TermWindow.h"
 #endif
 
-#include "Resource Constants.h"
+#include "ResourceConstants.h"
 
 
 short TermWinScrolls = 0;

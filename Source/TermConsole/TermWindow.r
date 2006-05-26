@@ -9,7 +9,7 @@
 #include "SysTypes.r"
 #include "Types.r"
 
-#include "Resource Constants.h"
+#include "ResourceConstants.h"
 
 #define kMinSize    128             /* application's minimum size (in K) */
 

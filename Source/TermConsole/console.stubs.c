@@ -19,6 +19,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2005/06/30 10:51:45  bfo
+ *    ifndef USE_CARBON => ifdef USE_CLASSIC; type casting
+ *
  *    Revision 1.8  2004/10/22 22:51:26  bfo
  *    Most of the "pragma unused" eliminated
  *
@@ -115,7 +118,7 @@ ulong               gNetActive        = 0;      /* speed-up for bg tasks if net 
 ulong               gNetLast          = 0;      /* speed-up for bg tasks if net activity */
 Boolean             gDocDone          = false;   
 
-#include "Resource Constants.h"
+#include "ResourceConstants.h"
 
 #define kDITop                  0x0050
 #define kDILeft                 0x0070
