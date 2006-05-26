@@ -1294,8 +1294,10 @@
 
           06-05-19  Bfo     Version changed to V3.32
           06-05-19  Bfo     Use "procid_adapted.h" / "errno_adapted.h"
-          06-05-25  Bfo     Some path movements for PtoC system
+          06-05-25  Bfo     Some path movements for PTOC system
           06-05-25  Bfo     '.pch', '.r', '.x' are also CWIE TEXT files now
+          06-05-26  Bfo     "Resource Constants.h" renamed to "ResourceConstants.h"
+          06-05-26  Bfo     Separate mcp files for PTOC
     3.32  06-??-??  Bfo
     ------------------- 
       
