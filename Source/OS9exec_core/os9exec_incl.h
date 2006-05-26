@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/05/19 17:58:58  bfo
+ *    Use only procid_adapted
+ *
  *    Revision 1.16  2006/03/12 19:25:24  bfo
  *    string.h included, according to Martin Gregorie's proposal
  *
@@ -113,20 +116,14 @@
 #ifdef MPW
 /* search path for MPW is different */
   #include ":os9defs:module.h"         /* must be before "procid.h" */
-  #include ":os9defs:procid.h"
+  #include ":os9defs:procid_adapted.h" /* _except -> except */
   #include ":os9defs:sgstat.h"
   #include ":os9defs:errno_adapted.h"  /* errno_adapted.h: errno -> errno2 */
 
 #else
   #include <string.h>  /* according to Martin Gregorie's proposal */
   #include "module.h"
-  
-//#if defined windows32 && __MWERKS__ >= CW8_MWERKS
   #include "procid_adapted.h"
-//#else
-//  #include "procid.h"
-//#endif
-   
   #include "sgstat.h"
   #include "errno_adapted.h"
 #endif
