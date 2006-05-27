@@ -1,0 +1,36 @@
+set OS9DISK "G5:OS9EXEC:dd:"
+# set OS9DISK "G5:OS9EXEC:h0:"
+# set OS9DISK "r0:"
+set OS9CMDS "{OS9DISK}CMDS"
+set OS9MDIR "{OS9DISK}OS9MDIR"
+export OS9CMDS
+export OS9DISK
+export OS9MDIR
+os9 shell
+
+
+ load   cio020 math881
+ chx    /dd/ZZ/CMDS
+ setenv PATH /dd/ZZ/SPE/FIRST/CMDS/TRAPS:/dd/ZZ/SPE/FIRST/CMDS:/dd/CMDS:/dd/ZZ/SPE/SPECTRAPOT/CMDS/TRAPS:/dd/ZZ/SPE/SPECTRAPOT/CMDS:/dd/ZZ/SPE/WORKSHOP/CMDS:/dd/ZZ/SPE/PA_C/CMDS/TRAPS:/dd/ZZ/SPE/PA_C/CMDS:/dd/ZZ/SPE/OMEGASOFT/CMDS:/dd/ZZ/SPE/LICENSE/CMDS:/dd/ZZ/SPE/FREE/CMDS:/dd/ZZ/MGR/CMDS:/dd/ZZ/CMDS
+ setenv Z_PATH LISTS:/dd/ZZ/SPE/WORKSHOP/SYS
+ setenv PTM_PATH /dd/ZZ/.TM
+ setenv SPOTPATH /dd/ZZ/SPE/SPECTRAPOT
+*
+ chd  /dd/ZZ
+ chx  /dd/ZZ/CMDS
+ load Firstrap t_rlk t_os9io SpecTrap Maloney ConfTrap WorkTrap l_Bridge
+ load STB/SpecTrap.stb STB/Maloney.stb STB/ConfTrap.stb STB/WorkTrap.stb
+*load SPE_SRC/WORKSHOP/PA_CPROTO/RESOURCE/STARTPPAC/start_pac -d
+*
+ (chd SPE_SRC/FIRST/REPLACE/CMDS;  load -d dir mdr)
+ (chd SPE_SRC/OBJS/OMEGASOFT/CMDS; load -d pc ra ll t_asmdis t_os9)
+ (chd SPE/WORKSHOP/CMDS;           load -d trapsli xr pascal definit createsf ranpapp makeSTB makeFPU relscopy)
+ (chd SPE/WORKSHOP/DATA;           load -d l_*)
+*
+*setenv PC_PRIO 255
+ printenv
+
+ setenv PASCAL all
+ chd SPE_SRC/FIRST/TERMTRAP
+ systime -r; Compile.f; systime -sd
+*
