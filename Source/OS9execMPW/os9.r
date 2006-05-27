@@ -23,11 +23,11 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2003 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
-/*        beat.forster@ggaweb.ch              */
+/*        bfo@synthesis.ch                    */
 /**********************************************/
 
 /* This Rez source generates OS9C resources for the
@@ -47,12 +47,12 @@
 
 resource 'vers' (1, purgeable) {
     0x3,
-    0x28,
+    0x32,
     final,
     0x1,
     verGrSwiss,
-    "3.28",
-    "OS9exec V3.28   © 1993-2005   luz@synthesis.ch / beat.forster@ggaweb.ch"
+    "3.32",
+    "OS9exec V3.32   © 1993-2006   luz@synthesis.ch / bfo@synthesis.ch"
 };
 
 resource 'cmdo' (257, "os9") {
