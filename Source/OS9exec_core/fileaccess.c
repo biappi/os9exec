@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/05/26 01:30:19  bfo
+ *    '.pch', '.r', '.x' are CWIE TEXT files now
+ *
  *    Revision 1.30  2006/05/16 13:09:57  bfo
  *    Linux full path name adaption / Named pipe adaption
  *
@@ -775,53 +778,54 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 	  } /* loop */
 
 	  if (v.p==&fName) { /* no suffix */
-	      if (TCSuff( &v, "Read_Me", 'MPS ','TEXT' )) return;
+	      if (TCSuff( &v, "Read_Me",  'MPS ','TEXT' )) return;
+	      if (TCSuff( &v, "makefile", 'MPS ','TEXT' )) return;
 	  }
 	  else {
 	  	      v.p--; /* making e.g. ".c" */
 	  	  if (v.p==&fName) { /* starting with "." */
-	          TCSuff( &v, "",        'os9a','PROG' ); return; // ".*"
-	      }
+	          TCSuff( &v, "",         'os9a','PROG' ); return; // ".*"
+	      } // if
 	                           
-	      if (TCCWIE( &v, ".h"   ))                   return; // include files
+	      if (TCCWIE( &v, ".h"   ))                    return; // include files
 	      if (TCCWIE( &v, ".c"   ) ||
 	          TCCWIE( &v, ".cp"  ) ||
 	          TCCWIE( &v, ".cpp" ) ||
 	          TCCWIE( &v, ".r"   ) ||
-	          TCCWIE( &v, ".pch" ))                   return; // C/C++ source
+	          TCCWIE( &v, ".pch" ))                    return; // C/C++ source
 	      if (TCCWIE( &v, ".p"   ) ||
 	          TCCWIE( &v, ".m"   ) ||
-	          TCCWIE( &v, ".x"   ))                   return; // Pascal source
-	      if (TCCWIE( &v, ".f"   ))                   return; // Pascal include files
-	      if (TCCWIE( &v, ".a"   ))                   return; // Assembler
-	      if (TCCWIE( &v, ".d"   ))                   return; // Assembler include files
-	      if (TCSuff( &v, ".tm",     'CWIE','MPLF' )) return;
+	          TCCWIE( &v, ".x"   ))                    return; // Pascal source
+	      if (TCCWIE( &v, ".f"   ))                    return; // Pascal include files
+	      if (TCCWIE( &v, ".a"   ))                    return; // Assembler
+	      if (TCCWIE( &v, ".d"   ))                    return; // Assembler include files
+	      if (TCSuff( &v, ".tm",      'CWIE','MPLF' )) return;
 
 								  /* creator type */
-	      if (TCSuff( &v, ".exe",    'CWIE','DEXE' )) return; // executables
+	      if (TCSuff( &v, ".exe",     'CWIE','DEXE' )) return; // executables
 
-	      if (TCSuff( &v, ".pic",    '8BIM','PICT' )) return; // PICT
-	      if (TCSuff( &v, ".psd",    '8BIM','8BPS' )) return; // Photoshop
-	      if (TCSuff( &v, ".jpg",    '8BIM','JPEG' )) return; // JPEG
-	      if (TCSuff( &v, ".tif",    '8BIM','TIFF' )) return; // TIFF
-	      if (TCSuff( &v, ".gif",    '8BIM','GIFf' )) return; // GIF
-	      if (TCSuff( &v, ".pdf",    'CARO','PDF ' )) return; // PDF
-	      if (TCSuff( &v, ".rm",     'PNst','PNRM' )) return; // RealMovie
+	      if (TCSuff( &v, ".pic",     '8BIM','PICT' )) return; // PICT
+	      if (TCSuff( &v, ".psd",     '8BIM','8BPS' )) return; // Photoshop
+	      if (TCSuff( &v, ".jpg",     '8BIM','JPEG' )) return; // JPEG
+	      if (TCSuff( &v, ".tif",     '8BIM','TIFF' )) return; // TIFF
+	      if (TCSuff( &v, ".gif",     '8BIM','GIFf' )) return; // GIF
+	      if (TCSuff( &v, ".pdf",     'CARO','PDF ' )) return; // PDF
+	      if (TCSuff( &v, ".rm",      'PNst','PNRM' )) return; // RealMovie
 
-	      if (TCSuff( &v, ".lzh",    'LARC','LHA ' )) return; // lzh
-	      if (TCSuff( &v, ".sit",    'SIT!','SIT!' )) return; // StuffIt
-	      if (TCSuff( &v, ".zip",    'ZIP ','ZIP ' )) return; // zip
+	      if (TCSuff( &v, ".lzh",     'LARC','LHA ' )) return; // lzh
+	      if (TCSuff( &v, ".sit",     'SIT!','SIT!' )) return; // StuffIt
+	      if (TCSuff( &v, ".zip",     'ZIP ','ZIP ' )) return; // zip
 
-	      if (TCSuff( &v, ".doc",    'MSWD','W8BN' )) return; // MS Word
-	      if (TCSuff( &v, ".xls",    'XCEL','XLS8' )) return; // MS Excel
-	      if (TCSuff( &v, ".ppt",    'PPT3','SLD8' )) return; // MS Powerpoint
+	      if (TCSuff( &v, ".doc",     'MSWD','W8BN' )) return; // MS Word
+	      if (TCSuff( &v, ".xls",     'XCEL','XLS8' )) return; // MS Excel
+	      if (TCSuff( &v, ".ppt",     'PPT3','SLD8' )) return; // MS Powerpoint
 
-	      if (TCSuff( &v, ".Me",     'MPS ','TEXT' )) return; // text file
-	      if (TCSuff( &v, ".txt",    'ttxt','TEXT' )) return; // text file
+	      if (TCSuff( &v, ".Me",      'MPS ','TEXT' )) return; // text file
+	      if (TCSuff( &v, ".txt",     'ttxt','TEXT' )) return; // text file
       }
 
-      if   ( RBF_Rsc( spc ) && TCRBFi( &v, "" ) )     return; // RBF images
-   			  TCSuff( &v, "",        'os9a','PROG' );         // default
+      if   ( RBF_Rsc( spc ) && TCRBFi( &v, "" ) )      return; // RBF images
+   			  TCSuff( &v, "",         'os9a','PROG' );         // default
   } /* Get_Creator_And_Type */
 #endif 
 
