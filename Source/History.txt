@@ -1298,6 +1298,7 @@
           06-05-25  Bfo     '.pch', '.r', '.x' are also CWIE TEXT files now
           06-05-26  Bfo     "Resource Constants.h" renamed to "ResourceConstants.h"
           06-05-26  Bfo     Separate mcp files for PTOC
+          06-05-27  Bfo     makefile => 'MPS ' / 'TEXT'
     3.32  06-??-??  Bfo
     ------------------- 
       
