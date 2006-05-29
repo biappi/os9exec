@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2006/05/19 17:59:33  bfo
+ *    Use only procid_adapted
+ *
  *    Revision 1.31  2006/02/19 16:22:35  bfo
  *    use <isIntUtil> / OS9_F_Exit thread save
  *
@@ -1527,8 +1530,8 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     int          sleep_x  = sleeptime & 0x7fffffff;
     int          ticks;
 
-    if (cp->isIntUtil)
-      printf( "%d Int Sleep\n", cpid );
+  //if (cp->isIntUtil)
+  //  printf( "%d Int Sleep\n", cpid );
 
     if (cp->way_to_icpt) return 0; /* don't sleep if signaled */
     
