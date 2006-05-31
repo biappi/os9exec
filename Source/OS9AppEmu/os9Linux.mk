@@ -53,16 +53,17 @@ c_SRC_OS9Linux+=${WD_OS9Linux}/Platforms/LINUX/net_linux.c
 
 OBJS_OS9Linux+=$(c_SRC_OS9Linux:.c=.c.o)
 
-CFLAGS_OS9Linux+= -ITARGET_STD/\
- -I./\
- -I../OS9exec_core/os9defs/\
- -I../OS9exec_core/\
- -I../Platforms/LINUX/\
- -I../Platforms/\
- -IUAE68emulator/\
- -I../OS9App/\
- -I- -I/usr/lib/\
- -I/usr/include/
+CFLAGS_OS9Linux+=\
+ -I TARGET_STD/\
+ -I ../Platforms/LINUX/\
+ -I ../Platforms/\
+ -I ./\
+ -I UAE68emulator/\
+ -I ../OS9App/\
+ -I ../OS9exec_core/os9defs/\
+ -I ../OS9exec_core/\
+ -I-\
+ -I /usr/include/
 
 DBG=-g
 
