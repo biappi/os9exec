@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/05/16 13:15:12  bfo
+ *    Named pipes are supported now (including "dir -e /pipe)
+ *
  *    Revision 1.10  2006/02/19 16:34:38  bfo
  *    use <isIntUtil>
  *
@@ -435,7 +438,7 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
                                        wrln ? "true":"false", remaining, pid, p->bwritten, numfree));
         
     /* copy loop */
-    buf= buffer + p->bwritten; /* position the buffer pointer */
+    buf= (byte*)buffer + p->bwritten; /* position the buffer pointer */
     debugprintf(dbgFiles,dbgDeep,("# pWriteSysTaskExe: buffer start=$%lX, writing now from $%lX\n",buffer,(ulong) buf));
 
     if (spP->type==fTTY) {
@@ -618,12 +621,12 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
     } /* for */
     
     if (debugcheck(dbgFiles,dbgDeep)) {
-        char *dp=(byte *) buffer + p->bread; /* at start of buffer */
+        char* dp= (char*)buffer + p->bread; /* at start of buffer */
         ushort kk;
         uphe_printf("pReadSysTaskExe: read='");
-        for (kk=0; kk<nn; kk++) putc(*dp++,stderr);
+        for (kk=0; kk<nn; kk++) putc( *dp++, stderr );
         upe_printf ("'\n");
-    }
+    } // if
     
     p->bread  +=nn; /* we have read so many now */
     remaining -=nn; /* calc what we've left */
@@ -1249,16 +1252,16 @@ void CheckInBufferTTY( ttydev_typ* mco )
     if (mco->installed &&
         mco->pid!=0    &&
         mco->spP->type==fTTY) {
-        err= pPready( mco->pid,mco->spP, &cnt );     if (cnt==0) return;
+        err= pPready( mco->pid, mco->spP, (ulong*)&cnt ); if (cnt==0) return;
 
         cmax= INBUFSIZE-mco->inBufUsed-1;
         if (cnt>cmax) cnt= cmax;
-        err= pPread ( mco->pid,mco->spP, &cnt,buffer ); if (err) return;
+        err= pPread ( mco->pid, mco->spP, (ulong*)&cnt, buffer ); if (err) return;
   
                k= 0;
         while (k<cnt) {
-            if (!KeyToBuffer( mco, buffer[k] )) { err= E_READ; break; }
-            k++;
+          if (!KeyToBuffer( mco, buffer[k] )) { err= E_READ; break; }
+          k++;
         } /* while */
     } /* if */
 } /* CheckInBufferTTY */

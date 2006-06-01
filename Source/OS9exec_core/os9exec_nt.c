@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2006/05/19 17:58:19  bfo
+ *    Changed to V3.32
+ *
  *    Revision 1.49  2006/05/16 13:06:45  bfo
  *    Version changed to V3.31, def. extension for linux
  *
@@ -488,7 +491,7 @@ static os9err prepParams(mod_exec *theModule, char **argv,int argc, char**envp, 
    k=strlen(modnam);
    if (!(k & 1)) *(--p)=0; /* align if module name has even # of chars (=odd with NUL) */
    p-=k+1;
-   strcpy(p,modnam); /* copy module name as argv[0] */
+   strcpy( (char*)p,modnam ); /* copy module name as argv[0] */
    p-=4;
    *((ulong *)p)=os9_long(p+4-pp); /* set argv[0] offset */
    p-=2; *((ushort *)p)=os9_word(0xFC01); /* special sync code */
@@ -503,12 +506,12 @@ static os9err prepParams(mod_exec *theModule, char **argv,int argc, char**envp, 
       if (*envp[k]=='@') {
          /* --- it is an OS-9 environment variable */
          *(elp++)=os9_long((ulong)hp-(ulong)pp); /* set offset */
-         strcpy(hp,envp[k]+1); /* copy the environment variable name, but without the '@' */
+         strcpy( (char*)hp, envp[k]+1 ); /* copy the environment variable name, but without the '@' */
          h=strlen(envp[k])-1; /* size of variable name without '@' */
    		debugprintf(dbgStartup,dbgDeep,("# prepParams: envp[%d] name='%s', len=%d",k,envp[k]+1,h));
          hp+=h; /* advance pointer */
          *hp++='='; /* insert '=' between name and value */
-         strcpy(hp,envp[k]+h+2); /* copy contents of the variable */
+         strcpy( (char*)hp, envp[k]+h+2 ); /* copy contents of the variable */
          h=strlen(envp[k]+h+2); /* size of contents */
    		debugprintf(dbgStartup,dbgDeep,(", contents='%s', len=%d\n",hp,h));
          hp+=h; /* advance pointer */
@@ -526,7 +529,7 @@ static os9err prepParams(mod_exec *theModule, char **argv,int argc, char**envp, 
    k=0;
    while (argc) {
       *(alp++)=os9_long((ulong)p-(ulong)pp); /* set offset */
-      strcpy(p,argv[k]); /* copy the argument */
+      strcpy( (char*)p, argv[k] ); /* copy the argument */
       p+=strlen(argv[k]); /* advance pointer */
       if (k+1>=argc) break;
       *(p++)=' '; /* add space */

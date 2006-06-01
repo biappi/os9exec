@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/02/19 16:14:12  bfo
+ *    void* for MoveBlk
+ *
  *    Revision 1.20  2005/06/30 16:33:38  bfo
  *    Up to date
  *
@@ -619,7 +622,7 @@ static void adapt_init( mod_exec* mh )
 /* special treatment for the "init" module: set version+revision */
 /* and connect it to the globals */
 {
-    char*   bp;
+    byte*   bp;
     char*   nm;
     ushort* sp;
     
@@ -640,7 +643,7 @@ static void adapt_init( mod_exec* mh )
 
 static void adapt_le0( mod_exec* mh, ulong inetAddr )
 {
-    char*  bp;
+    byte*  bp;
     ulong* lp;
         
     bp= (byte*) mh + 0x7a;        /* broadcast address position */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/02/19 16:10:34  bfo
+ *    Some comments switched off again
+ *
  *    Revision 1.33  2005/07/06 21:04:03  bfo
  *    defined UNIX
  *
@@ -1142,7 +1145,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     
     #elif defined win_unix
       len= sizeof(name);
-          epNew= accept( net->ep, (__SOCKADDR_ARG)&name, &len );
+          epNew= accept( net->ep, (__SOCKADDR_ARG)&name, (unsigned int*)&len );
       if (epNew==INVALID_SOCKET) {
           cp->saved_state= cp->state;
           set_os9_state( pid, pWaitRead );
@@ -1414,7 +1417,6 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
           udata.udata.maxlen=   sizeof(icmp_data);
         
           // Look for a packet...
-        
               err= OTRcvUData( net->ep, &udata, nil );
           if (err==noErr) {
                   icmp= (IcmpHeader*)&icmp_data[20];
@@ -1434,17 +1436,11 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
           
         #elif defined win_unix
           do {   
-            //#ifdef __MACH__
-            //  err= 0; n= 0;
-            //#else
-                err= ioctl( net->ep, FIONREAD, &n );
-            //#endif
-              
+              err= ioctl( net->ep, FIONREAD, &n );
               debugprintf(dbgSpecialIO,dbgDetail, ( "NgPCmd err=%d n=%d\n", err,n ));
 
               if (n>sizeof(IpHeader)+sizeof(IcmpHeader)) {
-                  err= recvfrom( net->ep, icmp_data, n, 0, 
-                                 (struct sockaddr*)&from, &fromlen);
+                  err= recvfrom( net->ep, icmp_data, n, 0, (struct sockaddr*)&from, (unsigned int*)&fromlen);
                   if (err<=0) break;
               
                   debugprintf(dbgSpecialIO,dbgNorm, ( "NgPCmd %d %d: %d %d %x\n", err, net->ep, 

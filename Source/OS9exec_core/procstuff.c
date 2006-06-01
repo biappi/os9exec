@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2006/02/19 16:38:37  bfo
+ *    thread support added
+ *
  *    Revision 1.27  2005/06/30 11:57:42  bfo
  *    sig_mask adaption
  *
@@ -183,7 +186,7 @@ void init_processes()
         pd->_task  = 0;
      // pd->_resvd1= os9_word(0xBD00); /* invisible at DevPak von 68K OS-9 V1.2 */
         pd->_deadlk= 0;                /* as in real OS-9 */
-        pd->_sigdat= (char*)os9_long((ulong)&procs[k].sigdat);
+        pd->_sigdat= (byte*)os9_long((ulong)&procs[k].sigdat);
 
         /* clear all memory segments ... */
         for (j=0; j<32; j++) {
@@ -1060,7 +1063,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
         cp->mid= 0;                 /* assign "OS9exec" module */
 
         /* prepare args */
-        prepArgs( paramptr, &argc,&arguments );
+        prepArgs( (char*)paramptr, &argc,&arguments );
         arguments[0]= (char*)mpath;  /* set module name */
                     
         if (pp->pd._cid!=0)       /* already children available */
@@ -1138,7 +1141,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     *a= os9_long(cp->memtop-paramsiz);
 
     /* check for stdout filter and init */
-    cp->stdoutfilter= initfilterfunc( Mod_Name( theModule ), paramptr, &cp->filtermem);
+    cp->stdoutfilter= initfilterfunc( Mod_Name( theModule ), (char*)paramptr, (void**)&cp->filtermem);
     debugprintf(dbgProcess,dbgNorm,("# prepFork: stdoutfilter=$%lX, filtermem=$%lX\n",cp->stdoutfilter,cp->filtermem));
     debugprintf(dbgProcess,dbgNorm,("# prepFork: Everything's ready for launch!\n"));
 
