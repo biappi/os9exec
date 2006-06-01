@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2006/06/01 18:05:57  bfo
+ *    differences in signedness (for gcc4.0) corrected
+ *
  *    Revision 1.28  2006/02/19 16:38:37  bfo
  *    thread support added
  *
@@ -912,13 +915,13 @@ void do_arbitrate( void )
     if    (done) spid= MAXPROCESSES; /* should have exited via break by now */
   } while(!done);
   
-  if (done && sprocess->isIntUtil)
-    printf( "%d ALLARM !!\n", currentpid ); /* %bfo% */
+//if (done && sprocess->isIntUtil)
+//  printf( "%d ALLARM !!\n", currentpid ); /* %bfo% */
     
   /* assign */
   currentpid= spid;
-  if (procs[currentpid].isIntUtil)
-    printf( "%d NOCHN ALLARM !!\n", currentpid ); /* %bfo% */
+//if (procs[currentpid].isIntUtil)
+//  printf( "%d NOCHN ALLARM !!\n", currentpid ); /* %bfo% */
     
     
   /* now, if currentpid<MAXPROCESSES, there is a process to run or unwait-and-run
