@@ -1299,6 +1299,8 @@
           06-05-26  Bfo     "Resource Constants.h" renamed to "ResourceConstants.h"
           06-05-26  Bfo     Separate mcp files for PTOC
           06-05-27  Bfo     makefile => 'MPS ' / 'TEXT'
+          06-06-01  Bfo     Linux makefile corrected: Changed -I- to iquote
+          06-06-01  Bfo     Some signedness warnings of GCC 4.0 eliminated 
     3.32  06-??-??  Bfo
     ------------------- 
       
