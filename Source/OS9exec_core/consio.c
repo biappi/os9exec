@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/02/19 16:15:05  bfo
+ *    Header changes for 2006
+ *
  *    Revision 1.10  2005/06/30 11:05:48  bfo
  *    Mach-O support
  *
@@ -670,7 +673,7 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                           ulong *maxlenP, char* buffer, Boolean wrln )
 /* output to console */
 {
-    long         cnt;
+    ulong        cnt;
     char         c;
     ulong        outputticks= GetSystemTick();
     syspath_typ* spC=  spP;          /* default: no crossed path */
@@ -687,11 +690,6 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                    cnt= 0; /* search if there is any CR */
             while (cnt<*maxlenP) {
                     c= buffer[cnt++];
-            //  if (c==NUL) {
-            //      *maxlenP= cnt-1;
-            //      break;
-            //  }
-                
                 if (c!=NUL && c==ot->_sgs_eorch) {
                     *maxlenP= cnt;
                     do_lf= ot->_sgs_alf;

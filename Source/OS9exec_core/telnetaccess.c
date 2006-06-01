@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/02/19 15:28:50  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.7  2005/06/30 11:55:40  bfo
  *    Mach-O support
  *
@@ -109,7 +112,7 @@ void RemoveTTY( int consoleID )
 
 
 
-long WriteCharsToPTY( char* buffer, long n, int consoleID, Boolean do_lf )
+ulong WriteCharsToPTY( char* buffer, ulong n, int consoleID, Boolean do_lf )
 /* write characters to TTY */
 {
     #ifdef PIP_SUPPORT
@@ -121,23 +124,23 @@ long WriteCharsToPTY( char* buffer, long n, int consoleID, Boolean do_lf )
       if (cp->state==pWaitRead) {
           set_os9_state( pid, cp->saved_state );
           n=                  cp->saved_cnt;
-      }
+      } // if
 
 	  if (mco->holdScreen) {
           cp->saved_cnt  = n;
           cp->saved_state= cp->state;
           set_os9_state( pid, pWaitRead );
           return n;
-	  }
+	  } // if
 	  
-      spC->u.pipe.pchP->do_lf= do_lf;                     /* store it here also */
+      spC->u.pipe.pchP->do_lf= do_lf;                    /* store it here also */
       PutCharsToTTY( currentpid,spC, &n,buffer, do_lf ); /* put it into pipe !! */
-      if    (n>0) lw_pid( mco );                        /* assign for later use */
+      if    (n>0) lw_pid( mco );                         /* assign for later use */
       return n;
 
     #else
       #ifndef linux
-      #pragma unused(buffer,n,consoleID,do_lf)
+      #pragma unused( buffer,n,consoleID,do_lf )
       #endif
       
       return 0;   

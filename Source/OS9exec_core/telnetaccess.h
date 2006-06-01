@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2006/02/19 15:28:06  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.5  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -58,11 +61,11 @@
 void               InitTTYs(void );
 void  CheckInputBuffersTTY( void );
 
-short           InstallTTY       ( syspath_typ*, int consoleID );
-void             RemoveTTY                     ( int consoleID );
-long      ReadCharsFromPTY( char *buffer,long n, int consoleID );
-long       WriteCharsToPTY( char *buffer,long n, int consoleID, Boolean do_lf );
-Boolean        DevReadyTTY( long *count,         int consoleID );
+short           InstallTTY        ( syspath_typ*, int consoleID );
+void             RemoveTTY                      ( int consoleID );
+long      ReadCharsFromPTY( char *buffer, long n, int consoleID );
+ulong      WriteCharsToPTY( char *buffer,ulong n, int consoleID, Boolean do_lf );
+Boolean        DevReadyTTY( long *count,          int consoleID );
 
 void           HandleEvent( void );
 void     CheckInputBuffers( void );
