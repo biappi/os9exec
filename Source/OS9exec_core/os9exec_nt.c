@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2006/06/01 18:05:57  bfo
+ *    differences in signedness (for gcc4.0) corrected
+ *
  *    Revision 1.50  2006/05/19 17:58:19  bfo
  *    Changed to V3.32
  *
@@ -384,9 +387,9 @@ char*  sw_name;
 char*  platform;
 
 /* screen size */
-ulong  screenW= -1; /* undefined */
-ulong  screenH= -1;
-
+ulong  screenW = -1; /* undefined */
+ulong  screenH = -1;
+ulong  g_ipAddr=  0;
 
 
 /* global options */
@@ -1472,8 +1475,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
  		         cp->state==pWaitRead) {
  			if    (cp->state==pActive ||
  			       cp->way_to_icpt) {
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    printf( "%d %d Alarmstufe 1\n", cpid,currentpid ); /* %bfo% */
+      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+      //  printf( "%d %d Alarmstufe 1\n", cpid,currentpid ); /* %bfo% */
     	    
 				/* --- go execute OS9 code until next trap or exception */
 				/* %%% for low-level calling interface debug: Debugger(); */
@@ -1514,8 +1517,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			  svd->vector= cp->vector;
 			  svd->func  = cp->func;
 			  
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    printf( "%d %d Alarmstufe 2\n", cpid, currentpid ); /* %bfo% */
+            //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+    	    //  printf( "%d %d Alarmstufe 2\n", cpid, currentpid ); /* %bfo% */
 			} /* if */
 				
 			/* in case of a unsuccessful read just repeat the call with saved registers */
@@ -1527,8 +1530,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			  cp->func   = svd->func;
 			} /* if */	
  
-      if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	  printf( "%d %d Alarmstufe 3", cpid,currentpid ); /* %bfo% */
+          //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+    	  //  printf( "%d %d Alarmstufe 3", cpid,currentpid ); /* %bfo% */
 			
 			/* --- now handle trap */
 			if (cp->vector!=0) {
@@ -1551,20 +1554,20 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     	  } /* if */
    
 			 // ----------------------
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    printf( "%d %d Alarmstufe 4a\n", cpid,currentpid ); /* %bfo% */
+      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+      //  printf( "%d %d Alarmstufe 4a\n", cpid,currentpid ); /* %bfo% */
 
 				    async_area= true; 
 				if (async_pending) sig_mask( cpid,0 ); /* disable signal mask */
 				/* asynchronous signals are allowed here */
 				
 				/* execute syscall */
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    printf( "%d %d Alarmstufe 4b\n", cpid,currentpid );
+      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+      //  printf( "%d %d Alarmstufe 4b\n", cpid,currentpid );
 				cp->lastsyscall=  lastsyscall= cp->func; /* remember for error tracking (globally and for process) */
 				cp->oerr       = exec_syscall( cp->func,cpid,crp, false );
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    upe_printf( "Alarmstufe 4c\n" );
+      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+      //  upe_printf( "Alarmstufe 4c\n" );
 				
 				/* analyze result */
 				if (debugcheck(dbgSysCall,dbgDeep)) {
@@ -1575,8 +1578,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				/* asynchronous signals are no longer allowed */
 			 // ----------------------
 
-        if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    printf( "Alarmstufe 4d\n", cpid,currentpid ); /* %bfo% */
+      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+      //  printf( "Alarmstufe 4d\n", cpid,currentpid ); /* %bfo% */
 
 				/* if the system is on the way to intercept, d1 and carry 
 			       must be stored (must not override values of "send_signal" */
@@ -1648,8 +1651,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 			}
 		}
 		
-    if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	printf( "%d %d Alarmstufe 5\n", cpid,currentpid );  /* %bfo% */
+  //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+  //  printf( "%d %d Alarmstufe 5\n", cpid,currentpid );  /* %bfo% */
 		
 		#ifdef MPW
   		  /* handle MPW signals, if any */
@@ -1682,10 +1685,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		if (!arb_cnt--) { arb_cnt= ARB_RATE-1; /* arbitrate= true; */ }
 		last_arbitrate= arbitrate;	
 
-    if (cp->isIntUtil) 
-		  printf( "%d Alarmstufe gruen\n", cpid ); /* %bfo% */
-    if (procs[currentpid].isIntUtil) 
-		  printf( "%d Alarmstufe orange\n", currentpid ); /* %bfo% */
+  //if (cp->isIntUtil) 
+  //  printf( "%d Alarmstufe gruen\n", cpid ); /* %bfo% */
+  //if (procs[currentpid].isIntUtil) 
+  //  printf( "%d Alarmstufe orange\n", currentpid ); /* %bfo% */
 		
 		if (cp->state==pWaitRead)
 		    memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); /* save all regs */
@@ -1695,8 +1698,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		if (logtiming) arb_to_os9( last_arbitrate );
 			
 		cp= &procs[currentpid];
-    if (cp->isIntUtil) 
-		  printf( "%d Alarmstufe rot\n", currentpid ); /* %bfo% */
+  //if (cp->isIntUtil) 
+  //  printf( "%d Alarmstufe rot\n", currentpid ); /* %bfo% */
 
 		if    (!cwti) {
 			    cwti=  cp->way_to_icpt;
