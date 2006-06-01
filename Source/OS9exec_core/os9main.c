@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2006/02/19 15:47:30  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.13  2005/07/06 21:07:57  bfo
  *    defined UNIX
  *
@@ -391,6 +394,7 @@ static void os9_usage(char *name)
     upho_printf("   -y height   define MGR screen width\n" );
     upho_printf("   -z          define MGR fullscreen mode\n" );
     upho_printf("   -u          user defined option\n" );
+    upho_printf("   -g ip_addr  open MGR screen at IP address\n");
     upho_printf("   -h[h]       show this help [and conditions for using the software]\n");
     upho_printf("\n");
 
@@ -555,11 +559,12 @@ void os9_main( int argc, char **argv, char **envp )
                             }
                             break;
 
-				case 'u' :  userOpt= true; break;    /* set user option */
-				
+				case 'u' :  userOpt   = true; break; /* set user option */
 				case 'z' :  fullScreen= true; break; /* full screen mode */
+
                 case 'x' :  ulp=&screenW;      goto getlnum;
                 case 'y' :  ulp=&screenH;      goto getlnum;
+                case 'g' :  ulp=&g_ipAddr;     goto getlnum;
                 case 'w' :  ulp=&spininterval; goto getlnum;
                 case 'p' :  ulp=&iniprior;     goto getlnum;
                 case 'm' :  if (*(p+1)=='m') { ulp=&memplusall; goto getlnum; }
@@ -586,6 +591,7 @@ void os9_main( int argc, char **argv, char **envp )
                                     exit(1);
                                 }
                             }
+                            
                             switch (tolower(modifier)) {
                                 case 'm' : *ulp *=1024; /* fall into Kbytes */
                                 case 'k' : *ulp *=1024;

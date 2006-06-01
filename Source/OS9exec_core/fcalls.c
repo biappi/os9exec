@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/05/29 10:15:37  bfo
+ *    "Int Sleep" commented out
+ *
  *    Revision 1.32  2006/05/19 17:59:33  bfo
  *    Use only procid_adapted
  *
@@ -930,8 +933,8 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
 	#define D_ScreenW1 0x1008   /* Width in pixels from OS9exec's option -x */
 	#define D_ScreenH1 0x100C   /* Hight  "   "    from OS9exec's option -y */
 	#define D_UserOpt  0x1010   /* User defined option -u                   */
-	
-    
+	#define D_IPAddr   0x1014   /* Open MGR screen at IP address: option -g */
+	    
     ulong        offs= loword(rp->d[0]);
     int          size= (int)  rp->d[1];
     ulong        b   = (ulong) &mdirField;
@@ -1022,6 +1025,7 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
       case D_ScreenW1: v= screenW;          break; /* -x option of OS9exec  */
       case D_ScreenH1: v= screenH;          break; /* -y option of OS9exec  */
       case D_UserOpt : v= userOpt;          break; /* -u option of OS9exec  */
+      case D_IPAddr  : v= g_ipAddr;         break; /* -g option of OS9exec  */
       
       default        : v= 0; if (debug[dbgNorm] & dbgAnomaly) upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
     }
