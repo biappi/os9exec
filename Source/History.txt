@@ -1302,7 +1302,8 @@
           06-06-01  Bfo     Linux makefile corrected: Changed -I- to iquote
           06-06-01  Bfo     Some signedness warnings of GCC 4.0 eliminated
           06-06-01  Bfo     'printf' things commented out
-          06-06-01  Bfo     g_ipAddr variable added (preparations) 
+          06-06-01  Bfo     g_ipAddr variable added (preparations)
+          06-06-02  Bfo     Option -g activated  
     3.32  06-??-??  Bfo
     ------------------- 
       
