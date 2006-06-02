@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2006/06/01 21:02:26  bfo
+ *    g_ipAddr added
+ *
  *    Revision 1.42  2006/05/16 13:13:01  bfo
  *    pipeDirCnt / pipeTim added
  *
@@ -1182,7 +1185,7 @@ extern char*   platform;
 /* screen size */
 extern ulong   screenW;
 extern ulong   screenH;
-extern ulong   g_ipAddr;
+extern char*   g_ipAddr;
 
 
 /* external definitions */

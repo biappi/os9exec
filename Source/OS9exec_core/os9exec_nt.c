@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2006/06/01 21:02:50  bfo
+ *    g_ipAddr added / printf things commented out
+ *
  *    Revision 1.51  2006/06/01 18:05:57  bfo
  *    differences in signedness (for gcc4.0) corrected
  *
@@ -389,7 +392,7 @@ char*  platform;
 /* screen size */
 ulong  screenW = -1; /* undefined */
 ulong  screenH = -1;
-ulong  g_ipAddr=  0;
+char*  g_ipAddr= NULL;
 
 
 /* global options */
