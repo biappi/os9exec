@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/06/01 21:06:22  bfo
+ *    g_ipAddr things added
+ *
  *    Revision 1.33  2006/05/29 10:15:37  bfo
  *    "Int Sleep" commented out
  *
@@ -1025,10 +1028,10 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
       case D_ScreenW1: v= screenW;          break; /* -x option of OS9exec  */
       case D_ScreenH1: v= screenH;          break; /* -y option of OS9exec  */
       case D_UserOpt : v= userOpt;          break; /* -u option of OS9exec  */
-      case D_IPAddr  : v= g_ipAddr;         break; /* -g option of OS9exec  */
+      case D_IPAddr  : v= (ulong)g_ipAddr;  break; /* -g option of OS9exec, no os9_long needed here */
       
       default        : v= 0; if (debug[dbgNorm] & dbgAnomaly) upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
-    }
+    } // switch
     
     debugprintf(dbgPartial,dbgNorm,("# F$SetSys: %04lX %x %d\n", offs, size, v));
     

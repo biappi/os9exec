@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2006/06/01 21:04:39  bfo
+ *    g_ipAddr things added
+ *
  *    Revision 1.14  2006/02/19 15:47:30  bfo
  *    Header changed to 2006
  *
@@ -428,9 +431,9 @@ static void GetStartTick()
 void os9_main( int argc, char **argv, char **envp )
 {
     int     k, kX;
-    char    *p;
-    ulong   *ulp;
-    ushort  *usp;
+    char*   p;
+    ulong*  ulp;
+    ushort* usp;
     char    modifier;
     char*   toolname;
     ushort  level;
@@ -561,10 +564,22 @@ void os9_main( int argc, char **argv, char **envp )
 
 				case 'u' :  userOpt   = true; break; /* set user option */
 				case 'z' :  fullScreen= true; break; /* full screen mode */
+ 
+                case 'g' :  if (g_ipAddr==NULL) {
+                              k++; /* next arg */
+                              if (k>=argc) {
+                                printf("# Error: missing argument for '%s' option!\n",p);
+                                exit(1); 
+                              } // if
+                              
+                              p= argv[ k ];
+                                      g_ipAddr= malloc( strlen( p )+1 );
+                              strcpy( g_ipAddr, p );
+                            } // if
+                            break;
 
                 case 'x' :  ulp=&screenW;      goto getlnum;
                 case 'y' :  ulp=&screenH;      goto getlnum;
-                case 'g' :  ulp=&g_ipAddr;     goto getlnum;
                 case 'w' :  ulp=&spininterval; goto getlnum;
                 case 'p' :  ulp=&iniprior;     goto getlnum;
                 case 'm' :  if (*(p+1)=='m') { ulp=&memplusall; goto getlnum; }
@@ -577,7 +592,7 @@ void os9_main( int argc, char **argv, char **envp )
                                 exit(1); 
                             }
 
-                            p=argv[k];
+                            p= argv[ k ];
                             modifier=0;
                             if (*p=='$') {
                                 if (sscanf(++p,"%lx%c", ulp, &modifier)<1) {
