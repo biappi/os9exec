@@ -241,7 +241,7 @@ static __inline__ void do_put_mem_byte(uae_u8 *a, uae_u8 v)
 
 
 /* %%% LuZ: changed to work with x86 as well as PPC */
-#ifdef macintosh
+#if (defined macintosh || defined __MACH__) && !defined __INTEL__
 
 static __inline__ uae_u32 do_get_mem_long(uae_u32 *a)
 {
