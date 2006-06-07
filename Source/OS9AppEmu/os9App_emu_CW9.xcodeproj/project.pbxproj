@@ -116,8 +116,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		477F459C0A31C24F001898B3 /* os9App_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
-		477F45A40A31C24F001898B3 /* a.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = a.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		477F459C0A31C24F001898B3 /* os9App_mach */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = os9App_mach; sourceTree = BUILT_PRODUCTS_DIR; };
 		477F45A80A31C24F001898B3 /* cpuemu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpuemu.c; path = UAE68emulator/cpuemu.c; sourceTree = SOURCE_ROOT; };
 		477F45A90A31C24F001898B3 /* cpustbl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpustbl.c; path = UAE68emulator/cpustbl.c; sourceTree = SOURCE_ROOT; };
 		477F45AA0A31C24F001898B3 /* cpudefs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpudefs.c; path = UAE68emulator/cpudefs.c; sourceTree = SOURCE_ROOT; };
@@ -244,13 +243,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		477F45A10A31C24F001898B3 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -271,8 +263,7 @@
 		477F458C0A31C24F001898B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				477F459C0A31C24F001898B3 /* os9App_xcode */,
-				477F45A40A31C24F001898B3 /* a.app */,
+				477F459C0A31C24F001898B3 /* os9App_mach */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -607,13 +598,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		477F459E0A31C24F001898B3 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -633,27 +617,8 @@
 			);
 			name = "OS9AppEmu Mach-O";
 			productName = "OS9AppEmu Mach-O";
-			productReference = 477F459C0A31C24F001898B3 /* os9App_xcode */;
+			productReference = 477F459C0A31C24F001898B3 /* os9App_mach */;
 			productType = "com.apple.product-type.tool";
-		};
-		477F45A30A31C24F001898B3 /* NoTarget */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 47E824480A3496AB00DBC0A5 /* Build configuration list for PBXNativeTarget "NoTarget" */;
-			buildPhases = (
-				477F459E0A31C24F001898B3 /* Headers */,
-				477F459F0A31C24F001898B3 /* Sources */,
-				477F45A00A31C24F001898B3 /* Resources */,
-				477F45A10A31C24F001898B3 /* Frameworks */,
-				477F45A20A31C24F001898B3 /* Rez */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = NoTarget;
-			productName = NoTarget;
-			productReference = 477F45A40A31C24F001898B3 /* a.app */;
-			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -667,7 +632,6 @@
 			projectDirPath = "";
 			targets = (
 				477F459B0A31C24F001898B3 /* OS9AppEmu Mach-O */,
-				477F45A30A31C24F001898B3 /* NoTarget */,
 			);
 		};
 /* End PBXProject section */
@@ -680,24 +644,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		477F45A00A31C24F001898B3 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXRezBuildPhase section */
 		477F459A0A31C24F001898B3 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		477F45A20A31C24F001898B3 /* Rez */ = {
 			isa = PBXRezBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -750,13 +700,6 @@
 				4700A4270A337FEB00A75463 /* cpustbl.c in Sources */,
 				4700A4290A33801700A75463 /* newcpu.c in Sources */,
 				4700A42A0A33802100A75463 /* support.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		477F459F0A31C24F001898B3 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -885,109 +828,6 @@
 			};
 			name = Default;
 		};
-		47E824490A3496AB00DBC0A5 /* Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_ALTIVEC_EXTENSIONS = NO;
-				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_REUSE_STRINGS = YES;
-				GCC_SHORT_ENUMS = YES;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
-				GCC_WARN_UNKNOWN_PRAGMAS = NO;
-				GCC_WARN_UNUSED_PARAMETER = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
-				OTHER_CFLAGS = (
-					"-fno-inline",
-					"-malign-mac68k",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = a;
-				REZ_SCRIPT_TYPE = Roman;
-				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				ZERO_LINK = YES;
-			};
-			name = Development;
-		};
-		47E8244A0A3496AB00DBC0A5 /* Deployment */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_ALTIVEC_EXTENSIONS = NO;
-				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_REUSE_STRINGS = YES;
-				GCC_SHORT_ENUMS = YES;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
-				GCC_WARN_UNKNOWN_PRAGMAS = NO;
-				GCC_WARN_UNUSED_PARAMETER = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
-				OTHER_CFLAGS = (
-					"-fno-inline",
-					"-malign-mac68k",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = a;
-				REZ_SCRIPT_TYPE = Roman;
-				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				ZERO_LINK = NO;
-			};
-			name = Deployment;
-		};
-		47E8244B0A3496AB00DBC0A5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_ALTIVEC_EXTENSIONS = NO;
-				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_REUSE_STRINGS = YES;
-				GCC_SHORT_ENUMS = YES;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
-				GCC_WARN_UNKNOWN_PRAGMAS = NO;
-				GCC_WARN_UNUSED_PARAMETER = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
-				OTHER_CFLAGS = (
-					"-fno-inline",
-					"-malign-mac68k",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = a;
-				REZ_SCRIPT_TYPE = Roman;
-				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
-		};
 		47E8244D0A3496AB00DBC0A5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1021,16 +861,6 @@
 				47E824450A3496AB00DBC0A5 /* Development */,
 				47E824460A3496AB00DBC0A5 /* Deployment */,
 				47E824470A3496AB00DBC0A5 /* Default */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
-		};
-		47E824480A3496AB00DBC0A5 /* Build configuration list for PBXNativeTarget "NoTarget" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				47E824490A3496AB00DBC0A5 /* Development */,
-				47E8244A0A3496AB00DBC0A5 /* Deployment */,
-				47E8244B0A3496AB00DBC0A5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
