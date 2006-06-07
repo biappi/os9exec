@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/05/16 13:12:06  bfo
+ *    Use "Pipe_NReady"
+ *
  *    Revision 1.20  2006/02/19 16:28:56  bfo
  *    'Is_PtoC' visible from ouside / PtoC + thread support added
  *
@@ -557,13 +560,15 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_pascal
 
 
+  /*
   static os9err int_pcall( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
     if (!err) err= int_pcall_call();
     return    err;
   } // int_pcall
-
+  */
+  
 
   static os9err int_pentominos( ushort pid, int argc, char** argv )
   { 
