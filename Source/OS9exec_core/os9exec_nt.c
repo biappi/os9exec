@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2006/06/02 19:00:25  bfo
+ *    g_ipAddr ulong => char*
+ *
  *    Revision 1.52  2006/06/01 21:02:50  bfo
  *    g_ipAddr added / printf things commented out
  *
@@ -693,38 +696,46 @@ void get_hw()
 /* must be done before linking "init" module */
 /* and this will be done earlier now */
 {
-	#ifdef macintosh
-      hw_site= "Mac";
+  #ifdef macintosh
+    hw_site= "Mac";
      
+    #ifdef __INTEL__
+      hw_name= "IntelMac XCode"; platform= "x86";
+    #else
       #ifdef powerc
         platform= "PPC";
         
         #if   defined USE_CLASSIC
-          hw_name= "PowerMac Classic";       
+          hw_name= "PowerMac Classic";
         #elif defined USE_CARBON
-          hw_name= "PowerMac Carbon";      
+          hw_name= "PowerMac Carbon";
         #elif defined __MACH__
-          hw_name= "PowerMac Mach-O";       
+          #ifdef __GNUC__ 
+            hw_name= "PowerMac XCode";
+          #else
+            hw_name= "PowerMac CW Mach";
+          #endif
         #else
           hw_name= "PowerMac ???";    
         #endif
       #else
         hw_name= "Apple Macintosh"; platform= "68k";
       #endif
-      
-    #elif defined windows32
-      hw_site= "PC";
-	    hw_name= "Windows - PC"; platform= "Windows";
-	  
-    #elif defined linux
-      hw_site= "PC";
-	    hw_name= "Linux - PC";   platform= "Linux";
-       
-    #else
-    /* unknown */
-      hw_site= "?";
-	    hw_name= "?";            platform= "?";
     #endif
+      
+  #elif defined windows32
+    hw_site= "PC";
+	hw_name= "Windows - PC"; platform= "Windows";
+	  
+  #elif defined linux
+    hw_site= "PC";
+	hw_name= "Linux - PC";   platform= "Linux";
+       
+  #else
+  /* unknown */
+    hw_site= "?";
+	hw_name= "?";            platform= "?";
+  #endif
 } /* get_hw */
 
 
@@ -1289,7 +1300,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     /* Sign-on message */
      upo_printf( "\n" );
     upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
-    upho_printf( "Copyright (C) 2005 Lukas Zeller / Beat Forster\n" );
+    upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
     upho_printf( "This program is distributed under the terms of\n" ); 
     upho_printf( "       the GNU General Public License         \n" );
     upho_printf( "\n" );
