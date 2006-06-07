@@ -44,6 +44,18 @@
   typedef unsigned int uint;
 #endif
 
+/* XCode does not know about macintosh */
+#if !defined macintosh && defined __MACH__
+  #define    macintosh
+  #define    powerc
+  #define    UNIX
+  #define    USE_UAEMU
+  
+  // Support Intel Macs
+  #ifndef __BIG_ENDIAN__
+    #define __INTEL__
+  #endif
+#endif
 
 #ifdef USE_UAEMU
     /* include file os9_uae.h */
