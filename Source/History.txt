@@ -1303,7 +1303,10 @@
           06-06-01  Bfo     Some signedness warnings of GCC 4.0 eliminated
           06-06-01  Bfo     'printf' things commented out
           06-06-01  Bfo     g_ipAddr variable added (preparations)
-          06-06-02  Bfo     Option -g activated  
+          06-06-02  Bfo     Option -g activated
+          06-06-05  Bfo     XCode adaptions for PPC Macs
+          06-06-06  Bfo     XCode adaptions for IntelMacs
+          06-06-07  Bfo     XCode projectfile added to CVS  
     3.32  06-??-??  Bfo
     ------------------- 
       
