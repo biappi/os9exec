@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/02/19 16:08:44  bfo
+ *    Some sytem definitons changes
+ *
  *    Revision 1.20  2005/07/15 22:24:00  bfo
  *    <math.h> / <unistd.h> and NULL adaptions for OS9exec/PtoC
  *
@@ -110,6 +113,16 @@
 #define OS9EXEC 1 
 
 
+/* XCode is MACH, but does not know about macintosh */
+#if !defined macintosh && defined __MACH__
+  #define macintosh
+  
+  // Support Intel Macs
+  #ifndef __BIG_ENDIAN__
+    #define __INTEL__
+  #endif
+#endif
+
 /* WINTEL can't be separated :-) */
 #ifdef __INTEL__
   // except for the "bright future"
@@ -141,10 +154,14 @@
 
 
 // Decide about the system
-#if !defined macintosh && !defined __INTEL__ && !defined linux
+#if !defined macintosh && !defined __INTEL__ && !defined __GNUC__
   /* make sure that this can also be compiled for MPW */
   /* when "macintosh" is not defined */
   #define macintosh
+#endif
+
+#if !defined powerc && defined __MACH__ && !defined __INTEL__
+  #define powerc
 #endif
 
 /* define a special label for 68k/MacOS9/Carbon software */
@@ -289,10 +306,13 @@ typedef struct dirent dirent_typ;
 
 #ifdef __MACH__
   #define  NULL 0L
-  #include <mw_stdarg.h>    // N.B. Not cdstarg!
   #include <stddef.h>
-  #include <cstdio>
-  #include <stat.h>
+  
+  #ifdef __MWERKS__
+	#include <mw_stdarg.h>    // N.B. Not cdstarg!
+    #include <cstdio>
+    #include <stat.h>
+  #endif
 #endif
 
 #if !defined linux && !defined __MACH__

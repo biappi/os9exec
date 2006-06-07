@@ -17,6 +17,10 @@
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
+  
+#if defined __MACH__ && defined __GNUC__ && !defined __BIG_ENDIAN__
+  #define __INTEL__
+#endif
 
 #ifndef _WIN32
 #ifndef __STDC__
@@ -111,7 +115,7 @@ struct utimbuf
 /* function definitions !                                 */
 #define REGPARAM2 REGPARAM
 
-#elif defined(linux)
+#elif defined(__GNUC__)
 /* linux also uses gcc */
 #define REGPARAM
 #define REGPARAM2
@@ -381,8 +385,8 @@ extern void closedir(DIR *);
 
 
 /* %%% LuZ: definitions to make UAE work with CW 5 Mac */
-#ifdef macintosh
-#if defined __MWERKS__
+#if defined macintosh  || defined __MACH__
+#if defined __MWERKS__ || defined __GNUC__
 
 //#include <io.h>
 //#include <direct.h>

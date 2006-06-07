@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2006/06/02 18:59:09  bfo
+ *    Option -g activated
+ *
  *    Revision 1.15  2006/06/01 21:04:39  bfo
  *    g_ipAddr things added
  *
@@ -287,8 +290,9 @@ void eAdvanceCursor(void)
       fflush(stdout);
     
     #elif defined macintosh
-      RotateCursor(3*32); /* will rotate now */
-      
+      #ifndef __INTEL__
+      //RotateCursor(3*32); /* will rotate now */
+      #endif
     #elif defined win_linux
       // sleep(1);
       

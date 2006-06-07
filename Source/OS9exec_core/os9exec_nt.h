@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2006/06/02 19:00:25  bfo
+ *    g_ipAddr ulong => char*
+ *
  *    Revision 1.43  2006/06/01 21:02:26  bfo
  *    g_ipAddr added
  *
@@ -168,6 +171,12 @@
 
 #ifdef THREAD_SUPPORT
   #include <types.h>
+#endif
+
+/* XCode does not know about macintosh */
+#if !defined macintosh && defined __MACH__
+  #define    macintosh
+  #define    powerc
 #endif
 
                 
@@ -340,7 +349,7 @@
 
 
 // omitted parameters (does not really work with gcc)
-#ifdef linux
+#ifdef __GNUC__
   #define _modeP_   ushort*      modeP
   #define _rp_      regs_type*   rp
   #define _pid_     ushort       pid

@@ -232,7 +232,7 @@ int memcmpy(void *foo, const void *bar, int len)
 #endif
 
 /* All the Win32 configurations handle this in od-win32/win32.c */
-#if !defined(_WIN32) && !defined(__MWERKS__) && !defined(linux)
+#if !defined _WIN32 && !defined __MWERKS__ && !defined __GNUC__
 
 #include <signal.h>
 
