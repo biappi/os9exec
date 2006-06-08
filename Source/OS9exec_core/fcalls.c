@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/06/02 18:58:37  bfo
+ *    Option -g activated
+ *
  *    Revision 1.34  2006/06/01 21:06:22  bfo
  *    g_ipAddr things added
  *
@@ -673,7 +676,7 @@ os9err OS9_F_Icpt( regs_type *rp, ushort cpid )
 {
     process_typ* cp= &procs[cpid];
 
-    cp->pd._sigvec= (char*) os9_long(rp->a[0]);  /* set address of intercept routine */
+    cp->pd._sigvec= (byte*) os9_long(rp->a[0]);  /* set address of intercept routine */
     cp->icpta6    =                  rp->a[6]; /* set data pointer for intercept routine */
     debugprintf(dbgProcess,dbgNorm,
       ("# F$Icpt: set intercept of pid=%d to pc=$%08lx, a6=$%08lx\n",
@@ -1619,16 +1622,16 @@ os9err OS9_F_CRC( regs_type *rp, _pid_ )
  * Output:  d1.l=updated CRC accumulator
  */
 {
-    if (rp->a[0]==0) {
-        /* add single 0 byte to CRC */
-        rp->d[1]=calc_crc("\0",1,rp->d[1]); /* update with one additional 0 byte */
-    }
-    else {
-        /* update CRC over given area */
-        rp->d[1]=calc_crc((byte*)rp->a[0],rp->d[0],rp->d[1]);
-    }
+  if (rp->a[0]==0) {
+    /* add single 0 byte to CRC */
+    rp->d[1]=calc_crc( (byte*)"\0", 1, rp->d[1]); /* update with one additional 0 byte */
+  }
+  else {
+    /* update CRC over given area */
+    rp->d[1]=calc_crc( (byte*)rp->a[0], rp->d[0], rp->d[1]);
+  } // if
 
-    return 0;
+  return 0;
 } /* OS9_F_CRC */
 
 

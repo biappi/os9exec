@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2006/06/01 15:17:48  bfo
+ *    Signedness adaptions (for gcc 4.0)
+ *
  *    Revision 1.11  2006/02/19 16:15:05  bfo
  *    Header changes for 2006
  *
@@ -774,7 +777,7 @@ os9err pCpos( _pid_, _spP_, ulong *posP )
 
 
 
-os9err pCready( _pid_, syspath_typ* spP, ulong *n )
+os9err pCready( _pid_, syspath_typ* spP, ulong* n )
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
 {
@@ -782,13 +785,13 @@ os9err pCready( _pid_, syspath_typ* spP, ulong *n )
     g_spP     = spP;
 
     if (gConsoleID>=TTY_Base) {
-        if (DevReadyTTY( n, gConsoleID )) return 0;
+        if (DevReadyTTY( (long*)n, gConsoleID )) return 0;
     }
     else { 
         #ifdef TERMINAL_CONSOLE
-          if (DevReady( n )) return 0;
+          if  (DevReady( (long*)n ))             return 0;
         #endif
-    }
+    } // if
     
     return os9error(E_NOTRDY);
 } /* pCready */

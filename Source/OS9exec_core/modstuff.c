@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/06/01 18:05:57  bfo
+ *    differences in signedness (for gcc4.0) corrected
+ *
  *    Revision 1.21  2006/02/19 16:14:12  bfo
  *    void* for MoveBlk
  *
@@ -1402,8 +1405,8 @@ void mod_crc( mod_exec* m )
     ulong modsize= os9_long(m->_mh._msize);
     ulong crc;
 
-    crc= calc_crc( (byte*)m, modsize-4,0xFFFFFFFF );
-    crc= calc_crc( "\0",     1,        crc ); /* update with one additional 0 byte */
+    crc= calc_crc( (byte*)m,    modsize-4,0xFFFFFFFF );
+    crc= calc_crc( (byte*)"\0", 1,        crc ); /* update with one additional 0 byte */
     crc=     ~crc; /* 1's complement */
 
     *((ulong*)((ulong)m+modsize-4))= os9_long(crc); /* assign now */

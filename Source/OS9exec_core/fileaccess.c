@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2006/05/27 00:13:22  bfo
+ *    makefile => 'MPS ' / 'TEXT'
+ *
  *    Revision 1.31  2006/05/26 01:30:19  bfo
  *    '.pch', '.r', '.x' are CWIE TEXT files now
  *
@@ -322,8 +325,8 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       #define READCHUNKSZ 200
     #else
       #ifndef MACOS9
-        byte *p;
-        char c;
+        char* p;
+        char  c;
       #endif
     #endif
       
@@ -331,8 +334,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       fpos_t tmp_pos;
     #endif
 
-    
-    
+      
     assert( buffer!=NULL );
 
     #ifdef MACFILES
@@ -412,14 +414,14 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       #else
         /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
         /* single char for now */
-        p=buffer;
+        p= buffer;
         cnt=0;
         while(cnt<*n) {
             if ((c=fgetc(spP->stream))==EOF) {
                 *n= cnt;
                 return cnt==0 ? os9error(E_EOF) : 0; /* return EOF only if on first char */
             }
-            *p++=c; /* save in the buffer */        
+            *p++= c; /* save in the buffer */        
             cnt++;
             if (c==CR) break; /* abort on CR */
         }
@@ -877,7 +879,7 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     if (spP->rawMode) {        /* rawmode allows only reading of 1st sector */
         spP->rw_sct = get_mem( STD_SECTSIZE );       /* for some info procs */
         spP->rawPos = 0;
-                     vn= &spP->rw_sct[31];
+                     vn= (char*)&spP->rw_sct[31];
         VolInfo( pp, vn );    /* this is the correct position */      
         
         #ifdef MACFILES
@@ -1256,10 +1258,10 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
-    byte   b= 0;
+    char   b= 0;
     ulong  n;
     ulong  p;
-    long   tmp_pos= 0;
+    ulong  tmp_pos= 0;
 
     #ifdef MACFILES
       OSErr oserr= SetEOF( spP->u.disk.u.file.refnum, (long)*sizeP );

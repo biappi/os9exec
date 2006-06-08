@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2006/05/16 13:07:34  bfo
+ *    scs>1 bug fixed
+ *
  *    Revision 1.45  2006/02/19 16:25:26  bfo
  *    printf commented out / reformatted
  *
@@ -304,7 +307,7 @@ static os9err ReadSector( rbfdev_typ* dev, ulong sectorNr,
     ulong   img      = dev->imgScts*sect;
     ulong   sectorLim= sectorNr + nSectors;   // upper limit
     ulong   blindNr, nBlinds;                 // not accessible sectors
-    long    cnt;
+    ulong   cnt;
 
 //  if (sectorNr==0) {
 //      debugprintf(dbgFiles,dbgDetail,("# RBF read  sector0\n"));
@@ -404,7 +407,7 @@ static os9err WriteSector( rbfdev_typ* dev, ulong sectorNr,
     ulong   img      = dev->imgScts*sect;
     ulong   sectorLim= sectorNr + nSectors;   // upper limit
     ulong   blindNr;                          // not accessible sectors
-    long    cnt;
+    ulong   cnt;
     byte    ee;
 
     /* take care of write and format protection */
@@ -734,7 +737,7 @@ static os9err RootLSN( _pid_, rbfdev_typ* dev, syspath_typ* spP, Boolean ignore 
         err= ReadSector( dev, 0,1,  dev->tmp_sct ); if (err) return err;
 
         /* get the sector size of the device */
-        cruz= (strcmp( &dev->tmp_sct[CRUZ_POS],Cruz_Str )==0);
+        cruz= (strcmp( (char*)&dev->tmp_sct[CRUZ_POS],Cruz_Str )==0);
         debugprintf(dbgFiles,dbgNorm,("# RootLSN: sectorsize %d %s\n", dev->sctSize, cruz?"(cruz)":"" ));
         
         if (cruz) {
@@ -818,10 +821,10 @@ static os9err Open_Image( ushort pid, rbfdev_typ* dev, ptype_typ type, char* pat
         err= syspath_seek   ( pid,  sp,  0 );                 if (err) break;
 
         /* Cruzli check */
-        if (strcmp( &bb[ CRUZ_POS ],Cruz_Str )!=0) { err= E_FNA; break; }
-        l= (ulong *)&bb[  TOT_POS ]; totScts= os9_long(*l) >> BpB;
-        w= (ushort*)&bb[ SECT_POS ]; sctSize= os9_word(*w);
-        if (sctSize==0)              sctSize= STD_SECTSIZE;
+        if (strcmp( (char*)&bb[ CRUZ_POS ],Cruz_Str )!=0) { err= E_FNA; break; }
+        l=        (ulong *)&bb[  TOT_POS ]; totScts= os9_long(*l) >> BpB;
+        w=        (ushort*)&bb[ SECT_POS ]; sctSize= os9_word(*w);
+        if (sctSize==0)                     sctSize= STD_SECTSIZE;
        
         imgScts= iSize/sctSize;
       //upo_printf( "name1='%s' size=%d %d\n", pathname, imgScts, totScts );
@@ -2175,7 +2178,7 @@ static os9err AdaptAlloc_FD( syspath_typ* spP, ulong pos, ulong scs )
 
 
 
-static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer, 
+static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer, 
                  Boolean lnmode, Boolean wMode )
 /* this is the main read routine for the RBF emulator */
 /* it is working for read and readln */
@@ -2258,7 +2261,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
             if (maxc>remain) maxc= remain;
             n=  maxc / dev->sctSize;
             d=  maxc % dev->sctSize;
-            b=  buffer+boffs;
+            b=  (byte*)(buffer+boffs);
             
             if (sect+n>slim) n= slim-sect; /* not more than a segment   */
             if (n     > 255) n=       255; /* command for <=256 sectors */
@@ -2309,8 +2312,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, byte* buffer,
       //if (sect==0) upe_printf( "Write 0 raw=%d\n", spP->rawMode );
                 
         if (lnmode) {       /* depends on read or write */
-            if (wMode) { bb=      buffer; coff= boffs; }
-            else       { bb= spP->rw_sct; coff=  offs; }
+            if (wMode) { bb= (byte*)buffer; coff= boffs; }
+            else       { bb=   spP->rw_sct; coff=  offs; }
 
             for (ii=coff; ii<coff+maxc; ii++) {
                 if (bb[ii]==CR) { done= true; maxc= ii-coff+1; break; }
@@ -2519,7 +2522,7 @@ static os9err Access_DirEntry( rbfdev_typ* dev, ulong dfd,  ulong fd,
     spP= &syspaths[sp];
     
     while (true) {               dir_len= DIRENTRYSZ; /* read 1 dir entry */
-            err= DoAccess( spP, &dir_len, (byte*)&dir_entry, false,false );
+            err= DoAccess( spP, &dir_len, (char*)&dir_entry, false,false );
                                      LastCh_Bit7( dir_entry.name,  false );
         if (err) {
             if (err!=E_EOF)              break;
@@ -2534,7 +2537,7 @@ static os9err Access_DirEntry( rbfdev_typ* dev, ulong dfd,  ulong fd,
             *deptr= spP->u.rbf.currPos;
             Fill_DirEntry               ( &dir_entry, fill, fd   );
                                  dir_len= DIRENTRYSZ;
-            err= DoAccess( spP, &dir_len, (byte*)&dir_entry, false,true ); 
+            err= DoAccess( spP, &dir_len, (char*)&dir_entry, false,true ); 
             break;
         }
     } /* loop */
@@ -2738,7 +2741,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     
     /* this is the recursion loop for directory entries */
     while (true) {               dir_len= DIRENTRYSZ; /* read 1 dir entry */
-            err= DoAccess( spP, &dir_len, (byte*)&dir_entry, false,false ); 
+            err= DoAccess( spP, &dir_len, (char*)&dir_entry, false,false ); 
         if (err) {
             if (err==E_EOF) {           /* do not create new sub paths !! */
                 if (cre && strcmp( p,"" )==0) {            /* create it ? */
@@ -2905,8 +2908,8 @@ os9err pRchd( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
     char         tmp[OS9PATHLEN];
     
       /* get current default path */
-    if (exedir) { xV= &cp->x.dev; xD= &cp->x.lsn; curpath= cp->x.path; }
-    else        { xV= &cp->d.dev; xD= &cp->d.lsn; curpath= cp->d.path; }
+    if (exedir) { xV= (short*)&cp->x.dev; xD= (long*)&cp->x.lsn; curpath= cp->x.path; }
+    else        { xV= (short*)&cp->d.dev; xD= (long*)&cp->d.lsn; curpath= cp->d.path; }
         
     err=     usrpath_open( pid,&path, fRBF, pathname,*modeP); if (err) return err;
         spP= get_syspathd( pid, cp->usrpaths[path] );
