@@ -116,7 +116,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		477F459C0A31C24F001898B3 /* os9App_mach */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = os9App_mach; sourceTree = BUILT_PRODUCTS_DIR; };
+		477F459C0A31C24F001898B3 /* os9App_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		477F45A80A31C24F001898B3 /* cpuemu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpuemu.c; path = UAE68emulator/cpuemu.c; sourceTree = SOURCE_ROOT; };
 		477F45A90A31C24F001898B3 /* cpustbl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpustbl.c; path = UAE68emulator/cpustbl.c; sourceTree = SOURCE_ROOT; };
 		477F45AA0A31C24F001898B3 /* cpudefs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpudefs.c; path = UAE68emulator/cpudefs.c; sourceTree = SOURCE_ROOT; };
@@ -263,7 +263,7 @@
 		477F458C0A31C24F001898B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				477F459C0A31C24F001898B3 /* os9App_mach */,
+				477F459C0A31C24F001898B3 /* os9App_xcode */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -617,7 +617,7 @@
 			);
 			name = "OS9AppEmu Mach-O";
 			productName = "OS9AppEmu Mach-O";
-			productReference = 477F459C0A31C24F001898B3 /* os9App_mach */;
+			productReference = 477F459C0A31C24F001898B3 /* os9App_xcode */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -710,8 +710,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = (
-					ppc,
 					i386,
+					ppc,
 				);
 				COPY_PHASE_STRIP = NO;
 				GCC_ALTIVEC_EXTENSIONS = NO;
@@ -831,6 +831,10 @@
 		47E8244D0A3496AB00DBC0A5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = (
+					i386,
+					ppc,
+				);
 				GCC_OPTIMIZATION_LEVEL = 3;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
