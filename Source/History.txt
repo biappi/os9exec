@@ -1306,7 +1306,8 @@
           06-06-02  Bfo     Option -g activated
           06-06-05  Bfo     XCode adaptions for PPC Macs
           06-06-06  Bfo     XCode adaptions for IntelMacs
-          06-06-07  Bfo     XCode projectfile added to CVS  
+          06-06-07  Bfo     XCode projectfile added to CVS
+          06-06-08  Bfo     The rest of the signedness warnings of GCC 4.0 eliminated      
     3.32  06-??-??  Bfo
     ------------------- 
       
