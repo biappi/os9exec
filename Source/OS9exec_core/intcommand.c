@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/06/07 16:12:41  bfo
+ *    PCall things switched off
+ *
  *    Revision 1.21  2006/05/16 13:12:06  bfo
  *    Use "Pipe_NReady"
  *
@@ -560,14 +563,14 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_pascal
 
 
-  /*
+  #ifdef PTOC_FULL
   static os9err int_pcall( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
     if (!err) err= int_pcall_call();
     return    err;
   } // int_pcall
-  */
+  #endif
   
 
   static os9err int_pentominos( ushort pid, int argc, char** argv )
@@ -703,8 +706,10 @@ cmdtable_typ commandtable[] =
   { "definit",       int_definit,    "PtoC definit"    },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
-//{ "pascal",        int_pascal,     "PtoC pascal"     },
-//{ "pcall",         int_pcall,      "PtoC pcall"      },
+  #ifdef PTOC_FULL
+    { "pascal",      int_pascal,     "PtoC pascal"     },
+    { "pcall",       int_pcall,      "PtoC pcall"      },
+  #endif 
   { "pentominos",    int_pentominos, "PtoC pentominos" },
   { "printenv",      int_printenv,   "PtoC printenv"   },
   { "ptoc",          int_ptoc,       "PtoC ptoc"       },
