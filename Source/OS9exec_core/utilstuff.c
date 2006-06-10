@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2006/05/16 13:11:20  bfo
+ *    Linux full path name adaption
+ *
  *    Revision 1.42  2006/02/20 21:40:31  bfo
  *    no echo for Linux /term ; cTime/cDate assignment implented in a clean way
  *
@@ -2208,7 +2211,6 @@ char* PStateStr( process_typ* cp )
         case pSleeping: nam="pSleeping"; break;
         case pWaiting : nam="pWaiting";  break;
         case pSysTask : nam="pSysTask";  break;
-    //  case pIntUtil : nam="pIntUtil";  break;
         case pWaitRead: nam="pWaitRead"; break;
         default       : nam="unknown";
     } // switch
@@ -2284,9 +2286,11 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
            || ustrcmp(os9path,SerialLineA)==0 /* ts1 */
            || ustrcmp(os9path,SerialLineB)==0 /* ts2 */
           
+            #ifndef linux
            || (os9path[0]==PSEP &&
-               os9path[1]=='t' && atoi(&os9path[2])>= 1 && /* /t1 ../t49 */
-                                  atoi(&os9path[2])<VModBase)
+               os9path[1]=='t'  && atoi(&os9path[2])>= 1 && /* /t1 ../t49 */
+                                   atoi(&os9path[2])<VModBase)
+            #endif
           #endif
           ) { type= fCons; break; }
 
