@@ -1307,7 +1307,11 @@
           06-06-05  Bfo     XCode adaptions for PPC Macs
           06-06-06  Bfo     XCode adaptions for IntelMacs
           06-06-07  Bfo     XCode projectfile added to CVS
-          06-06-08  Bfo     The rest of the signedness warnings of GCC 4.0 eliminated      
+          06-06-08  Bfo     The rest of the signedness warnings of GCC 4.0 eliminated
+          
+          06-06-10  Bfo     t1..t49 no longer visible for Linux
+          06-06-10  Bfo     PTOC_FULL defines included
+          06-06-10  Bfo     Some isIntUtil debugging made invisble
     3.32  06-??-??  Bfo
     ------------------- 
       
