@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2006/06/07 16:07:03  bfo
+ *    XCode / IntelMacs supported now
+ *
  *    Revision 1.44  2006/06/02 19:00:25  bfo
  *    g_ipAddr ulong => char*
  *
@@ -461,6 +464,7 @@ typedef struct {
 /* pipe */
 #define SAFETY           2
 #define DEFAULTPIPESZ 4096+SAFETY
+#define DEFAULTPTYSZ   256+SAFETY
 #define MINPIPESZ       90
 
 
@@ -850,7 +854,6 @@ typedef enum {
             pSleeping, 
             pWaiting, 
             pSysTask, 
-          //pIntUtil,
             pWaitRead 
         } pstate_typ;
 
