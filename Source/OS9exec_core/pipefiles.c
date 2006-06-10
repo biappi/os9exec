@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2006/06/01 18:05:57  bfo
+ *    differences in signedness (for gcc4.0) corrected
+ *
  *    Revision 1.11  2006/05/16 13:15:12  bfo
  *    Named pipes are supported now (including "dir -e /pipe)
  *
@@ -498,12 +501,12 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
         }
         else {
             /* ...so wait for some consumer to empty buffer */
-            if (procs[currentpid].isIntUtil)
-              printf( "%d goto systemtask %d\n", currentpid, cp->state==pSysTask ); /* %bfo% */
+          //if (procs[currentpid].isIntUtil)
+          //  printf( "%d goto systemtask %d\n", currentpid, cp->state==pSysTask ); /* %bfo% */
             
             if (cp->state!=pSysTask) {
-                if (cp->isIntUtil || procs[pid].isIntUtil) 
-                  printf( "ALARM 1\n" );
+              //if (cp->isIntUtil || procs[pid].isIntUtil) 
+              //  printf( "ALARM 1\n" );
                 set_os9_state( pid, pSysTask ); /* goto systask */
                 cp->systask_offs= 0; /* by default */
             }
@@ -651,8 +654,8 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
         }
         else {
             /* ...so wait for writing end of pipe to send more data */
-            if (cp->isIntUtil || procs[pid].isIntUtil) 
-              printf( "ALARM 2\n" );
+          //if (cp->isIntUtil || procs[pid].isIntUtil) 
+          //  printf( "ALARM 2\n" );
             set_os9_state( pid, pSysTask ); /* stay in (or enter) systask */
             cp->systask     = rd_func;
             cp->systaskdataP= (void*)spP;

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2006/06/07 16:10:52  bfo
+ *    "PowerMac/IntelMac XCode" added
+ *
  *    Revision 1.53  2006/06/02 19:00:25  bfo
  *    g_ipAddr ulong => char*
  *
@@ -1464,15 +1467,15 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		if (cp->state==pSysTask) {
 			arbitrate=true; /* allow arbitration by default after sysTask execution */
 	
-			if (cp->isIntUtil) 
-    	  printf( "%d was ?", currentpid ); /* %bfo% */
+          //if (cp->isIntUtil) 
+    	  //  printf( "%d was ?", currentpid ); /* %bfo% */
 
 			/* --- execute system task function */
 				  cp->oerr= (cp->systask)(cpid,cp->systaskdataP,crp);
 			if (cp->oerr!=0) set_os9_state( cpid, pActive ); /* on error, continue with task execution anyway */
 			if (cp->state==pActive) {
-			  if (cp->isIntUtil) 
-    	    printf( "%d was2 ?", currentpid ); /* %bfo% */
+              //if (cp->isIntUtil) 
+    	      //  printf( "%d was2 ?", currentpid ); /* %bfo% */
 
 				/* process gets active again, report errors to OS9 programm */
 				if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
@@ -1487,26 +1490,26 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		
  		else if (cp->state==pActive   ||
  		         cp->state==pWaitRead) {
- 			if    (cp->state==pActive ||
- 			       cp->way_to_icpt) {
+          if    (cp->state==pActive ||
+ 			     cp->way_to_icpt) {
       //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
       //  printf( "%d %d Alarmstufe 1\n", cpid,currentpid ); /* %bfo% */
     	    
-				/* --- go execute OS9 code until next trap or exception */
-				/* %%% for low-level calling interface debug: Debugger(); */
-				if (cp->isIntUtil)
-				  printf( "%d MEGA ALARM\n", currentpid ); /* %bfo% */
-				  
-        #ifdef THREAD_SUPPORT
-          if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
-        #endif
+      /* --- go execute OS9 code until next trap or exception */
+      /* %%% for low-level calling interface debug: Debugger(); */
+      //if (cp->isIntUtil)
+      //  printf( "%d MEGA ALARM\n", currentpid ); /* %bfo% */
+		
+            #ifdef THREAD_SUPPORT
+              if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+            #endif
         
-				res= llm_os9_go(crp);
+            res= llm_os9_go(crp);
 				
-				#ifdef THREAD_SUPPORT
-          if (ptocThread) pthread_mutex_lock  ( &sysCallMutex );
-          currentpid= cpid;
-        #endif
+            #ifdef THREAD_SUPPORT
+              if (ptocThread) pthread_mutex_lock  ( &sysCallMutex );
+              currentpid= cpid;
+            #endif
 
 		    cp->way_to_icpt= false; /* now it is done */
 
@@ -1547,29 +1550,29 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
           //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
     	  //  printf( "%d %d Alarmstufe 3", cpid,currentpid ); /* %bfo% */
 			
-			/* --- now handle trap */
-			if (cp->vector!=0) {
-				if (!TCALL_or_Exception( cp, crp, cpid )) continue;
-			}
-			else {
-				/* TRAP0 = OS-9 system call called */
-				arbitrate=false; /* disallow arbitration by default */
+          /* --- now handle trap */
+          if (cp->vector!=0) {
+            if (!TCALL_or_Exception( cp, crp, cpid )) continue;
+          }
+          else {
+            /* TRAP0 = OS-9 system call called */
+            arbitrate=false; /* disallow arbitration by default */
 
-				debug_comein( cpid,crp );
+            debug_comein( cpid,crp );
 				
     	/* --- Alarm handling */
-    				aa= alarm_queue[0];
-        if (aa!=NULL) {
-    			if (GetSystemTick()>=aa->due) {     aNew= 0; /* must be zero ! */
+                aa= alarm_queue[0];
+            if (aa!=NULL) {
+              if (GetSystemTick()>=aa->due) {     aNew= 0; /* must be zero ! */
        			if (aa->cyclic) A_Make( aa->pid, &aNew, aa->signal, aa->ticks, true );
-   					send_signal           ( aa->pid,        aa->signal ); /* renew it */
-       			A_Remove( aa ); /* and remove the old one */
+                send_signal           ( aa->pid,        aa->signal ); /* renew it */
+       		    A_Remove( aa ); /* and remove the old one */
     		  } /* if */
-    	  } /* if */
+            } /* if */
    
 			 // ----------------------
-      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-      //  printf( "%d %d Alarmstufe 4a\n", cpid,currentpid ); /* %bfo% */
+          //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
+          //  printf( "%d %d Alarmstufe 4a\n", cpid,currentpid ); /* %bfo% */
 
 				    async_area= true; 
 				if (async_pending) sig_mask( cpid,0 ); /* disable signal mask */
@@ -1609,10 +1612,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 					else {
 						cp->way_to_icpt= false;   /* now the way to icpt changes */
 						
-						if (procs[cp->icpt_pid].isIntUtil)
-						  printf( "%d interceptli %d\n", currentpid, cp->icpt_signal ); /* %bfo% */
-						else 
-  						currentpid= cp->icpt_pid; /* continue as this process */
+                      //if (procs[cp->icpt_pid].isIntUtil)
+					  //  printf( "%d interceptli %d\n", currentpid, cp->icpt_signal ); /* %bfo% */
+
+                        if (!procs[cp->icpt_pid].isIntUtil)
+  						  currentpid= cp->icpt_pid; /* continue as this process */
 					}
 		    } /* if cwti */
 						

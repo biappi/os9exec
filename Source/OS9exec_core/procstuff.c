@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2006/06/01 21:03:29  bfo
+ *    printf things commented out
+ *
  *    Revision 1.29  2006/06/01 18:05:57  bfo
  *    differences in signedness (for gcc4.0) corrected
  *
@@ -577,8 +580,8 @@ os9err send_signal(ushort spid, ushort signal)
   cp->icpt_pid   = spid;    /* keep it save */
   cp->icpt_signal= signal;
   
-  if (procs[cp->icpt_pid].isIntUtil)
-    printf( "%d wer sendet denn da %d\n", currentpid, signal ); /* %bfo% */
+//if (procs[cp->icpt_pid].isIntUtil)
+//  printf( "%d wer sendet denn da %d\n", currentpid, signal ); /* %bfo% */
         
   /* first, wakeup process, if sleeping */
   if (sigp->state==pSleeping) {
@@ -656,9 +659,9 @@ os9err send_signal(ushort spid, ushort signal)
       /* execution will continue in intercept routine */
     }
     else {
-      if (sigp->isIntUtil) { 
-        printf( "%d abortli\n", currentpid );  /* %bfo% */
-      } // if
+    //if (sigp->isIntUtil) { 
+    //  printf( "%d abortli\n", currentpid );  /* %bfo% */
+    //} // if
 
       /* abort process */
       debugprintf(dbgProcess,dbgNorm,("# send_signal=%d => pid=%d has no icpt routine, so it will be killed\n",
@@ -786,8 +789,8 @@ void do_arbitrate( void )
   } // if
     
   cp= &procs[cpid];
-  if (cp->isIntUtil)
-    printf( "%d nicht gut !!\n", currentpid ); /* %bfo% */
+//if (cp->isIntUtil)
+//  printf( "%d nicht gut !!\n", currentpid ); /* %bfo% */
 
   if (!arbitrate) {
     if (cp->state==pSysTask ||                 /* we need aritration or we'll get stuck in systasks */
