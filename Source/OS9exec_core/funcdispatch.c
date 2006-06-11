@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/02/19 16:31:45  bfo
+ *    Thread support added
+ *
  *    Revision 1.19  2005/07/15 22:20:13  bfo
  *    unistd.h implemented only here for MACH
  *
@@ -619,8 +622,8 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
 
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
-      if (currentpid!=pid)
-        printf( "%d %d GRAUSAM\n", currentpid, pid );
+    //if (currentpid!=pid)
+    //  printf( "%d %d GRAUSAM\n", currentpid, pid );
         
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     } // if

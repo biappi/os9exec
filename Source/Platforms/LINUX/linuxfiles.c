@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.2  2006/02/19 23:50:16  bfo
+ *    Header changed for 2006
+ *
  *    Revision 1.1  2005/06/30 11:00:36  bfo
  *    Moved to the platform dependent things
  *
@@ -218,12 +221,12 @@ void CheckDir( DIR* d )
     while (true) {
         dEnt= readdir( d ); if (dEnt==NULL) break;
         pos = telldir( d );
-        printf( "%08x '%s'\n", pos, dEnt->d_name );
+      //printf( "%08x '%s'\n", pos, dEnt->d_name );
     }
     
     seekdir( d,0 );
     pos = telldir( d );
-    printf( "%08x EOF\n", pos );
+  //printf( "%08x EOF\n", pos );
 } /* CheckDir */
 
 
