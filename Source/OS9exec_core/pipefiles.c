@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2006/06/10 10:23:26  bfo
+ *    Some isIntUtil debugging made invisible
+ *
  *    Revision 1.12  2006/06/01 18:05:57  bfo
  *    differences in signedness (for gcc4.0) corrected
  *
@@ -404,12 +407,12 @@ static void PipePutc( pipechan_typ* p, char c )
 } /* PipePutC */
 
 
-static void Reactivate( ushort pid, process_typ* cp )
+static void Reactivate( ushort pid, process_typ* cp, const char* callingProc )
 {
   if (cp->state!=pWaitRead &&       /* this statement costed me 2 days debugging !! */
       cp->state!=pWaiting)          /* and this one another 1.5 days !!! */
    // cp->state!=pIntUtil)          /* ... don't ask me about this ... */
-    set_os9_state( pid, pActive );  /* re-activate */
+    set_os9_state( pid, pActive, callingProc );  /* re-activate */
 } /* Reactvate */
 
 
@@ -490,26 +493,26 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     }
 
     /* check how things go on */
+  //if (remaining || cp->state==pSysTask) printf( "FULL remain=%d pid=%d state=%d\n", remaining, pid, cp->state ); 
     if (remaining) {
         /* caller wants to write more... */
         if (spP->linkcount<2 && spP->name[0]==0) {
             /* ...but no one else will read it, so end things now (unnamed pipes only) */
             debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: aborting pipe write with %ld total bytes written and E_WRITE\n",p->bwritten));
-          //set_os9_state( pid, pActive ); /* re-activate */
-            Reactivate( pid, cp );
+            Reactivate( pid, cp, "Reactivate pWriteSysTaskExe (disconnect)" );
             return os9error(E_WRITE);   /* pipe is broken */
         }
         else {
-            /* ...so wait for some consumer to empty buffer */
-          //if (procs[currentpid].isIntUtil)
-          //  printf( "%d goto systemtask %d\n", currentpid, cp->state==pSysTask ); /* %bfo% */
+            /* ... so wait for some consumer to empty buffer */
+            //if (procs[currentpid].isIntUtil)
+            //  printf( "%d goto systemtask %d\n", currentpid, cp->state==pSysTask ); /* %bfo% */
             
             if (cp->state!=pSysTask) {
               //if (cp->isIntUtil || procs[pid].isIntUtil) 
               //  printf( "ALARM 1\n" );
-                set_os9_state( pid, pSysTask ); /* goto systask */
+                set_os9_state( pid, pSysTask, "pWriteSysTaskExe" ); /* goto systask */
                 cp->systask_offs= 0; /* by default */
-            }
+            } // if
                 
             cp->systask= wr_func;
             cp->systaskdataP= (void *) spP;
@@ -518,14 +521,8 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     }
     else {
         /* done, return to caller */
-        Reactivate( pid, cp );
-        
-        /*
-        if (cp->state!=pWaitRead &&
-            cp->state!=pWaiting)
-            set_os9_state( pid, pActive ); // re-activate
-        */
-        
+        Reactivate( pid, cp, "Reactivate pWriteSysTaskExe" );
+
         *lenP= p->bwritten; /* number of bytes written to pipe in that I/O call */
         debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: pipe write successful, %ld total bytes written\n",p->bwritten));
         /* go on */     
@@ -585,9 +582,10 @@ os9err pPwriteln( ushort pid, syspath_typ* spP, ulong *n, char* buffer )
     return pWriteSysTaskExe( pid,spP, n,buffer, true,  (systaskfunc_typ)pWriteSysTaskLn );
 } /* pPwriteln */
 
-        
+
+/* <syW>: if true, it is already in SysTask write mode */
 static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP, 
-                               ulong *lenP, char* buffer, Boolean rdln, systaskfunc_typ rd_func )
+                               ulong *lenP, char* buffer, Boolean rdln, Boolean syW, systaskfunc_typ rd_func )
 {
     ulong         numready,remaining,bytes,nn;
     byte*         buf;
@@ -639,6 +637,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
     if (!rdln && p->bread>0) remaining= 0; /* don't wait in normal read mode, when got at least 1 char */
 
     /* check how things go on */
+  //if (remaining || cp->state==pSysTask) printf( "READ remain=%d pid=%d state=%d\n", remaining, pid, cp->state ); 
     if (remaining) {
         /* caller wants more... */
         if (spP->linkcount<=p->consumers || p->consumers<=0) { /* eof condition must be checked !! */
@@ -646,7 +645,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
             debugprintf(dbgFiles,dbgDetail,("# pReadSysTaskExe: aborting pipe read with %ld total bytes read%s\n",
                                                p->bread, p->bread==0 ? " and E_EOF" : ""));
           //set_os9_state( pid, pActive ); /* re-activate, finish I$Read(Ln) now */
-            Reactivate( pid, cp );
+            if (!syW) Reactivate( pid, cp, "Reactivate pReadSysTaskExe (disconnect)" );
             p->consumers--; /* One waiting consumer less */
             if    (p->bread==0) return os9error(E_EOF); /* pipe is empty */
             *lenP= p->bread; /* there was still something in the pipe */
@@ -656,7 +655,8 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
             /* ...so wait for writing end of pipe to send more data */
           //if (cp->isIntUtil || procs[pid].isIntUtil) 
           //  printf( "ALARM 2\n" );
-            set_os9_state( pid, pSysTask ); /* stay in (or enter) systask */
+            if (syW) printf( "ALARM double SysTask\n" );
+            set_os9_state( pid, pSysTask, "pReadSysTaskExe" ); /* stay in (or enter) systask */
             cp->systask     = rd_func;
             cp->systaskdataP= (void*)spP;
             /* leave it as systask and as consumer */
@@ -664,13 +664,7 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
     }
     else {
         /* done, return to caller */
-        Reactivate( pid, cp );
-        
-        /*
-        if (cp->state!=pWaitRead &&        // this statement costed me 2 days debugging !!
-            cp->state!=pWaiting)           // and this one another 1.5 days !!!
-            set_os9_state( pid, pActive ); // re-activate
-        */
+        if (!syW) Reactivate( pid, cp, "Reactivate pReadSysTaskExe" );
         
         *lenP= p->bread; /* number of bytes read from pipe in that I/O call */
         p->consumers--;  /* We are not a waiting consumer any more */
@@ -685,13 +679,13 @@ static os9err pReadSysTaskExe( ushort  pid, syspath_typ *spP,
 
 
 /* system task routines to complete pipe read request */    
-static os9err pReadSysTask  ( ushort pid, syspath_typ* spP, regs_type* rp )
+static os9err pReadSysTask( ushort pid, syspath_typ* spP, regs_type* rp )
 {   
     os9err err;
     char*  a0= (char*)(rp->a[0]);
     ulong  d1=         rp->d[1];
     
-    err= pReadSysTaskExe( pid,spP, &d1,a0, false, (systaskfunc_typ)pReadSysTask );
+    err= pReadSysTaskExe( pid,spP, &d1,a0, false, false, (systaskfunc_typ)pReadSysTask );
     rp->d[1]= d1;
     return err;
 } /* pReadSysTask */
@@ -702,7 +696,7 @@ static os9err pReadSysTaskLn( ushort pid, syspath_typ* spP, regs_type* rp )
     char* a0= (char*)(rp->a[0]);
     ulong d1=         rp->d[1];
     
-    err= pReadSysTaskExe( pid,spP, &d1,a0, true,  (systaskfunc_typ)pReadSysTaskLn );
+    err= pReadSysTaskExe( pid,spP, &d1,a0, true,  false, (systaskfunc_typ)pReadSysTaskLn );
     rp->d[1]= d1;
     return err;
 } /* pReadSysTaskLn */
@@ -741,7 +735,9 @@ static os9err ShowPipeDir( syspath_typ* spP, char* buffer )
 /* read from pipe buffer */
 os9err pPread( ushort pid, syspath_typ* spP, ulong *n, char* buffer )
 {
-  pipechan_typ* p= spP->u.pipe.pchP;
+  Boolean       syW;
+  process_typ*  cp= &procs[pid];
+  pipechan_typ* p = spP->u.pipe.pchP;
     
   if (spP->mode & 0x80) { // treat it as directory ?
     if (*n<DIRENTRYSZ) return E_EOF;
@@ -754,24 +750,28 @@ os9err pPread( ushort pid, syspath_typ* spP, ulong *n, char* buffer )
   debugprintf( dbgFiles,dbgDetail,("# pPread: requests %ld bytes\n",*n ));
   p->bread= 0;    /* start of new read request */
   p->consumers++; /* I'm now a consumer, too */
-   
+
   /* system task routine will do the rest */
-  return pReadSysTaskExe( pid,spP, n,buffer, false, (systaskfunc_typ)pReadSysTask );
+  syW= cp->state==pSysTask;
+  return pReadSysTaskExe( pid,spP, n,buffer, false, syW, (systaskfunc_typ)pReadSysTask );
 } /* pPread */
         
     
 /* readln from pipe buffer */
 os9err pPreadln( ushort pid, syspath_typ *spP, ulong *n, char* buffer )
 {
-  pipechan_typ* p= spP->u.pipe.pchP;
-  if (p->broken) return E_EOF;
+  Boolean       syW;
+  process_typ*  cp = &procs[pid];
+  pipechan_typ* p  = spP->u.pipe.pchP;
+  if           (p->broken) return E_EOF;
     
   debugprintf( dbgFiles,dbgDetail,("# pPreadln: requests %ld bytes\n",*n ));
   p->bread=0;     /* start of new read request */
   p->consumers++; /* I'm now a consumer, too */
 
   /* system task routine will do the rest */
-  return pReadSysTaskExe( pid,spP, n,buffer, true,  (systaskfunc_typ)pReadSysTaskLn );
+  syW= cp->state==pSysTask;
+  return pReadSysTaskExe( pid,spP, n,buffer, true, syW, (systaskfunc_typ)pReadSysTaskLn );
 } /* pPreadln */
         
 
@@ -910,9 +910,7 @@ os9err pPsetsz( _pid_, syspath_typ* spP, ulong *sizeP )
 
 
 
-
 /* ------------------------- packet manager routines --------- */
-
 os9err pKopen( ushort pid, syspath_typ* spP, _modeP_, char* pathname )
 {
     os9err        err;  
@@ -1122,14 +1120,14 @@ os9err pKlock( ushort pid, _spP_, ulong *d0, ulong *d1)
     spX= procs[pid].usrpaths[up];
                        spPX= get_syspath( pid,spX ); 
     strcpy           ( spPX->name, pty );
-    getPipe     ( pid, spPX, DEFAULTPIPESZ );
+    getPipe     ( pid, spPX, DEFAULTPTYSZ );
     *d0= retword           ( up ); 
     
     err= usrpath_new( pid,  &up, fTTY ); if (err) return err;
     spY= procs[pid].usrpaths[up];
                        spPY= get_syspath( pid,spY ); 
     strcpy           ( spPY->name, tty );
-    getPipe     ( pid, spPY, DEFAULTPIPESZ );
+    getPipe     ( pid, spPY, DEFAULTPTYSZ );
     err= pSCFopt( pid, spPY, (byte*)&spPY->opt );    /* default console options */
     spPY->term_id=          newPty+TTY_Base; /* compatible to serial sub system */
     InstallTTY       ( spPY,newPty+TTY_Base );
@@ -1216,7 +1214,7 @@ os9err ConnectPTY_TTY( ushort pid, syspath_typ* spP )
     }
 
     if (!found) {
-        getPipe( pid, spP, DEFAULTPIPESZ );
+        getPipe( pid, spP, DEFAULTPTYSZ );
 
         for (k=1; k<MAXSYSPATHS; k++) {
                 spK= &syspaths[k]; /* is there already a tty with the same name ? */
