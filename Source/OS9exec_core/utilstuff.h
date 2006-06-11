@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/05/16 13:11:20  bfo
+ *    Linux full path name adaption
+ *
  *    Revision 1.25  2006/02/19 15:52:52  bfo
  *    Header changed to 2006
  *
@@ -101,7 +104,7 @@ int  ustrncmp( const char* s1,const char* s2, ushort n );
 
 
 void os9_long_inc ( unsigned int* a, ulong increment );
-void set_os9_state( ushort cpid, pstate_typ state );
+void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc );
 
 os9err host2os9err( OSErr hosterr, ushort suggestion );
 os9err c2os9err   ( int   cliberr, ushort suggestion );

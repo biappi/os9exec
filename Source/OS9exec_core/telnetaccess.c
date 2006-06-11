@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/06/01 15:17:15  bfo
+ *    Signedness adaptions (for gcc 4.0)
+ *
  *    Revision 1.8  2006/02/19 15:28:50  bfo
  *    Header changed to 2006
  *
@@ -122,14 +125,14 @@ ulong WriteCharsToPTY( char* buffer, ulong n, int consoleID, Boolean do_lf )
       ttydev_typ*  mco= &ttydev[consoleID-TTY_Base];
 
       if (cp->state==pWaitRead) {
-          set_os9_state( pid, cp->saved_state );
+          set_os9_state( pid, cp->saved_state, "WriteCharsToPTY" );
           n=                  cp->saved_cnt;
       } // if
 
 	  if (mco->holdScreen) {
           cp->saved_cnt  = n;
           cp->saved_state= cp->state;
-          set_os9_state( pid, pWaitRead );
+          set_os9_state( pid, pWaitRead, "WriteCharsToPTY" );
           return n;
 	  } // if
 	  

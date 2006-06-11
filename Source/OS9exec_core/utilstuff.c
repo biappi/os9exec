@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2006/06/10 10:21:21  bfo
+ *    t1..t49 no longer visible for Linux
+ *
  *    Revision 1.43  2006/05/16 13:11:20  bfo
  *    Linux full path name adaption
  *
@@ -268,11 +271,14 @@ void os9_long_inc( unsigned int* a, ulong increment )
 
 
 
-void set_os9_state( ushort cpid, pstate_typ state )
+void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc )
 /* convert the state into OS-9 notation */
 {
     process_typ* cp= &procs[cpid];
     procid*      pd= &cp->pd;
+    
+    debugprintf(dbgTaskSwitch,dbgNorm,("#    state %d -> %d '%s'\n", 
+                                             cp->state, state, callingProc ));
     
             cp->state= state;
     switch (cp->state) {
@@ -281,7 +287,6 @@ void set_os9_state( ushort cpid, pstate_typ state )
         case pDead     : pd->_state = os9_word(0x9100); pd->_queueid = '-'; break;
         case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
         case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
-    //  case pIntUtil  : pd->_state = 0;                pd->_queueid = 'i'; break;
         case pSysTask  : pd->_state = 0;                pd->_queueid = 't'; break;
         case pWaitRead : pd->_state = os9_word(0xA000); pd->_queueid = 'r'; break;
         default        : pd->_state = 0;                pd->_queueid = '?';
@@ -1690,7 +1695,7 @@ ulong My_Ino( const char* pathname )
                   dEnt= ReadTDir( d );
               if (dEnt==NULL) break;
               if (ustrcmp(dEnt->d_name,q)==0) {
-                printf( "MyIno='%s'\n", p );
+              //printf( "MyIno='%s'\n", p );
                 FD_ID( NULL, p,dEnt, &ino, false,false );
                 break;
               }

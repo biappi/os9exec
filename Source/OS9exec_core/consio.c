@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2006/06/08 08:15:04  bfo
+ *    Eliminate causes of signedness warnings with gcc 4.0
+ *
  *    Revision 1.12  2006/06/01 15:17:48  bfo
  *    Signedness adaptions (for gcc 4.0)
  *
@@ -337,7 +340,7 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
     clearerr(stdin);    /* make sure we are not stuck with a Cmd-. */
     
     if (cp->state==pWaitRead) {
-        set_os9_state( pid, cp->saved_state );
+        set_os9_state( pid, cp->saved_state, "ConsRead" );
         cnt=                cp->saved_cnt;
     }
 
@@ -353,7 +356,7 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
                     
                 cp->saved_cnt  = cnt;
                 cp->saved_state= cp->state;
-                set_os9_state  ( pid, pWaitRead );
+                set_os9_state  ( pid, pWaitRead, "ConsRead" );
                 arbitrate= true;
             }
             break; 

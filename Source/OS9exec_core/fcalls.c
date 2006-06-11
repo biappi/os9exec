@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2006/06/08 08:15:04  bfo
+ *    Eliminate causes of signedness warnings with gcc 4.0
+ *
  *    Revision 1.35  2006/06/02 18:58:37  bfo
  *    Option -g activated
  *
@@ -527,12 +530,12 @@ os9err OS9_F_Event( regs_type *rp, ushort cpid )
                         maxV= rp->d[3];
                         
                         if (cp->state==pWaitRead)
-                            set_os9_state( cpid, cp->saved_state );
+                            set_os9_state( cpid, cp->saved_state, "OS9_F_Event" );
                         
                             err= evWait( evId, minV,maxV, &evValue );
                         if (err) {
                             cp->saved_state= cp->state;
-                            set_os9_state( cpid, pWaitRead );
+                            set_os9_state( cpid, pWaitRead, "OS9_F_Event" );
                         }
                         
                         rp->d[1]= evValue;
@@ -710,7 +713,7 @@ os9err OS9_F_RTE( _rp_, ushort cpid )
     }
     else {
         /* ok, terminate processing of intercept routine */
-        set_os9_state( cpid,   cp->rtestate );
+        set_os9_state( cpid,   cp->rtestate, "OS9_F_RTE" );
         debugprintf(dbgProcess,dbgNorm,("# F$RTE: end of intercept in pid=%d, signal was %d; state=%s\n",
                        cpid, os9_word(cp->pd._signal), PStateStr(cp) ));
         memcpy( (void*)&cp->os9regs, (void*)&cp->rteregs, sizeof(regs_type) ); /* restore regs */
@@ -728,7 +731,7 @@ os9err OS9_F_RTE( _rp_, ushort cpid )
             if (pds>0 && pds<=32) {
                 cp->os9regs.d[1]= pds;
 			          cp->os9regs.sr |= CARRY;
-                set_os9_state( cpid, pActive );  /* only for some cases */
+                set_os9_state( cpid, pActive, "OS9_F_RTE" );  /* only for some cases */
             }
             else arbitrate= true;
         } /* if pWaitRead */
@@ -1352,7 +1355,7 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
 
       cp->pd._cid= os9_word( newpid );                  /* this is the child */
       currentpid =           newpid;  /* continue execution in new process  */
-      set_os9_state        ( newpid, pActive ); /* make this process active */
+      set_os9_state        ( newpid, pActive, "OS9_F_Fork" ); /* make this process active */
     } // if
         
     arbitrate= true;
@@ -1361,7 +1364,7 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
   if  (err) {
     /* -- save exit code */
     close_usrpaths( newpid );
-    set_os9_state ( newpid, pUnused ); /* unused again because of error */
+    set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); /* unused again because of error */
     np->exiterr= err;
   } // if
             
@@ -1492,7 +1495,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
           retword(rp->d[0])= k; /* ID of dead child */
           retword(rp->d[1])= procs[k].exiterr; /* exit error of child */
           debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
-          set_os9_state( k, pUnused );
+          set_os9_state( k, pUnused, "OS9_F_Wait" );
           return 0; /* process already died, no need to wait */
         }
         else {
@@ -1509,7 +1512,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
       retword(rp->d[1])= 0; /* no error */
                         
       debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
-      set_os9_state( cpid, pWaiting ); /* put myself to wait state */
+      set_os9_state( cpid, pWaiting, "OS9_F_Wait" ); /* put myself to wait state */
       if (!cp->isIntUtil) currentpid= activeChild; /* activate that child */
       
       arbitrate= true;
@@ -1551,7 +1554,7 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     CheckInputBuffers(); /* make shure that special chars like
                             CtrlC/CtrlE/XOn/XOff will be handled */         
 
-    set_os9_state( cpid, pSleeping ); /* status is sleeping now */
+    set_os9_state( cpid, pSleeping, "OS9_F_Sleep" ); /* status is sleeping now */
 
     if (sleep_x==0) {
         /* --- put process to indefinite sleep */

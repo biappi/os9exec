@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/06/01 18:05:57  bfo
+ *    differences in signedness (for gcc4.0) corrected
+ *
  *    Revision 1.34  2006/02/19 16:10:34  bfo
  *    Some comments switched off again
  *
@@ -605,7 +608,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
     *lenP= 0; /* how many bytes read ? 0 at the beginning */
     do {
         if (net->bsize==0) { /* buffer is currently empty */
-            if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
+            if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state, "netRead" );
             HandleEvent(); /* allow cooperative multitasking */
        
                 err= netReadBlock( pid,net, &nBytes );
@@ -614,7 +617,7 @@ static os9err netRead( ushort pid, syspath_typ* spP, ulong *lenP,
                   return E_EOF;
             
                 cp->saved_state= cp->state;
-                set_os9_state( pid, pWaitRead );
+                set_os9_state( pid, pWaitRead, "netRead" );
                 return E_NOTRDY;
             } /* if */
                 
@@ -889,7 +892,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
       return E_UNKSVC;
     #endif
     
-    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
+    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state, "pNlisten" );
 
     #if defined powerc && !defined __MACH__
       OTMemzero( &net->call,   sizeof(TCall) );
@@ -913,7 +916,7 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
 
     if (err) {
         cp->saved_state= cp->state;
-        set_os9_state( pid, pWaitRead );
+        set_os9_state( pid, pWaitRead, "pNlisten" );
         return E_NOTRDY;
     } /* if */
     
@@ -1106,7 +1109,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     #endif
     
 
-    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state );
+    if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state, "pNaccept" );
 
     #ifdef MACOS9
               state= OTGetEndpointState( net->ep );
@@ -1120,7 +1123,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
       if (state!=T_INCON) {
           cp->saved_state= cp->state;
-          set_os9_state( pid, pWaitRead );
+          set_os9_state( pid, pWaitRead, "pNaccept" );
           return E_NOTRDY;
       } /* if */
     
@@ -1148,7 +1151,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
           epNew= accept( net->ep, (__SOCKADDR_ARG)&name, (unsigned int*)&len );
       if (epNew==INVALID_SOCKET) {
           cp->saved_state= cp->state;
-          set_os9_state( pid, pWaitRead );
+          set_os9_state( pid, pWaitRead, "pNaccept" );
           return E_NOTRDY;
       } /* if */
           

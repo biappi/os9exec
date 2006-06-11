@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/06/10 10:22:55  bfo
+ *    Some isIntUtil debugging made invisible
+ *
  *    Revision 1.30  2006/06/01 21:03:29  bfo
  *    printf things commented out
  *
@@ -210,7 +213,7 @@ void init_processes()
         for (j=0; j<   7; j++) pd->FPExStk [j]= NULL;
      // for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* invisible at DevPak von 68K OS-9 V1.2 */
         
-        set_os9_state( k, pUnused );   /* invalidate this process  */
+        set_os9_state( k, pUnused, "init_process" );   /* invalidate this process  */
         procs[k].isIntUtil= false;
         prDBT[k]= 0;                   /* and also the table entry */
     } /* for */
@@ -385,7 +388,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             /* --- process descriptor prepared ok */
             debugprintf(dbgProcess,dbgNorm,("# new_process: created pid=%d\n",npid));
             /* --- its only here where we activate the process */
-            set_os9_state( npid, pDead ); /* correct state must be set afterwards, or process will be dead from start */
+            /* correct state must be set afterwards, or process will be dead from start */
+            set_os9_state( npid, pDead, "new_process" ); 
             *newpid=npid; /* return new PID */
             return 0;
         }
@@ -442,7 +446,7 @@ os9err kill_process( ushort pid )
         if        (kp->state!=pUnused &&
           os9_word(kp->pd._pid)==pid) {
                    kp->pd._pid= 0; /* earlier: MAXPROCESSES */
-            if    (kp->state==pDead) set_os9_state( k,pUnused );
+            if    (kp->state==pDead) set_os9_state( k, pUnused, "kill_process" );
             debugprintf(dbgProcess,dbgNorm,("# kill_process: orphaned child pid=%d\n",k));
         }
     }
@@ -457,13 +461,13 @@ os9err kill_process( ushort pid )
         parentid<MAXPROCESSES) {
     //upe_printf( "dead id=%d\n", pid );
       /* there is a parent process */
-      set_os9_state( pid, pDead ); /* keep it there until parent recognizes */
+      set_os9_state( pid, pDead, "kill_process" ); /* keep it there until parent recognizes */
       if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
       AssignNewChild( parentid,pid );
     }
     else {
     //upe_printf( "unused id=%d\n", pid );
-      set_os9_state( pid, pUnused ); /* there's no parent => invalidate descriptor */
+      set_os9_state( pid, pUnused, "kill_process" ); /* there's no parent => invalidate descriptor */
     } // if
     
     debugprintf(dbgProcess,dbgNorm,("# kill_process: process killed\n" ));
@@ -586,7 +590,7 @@ os9err send_signal(ushort spid, ushort signal)
   /* first, wakeup process, if sleeping */
   if (sigp->state==pSleeping) {
     debugprintf(dbgProcess,dbgNorm,("# send_signal: waking pid=%d from sleep\n",spid));
-    set_os9_state( spid, pActive );
+    set_os9_state( spid, pActive, "send_signal" );
     sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
     sigp->os9regs.sr &= ~CARRY; /* error-free return */
     sigp->way_to_icpt = true;   /* activate both */
@@ -637,9 +641,10 @@ os9err send_signal(ushort spid, ushort signal)
       memcpy( (void*)&sigp->rteregs, (void*)v, sizeof(regs_type) ); /* save all regs */
             
       /* signal causes wakeup */
-      if (sigp->state!=pWaitRead) set_os9_state( spid, pActive );   /* activate for all other cases */
+      /* activate for all other cases */
+      if (sigp->state!=pWaitRead) set_os9_state( spid, pActive, "send_signal" );
       sigp->rtestate= sigp->state;                                  /* save it, active after signal */
-      set_os9_state( spid, pActive );                               /* now activate it */
+      set_os9_state( spid, pActive, "send_signal" );                /* now activate it */
            
       sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
       sigp->os9regs.a[6]= sigp->icpta6;
@@ -899,7 +904,7 @@ void do_arbitrate( void )
         if (sprocess->wakeUpTick < GetSystemTick()) {
             sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
             sprocess->os9regs.sr &= ~CARRY; /* error-free return */
-          set_os9_state( spid, pActive ); break;
+          set_os9_state( spid, pActive, "do_arbitrate" ); break;
         } // if
 
         sleepingpid= spid; /* remember sleeping process */ 
@@ -938,8 +943,8 @@ void do_arbitrate( void )
       retword(cp->os9regs.d[0])=       deadpid;          /* ID of dead child */
       retword(cp->os9regs.d[1])= procs[deadpid].exiterr; /* exit error of child */
       debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate: waiting pid=%d gets active because child pid=%d is dead (exiterr=%d)\n",currentpid,deadpid,procs[deadpid].exiterr));
-      set_os9_state( deadpid,    pUnused );
-      set_os9_state( currentpid, pActive ); /* process is now active */
+      set_os9_state( deadpid,    pUnused, "do_arbitrate" );
+      set_os9_state( currentpid, pActive, "do_arbitrate" ); /* process is now active */
       cp->os9regs.sr &= ~CARRY; /* error-free return */
     } // if           
   }
@@ -1064,7 +1069,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     #ifdef INT_CMD
           cp->isIntUtil= isintcommand( mpath )>=0;
       if (cp->isIntUtil) {
-        set_os9_state( newpid, pActive  );
+        set_os9_state( newpid, pActive, "prepFork" );
       //set_os9_state( newpid, pIntUtil ); /* internal utility */
         cp->mid= 0;                 /* assign "OS9exec" module */
 

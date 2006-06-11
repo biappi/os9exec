@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2006/06/10 10:24:54  bfo
+ *    Some isIntUtil debugging made invisible
+ *
  *    Revision 1.54  2006/06/07 16:10:52  bfo
  *    "PowerMac/IntelMac XCode" added
  *
@@ -560,36 +563,33 @@ static os9err prepParams(mod_exec *theModule, char **argv,int argc, char**envp, 
  */
 static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulong memplus, ushort prior)
 {
-	ulong   psiz;
-	byte*   pap;
-	os9err  err;
-	ushort  newpid;
-	ushort  mid;
-	ushort  numpaths;
-//Boolean intCmd;
+  ulong   psiz;
+  byte*   pap;
+  os9err  err;
+  ushort  newpid;
+  ushort  mid;
+  ushort  numpaths;
 	
-	#ifdef MPW
-	  numpaths=3; /* use the 3 standard paths for MPW */
-	#else
-	  numpaths=1; /* use only 1 path at the beginning with TERMINAL_CONSOLE */
-	#endif        
+  #ifdef MPW
+    numpaths=3; /* use the 3 standard paths for MPW */
+  #else
+	numpaths=1; /* use only 1 path at the beginning with TERMINAL_CONSOLE */
+  #endif        
 	
-	/* father of first process is now 0 (bfo) */
-	err= new_process( 0, &newpid,numpaths      ); if (err) return err;
-	err= link_load  (     newpid,toolname,&mid ); if (err) return err;
+  /* father of first process is now 0 (bfo) */
+  err= new_process( 0, &newpid,numpaths      ); if (err) return err;
+  err= link_load  (     newpid,toolname,&mid ); if (err) return err;
 	
-	err= prepParams( os9mod(mid), argv,argc, envp, &psiz, &pap ); if (err) return err;
+  err= prepParams( os9mod(mid), argv,argc, envp, &psiz, &pap ); if (err) return err;
 	
 										  /* group/user 0.0 are set for the first process */
-	err= prepFork( newpid,toolname, mid,pap,psiz,memplus,numpaths, 0,0, prior );
-	release_mem( pap ); /* return arg buffer anyway, alloc as pointer */
+  err= prepFork( newpid,toolname, mid,pap,psiz,memplus,numpaths, 0,0, prior );
+  release_mem( pap ); /* return arg buffer anyway, alloc as pointer */
 	
   if (!err) { /* make this process ready to execute */
-//if (!intCmd) {   
-      currentpid= newpid;    /* make this process current */
-   		set_os9_state( currentpid, pActive ); /* now active */
-//  }
-	} // if
+    currentpid= newpid;    /* make this process current */
+    set_os9_state( currentpid, pActive, "prepLaunch" ); /* now active */
+  } // if
 	
   return err;
 } /* prepLaunch */
@@ -1200,37 +1200,35 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   #endif
   
 
-	/* ---- win32 specific global init ------------------------------- */
+  /* ---- win32 specific global init ------------------------------- */
   #ifdef windows32
     // Avoid error popup (Retry/Abort)
     SetErrorMode(SEM_NOOPENFILEERRORBOX + SEM_FAILCRITICALERRORS);
   #endif
 
-	/* ---- create the kernel process -------------------------------- */
-	new_process( 0,&cpid, 0 ); /* get the kernel process */
-	cp=      &procs[cpid];
-	set_os9_state ( cpid, pSleeping ); /* to be compliant to real OS-9 */
-	cp->pd._prior= os9_word( 0xFFFF ); /* "  "      "     "    "    "  */
-	cp->mid      = 0;           /* take "OS9exec" as the kernel module */
+  /* ---- create the kernel process -------------------------------- */
+  new_process( 0,&cpid, 0 ); /* get the kernel process */
+  cp=      &procs[cpid];
+  set_os9_state ( cpid, pSleeping, "" ); /* to be compliant to real OS-9 */
+  cp->pd._prior= os9_word( 0xFFFF );     /* "  "      "     "    "    "  */
+  cp->mid      = 0;                      /* take "OS9exec" as the kernel module */
 
+  /* ---- assign startVolID/dirID ---------------------------------- */
+  #ifdef MACOS9
+            fs.vRefNum= 0; /* default path is my own path */
+            fs.parID  = 0;
+    strcpy( fs.name,"" );
+    c2pstr( fs.name );     /* it is pascal notation */
+
+    startVolID= fs.vRefNum;
+    startDirID= fs.parID; /* get default dir */
+  #endif
 	
-	/* ---- assign startVolID/dirID ---------------------------------- */
-	#ifdef MACOS9
-			  fs.vRefNum= 0; /* default path is my own path */
-			  fs.parID  = 0;
-	  strcpy( fs.name,"" );
-	  c2pstr( fs.name );     /* it is pascal notation */
+  #if defined MACTERMINAL && defined USE_CLASSIC
+    Install_AppleEvents(); /* do this as early as possible */
+  #endif
 
-	  startVolID= fs.vRefNum;
-	  startDirID= fs.parID; /* get default dir */
-	#endif
-	
-
-	#if defined MACTERMINAL && defined USE_CLASSIC
-	  Install_AppleEvents(); /* do this as early as possible */
-	#endif
-
-	#ifdef windows32
+  #ifdef windows32
     hStdin= GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleCtrlHandler( CtrlC_Handler, true );
     WindowTitle    ( &title,false ); /* adapt title line of DOS window */
@@ -1467,15 +1465,15 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		if (cp->state==pSysTask) {
 			arbitrate=true; /* allow arbitration by default after sysTask execution */
 	
-          //if (cp->isIntUtil) 
-    	  //  printf( "%d was ?", currentpid ); /* %bfo% */
+            //if (cp->isIntUtil) 
+    	    //  printf( "%d was ?", currentpid ); /* %bfo% */
 
 			/* --- execute system task function */
-				  cp->oerr= (cp->systask)(cpid,cp->systaskdataP,crp);
-			if (cp->oerr!=0) set_os9_state( cpid, pActive ); /* on error, continue with task execution anyway */
-			if (cp->state==pActive) {
-              //if (cp->isIntUtil) 
-    	      //  printf( "%d was2 ?", currentpid ); /* %bfo% */
+                cp->oerr= (cp->systask)(cpid,cp->systaskdataP,crp);
+            if (cp->oerr!=0) set_os9_state( cpid, pActive, "" ); /* on error, continue with task execution anyway */
+            if (cp->state==pActive) {
+                //if (cp->isIntUtil) 
+    	        //  printf( "%d was2 ?", currentpid ); /* %bfo% */
 
 				/* process gets active again, report errors to OS9 programm */
 				if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
@@ -1484,8 +1482,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 				else {
 					retword(crp->d[1])= cp->oerr;
 					crp->sr |= CARRY;
-				}
-			}			
+				} // if
+			} // if
 		} /* system task */
 		
  		else if (cp->state==pActive   ||
@@ -1644,12 +1642,12 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 						memcpy( (void*)&sigp->rteregs, (void*)&svd->r, sizeof(regs_type) );
 						         sigp->rtevector= svd->vector;
 						         sigp->rtefunc  = svd->func;
-						set_os9_state( spid, pActive );
+						set_os9_state( spid, pActive, "" );
 				  } // if
 
 					if (sigp->state==pWaiting &&     /* a signalled waiting process */
 						sigp->pd._sigvec!=0) {        /* will be active afterwards */
-						set_os9_state( spid, pActive );
+						set_os9_state( spid, pActive, "" );
 						sigp->rtestate=      pActive;
 				  } // if
 				} /* if (cwti) */
