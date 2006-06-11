@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/06/10 10:21:56  bfo
+ *    PTOC_FULL included
+ *
  *    Revision 1.22  2006/06/07 16:12:41  bfo
  *    PCall things switched off
  *
@@ -555,6 +558,7 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_info
 
 
+  #ifdef PTOC_FULL
   static os9err int_pascal( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
@@ -562,8 +566,6 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     return    err;
   } // int_pascal
 
-
-  #ifdef PTOC_FULL
   static os9err int_pcall( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
@@ -572,6 +574,14 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_pcall
   #endif
   
+
+  static os9err int_pento( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_pento_call();
+    return    err;
+  } // int_pento
+
 
   static os9err int_pentominos( ushort pid, int argc, char** argv )
   { 
@@ -710,6 +720,7 @@ cmdtable_typ commandtable[] =
     { "pascal",      int_pascal,     "PtoC pascal"     },
     { "pcall",       int_pcall,      "PtoC pcall"      },
   #endif 
+  { "pento",         int_pento,      "PtoC pento"      },
   { "pentominos",    int_pentominos, "PtoC pentominos" },
   { "printenv",      int_printenv,   "PtoC printenv"   },
   { "ptoc",          int_ptoc,       "PtoC ptoc"       },
