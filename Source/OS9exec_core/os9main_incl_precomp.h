@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/06/07 16:06:28  bfo
+ *    XCode / IntelMacs supported now
+ *
  *    Revision 1.21  2006/02/19 16:08:44  bfo
  *    Some sytem definitons changes
  *
@@ -287,7 +290,7 @@
     #endif
 
   #else
-    #define  MAX_PATH 1024
+  //#define  MAX_PATH 1024
     
     #ifndef __MACH__
       struct __dirstream {}; /* not visible */

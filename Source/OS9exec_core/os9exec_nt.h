@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2006/06/10 19:14:31  bfo
+ *    DEFAULTPTYSZ introduced
+ *
  *    Revision 1.45  2006/06/07 16:07:03  bfo
  *    XCode / IntelMacs supported now
  *
@@ -182,6 +185,10 @@
   #define    powerc
 #endif
 
+#ifdef __GNUC__
+  #define UNIX
+#endif
+
                 
 /* constants */
 /* ========= */
@@ -229,8 +236,8 @@
 #define MAX_PICTS         8 /* max number of picts to be displayed at /vmod display */
 #define MAXTRIES        100 /* max tries to delete a file */
 
-#ifdef macintosh
-  #define MAX_PATH     1024 /* for others already defined */
+#ifndef windows32
+  #define MAX_PATH     1024
 #endif
 
 /* maximum number of modules that can be linked (minus one for the main module itself */
