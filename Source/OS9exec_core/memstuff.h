@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/03/12 19:31:22  bfo
+ *    RealToStrN added
+ *
  *    Revision 1.9  2006/02/19 16:33:20  bfo
  *    Some PtoC routines are implemented here now
  *
@@ -58,6 +61,12 @@
  *
  *
  */
+
+#if defined __cplusplus && defined __GNUC__
+  typedef short Boolean;
+  #define true  1
+  #define false 0
+#endif
 
 
 #if !defined __cplusplus 
