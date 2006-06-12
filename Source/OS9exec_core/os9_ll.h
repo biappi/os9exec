@@ -39,9 +39,12 @@
 /* this is required to allow the use of original */
 /* "module.h" with its ulong definition on Linux */
 #ifdef linux
-  #undef __USE_MISC
+  #undef  __USE_MISC
   typedef unsigned long int ulong;
   typedef unsigned int uint;
+//typedef int OSErr;
+
+  #define USE_UAEMU
 #endif
 
 /* XCode does not know about macintosh */
@@ -58,15 +61,16 @@
 #endif
 
 #ifdef USE_UAEMU
-    /* include file os9_uae.h */
-    #include "sysconfig.h"
-    #include "sysdeps.h"
+  /* include file os9_uae.h */
+  #include "sysconfig.h"
+  #include "sysdeps.h"
 
-    #ifdef _in_uae_c
+  #ifdef _in_uae_c
     #define extern
-    #endif
-    
-#else
+  #endif
+#endif
+
+//#else
   #ifdef linux
     /* include file for empty interface */
     #include <sys/types.h>   /* according to Martin Gregorie's proposal */
@@ -74,7 +78,7 @@
     #include <stdarg.h>
     #include <time.h>
   #endif
-#endif
+//#endif
 
 
 #define CARRY      0x0001
