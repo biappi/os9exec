@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2006/06/11 22:02:32  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.44  2006/06/10 10:21:21  bfo
  *    t1..t49 no longer visible for Linux
  *
@@ -2279,9 +2282,11 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
             break;
         } /* if */
     
-        if  (ustrcmp (os9path,"/nil"   )==0) { type= fNIL;  break; }
-        if  (ustrncmp(os9path,"/pipe",5)==0) { type= fPipe; break; }
-        if  (ustrncmp(os9path,"/lp",3)==0) { type= fPrinter; break; }
+        if  (ustrcmp (os9path,"/nil"   )==0) { type= fNIL;     break; }
+        if  (ustrncmp(os9path,"/pipe",5)==0) { type= fPipe;    break; }
+        if  (ustrncmp(os9path,"/lp",  3)==0 ||
+             ustrcmp (os9path,"/p"     )==0 ||
+             ustrcmp (os9path,"/p1"    )==0) { type= fPrinter; break; }
 
         #ifdef TERMINAL_CONSOLE
           /* there is more than one serial device possible now */
@@ -2292,6 +2297,7 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
            || ustrcmp(os9path,SerialLineB)==0 /* ts2 */
           
             #ifndef linux
+           || (ustrcmp (os9path,"/t0") == 0)
            || (os9path[0]==PSEP &&
                os9path[1]=='t'  && atoi(&os9path[2])>= 1 && /* /t1 ../t49 */
                                    atoi(&os9path[2])<VModBase)
