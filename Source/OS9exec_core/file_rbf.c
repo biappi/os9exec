@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2006/06/08 08:15:04  bfo
+ *    Eliminate causes of signedness warnings with gcc 4.0
+ *
  *    Revision 1.46  2006/05/16 13:07:34  bfo
  *    scs>1 bug fixed
  *
@@ -212,6 +215,7 @@ os9err pRsize    ( ushort pid, syspath_typ*, ulong  *sizeP );
 os9err pRopt     ( ushort pid, syspath_typ*,                  byte* buffer );
 os9err pRnam     ( ushort pid, syspath_typ*,                  char* volname );
 os9err pRpos     ( ushort pid, syspath_typ*, ulong  *posP  );
+os9err pReof     ( ushort pid, syspath_typ* );
 os9err pRready   ( ushort pid, syspath_typ*, ulong  *n     );
 os9err pRgetFD   ( ushort pid, syspath_typ*, ulong  *maxbytP, byte* buffer );
 os9err pRgetFDInf( ushort pid, syspath_typ*, ulong  *maxbytP,
@@ -250,7 +254,7 @@ void init_RBF( fmgr_typ* f )
     gs->_SS_Opt  = (pathopfunc_typ)pRopt;
     gs->_SS_DevNm= (pathopfunc_typ)pRnam;
     gs->_SS_Pos  = (pathopfunc_typ)pRpos;
-    gs->_SS_EOF  = (pathopfunc_typ)pUnimp;    /* not used */
+    gs->_SS_EOF  = (pathopfunc_typ)pReof;
     gs->_SS_Ready= (pathopfunc_typ)pRready;
     gs->_SS_FD   = (pathopfunc_typ)pRgetFD;
     gs->_SS_FDInf= (pathopfunc_typ)pRgetFDInf;
@@ -3002,6 +3006,19 @@ os9err pRpos( _pid_, syspath_typ* spP, ulong *posP )
     return 0;
 } /* pRpos */
 
+
+os9err pReof( _pid_, syspath_typ* spP )
+/* get current file position <posP> */
+{
+    rbf_typ*    rbf= &spP->u.rbf;
+    rbfdev_typ* dev= &rbfdev[rbf->devnr];
+    Boolean   isEOF= rbf->currPos >= rbf->lastPos;
+    
+    debugprintf(dbgFiles,dbgNorm,("# RBF eof: '%s' %s\n", dev->name, isEOF ? "true":"false" ));
+    
+    if (isEOF) return os9error(E_EOF);
+    else       return 0;
+} /* pReof */
 
 
 /* get options for RBF file */
