@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/06/12 10:49:33  bfo
+ *    BOOLEAN def added for GNUC
+ *
  *    Revision 1.10  2006/03/12 19:31:22  bfo
  *    RealToStrN added
  *
@@ -101,6 +104,10 @@ os9err  os9free( ushort pid, void* membase, ulong memsz );
 Boolean StrToReal    ( float*  f, const char* s );
 Boolean StrToLongReal( double* f, const char* s );
 
+// missing "atoi" operation for "cclib", temporary placed here
+Boolean StrToInt     ( int*    i, const char* s );
+Boolean StrToShort   ( short*  i, const char* s );
+
 // missing "sprintf" operations for "cclib", temporary placed here
 void IntToStr  ( char* s, int    i );
 void IntToStrN ( char* s, int    i, int n );
@@ -114,9 +121,6 @@ void BoolToStrN( char* s, Boolean bo, int n );
 void RealToStr ( char* s, double d,        int res );
 void RealToStrN( char* s, double d, int n, int res );
 
-/*
-void RealToStrN( char* s, double d, int n, int res );
-*/
 
 #if defined __cplusplus
   } // end extern "C"

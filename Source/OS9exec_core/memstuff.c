@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2006/03/12 19:30:24  bfo
+ *    RealToStrN added
+ *
  *    Revision 1.17  2006/02/19 16:33:21  bfo
  *    Some PtoC routines are implemented here now
  *
@@ -639,7 +642,7 @@ os9err os9free( ushort pid, void* membase, ulong memsz )
 } /* os9free */
 
 
-static IsZero( const char* s )
+static IsZeroR( const char* s )
 {
   while (*s!=NUL) {
     if  (*s <'0' && *s >'9' && *s!='.' && 
@@ -648,19 +651,47 @@ static IsZero( const char* s )
   } // while
   
   return true;
-} // IsZero
+} // IsZeroR
 
 
-Boolean StrToReal( float* f, const char* s ) {
+static IsZeroI( const char* s )
+{
+  while (*s!=NUL) {
+    if  (*s <'0' && *s >'9' &&
+         *s!='-' && *s!='+') return false;
+    s++;
+  } // while
+  
+  return true;
+} // IsZeroI
+
+
+Boolean StrToReal( float* f, const char* s )
+{
   *f= atof( s );
-  return *f==0 && !IsZero( s );
+  return *f==0 && !IsZeroR( s );
 } // StrToReal
 
 
-Boolean StrToLongReal( double* d, const char* s ) {
+Boolean StrToLongReal( double* d, const char* s )
+{
   *d= atof( s );
-  return *d==0 && !IsZero( s );
+  return *d==0 && !IsZeroR( s );
 } // StrToLongReal
+
+
+Boolean StrToInt( int* i, const char* s )
+{
+  *i= atoi( s );
+  return *i==0 && !IsZeroI( s );
+} // StrToInt
+
+
+Boolean StrToShort( short* i, const char* s )
+{
+  *i= atoi( s );
+  return *i==0 && !IsZeroI( s );
+} // StrToShort
 
 
 // missing "sprintf" operations for "cclib", temporary placed here
