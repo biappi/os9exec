@@ -1320,6 +1320,9 @@
           06-06-12  Bfo     Some printing comments eliminated
           06-06-13  Bfo     /t0 added
           06-06-13  Bfo     /p and /p1 allowed as printer as well
+          06-06-14  Bfo     SS_EOF implementation added for RBF file manager
+          06-06-14  Bfo     d1 set correctly for SS_EOF
+          06-06-14  Bfo     StrToInt/StrToShort added
     3.32  06-??-??  Bfo
     ------------------- 
       
