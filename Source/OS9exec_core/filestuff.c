@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/05/16 13:14:09  bfo
+ *    pipeDir adaptions
+ *
  *    Revision 1.25  2006/02/19 16:16:50  bfo
  *    f->del (instead of f->delete)
  *
@@ -1687,7 +1690,7 @@ os9err syspath_getstat( ushort pid, ushort sp, ushort func,
         case SS_Opt    : err= (g->_SS_Opt   )( pid,spP,       *a );            break;
         case SS_DevNm  : err= (g->_SS_DevNm )( pid,spP,       *a );            break;
         case SS_Pos    : err= (g->_SS_Pos   )( pid,spP, d2       );            break;
-        case SS_EOF    : err= (g->_SS_EOF   )( pid,spP );                      break;
+        case SS_EOF    : err= (g->_SS_EOF   )( pid,spP );     *d1= 0;          break;
         case SS_Ready  : err= (g->_SS_Ready )( pid,spP, d1 ); arbitrate= true; break;
         case SS_FD     : err= (g->_SS_FD    )( pid,spP, d2,   *a );            break;
         case SS_FDInf  : err= (g->_SS_FDInf )( pid,spP, d2,d3,*a );            break;
