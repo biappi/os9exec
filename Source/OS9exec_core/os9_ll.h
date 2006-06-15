@@ -42,8 +42,11 @@
   #undef  __USE_MISC
   typedef unsigned long int ulong;
   typedef unsigned int uint;
-//typedef int OSErr;
 
+  #ifdef __cplusplus
+    typedef int OSErr;
+  #endif
+  
   #define USE_UAEMU
 #endif
 
