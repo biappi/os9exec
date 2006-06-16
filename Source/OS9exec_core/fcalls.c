@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2006/06/16 15:59:30  bfo
+ *    F$Exit for built-in later / avoid bad <sp> manipulation for built-in
+ *
  *    Revision 1.37  2006/06/11 22:06:45  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -840,34 +843,30 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
         pd._traps [k]= (byte*)os9_long((ulong)tp->trapmodule);
         pd._trpmem[k]= (byte*)os9_long((ulong)tp->trapmem);
         pd._trpsiz[k]= 0;
-    }
+    } // for
 
     /* get the list of the currently installed error trap handlers (LuZ) */ 
     for (k=0; k<NUMEXCEPTIONS; k++) {
-        ep = &cp->ErrorTraps[k];
+        ep= &cp->ErrorTraps[k];
         
-      //#if defined(windows32) && __MWERKS__ >= CW8_MWERKS
-         pd.except[k]= (byte*)os9_long( (ulong)ep->handleraddr );
-      //#else
-      //  pd._except[k]= (byte*)os9_long((ulong)ep->handleraddr);
-      //#endif
-        
-        pd._exstk [k]= (byte*)os9_long((ulong)ep->handlerstack);
-    }
+        pd.except[k]= (byte*)os9_long( (ulong)ep->handleraddr );        
+        pd._exstk[k]= (byte*)os9_long( (ulong)ep->handlerstack);
+    } // for
 
-   /* get the list of the currently opened paths */ 
-   for (k=0; k<MAXUSRPATHS; k++) {
+    /* get the list of the currently opened paths */ 
+    for (k=0; k<MAXUSRPATHS; k++) {
         pd._path[k] = os9_word(cp->usrpaths[k]);
     }
      
     /* ... and get the total size from the first segment */
     memsz=0;
+    
     for (k=0; k<MAXMEMBLOCKS; k++) {
         if                (cp->os9memblocks[k].base!=NULL) {
             pd._memimg[0] = (unsigned char *) os9_long((ulong)cp->os9memblocks[k].base);
             memsz+= cp->os9memblocks[k].size;
         }
-    }
+    } // for
     pd._blksiz[0]= os9_long(memsz);
     
         
