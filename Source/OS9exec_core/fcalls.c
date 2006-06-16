@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2006/06/11 22:06:45  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.36  2006/06/08 08:15:04  bfo
  *    Eliminate causes of signedness warnings with gcc 4.0
  *
@@ -160,8 +163,11 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
     process_typ*        cp= &procs[cpid];
     unsigned short exiterr= loword( rp->d[1] );
     
+    /* internal utilities will be killed on a higher level now */
+    /* because XCode will not allow to throw exception thru C context */
+    /*
     #ifdef PTOC_SUPPORT
-      /* -- kill internal command by exception */
+      // -- kill internal command by exception
       if (cp->isIntUtil) {
         // don't forget to open the mutex for this special case
         #ifdef THREAD_SUPPORT
@@ -171,6 +177,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
         throw_exception( exiterr ); // this is the only way to leave the program
       }
     #endif
+    */
   
     /* -- kill the process */
     cp->exiterr= exiterr;
@@ -1120,6 +1127,7 @@ os9err OS9_F_TLink( regs_type *rp, ushort cpid )
     traphandler_typ *tp;
     mod_trap *trapmodP;
     ulong *sp;
+    process_typ* cp= &procs[cpid];
     
         trapidx=rp->d[0]-1;
     if (trapidx>=NUMTRAPHANDLERS) return os9error(E_ITRAP); /* invalid trap code */
@@ -1138,12 +1146,14 @@ os9err OS9_F_TLink( regs_type *rp, ushort cpid )
             rp->a[1]= (ulong)trapmodP+os9_long(trapmodP->progmod._mexec);
          
             /* --- now modify stack and PC to return through trapinit routine to program */
-            sp=(ulong*)rp->a[7]; /* get current stack pointer as *ulong */
-            *(--sp)= os9_long(rp->pc); /* save PC pointing to instruction after F$TLink */
-            *(--sp)= 0; /* save two dummy null words */
-            *(--sp)= os9_long(rp->a[6]); /* save "caller's A6" */
-            rp->a[7]=(ulong)sp; /* update stack pointer */
-         
+            sp=(ulong*)rp->a[7];           // get current stack pointer as *ulong
+            if (!cp->isIntUtil) {          // workaround for built-in utilities: not really used
+              *(--sp)= os9_long(rp->pc);   // save PC pointing to instruction after F$TLink
+              *(--sp)= 0;                  // save two dummy null words
+              *(--sp)= os9_long(rp->a[6]); // save "caller's A6"
+              rp->a[7]=(ulong)sp;          // update stack pointer
+            } // if
+            
             /* --- modify registers to continue execution in traphandler's init routine */
             rp->pc=(ulong)trapmodP + os9_long(trapmodP->_mtrapinit);
             rp->a[6]=tp->trapmem+0x8000; /* set pointer to traphandler's data with offset */
