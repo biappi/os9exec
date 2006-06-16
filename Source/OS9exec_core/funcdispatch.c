@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/06/11 22:14:10  bfo
+ *    Some printing comments eliminated
+ *
  *    Revision 1.20  2006/02/19 16:31:45  bfo
  *    Thread support added
  *
@@ -575,10 +578,11 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
       currentpid= pid;
       
-      if (cp->state==pDead) {
-        if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
-        throw_exception( cp->exiterr );
-      } // if
+    /* %%% activate this later again !! */  
+    //if (cp->state==pDead) {
+    //  if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+    //  throw_exception( cp->exiterr );
+    //} // if
     } // if
   #endif
   
