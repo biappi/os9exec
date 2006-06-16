@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2006/06/12 10:52:09  bfo
+ *    MAX_PATH added
+ *
  *    Revision 1.46  2006/06/10 19:14:31  bfo
  *    DEFAULTPTYSZ introduced
  *
@@ -471,7 +474,7 @@ typedef struct {
 /* pipe */
 #define SAFETY           2
 #define DEFAULTPIPESZ 4096+SAFETY
-#define DEFAULTPTYSZ   256+SAFETY
+#define DEFAULTPTYSZ  2048+SAFETY
 #define MINPIPESZ       90
 
 
