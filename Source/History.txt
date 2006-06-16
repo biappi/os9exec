@@ -1323,6 +1323,11 @@
           06-06-14  Bfo     SS_EOF implementation added for RBF file manager
           06-06-14  Bfo     d1 set correctly for SS_EOF
           06-06-14  Bfo     StrToInt/StrToShort added
+          
+          06-06-16  Bfo     DEFAULTPTYSZ up to 2048 + safety (avoid deadlocking)
+          06-06-16  Bfo     Throw exception within C++ part
+          06-06-16  Bfo     Avoid bad (sp) access for internal utilities
+          06-06-16  Bfo     Use GCC_ONE_BYTE_BOOL = YES;  (project.pbxproj)
     3.32  06-??-??  Bfo
     ------------------- 
       
@@ -1340,6 +1345,7 @@
     -   Linux telnet close still quits emulator (recognition of end cond not correctly)
     -   "inetd" superdaemon is not yet running correctly.
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
+    -   Deadlocking MGR when too small DEFAULTPTYSZ 
 
    (+)  Take tty00/pty00 first (problems with arbitration)
    (+)  setime_Y2K version with param passing --> 1900
