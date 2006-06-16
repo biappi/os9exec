@@ -36,17 +36,25 @@ OS9exec expects them as "errno_adapted.h" and "procid_adapted.h"
 
 "errno_adapted.h"
 -----------------
-#if !defined(_ERRNO_H)                               ===> #if !defined(_ERRNO_ADAPTED_H)
-#define _ERRNO_H                                          #define _ERRNO_ADAPTED_H 
+( <errno> must be changed to <errno2>, as it clashes with the 
+  global errno of every compile environment )
 
-extern int errno;                                    ===> extern int errno2;
+
+           extern int errno;                                    
+
+    ===>   extern int errno2;
 
 
 
 
 "procid_adapted.h"
 ------------------
+( "_except" must be changed to "except", as it clashes with the 
+  Windows exception system )
 
-*_except[10], /* program error exception vectors */  ===>  *except[10], /* program error exception vectors */
+
+          *_except[10], /* program error exception vectors */  
+
+     ===>  *except[10], /* program error exception vectors */
 
  
