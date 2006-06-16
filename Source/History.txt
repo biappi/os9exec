@@ -1328,6 +1328,8 @@
           06-06-16  Bfo     Throw exception within C++ part
           06-06-16  Bfo     Avoid bad (sp) access for internal utilities
           06-06-16  Bfo     Use GCC_ONE_BYTE_BOOL = YES;  (project.pbxproj)
+          06-06-16  Bfo     Improved description of os9defs differences
+          06-06-16  Bfo     Early termination of 1st internal utilities
     3.32  06-??-??  Bfo
     ------------------- 
       

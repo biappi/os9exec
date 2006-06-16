@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2006/06/11 22:04:33  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.55  2006/06/10 10:24:54  bfo
  *    Some isIntUtil debugging made invisible
  *
@@ -1451,7 +1454,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
    		cp  = &procs[cpid]; /* pointer to procs   descriptor */
    		crp = &cp->os9regs; /* pointer to process' registers */
    		svd = &cp->savread; /* pointer to process' saved registers */
-		  cwti= false;
+		cwti= false;
+		if (cp->isIntUtil) break; /* for an int utility everything is done already */
 		
      	/* --- make sure MacOS gets its time, too */
      		my_tick= GetSystemTick();
