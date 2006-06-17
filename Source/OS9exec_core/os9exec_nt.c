@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.57  2006/06/16 22:33:37  bfo
+ *    Early termination of 1st internal utilities
+ *
  *    Revision 1.56  2006/06/11 22:04:33  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -339,10 +342,10 @@ char     strtUPath[OS9PATHLEN];   /* next higher than start path */
 #if defined win_unix
   ttydev_typ   main_mco;
   short	       gConsoleNLExpand  = true;
-  int   	     gConsoleID        =    0;
+  int          gConsoleID        =    0;
   syspath_typ* g_spP             = NULL;
-  int   	     gLastwritten_pid  =    0;
-  int		       gConsoleQuickInput= true;
+  int          gLastwritten_pid  =    0;
+  int	       gConsoleQuickInput= true;
   char         gTitle[OS9NAMELEN];
 #endif
 
@@ -360,12 +363,13 @@ Boolean in_recursion = false;
 int     dbgOut        = -1;
 int      without_pid  =  0;
 int     justthis_pid  =  0;
-Boolean quitFlag	    = false;
-Boolean userOpt		    = false;
+Boolean quitFlag	  = false;
+Boolean userOpt		  = false;
 
 Boolean ptocActive    = true;
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
+Boolean withTitle     = true; 
 
 Boolean logtiming     = true; /* syscall loging, used by int cmd "systime" */
 Boolean logtiming_disp= false;
@@ -709,7 +713,7 @@ void get_hw()
       hw_name= "IntelMac XCode"; platform= "x86";
     #else
       #ifdef powerc
-        platform= "PPC";
+        platform= "ppc";
         
         #if   defined USE_CLASSIC
           hw_name= "PowerMac Classic";
@@ -731,16 +735,16 @@ void get_hw()
       
   #elif defined windows32
     hw_site= "PC";
-	hw_name= "Windows - PC"; platform= "Windows";
+	hw_name= "Windows-PC"; platform= "x86";
 	  
   #elif defined linux
     hw_site= "PC";
-	hw_name= "Linux - PC";   platform= "Linux";
+	hw_name= "Linux-PC";   platform= "x86";
        
   #else
   /* unknown */
     hw_site= "?";
-	hw_name= "?";            platform= "?";
+	hw_name= "?";          platform= "?";
   #endif
 } /* get_hw */
 
@@ -819,22 +823,21 @@ static os9err GetStartPath( char* pathname )
 
 
 
-
 static void PathUp( char* p )
 {
-	char*    q= p+strlen(p)-2;
-	while   (q>p) {
-		if (*q==PATHDELIM) {
-			#ifdef macintosh
-			  q++;
-			#endif
+  char*  q= p+strlen(p)-2;
+  while (q>p) {
+    if (*q==PATHDELIM) {
+      #ifdef macintosh
+        q++;
+      #endif
 			   
-		    *q= NUL; 
-		    break; 
-		}
+      *q= NUL; 
+      break; 
+    } // if
 		
-		q--;
-	} /* while */
+    q--;
+  } // while
 } /* PathUp */
 
 
@@ -1147,12 +1150,12 @@ void os9exec_globinit(void)
     /* --- global environment initialisation --- */
   init_all_mem  ();        /* initialize memory handling */
   init_fmgrs    ();        /* initialize all the file manager objects */
-	init_processes();        /* no processes yet */
-	init_modules  ();        /* clear module handle list */
-	init_events   ();	       /* init OS-9 events */
-	init_alarms   ();		     /* init OS-9 alarms */
-	init_syspaths ();        /* prepare system paths, ready for usrpath print now */
-	init_L2       ();		     /* prepare the /L2 stuff */
+  init_processes();        /* no processes yet */
+  init_modules  ();        /* clear module handle list */
+  init_events   ();	       /* init OS-9 events */
+  init_alarms   ();		   /* init OS-9 alarms */
+  init_syspaths ();        /* prepare system paths, ready for usrpath print now */
+  init_L2       ();		   /* prepare the /L2 stuff */
 } /* os9exec_globinit */
 
    
@@ -1161,41 +1164,41 @@ void os9exec_globinit(void)
  * If toolname==NULL, the os9 program is loaded from 'OS9C' Id=0
  */
 ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp, 
-                   ulong memplus, ushort prior)
+                   ulong memplus, ushort prior )
 {
-	#define      ARB_RATE 10
+  #define      ARB_RATE 10
 
-	ushort       cpid, spid;
-	process_typ* cp;
-	regs_type*   crp;
-	save_type*   svd;
+  ushort       cpid, spid;
+  process_typ* cp;
+  regs_type*   crp;
+  save_type*   svd;
   process_typ* sigp;
-	ulong        lastspin, my_tick;
-	dir_type*    drP;
-	char*        errnam;
-	char*        errdesc;
+  ulong        lastspin, my_tick;
+  dir_type*    drP;
+  char*        errnam;
+  char*        errdesc;
   char*        argv_startup[2];
-	Boolean      cwti, last_arbitrate;
-	int          arb_cnt= 0;
-	char*		 my_toolname= (char*)toolname; /* do not change <toolname> directly */
-	alarm_typ*   aa;
-	ulong		 aNew; /* new alarm number for cyclic alarm */
-    int          ii;
+  Boolean      cwti, last_arbitrate;
+  int          arb_cnt= 0;
+  char*		   my_toolname= (char*)toolname; /* do not change <toolname> directly */
+  alarm_typ*   aa;
+  ulong		   aNew; /* new alarm number for cyclic alarm */
+  int          ii;
 	
-	#ifdef MACFILES
-	  FSSpec     fs;
+  #ifdef MACFILES
+    FSSpec     fs;
     CInfoPBRec cipb;
-	#else
-	  char* p;
-	  
-	  #ifdef windows32
-	    char title[255];
-	  #endif
-	#endif
-		
-	ulong    res;	    /* llm_os9_go result */
+  #else
+    char* p;
+  
+    #ifdef windows32
+      char title[255];
+    #endif
+  #endif
+	
+  ulong    res;	    /* llm_os9_go result */
   ushort   err= 0;  /* MPW Error */
-	OSErr    oserr;		/* Mac error */
+  OSErr    oserr;	/* Mac error */
 
   // Prepare the mutex
   #ifdef THREAD_SUPPORT
@@ -1238,11 +1241,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     SetConsoleTitle( &title );     	  
   #endif
   	
-    // some global init moved from here to os9exec_globinit() to allow them being
-    // called in os9main.c already	
+  // some global init moved from here to os9exec_globinit() to allow them being
+  // called in os9main.c already	
 	
-	interactivepid=  0;        /* send aborts to first process by default */
-	sig_queue.cnt =  0;        /* no signal pending at the beginning */
+  interactivepid=  0;        /* send aborts to first process by default */
+  sig_queue.cnt =  0;        /* no signal pending at the beginning */
 	
   #if defined windows32 || defined macintosh
     for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
@@ -1300,15 +1303,19 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     	argv= (char**)&argv_startup;
     } /* if */
 
-
+    withTitle= ustrcmp( my_toolname,"shell" )==0 ||
+               ustrcmp( my_toolname,"sh"    )==0;
+    
     /* Sign-on message */
-     upo_printf( "\n" );
-    upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
-    upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
-    upho_printf( "This program is distributed under the terms of\n" ); 
-    upho_printf( "       the GNU General Public License         \n" );
-    upho_printf( "\n" );
-
+    if (withTitle) {
+       upo_printf( "\n" );
+      upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
+      upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
+      upho_printf( "This program is distributed under the terms of\n" ); 
+      upho_printf( "       the GNU General Public License         \n" );
+      upho_printf( "\n" );
+    } // if
+    
    	/* prepare low-level magic, to allow using llm_xxx() routines */
 	    oserr=lowlevel_prepare();
 	if (oserr) {
@@ -1420,19 +1427,19 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   atexit(&cleanup);
 
   /* obtain package (os9exec) version */
-	BootLoader  ( cpid );
-	CheckStartup( cpid, my_toolname, &argc, argv );
+  BootLoader  ( cpid );
+  CheckStartup( cpid, my_toolname, &argc, argv );
 
   /* initialize spinning cursor */ 
   lastspin= GetSystemTick();
   eSpinCursor(0); /* reset cursor spinning */	
 
-	titles();
-
+  if (withTitle) titles();
+  
    /* init error tracking vars */
   totalMem= max_mem(); /* get startup memory */
-	lastpathparsed=NULL;
-	lastsyscall=0;
+  lastpathparsed=NULL;
+  lastsyscall=0;
 	
 	/* set-up MPW signal handling */
   #ifdef MPW
@@ -1440,11 +1447,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	  signal(SIGINT,&mpwSignalHandler); /* install handler */
   #endif
     
-	/* prepare initial process */
-	    cp->oerr= prepLaunch( my_toolname, argv,argc,envp, memplus,prior );
-	if (cp->oerr) goto mainabort; /* prepare for execution */
+  /* prepare initial process */
+	  cp->oerr= prepLaunch( my_toolname, argv,argc,envp, memplus,prior );
+  if (cp->oerr) goto mainabort; /* prepare for execution */
 		
-	debugprintf(dbgStartup,dbgNorm,("# main startup: Main module loaded & prepared for launch\n"));
+  debugprintf(dbgStartup,dbgNorm,("# main startup: Main module loaded & prepared for launch\n"));
 
 
 	/* now start running emulated OS9 tasks */
@@ -1796,8 +1803,8 @@ cleanup:
 /* Entry for old os9exec V1.14 style tools */
 ushort os9exec(int argc,char **argv,char **envp)
 {
-	/* execute default module (OS9C ID=0) with no extra memory */
-	return os9exec_nt( NULL, argc,argv,envp, 0, MYPRIORITY);
+  /* execute default module (OS9C ID=0) with no extra memory */
+  return os9exec_nt( NULL, argc,argv,envp, 0, MYPRIORITY );
 } /* os9exec */
 
 
