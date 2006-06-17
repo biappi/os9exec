@@ -26,6 +26,14 @@
 
 #include "luzstuff.h"
 
+#ifdef __GNUC__
+  typedef short Boolean;
+  #define true  1
+  #define false 0
+#endif
+
+extern Boolean withTitle;
+
 /* debug_out handling (Bfo) */
 typedef void (*dbg_func)(void);
 
@@ -137,7 +145,7 @@ static void build_cpufunctbl (void)
 			  : currprefs.cpu_compatible ? op_smalltbl_4
 			  : op_smalltbl_3);
 
-    write_log ("# Building CPU function table (%d %d %d).\n",
+    if (withTitle) write_log ("# Building CPU function table (%d %d %d).\n",
 	       currprefs.cpu_level, currprefs.cpu_compatible, currprefs.address_space_24);
 
     for (opcode = 0; opcode < 65536; opcode++)
@@ -234,32 +242,36 @@ void init_m68k (void)
 	}
     }
 #endif
-    write_log ("# Building CPU table for configuration: 68");
-    if (currprefs.address_space_24 && currprefs.cpu_level > 1)
+    if (withTitle) {
+      write_log ("# Building CPU table for configuration: 68");
+      
+      if (currprefs.address_space_24 && currprefs.cpu_level > 1)
         write_log ("EC");
-    switch( currprefs.cpu_level )
-    {
-    case 1:
-        write_log ("010");
-        break;
-    case 2:
-        write_log ("020");
-        break;
-    case 3:
-        write_log ("020/881");
-        break;
-    default:
-        write_log ("000");
-        break;
-    }
-    if (currprefs.cpu_compatible)
-        write_log (" (compatible mode)");
-    write_log ("\n");
-
+    
+      switch( currprefs.cpu_level )
+      {
+      case 1:
+          write_log ("010");
+          break;
+      case 2:
+          write_log ("020");
+          break;
+      case 3:
+          write_log ("020/881");
+          break;
+      default:
+          write_log ("000");
+          break;
+      }
+      if (currprefs.cpu_compatible)
+          write_log (" (compatible mode)");
+      write_log ("\n");
+    } // if
+    
     read_table68k ();
     do_merges ();
 
-    write_log ("# %d CPU functions\n", nr_cpuop_funcs);
+    if (withTitle) write_log ("# %d CPU functions\n", nr_cpuop_funcs);
 
     build_cpufunctbl ();
 }

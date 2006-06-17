@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/06/07 16:08:15  bfo
+ *    XCode / IntelMacs supported now
+ *
  *    Revision 1.16  2006/06/02 18:59:09  bfo
  *    Option -g activated
  *
@@ -665,9 +668,16 @@ void os9_main( int argc, char **argv, char **envp )
     if (logtiming_disp) show_timing( STIM_NONE,1 );
             
     currentpid= 0; /* no longer an active process */
-     upo_printf("\n");
-    upho_printf("OS9 emulation ends here.\n");
+    
     fflush(stdout);
+    
+    /* end message, if <withTitle> = calling shell/sh */
+    if (withTitle) {
+      upo_printf("\n");
+      upho_printf("OS9 emulation ends here.\n");
+      fflush(stdout);
+    } // if
+    
     exit(err);
 } /* os9_main */
 /* eof */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2006/06/16 15:57:57  bfo
+ *    Make the PTY buffer larger again
+ *
  *    Revision 1.47  2006/06/12 10:52:09  bfo
  *    MAX_PATH added
  *
@@ -1170,6 +1173,7 @@ extern Boolean userOpt;
 extern Boolean ptocActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
+extern Boolean withTitle;
 
 extern Boolean logtiming;
 extern Boolean logtiming_disp;
@@ -1297,7 +1301,7 @@ void   getversions();
 void   os9exec_globinit(void);
 ushort os9exec                         ( int argc, char **argv, char **envp );
 ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp, 
-                   ulong memplus, ushort prior);
+                   ulong memplus, ushort prior );
 
 
 #endif
