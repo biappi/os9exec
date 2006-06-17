@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2006/06/13 22:21:39  bfo
+ *    d1 set correctly for SS_EOF
+ *
  *    Revision 1.26  2006/05/16 13:14:09  bfo
  *    pipeDir adaptions
  *
@@ -284,7 +287,7 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
     mod_exec*     mod;
     process_typ*  cp= &procs[pid];
     pipechan_typ* p;
-    char          idstr[10], pidstr[10], lwstr[10], aa[30];
+    char          idstr[10], pidstr[10], lwstr[10], aa[30], szs[20];
     char          theName[OS9PATHLEN];
     char          devName[OS9NAMELEN];
     char*         mName;
@@ -320,15 +323,14 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
         case fTTY :
         case fPTY : 
         case fPipe: if (p==NULL) sprintf( aa, "->NULL" );
-                    else       { // n=  p->pwp-p->prp;
-                                 // if (p->pwp<p->prp) n+= p->size; /* wrapper */
-                                 n= Pipe_NReady( p );
+                    else { 
+                      n= Pipe_NReady( p );
+                      if (p->size>=1000) sprintf( szs, "%1.0fk", (float)(p->size/1024) );
+                      else               sprintf( szs, "%3d",            p->size       );
 
-                                 sprintf( aa, "%c>%d:%1.0fk",
-                                               p->broken? '/':'-',
-                                               p->sp_lock, (float)(p->size/1024) );
-                                 if (n>0) sprintf( aa,"%s:%d", aa,n );
-                    }
+                               sprintf( aa, "%c>%d:%s", p->broken? '/':'-', p->sp_lock, szs );
+                      if (n>0) sprintf( aa, "%s:%d",    aa, n );
+                    } // if
                    
                     upo_printf( "%-13s", aa ); break;
 
