@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/06/17 11:07:45  bfo
+ *    Global var <withTitle> introduced
+ *
  *    Revision 1.48  2006/06/16 15:57:57  bfo
  *    Make the PTY buffer larger again
  *
@@ -477,7 +480,7 @@ typedef struct {
 /* pipe */
 #define SAFETY           2
 #define DEFAULTPIPESZ 4096+SAFETY
-#define DEFAULTPTYSZ  2048+SAFETY
+#define DEFAULTPTYSZ   512
 #define MINPIPESZ       90
 
 
@@ -641,7 +644,7 @@ typedef struct {
 
 /* the SCSI device variables */
 typedef struct {
-			      int	      ID;               /* SCSI ID, -1 if NO_SCSI   */
+			      int	    ID;               /* SCSI ID, -1 if NO_SCSI   */
 			      short     adapt;            /* SCSI Adaptor, -1 if none */
 			      short     bus;              /* SCSI Bus, normally 0     */
 			      short     LUN;              /* SCSI LUN, normally 0     */
