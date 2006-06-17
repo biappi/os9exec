@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2006/06/11 22:09:49  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *    DEFAULTPTYSZ used for pty/tty system
+ *    scroll bug fixed with <syW> checking
+ *
  *    Revision 1.13  2006/06/10 10:23:26  bfo
  *    Some isIntUtil debugging made invisible
  *
@@ -283,6 +288,9 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char* name)
     ulong   pipesz;
     ushort  k;
     Boolean cre= IsCrea(*modeP);
+    
+  //process_typ*  cp = &procs[pid];
+  //printf( "pPopen='%s' %d\r\n", name, cp->cre_initsize );
         
     /* make sure that new descriptor has no pipe name yet */
     strcpy( spP->name,"" );      /* unnamed pipe: no name */
@@ -918,11 +926,14 @@ os9err pKopen( ushort pid, syspath_typ* spP, _modeP_, char* pathname )
     pipechan_typ* k;
     int           n;
     char          tty_cmp[OS9NAMELEN];
+    
+  //process_typ*  cp = &procs[pid];
+  //printf( "pKopen='%s' %d\r\n", pathname, cp->cre_initsize );
         
     strcpy( spP->name,&pathname[1] );
     strcpy( tty_cmp, spP->name );
             tty_cmp[0]= 't';
-    
+        
     /* check whether this pty is already open by another syspath */
     for (n=0; n<MAXSYSPATHS; n++) {
         spK= get_syspathd( pid,n );
