@@ -1330,6 +1330,9 @@
           06-06-16  Bfo     Use GCC_ONE_BYTE_BOOL = YES;  (project.pbxproj)
           06-06-16  Bfo     Improved description of os9defs differences
           06-06-16  Bfo     Early termination of 1st internal utilities
+          06-06-17  Bfo     Global var <withTitle> introduced
+          06-06-17  Bfo     filestuff.c: Display pipe/tty sizes < 1000 not with k
+          06-06-17  Bfo     DEFAULTPTYSZ is now exactly 512 bytes (seems to be ok for MGR)
     3.32  06-??-??  Bfo
     ------------------- 
       
