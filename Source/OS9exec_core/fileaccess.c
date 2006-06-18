@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/06/08 08:15:04  bfo
+ *    Eliminate causes of signedness warnings with gcc 4.0
+ *
  *    Revision 1.32  2006/05/27 00:13:22  bfo
  *    makefile => 'MPS ' / 'TEXT'
  *
@@ -815,7 +818,7 @@ static os9err touchfile( ushort pid, syspath_typ* spP )
 	      if (TCSuff( &v, ".rm",      'PNst','PNRM' )) return; // RealMovie
 
 	      if (TCSuff( &v, ".lzh",     'LARC','LHA ' )) return; // lzh
-	      if (TCSuff( &v, ".sit",     'SIT!','SIT!' )) return; // StuffIt
+	      if (TCSuff( &v, ".sit",     'SIT!','SITD' )) return; // StuffIt
 	      if (TCSuff( &v, ".zip",     'ZIP ','ZIP ' )) return; // zip
 
 	      if (TCSuff( &v, ".doc",     'MSWD','W8BN' )) return; // MS Word
