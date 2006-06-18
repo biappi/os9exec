@@ -1332,7 +1332,11 @@
           06-06-16  Bfo     Early termination of 1st internal utilities
           06-06-17  Bfo     Global var <withTitle> introduced
           06-06-17  Bfo     filestuff.c: Display pipe/tty sizes < 1000 not with k
-          06-06-17  Bfo     DEFAULTPTYSZ is now exactly 512 bytes (seems to be ok for MGR)
+          06-06-17  Bfo     DEFAULTPTYSZ is now exactly  512 bytes (seems to be ok for MGR)
+          06-06-18  Bfo     DEFAULTPTYSZ is now exactly 1024 bytes ("clock2" hangs no longer)       
+          06-06-18  Bfo     Use 'SITD' instead of 'SIT!' for Mac file type now
+          06-06-18  Bfo     "Windows-PC" can't be used (.mgr_loop) => switch back to "Windows - PC"
+          06-06-18  Bfo     Display the Platform now at the title sequence
     3.32  06-??-??  Bfo
     ------------------- 
       
