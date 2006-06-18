@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2006/06/17 14:20:59  bfo
+ *    DEFAULTPTYSZ is now exactly 512 bytes (seems to be ok for MGR)
+ *
  *    Revision 1.49  2006/06/17 11:07:45  bfo
  *    Global var <withTitle> introduced
  *
@@ -480,7 +483,7 @@ typedef struct {
 /* pipe */
 #define SAFETY           2
 #define DEFAULTPIPESZ 4096+SAFETY
-#define DEFAULTPTYSZ   512
+#define DEFAULTPTYSZ  1024
 #define MINPIPESZ       90
 
 
