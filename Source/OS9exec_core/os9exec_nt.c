@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.58  2006/06/17 11:09:07  bfo
+ *    Global var <withTitle> introduced / tab source formatting
+ *
  *    Revision 1.57  2006/06/16 22:33:37  bfo
  *    Early termination of 1st internal utilities
  *
@@ -735,16 +738,16 @@ void get_hw()
       
   #elif defined windows32
     hw_site= "PC";
-	hw_name= "Windows-PC"; platform= "x86";
+	hw_name= "Windows - PC"; platform= "x86"; // don't change hw_name, used at ".mgr_loop"
 	  
   #elif defined linux
     hw_site= "PC";
-	hw_name= "Linux-PC";   platform= "x86";
+	hw_name= "Linux - PC";   platform= "x86";
        
   #else
   /* unknown */
     hw_site= "?";
-	hw_name= "?";          platform= "?";
+	hw_name= "?";            platform= "?";
   #endif
 } /* get_hw */
 
@@ -981,6 +984,8 @@ BOOL CtrlC_Handler( DWORD ctrlType )
 static void titles( void )
 {
    /* - Apperance (CTB-terminal, Win32 or Linux Console or MPW tool) */
+   upho_printf( "Platform: '%s' (%s)\n", hw_name, platform );
+   
    #ifdef TERMINAL_CONSOLE
      #ifdef macintosh
        #if defined USE_CLASSIC && !defined SERIAL_INTERFACE
