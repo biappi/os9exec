@@ -1374,6 +1374,7 @@
     -   <in_recursion> for debug load
     -   btree optimisation
     -   termcap support for the DOS window.
+    -   "OS9Boot" will be loaded by name, not by reference on RBF images
 
    (+)  return of d1.l from pipe-systasks
    (+)  passing of d2.l to pipe open
