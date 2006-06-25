@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2006/06/11 22:05:24  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.31  2006/06/10 10:22:55  bfo
  *    Some isIntUtil debugging made invisible
  *
@@ -519,22 +522,22 @@ os9err send_signal(ushort spid, ushort signal)
   process_typ* sigp;                     /* ptr to procs dsc to which the signal will be sent */
   sig_typ*     s   = &sig_queue;
   save_type*   svd;
-	int          k;
-	Boolean      wRead;
-	regs_type*   v;
+  int          k;
+  Boolean      wRead;
+  regs_type*   v;
 	
-	/* the broadcast (send to pid=0) is implemented here */
-	if (currentpid!=0 && spid==0) {
-		for (k=1; k<MAXPROCESSES; k++) {
-			if (cp->pd._group==procs[k].pd._group &&
-			    cp->pd._user ==procs[k].pd._user  &&
-			    currentpid!=k) send_signal( k,signal );
-		} /* for */
-		
-		return 0;
-	} /* if */
+  /* the broadcast (send to pid=0) is implemented here */
+  if (currentpid!=0 && spid==0) {
+    for (k=1; k<MAXPROCESSES; k++) {
+      if (cp->pd._group==procs[k].pd._group &&
+          cp->pd._user ==procs[k].pd._user  &&
+        currentpid!=k) send_signal( k,signal );
+    } /* for */
 
-	if (spid>=MAXPROCESSES) return E_IPRCID;         /* check the validity of <spid> first */
+	return 0;
+  } /* if */
+
+  if (spid>=MAXPROCESSES) return E_IPRCID;         /* check the validity of <spid> first */
   sigp= &procs[spid];               /* ptr to procs dsc to which the signal will be sent */
 
   if (currentpid==0) cp= sigp;
