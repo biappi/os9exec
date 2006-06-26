@@ -1337,6 +1337,14 @@
           06-06-18  Bfo     Use 'SITD' instead of 'SIT!' for Mac file type now
           06-06-18  Bfo     "Windows-PC" can't be used (.mgr_loop) => switch back to "Windows - PC"
           06-06-18  Bfo     Display the Platform now at the title sequence
+          
+          06-06-25  Bfo     Ctrl-C handler introduced for UNIX platforms (consio.c)
+          06-06-26  Bfo     shandler eliminated again.
+          06-06-26  Bfo     <in_m68k_go> visible from outside now: sysdeps.h
+          06-06-26  Bfo     <setjmp.h> included
+          06-06-26  Bfo     jmp_buf main_env added
+          06-06-26  Bfo     Make some more things NET_SUPPORT dependent
+          06-06-26  Bfo     SEGV handler introduced, which allows now to catch bus errors !
     3.32  06-??-??  Bfo
     ------------------- 
       
