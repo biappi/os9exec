@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2006/06/11 22:06:00  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.13  2006/06/08 08:15:04  bfo
  *    Eliminate causes of signedness warnings with gcc 4.0
  *
@@ -265,7 +268,9 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE* stream, Boolean wrln)
       }
 
       write( 1,&c,1 );
-      #ifdef windows32
+      
+      // not yet supported for Mac Classic/Carbon
+      #ifdef win_unix
         lw_pid( &main_mco ); /* assign for later use */
       #endif
   } /* ConsPutc */
@@ -287,18 +292,51 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE* stream, Boolean wrln)
 Boolean ConsGetc( char* c )
 {
     int n;
+  //process_typ* cp;
+    
+    /*
+    #ifdef win_unix
+      Boolean doit;
+    #endif
+    */
     
     if (gConsoleID>=TTY_Base) {
         n= ReadCharsFromPTY( c,1, gConsoleID);
         return (n>0) && devIsReady;
     } /* if */
 
+    /*
+    #ifdef win_unix
+      HandleEvent();
+    #endif
+    */
+    
     #if defined windows32 // || defined __MACH__ // || defined linux
       HandleEvent();
       n= ReadCharsFromTerminal( c,1, &main_mco );
       return (n>0) && devIsReady;
     #endif
+    
+    /*
+    #ifdef win_unix
+      #ifdef windows32
+        HandleEvent();
+        doit= true; // always
+      #else
+        doit= main_mco.inBufUsed;
+      #endif
 
+      if (doit) {
+             n= ReadCharsFromTerminal( c,1, &main_mco );
+        if ((n>0) && devIsReady) return true;
+      } // if
+      
+      #ifdef windows32
+         return false;
+      #endif
+    #endif
+    */
+    
     /* as a UNIX-function, EOLN is delivered as 0x0A */
 //      *c= getchar();
 //  if (*c==0x00 || !devIsReady) return false;
@@ -309,9 +347,28 @@ Boolean ConsGetc( char* c )
       if (!devIsReady) return false;
       *c= n;
     #else
-      if (fread( c,1,1, stdin )!=1 || !devIsReady) return false;
+    //devIsReady= true;
+    
+      n= fread( c,1,1, stdin );
+           devIsReady= (n!=-1);
+      if (!devIsReady) return false;
+     
+    //printf( "nn=%d\n", n );
+    //fflush(0);
+    //if (n!=1 || !devIsReady) return false;
+    
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
+
+    /*
+        cp= &procs[ currentpid ]; // signal pending ?
+    if (cp->way_to_icpt &&
+        cp->icpt_signal!=S_Wake) {
+      printf( "soso\n" );
+      fflush(0);
+      return false;
+    } // if
+    */
     
     /* now swap 0x0A and 0x0D */
     if      (*c==LF) *c= CR; /* convert LF to OS-9 style CR */
@@ -366,10 +423,10 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
             /* check options */
             if (c==ot->_sgs_eofch) { err= E_EOF;    break; }
         
-            #ifdef MPW /* for the terminal consoles it is supported now */
+          //#ifdef MPW /* for the terminal consoles it is supported now */
             if (c==ot->_sgs_kbich) { err= S_Intrpt; break; };
             if (c==ot->_sgs_kbach) { err= S_Abort;  break; };
-            #endif
+          //#endif
             
             if (edit && c==ot->_sgs_dulnch) {
                 dupMode= true; /* duplicate last line */
