@@ -45,6 +45,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/06/12 10:52:09  bfo
+ *    MAX_PATH added
+ *
  *    Revision 1.22  2006/06/07 16:06:28  bfo
  *    XCode / IntelMacs supported now
  *
@@ -342,8 +345,10 @@ typedef struct dirent dirent_typ;
         #include "IntEnv.h"
       #endif
       
-      #include <OpenTransport.h>
-      #include <OpenTptInternet.h>
+      #ifdef NET_SUPPORT
+        #include <OpenTransport.h>
+        #include <OpenTptInternet.h>
+      #endif
     #endif
   #endif
 
@@ -355,6 +360,9 @@ typedef struct dirent dirent_typ;
     #include <unistd.h>
   #endif
 #endif
+
+/* setjmp/longjmp support */
+#include <setjmp.h>
 
 #ifdef MACOS9
   #ifdef MPW
