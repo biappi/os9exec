@@ -144,16 +144,16 @@
 
 /* floating point register */
 #ifdef USE_UAEMU
-typedef  double        fp_typ;     
+  typedef  double        fp_typ;     
 #else
-typedef  unsigned char fp_typ[12];
+  typedef  unsigned char fp_typ[12];
 #endif
 
 
 #ifdef USE_UAEMU
-/* buffer for interupt stack */
-#define TRAPFRAMEBUFLEN 128 /* should be fairly enough for all stack frames */
-extern ulong trapframebuf[TRAPFRAMEBUFLEN];
+  /* buffer for interupt stack */
+  #define TRAPFRAMEBUFLEN 128 /* should be fairly enough for all stack frames */
+  extern ulong trapframebuf[TRAPFRAMEBUFLEN];
 #endif
 
 
