@@ -52,5 +52,9 @@ void *xmalloc( size_t n )
     return a;
 }
 
+
+int in_m68k_go= 0;
+
+
 /* eof */
 

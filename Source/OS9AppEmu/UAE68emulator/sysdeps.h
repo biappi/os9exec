@@ -219,6 +219,7 @@ extern char *my_strdup (const char*s);
 #endif
 
 extern void *xmalloc(size_t);
+extern int   in_m68k_go;
 
 /* We can only rely on GNU C getting enums right. Mickeysoft VSC++ is known
  * to have problems, and it's likely that other compilers choke too. */

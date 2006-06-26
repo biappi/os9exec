@@ -1355,7 +1355,7 @@ static __inline__ void m68k_run1 (void)
 #endif
 
 
-int in_m68k_go = 0;
+//int in_m68k_go = 0;
 
 #ifdef NO_AMIGA
 
