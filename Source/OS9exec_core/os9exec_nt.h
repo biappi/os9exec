@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2006/06/18 14:30:39  bfo
+ *    DEFAULTPTYSZ is now exactly 1024 bytes ("clock2" hangs no longer)
+ *
  *    Revision 1.50  2006/06/17 14:20:59  bfo
  *    DEFAULTPTYSZ is now exactly 512 bytes (seems to be ok for MGR)
  *
@@ -190,6 +193,8 @@
 #ifdef THREAD_SUPPORT
   #include <types.h>
 #endif
+
+#include <setjmp.h>
 
 /* XCode does not know about macintosh */
 #if !defined macintosh && defined __MACH__
@@ -654,64 +659,64 @@ typedef struct {
         } scsi_dev;
         
         
+#ifdef NET_SUPPORT
+  #ifdef MACOS9
+    typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
+  #else
+    #if defined UNIX
+      typedef ulong     SOCKET;  /* make it visible for linux as std type */
+    #endif
+  
+    #define nil   0
+    typedef char* Ptr;
+    typedef int   OSStatus;
+  
+    struct  InetAddress
+    {
+      ushort  fAddressType;   // always AF_INET
+      ushort  fPort;          // Port number 
+      ulong   fHost;          // Host address in net byte order
+      byte    fUnused[8];     // Traditional unused bytes
+    };
 
-#ifdef MACOS9
-  typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
-#else
-  #if defined UNIX
-    typedef ulong     SOCKET;  /* make it visible for linux as std type */
+    typedef struct InetAddress InetAddress;
   #endif
-  
-  #define nil   0
-  typedef char* Ptr;
-  typedef int   OSStatus;
-  
-  struct  InetAddress
-  {
-    ushort  fAddressType;   // always AF_INET
-    ushort  fPort;          // Port number 
-    ulong   fHost;          // Host address in net byte order
-    byte    fUnused[8];     // Traditional unused bytes
-  };
-
-  typedef struct InetAddress InetAddress;
-#endif
-
-#ifdef UNIX
-  #define kTransferBufferSize 256
-#else
-  #define kTransferBufferSize 4096
-#endif
 
 
-/* variant for network objects */
-typedef struct {
-            SOCKET      ep;             /* end point reference */
-            Ptr         transferBuffer; /* OpenTransport's network buffer */
-            Ptr         b_local;        /* local buffer */
-            ulong       bsize;          /* local buffer size */     
-            Ptr         bpos;           /* local buffer access */     
-            InetAddress ipAddress;      /* my  own    host's address */
-            InetAddress ipRemote;       /* the remote host's address */
-            ushort      fAddT;
+  #ifdef UNIX
+    #define kTransferBufferSize 256
+  #else
+    #define kTransferBufferSize 4096
+  #endif
+
+
+  /* variant for network objects */
+  typedef struct {
+              SOCKET      ep;             /* end point reference */
+              Ptr         transferBuffer; /* OpenTransport's network buffer */
+              Ptr         b_local;        /* local buffer */
+              ulong       bsize;          /* local buffer size */     
+              Ptr         bpos;           /* local buffer access */     
+              InetAddress ipAddress;      /* my  own    host's address */
+              InetAddress ipRemote;       /* the remote host's address */
+              ushort      fAddT;
                 
-            #ifdef MACOS9
-              TCall     call;
-            #endif
+              #ifdef MACOS9
+                TCall     call;
+              #endif
             
-            #ifdef windows32
-              WSAEVENT  hEventObj;
-            #endif
+              #ifdef windows32
+                WSAEVENT  hEventObj;
+              #endif
                 
-            Boolean     bound;          /* true, if binding was successful  */
-            Boolean     accepted;       /* true, if connection is accepted  */
-            Boolean     connected;      /* true, if connection is connected */
-            Boolean     listen;         /* net listener */
-            Boolean     check;          /* check if ready */
-            Boolean     closeIt;        /* ready to be closed */
-        } net_typ;
-
-                
+              Boolean     bound;          /* true, if binding was successful  */
+              Boolean     accepted;       /* true, if connection is accepted  */
+              Boolean     connected;      /* true, if connection is connected */
+              Boolean     listen;         /* net listener */
+              Boolean     check;          /* check if ready */
+              Boolean     closeIt;        /* ready to be closed */
+          } net_typ;
+#endif
 
                     
 /* the system path descriptor itself */         
@@ -756,16 +761,19 @@ typedef struct {
 
     /* no errors for mac/linux definition */
     #ifdef windows32        
-      HANDLE    printerHandle;    /* handle for printer devices */
+      HANDLE    printerHandle; /* handle for printer devices */
     #endif
 
 
     /* variants for different types */
     union {
-        pipe_typ pipe;          /* Pipe          object */
-        disk_typ disk;          /* Disk file/dir object */
-         rbf_typ rbf;           /* RBF  file/dir object */
-         net_typ net;           /* Network       object */
+      pipe_typ pipe;          /* Pipe          object */
+      disk_typ disk;          /* Disk file/dir object */
+       rbf_typ rbf;           /* RBF  file/dir object */
+         
+      #ifdef NET_SUPPORT
+        net_typ net;          /* Network       object */
+      #endif
     } u;
 } syspath_typ;
 
@@ -1189,6 +1197,9 @@ extern short   defSCSIAdaptNo;
 extern short   defSCSIBusNo;
 extern l2_typ  l2;
 extern ulong   my_inetaddr;
+
+/* jump back environment for SEGV exceptions */
+extern jmp_buf main_env;
 
 /* tickCount at start of the program */
 extern ulong   startTick;
