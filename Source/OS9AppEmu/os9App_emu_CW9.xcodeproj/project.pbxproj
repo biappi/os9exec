@@ -11,8 +11,6 @@
 		4700A4270A337FEB00A75463 /* cpustbl.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45A90A31C24F001898B3 /* cpustbl.c */; };
 		4700A4290A33801700A75463 /* newcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45AE0A31C24F001898B3 /* newcpu.c */; };
 		4700A42A0A33802100A75463 /* support.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45B30A31C24F001898B3 /* support.c */; };
-		474A2DD10A4EB1F500979463 /* shandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 474A2DCF0A4EB1F500979463 /* shandler.h */; };
-		474A2DD20A4EB1F500979463 /* shandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 474A2DD00A4EB1F500979463 /* shandler.cpp */; };
 		477F46210A31C24F001898B3 /* newcpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 477F45AF0A31C24F001898B3 /* newcpu.h */; };
 		477F46220A31C24F001898B3 /* readcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45B10A31C24F001898B3 /* readcpu.c */; };
 		477F46230A31C24F001898B3 /* readcpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 477F45B20A31C24F001898B3 /* readcpu.h */; };
@@ -118,8 +116,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		474A2DCF0A4EB1F500979463 /* shandler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = shandler.h; path = ../OS9exec_core/shandler.h; sourceTree = SOURCE_ROOT; };
-		474A2DD00A4EB1F500979463 /* shandler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = shandler.cpp; path = ../OS9exec_core/shandler.cpp; sourceTree = SOURCE_ROOT; };
 		477F459C0A31C24F001898B3 /* os9App_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		477F45A80A31C24F001898B3 /* cpuemu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpuemu.c; path = UAE68emulator/cpuemu.c; sourceTree = SOURCE_ROOT; };
 		477F45A90A31C24F001898B3 /* cpustbl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpustbl.c; path = UAE68emulator/cpustbl.c; sourceTree = SOURCE_ROOT; };
@@ -436,8 +432,6 @@
 				477F46030A31C24F001898B3 /* printer.c */,
 				477F46040A31C24F001898B3 /* procstuff.h */,
 				477F46050A31C24F001898B3 /* procstuff.c */,
-				474A2DCF0A4EB1F500979463 /* shandler.h */,
-				474A2DD00A4EB1F500979463 /* shandler.cpp */,
 				477F46060A31C24F001898B3 /* telnetaccess.h */,
 				477F46070A31C24F001898B3 /* telnetaccess.c */,
 				477F46080A31C24F001898B3 /* utilstuff.h */,
@@ -601,7 +595,6 @@
 				477F46900A31C252001898B3 /* TermWindow.h in Headers */,
 				477F46920A31C252001898B3 /* target.h in Headers */,
 				477F46940A31C252001898B3 /* maccess.h in Headers */,
-				474A2DD10A4EB1F500979463 /* shandler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -707,7 +700,6 @@
 				4700A4270A337FEB00A75463 /* cpustbl.c in Sources */,
 				4700A4290A33801700A75463 /* newcpu.c in Sources */,
 				4700A42A0A33802100A75463 /* support.c in Sources */,
-				474A2DD20A4EB1F500979463 /* shandler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -725,7 +717,7 @@
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -768,7 +760,7 @@
 				COPY_PHASE_STRIP = YES;
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -810,6 +802,7 @@
 				);
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
