@@ -1345,6 +1345,7 @@
           06-06-26  Bfo     jmp_buf main_env added
           06-06-26  Bfo     Make some more things NET_SUPPORT dependent
           06-06-26  Bfo     SEGV handler introduced, which allows now to catch bus errors !
+          06-06-28  Bfo     SEGV handler ( __try/__except ) introduced for Windows 
     3.32  06-??-??  Bfo
     ------------------- 
       

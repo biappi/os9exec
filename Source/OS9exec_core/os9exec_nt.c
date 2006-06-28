@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.61  2006/06/28 17:38:53  bfo
+ *    shandler/setjmp commented things eliminated
+ *
  *    Revision 1.60  2006/06/26 22:13:49  bfo
  *    SEGV handler introduced, which allows now to catch bus errors !
  *
@@ -1514,6 +1517,18 @@ static void os9exec_loop( unsigned short xErr )
   } // segv_handler
 #endif
 
+#ifdef windows32
+  static ulong segv_handler( ulong sig )
+  {
+    int sv= sig;
+  //printf("*** Bus Error *** %d\n", sig );
+  //fflush(0);
+  
+    in_m68k_go= 0;
+    longjmp( main_env, 102 ); // bus error
+  } // segv_handler
+#endif
+
 
 typedef               void (*loop_proc)( unsigned short xErr );
 static void setup_exception( loop_proc lo )
@@ -1530,8 +1545,17 @@ static void setup_exception( loop_proc lo )
     sigaction( SIGSEGV, &sa, NULL );
   #endif
   
-      err= setjmp( main_env );
-  lo( err );   
+  err= setjmp( main_env );
+  
+  #ifdef windows32
+    __try {
+  #endif
+  
+  lo( err );
+   
+  #ifdef windows32
+    } __except (segv_handler( 0 )) { }
+  #endif
 } // setup_exception
 
 
