@@ -102,6 +102,14 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
     } pbu;
     Str255 fName;
 
+    Boolean resolveAlias= true;
+    
+    // No alias resolver for MacOS <= 9.0.4
+  //#define NO_ALIAS_RESOLVER
+    #ifdef  NO_ALIAS_RESOLVER
+      resolveAlias= false;
+    #endif
+
     if (pathname==NULL) strcpy( cstr,""       );
     else                strcpy( cstr,pathname ); /* make a local copy */
                         strcpy( rstr,""       );
@@ -196,9 +204,13 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
         } // while
 */
         
-        if    (!oserr) {
-                memcpy( afsP,fsP, sizeof(*fsP) );
-                oserr=  ResolveAliasFile( fsP,true, isFolder,&wasAliased );
+        if (!oserr) {
+            memcpy( afsP,fsP, sizeof(*fsP) );
+            
+            // No resolver support for MacOS <= 9.0.4
+            if (resolveAlias) oserr= ResolveAliasFile( fsP,true, isFolder,&wasAliased );
+            else              oserr= fnfErr;
+            
             if (oserr ||             /* an error is always bad */
                 rstr[0]==NUL) break; /* no sub path to reconnect */
              
