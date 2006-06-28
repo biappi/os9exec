@@ -67,11 +67,12 @@
   void main() 
   {
     const argc= 1;
-    
+  //const argc= 3;
+   
     char *argv[]= {
          "os9app"
      // ,"-d"
-     // ,"20"
+     // ,"ffff"
      // ,"shell"
      // ,"startup"
     };
