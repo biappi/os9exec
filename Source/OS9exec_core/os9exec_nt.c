@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.60  2006/06/26 22:13:49  bfo
+ *    SEGV handler introduced, which allows now to catch bus errors !
+ *
  *    Revision 1.59  2006/06/18 14:38:55  bfo
  *    "Windows-PC" can't be used (.mgr_loop) => switch back to "Windows - PC"
  *    Display the Platform now at the title sequence
@@ -242,7 +245,6 @@
 
 #include <signal.h>
 #include "os9exec_incl.h"
-//#include "shandler.h"
 
 				
 /* global variables */
@@ -1528,17 +1530,8 @@ static void setup_exception( loop_proc lo )
     sigaction( SIGSEGV, &sa, NULL );
   #endif
   
-  // loop as long as broken with exception
-//printf( "CH rein\n" );
-//fflush(0);
-  
-  err= setjmp( main_env );
-//printf( "CH  call err=%d\n", err );
-//fflush(0);
+      err= setjmp( main_env );
   lo( err );   
-          
-//printf( "CH ganz err=%d\n", err );
-//fflush(0);
 } // setup_exception
 
 
@@ -1592,7 +1585,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   //ulong    res;	    // /* llm_os9_go result */
   ushort   err= 0;     /* MPW Error */
   OSErr    oserr;	   /* Mac error */
-
+  
   // Prepare the mutex
   #ifdef THREAD_SUPPORT
     pthread_mutex_init( &sysCallMutex, NULL );
