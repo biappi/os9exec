@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.63  2006/06/29 10:28:13  bfo
+ *    SEGV handler for Windows is re-entrant now
+ *
  *    Revision 1.62  2006/06/28 18:14:13  bfo
  *    SEGV handler introduced for Windows
  *
@@ -1511,9 +1514,14 @@ static void os9exec_loop( unsigned short xErr )
 #ifdef UNIX
   static void segv_handler( int sig )
   {
-    int sv= sig;
+    int          sv= sig;
+    process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
+    regs_type*   crp= &cp->os9regs;       // pointer to process' registers
+  
   //printf("*** Bus Error ***\n" );
   //fflush(0);
+
+    llm_os9_copyback( crp );
   
     in_m68k_go= 0; // remove the blocker in UAE
     longjmp( main_env, 102 ); // bus error
@@ -1523,9 +1531,14 @@ static void os9exec_loop( unsigned short xErr )
 #ifdef windows32
   static ulong segv_handler( ulong sig )
   {
-    int sv= sig;
+    int          sv= sig;
+    process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
+    regs_type*   crp= &cp->os9regs;       // pointer to process' registers
+
   //printf("*** Bus Error *** %d\n", sig );
   //fflush(0);
+
+    llm_os9_copyback( crp );
   
     in_m68k_go= 0; // remove the blocker in UAE
     return EXCEPTION_EXECUTE_HANDLER;

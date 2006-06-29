@@ -158,6 +158,13 @@ ulong llm_os9_go(regs_type *rp)
 } /* llm_os9_go */
 
 
+void llm_os9_copyback( regs_type *rp )
+{
+  memcpy( rp, &regs, sizeof(regs) );
+} // Copy back registers in case of SEGV exception
+
+
+
 /* Flush code range in 68k (real one or emulator, especially DR emulator needs it!!) */
 static void llm_cache_rf( _bufferV_, _size_ ) { }
 

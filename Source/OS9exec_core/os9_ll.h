@@ -267,7 +267,8 @@ extern void handle_os9exec_exception(int nr, uaecptr oldpc);
 #endif
 
 
-ulong llm_os9_go(regs_type *rp);
+ulong llm_os9_go      ( regs_type *rp );
+void  llm_os9_copyback( regs_type *rp );
 
 #if defined macintosh && !defined __MACH__
   void llm_os9_debug( regs_type *rp, ConstStr255Param debuggerMsg );
