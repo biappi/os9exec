@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.62  2006/06/28 18:14:13  bfo
+ *    SEGV handler introduced for Windows
+ *
  *    Revision 1.61  2006/06/28 17:38:53  bfo
  *    shandler/setjmp commented things eliminated
  *
@@ -1512,7 +1515,7 @@ static void os9exec_loop( unsigned short xErr )
   //printf("*** Bus Error ***\n" );
   //fflush(0);
   
-    in_m68k_go= 0;
+    in_m68k_go= 0; // remove the blocker in UAE
     longjmp( main_env, 102 ); // bus error
   } // segv_handler
 #endif
@@ -1524,8 +1527,8 @@ static void os9exec_loop( unsigned short xErr )
   //printf("*** Bus Error *** %d\n", sig );
   //fflush(0);
   
-    in_m68k_go= 0;
-    longjmp( main_env, 102 ); // bus error
+    in_m68k_go= 0; // remove the blocker in UAE
+    return EXCEPTION_EXECUTE_HANDLER;
   } // segv_handler
 #endif
 
@@ -1533,8 +1536,13 @@ static void os9exec_loop( unsigned short xErr )
 typedef               void (*loop_proc)( unsigned short xErr );
 static void setup_exception( loop_proc lo )
 {
-  unsigned short err;
+  unsigned short err= 0;
+
+  #ifdef windows32
+    unsigned short xErr;
+  #endif
   
+  // The UNIX exception handler, using setjmp/longjmp
   #ifdef UNIX
     struct sigaction sa;
 
@@ -1543,18 +1551,24 @@ static void setup_exception( loop_proc lo )
     sa.sa_flags  = 0;
     
     sigaction( SIGSEGV, &sa, NULL );
+    err= setjmp( main_env );
   #endif
   
-  err= setjmp( main_env );
-  
+  // The Windows exception handler, using __try/__except
   #ifdef windows32
-    __try {
-  #endif
+   do {
+     xErr= err;
+     err = 0;
+     
+     __try {
+       lo( xErr ); // go in with the last exception error
+     }
+     __except( segv_handler( 0 ) ) { err= 102; }
+   } while (err);
   
-  lo( err );
-   
-  #ifdef windows32
-    } __except (segv_handler( 0 )) { }
+  // The normal way of doing it 
+  #else
+    lo( err ); 
   #endif
 } // setup_exception
 
