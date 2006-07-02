@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.64  2006/06/29 22:46:33  bfo
+ *    void llm_os9_copyback( regs_type *rp ) introduced (for register dump)
+ *
  *    Revision 1.63  2006/06/29 10:28:13  bfo
  *    SEGV handler for Windows is re-entrant now
  *
@@ -732,26 +735,35 @@ void get_hw()
     hw_site= "Mac";
      
     #ifdef __INTEL__
-      hw_name= "IntelMac XCode"; platform= "x86";
+      hw_name = "IntelMac XCode"; 
+      platform= "x86";
     #else
-      #ifdef powerc
+      #ifndef powerc
+        hw_name = "Apple Macintosh";
+        platform= "68k";
+      #else
         platform= "ppc";
         
         #if   defined USE_CLASSIC
-          hw_name= "PowerMac Classic";
+          #ifdef MPW
+            hw_name= "PowerMac MPW";
+          #else
+            hw_name= "PowerMac Classic";
+          #endif
+          
         #elif defined USE_CARBON
           hw_name= "PowerMac Carbon";
+          
         #elif defined __MACH__
           #ifdef __GNUC__ 
             hw_name= "PowerMac XCode";
           #else
             hw_name= "PowerMac CW Mach";
           #endif
+          
         #else
           hw_name= "PowerMac ???";    
         #endif
-      #else
-        hw_name= "Apple Macintosh"; platform= "68k";
       #endif
     #endif
       
