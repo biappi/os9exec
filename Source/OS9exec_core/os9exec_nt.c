@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.65  2006/07/02 13:46:15  bfo
+ *    Name adaptions
+ *
  *    Revision 1.64  2006/06/29 22:46:33  bfo
  *    void llm_os9_copyback( regs_type *rp ) introduced (for register dump)
  *
@@ -1536,7 +1539,7 @@ static void os9exec_loop( unsigned short xErr )
     llm_os9_copyback( crp );
   
     in_m68k_go= 0; // remove the blocker in UAE
-    longjmp( main_env, 102 ); // bus error
+    siglongjmp( main_env, 102 ); // bus error
   } // segv_handler
 #endif
 
@@ -1571,12 +1574,14 @@ static void setup_exception( loop_proc lo )
   #ifdef UNIX
     struct sigaction sa;
 
+    err= sigsetjmp( main_env, 1 );
+    
     sa.sa_handler= &segv_handler;
     sigemptyset( &sa.sa_mask );
     sa.sa_flags  = 0;
     
     sigaction( SIGSEGV, &sa, NULL );
-    err= setjmp( main_env );
+    
   #endif
   
   // The Windows exception handler, using __try/__except
