@@ -1348,6 +1348,7 @@
           06-06-28  Bfo     SEGV handler ( __try/__except ) introduced for Windows 
           06-06-29  Bfo     SEGV handler for Windows is re-entrant now
           06-06-29  Bfo     void llm_os9_copyback( regs_type *rp ) introduced (for register dump)
+          06-07-03  Bfo     SEGV handler also re-entrant for Linux (use sigsetjmp/siglongjmp)
     3.32  06-??-??  Bfo
     ------------------- 
       
