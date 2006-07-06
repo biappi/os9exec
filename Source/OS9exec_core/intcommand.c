@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/06/11 22:11:26  bfo
+ *    int_pento added to internal commands
+ *
  *    Revision 1.23  2006/06/10 10:21:56  bfo
  *    PTOC_FULL included
  *
@@ -127,6 +130,22 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 
+static os9err int_stop( ushort pid, _argc_, _argv_ )
+/* "stop": exit from the OS9exec emulator */
+{
+    if (is_super(pid)) {
+        quitFlag= true;       /* only the super user can stop os9exec */
+        upo_printf ("\n");
+        upho_printf( "OS9 emulation stopped\n");
+        fflush(stdout);
+        exit(0);
+    } // if
+    
+    return(E_PERMIT);         /* not super user: reject the stop command */
+} /* int_stop */
+
+
+
 static os9err int_debughalt( ushort pid, int argc, char** argv )
 /* OS9exec debug halt */
 {
@@ -191,11 +210,7 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                                 strncpy(triggername,argv[k],TRIGNAMELEN);
                                 break;
 
-                case 'q' :  quitFlag= true;
-                            upo_printf ("\n");
-                            upho_printf( "OS9 emulation stopped\n"); 
-                            fflush(stdout);
-                            exit(0);
+                case 'q' :  return int_stop(pid, argc, argv);
             
                 case 'w' :  if (*(p+1)=='=') p+=2;
                             else {  k++; /* next arg */
@@ -689,6 +704,7 @@ cmdtable_typ commandtable[] =
   { "cmd",           int_wincmd,     "calls Windows Command Line / DOS command" },
   #endif
     
+  { "stop",          int_stop,       "exit from OS9exec" },
   { "systime",       int_systime,    "emulation timing management/display" },
   { "iprocs",        int_procs,      "shows OS9exec's processes" },
   { "imdir",         int_mdir,       "shows OS9exec's loaded OS-9 modules" },
