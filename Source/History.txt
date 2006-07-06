@@ -1349,6 +1349,10 @@
           06-06-29  Bfo     SEGV handler for Windows is re-entrant now
           06-06-29  Bfo     void llm_os9_copyback( regs_type *rp ) introduced (for register dump)
           06-07-03  Bfo     SEGV handler also re-entrant for Linux (use sigsetjmp/siglongjmp)
+          06-07-06  MG      procstuff : function 'is_super' added.
+          06-07-06  MG      intcommand: function 'int_stop' added (allowed for super user only)
+          06-07-07  Bfo     consio    : devReady for MacOS9 is ok again
+          
     3.32  06-??-??  Bfo
     ------------------- 
       
