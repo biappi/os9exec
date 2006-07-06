@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2006/06/26 22:11:42  bfo
+ *    Adaptions for Ctrl-C
+ *
  *    Revision 1.14  2006/06/11 22:06:00  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -350,12 +353,12 @@ Boolean ConsGetc( char* c )
     //devIsReady= true;
     
       n= fread( c,1,1, stdin );
-           devIsReady= (n!=-1);
-      if (!devIsReady) return false;
+    //     devIsReady= (n!=-1);
+    //if (!devIsReady) return false;
      
     //printf( "nn=%d\n", n );
     //fflush(0);
-    //if (n!=1 || !devIsReady) return false;
+      if (n!=1 || !devIsReady) return false;
     
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
