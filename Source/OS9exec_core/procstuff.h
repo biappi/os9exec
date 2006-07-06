@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2006/02/19 16:38:37  bfo
+ *    thread support added
+ *
  *    Revision 1.6  2005/06/30 11:56:37  bfo
  *    sig_mask adaption
  *
@@ -59,6 +62,7 @@
 void   show_processes(void);
 void   init_processes(void);
 void   kill_processes(void);
+int    is_super(ushort pid);
 
 os9err  new_process( ushort parentid, ushort *newpid, ushort numpaths );
 os9err kill_process( ushort pid );

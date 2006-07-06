@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/06/25 22:17:40  bfo
+ *    Up to date
+ *
  *    Revision 1.32  2006/06/11 22:05:24  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -122,6 +125,17 @@
 /* process routines */
 /* ================ */
 
+int is_super(ushort pid)
+/* Returns true if process belongs to super user */
+{
+   process_typ*   cp = &procs[pid];
+   int            reply = 0;
+
+   if (cp->pd._user == 0 && cp->pd._group == 0)
+      reply = 1;
+
+   return reply;
+}
 
 void show_processes(void)
 /* show processes */
