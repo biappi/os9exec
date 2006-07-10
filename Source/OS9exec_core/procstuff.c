@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/07/06 22:58:01  bfo
+ *    function 'is_super' added (by Marin Gregorie)
+ *
  *    Revision 1.33  2006/06/25 22:17:40  bfo
  *    Up to date
  *
@@ -788,7 +791,7 @@ static void wait_for_signal( ushort pid )
  * Note: checks global flag "arbitrate" to see if global "currentpid"
  *       should be changed to next waiting/active process
  */
-void do_arbitrate( void )
+void do_arbitrate( Boolean allowIntUtil )
 {
   ushort       cpid       = currentpid;
   ushort       pid, spid;
@@ -843,7 +846,7 @@ void do_arbitrate( void )
     //if (cpid==spid && !sprocess->isIntUtil) {
       if (cpid==spid) {
         /* -- no other process found to run */
-        if (!chkAll && !sprocess->isIntUtil) {
+        if (!chkAll && (allowIntUtil || !sprocess->isIntUtil)) {
           if (atLeast1) chkAll= true;
           else          done  = true; 
         }
@@ -879,7 +882,7 @@ void do_arbitrate( void )
     } /* if arbitrate */
         
     /* --- test if process can be run */
-    if (sprocess->state==pWaiting) {
+    if (sprocess->state==pWaiting && !allowIntUtil) {
       /* --- search if there is a dead child of that process */
       for (pid=0; pid<MAXPROCESSES; pid++) {
         if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
@@ -889,7 +892,7 @@ void do_arbitrate( void )
       if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
     } /* if */
     
-    if   (sprocess->isIntUtil) {
+    if   (sprocess->isIntUtil && !allowIntUtil) {
       arbitrate= true; continue;  /* don't break as internal utility */
     } // if
     
@@ -1102,7 +1105,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
         currentpid =          newpid;  /* use the correct identification */
           
         /* execute command */
-        err= callcommand( mpath,newpid, argc,arguments, &asThread );
+        err= callcommand( mpath,newpid,svid, argc,arguments, &asThread );
         release_mem( arguments );
         
         if (asThread) 
