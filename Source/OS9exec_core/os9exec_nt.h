@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2006/06/26 22:10:37  bfo
+ *    Make some more things NET_SUPPORT dependent
+ *    jmp_buf main_env added
+ *
  *    Revision 1.51  2006/06/18 14:30:39  bfo
  *    DEFAULTPTYSZ is now exactly 1024 bytes ("clock2" hangs no longer)
  *
@@ -1316,12 +1320,12 @@ void   getversions();
 
 /* Entry into OS9 emulation */
 void   os9exec_globinit(void);
-ushort os9exec                         ( int argc, char **argv, char **envp );
-ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp, 
-                   ulong memplus, ushort prior );
+void   os9exec_loop( unsigned short xErr, Boolean fromIntUtil );
+
+ushort os9exec                         ( int argc, char** argv, char** envp );
+ushort os9exec_nt( const char* toolname, int argc, char** argv, char** envp, ulong memplus, ushort prior );
 
 
 #endif
-
 /* eof */
 
