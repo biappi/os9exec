@@ -1353,6 +1353,14 @@
           06-07-06  MG      intcommand: function 'int_stop' added (allowed for super user only)
           06-07-07  Bfo     consio    : devReady for MacOS9 is ok again
           
+          06-07-10  Bfo     intcommand  : ushort parentid added for "callcommand"
+          06-07-10  Bfo     procstuff   : <allowIntUtil> param for "do_arbitrate"
+          06-07-10  Bfo     funcdispatch: F_Exit special support for internal utilities
+          06-07-10  Bfo     funcdispatch: "os9exec_loop" prepared, still inactive (because unstable)
+          06-07-10  Bfo     os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
+          06-07-10  Bfo     os9exec_loop can be called by intUtils now
+          06-07-10  Bfo     os9exec_nt  : SEGV handler is common for Windows/Unix now
+          06-07-10  Bfo     os9exec_nt  : Some old code removed (which was commented out already)    
     3.32  06-??-??  Bfo
     ------------------- 
       
@@ -1382,7 +1390,6 @@
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
     -   direct line editing on Linux (over network)
-    -   CtrlC/CtrlE support for Linux not yet done
     -   gs_ready Linux for CR
     -   Faster directory read (Windows)
     -   Implement internal command "ls" in UNIX style: "ls -la".
@@ -1390,6 +1397,8 @@
     -   btree optimisation
     -   termcap support for the DOS window.
     -   "OS9Boot" will be loaded by name, not by reference on RBF images
+    -   paging for SCF devices
+    -   tab expansion for SCF devices
 
    (+)  return of d1.l from pipe-systasks
    (+)  passing of d2.l to pipe open
