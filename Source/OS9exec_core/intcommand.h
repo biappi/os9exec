@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2006/02/19 16:28:56  bfo
+ *    'Is_PtoC' visible from ouside / PtoC + thread support added
+ *
  *    Revision 1.5  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -74,8 +77,9 @@ os9err  _errmsg( os9err err, char* format, ...);
 Boolean Is_PtoC     ( char* name );
 int     isintcommand( char* name );
 os9err  prepArgs    ( char* arglist, ushort *argcP, char*** argP);
-os9err  callcommand ( char* name,    ushort pid, int argc,     char **argv, Boolean* asThread );
-os9err  call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv );
+os9err  callcommand ( char* name,    ushort pid, ushort parentid,
+                                                 int argc,     char** argv, Boolean* asThread );
+os9err  call_hostcmd( char* cmdline, ushort pid, int moreargs, char** argv );
 
 #endif
 

@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/07/06 22:59:13  bfo
+ *    function 'int_stop' added (allowed for super user only)
+ *     (by Marin Gregorie)
+ *
  *    Revision 1.24  2006/06/11 22:11:26  bfo
  *    int_pento added to internal commands
  *
@@ -1017,7 +1021,7 @@ static void large_pipe_connect( ushort pid, syspath_typ* spC )
 
 
 /* executes internal command */
-os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asThread )
+os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** argv, Boolean* asThread )
 {
     os9err       err;
     int          index;
@@ -1031,7 +1035,7 @@ os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asTh
       ThreadVars* t;
     #endif
     
-    icmpid = pid; /* save as global for ported utilities and _errmsg */
+    icmpid = pid;  /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
     
      *asThread= ptocThread;
@@ -1041,6 +1045,9 @@ os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asTh
     
         index= isintcommand(name);
     if (index<0) return os9error(E_PNNF);
+
+    // save it 
+    set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
 
     /* There is a problem: during internal commands, multitasking can't
      * be active. If intcommands are used via telnet, the tty/pty connection
@@ -1056,6 +1063,10 @@ os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asTh
      * the tty/pty will run normally. To avoid parallel access to kernel
      * routines, a mutex will be set up, to have only one process there
      * at the same time.
+     *
+     * The 3rd solution is to arbitrate at system calls of internal
+     * utilities. This will be done for all PtoC utilities.
+     * The large buffer will be connected for this case as well.
      */
     if (!*asThread) {
       sp = procs[pid].usrpaths[usrStdout];
@@ -1088,6 +1099,7 @@ os9err callcommand( char* name, ushort pid, int argc, char** argv, Boolean* asTh
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
     if (logtiming) os9_to_xxx( pid, name );
 
+    set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
 } /* callcommand */
 
