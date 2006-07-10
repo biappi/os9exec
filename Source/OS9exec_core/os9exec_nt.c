@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.66  2006/07/03 13:37:32  bfo
+ *    SEGV handler also re-entrant for Linux (use sigsetjmp/siglongjmp)
+ *
  *    Revision 1.65  2006/07/02 13:46:15  bfo
  *    Name adaptions
  *
@@ -1216,28 +1219,31 @@ void os9exec_globinit(void)
 // arbitrated. In one direction the 68k emulation (MacOS9 built-in or UAE) will be
 // called, in the other direction the systemcall interface will be used.
 // An exception handler one level higher can recall this procedure again.
-static void os9exec_loop( unsigned short xErr )
+void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 {
   const int    ARB_RATE= 10;
   ushort       cpid;
-  ushort       spid;
   process_typ* cp;
   regs_type*   crp;
   save_type*   svd;
-
-  ulong        my_tick;
   Boolean      cwti;
-  process_typ* sigp;
-  
-  ulong        res;  // llm_os9_go result
-  alarm_typ*   aa;
-  ulong		   aNew; // new alarm number for cyclic alarm
+  ulong        my_tick;
+  ulong        lastspin= GetSystemTick();
 
+  ushort       spid;  // will be assigned before use
+  ulong        resL;  // llm_os9_go result
+  alarm_typ*   aa;
+  ulong		   aaNew; // new alarm number for cyclic alarm
   Boolean      last_arbitrate;
   int          arb_cnt = 0;
-  ulong        lastspin= GetSystemTick();
-  
-//printf( "rein xErr=%d currentpid=%d\n", xErr, currentpid );
+  process_typ* sigp;
+
+  // If call is coming from within intUtil, one loop thru all (active) processes
+  // will be done. Exit criteria is the cp->isIntUtil call, which should be reached after
+  if (fromIntUtil) {
+    arbitrate= true;
+    do_arbitrate( true );
+  } // if
   
   do {
     // --- prepare for entry into OS9 world, process is "currentpid"
@@ -1282,20 +1288,18 @@ static void os9exec_loop( unsigned short xErr )
       // --- go execute OS9 code until next trap or exception
       // %%% for low-level calling interface debug: Debugger();
         if (xErr) {
-        //printf( "wirklich hier xErr=%d\n", xErr );
-          fflush(0);
-          
           cp->vector= 0xFAFA;
           cp->func  = 4*( xErr-100 );
           
           xErr= 0; // do that only once
         }
         else {
+          // Threads can only run in parallel during 68k EMU access
           #ifdef THREAD_SUPPORT
             if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
           #endif
         
-          res= llm_os9_go(crp);
+          resL= llm_os9_go(crp);
 				
           #ifdef THREAD_SUPPORT
             if (ptocThread) pthread_mutex_lock  ( &sysCallMutex );
@@ -1303,8 +1307,8 @@ static void os9exec_loop( unsigned short xErr )
           #endif
 
           // --- and now exec syscall
-          cp->vector= hiword(res);
-          cp->func  = loword(res);
+          cp->vector= hiword(resL);
+          cp->func  = loword(resL);
         } // if
         
         cp->way_to_icpt= false; // now it is done
@@ -1343,16 +1347,16 @@ static void os9exec_loop( unsigned short xErr )
       }
       else {
         // TRAP0 = OS-9 system call called
-        arbitrate=false; // disallow arbitration by default
+        arbitrate= false; // disallow arbitration by default
 
         debug_comein( cpid,crp );
 				
     	// --- Alarm handling
-            aa= alarm_queue[0];
+            aa= alarm_queue[ 0 ];
         if (aa!=NULL) {
-          if (GetSystemTick()>=aa->due) {     aNew= 0; // must be zero !
-            if (aa->cyclic) A_Make( aa->pid, &aNew, aa->signal, aa->ticks, true );
-            send_signal           ( aa->pid,        aa->signal ); // renew it
+          if (GetSystemTick()>=aa->due) {     aaNew= 0; // must be zero !
+            if (aa->cyclic) A_Make( aa->pid, &aaNew, aa->signal, aa->ticks, true );
+            send_signal           ( aa->pid,         aa->signal ); // renew it
             A_Remove( aa ); // and remove the old one
           } // if
         } // if
@@ -1479,8 +1483,8 @@ static void os9exec_loop( unsigned short xErr )
     if (cp->state==pWaitRead)
       memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
 		
-    if (fullArb) arbitrate= true;
-    if (!cwti) do_arbitrate();
+    if (fullArb || fromIntUtil) arbitrate= true;
+    if (!cwti) do_arbitrate( fromIntUtil );
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
@@ -1519,13 +1523,12 @@ static void os9exec_loop( unsigned short xErr )
       } // if
     } // if
 		
-    debug_return( currentpid,crp, cwti );
-  } while(currentpid<MAXPROCESSES); /* while active processes */
-  
-//throw_exception( 42 );
+    debug_return( currentpid, crp, cwti );
+  } while( currentpid<MAXPROCESSES ); /* while active processes */
 } // os9exec_loop
 
 
+/*
 #ifdef UNIX
   static void segv_handler( int sig )
   {
@@ -1559,18 +1562,42 @@ static void os9exec_loop( unsigned short xErr )
     return EXCEPTION_EXECUTE_HANDLER;
   } // segv_handler
 #endif
+*/
 
 
-typedef               void (*loop_proc)( unsigned short xErr );
+#ifdef win_unix
+  #ifdef windows32
+    static ulong segv_handler( ulong sig )
+  #else
+    static void  segv_handler( int   sig )
+  #endif
+  {
+    int          sv= sig;
+    process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
+    regs_type*   crp= &cp->os9regs;       // pointer to process' registers
+  
+  //printf("*** Bus Error *** %d\n", sig );
+  //fflush(0);
+
+    in_m68k_go= 0;                        // remove the blocker in UAE
+    llm_os9_copyback( crp );              // copy registers back for BusError reporting
+    
+    #ifdef windows32
+      return EXCEPTION_EXECUTE_HANDLER;
+    #else
+      siglongjmp( main_env, E_BUSERR );   // go back with bus error
+    #endif
+  } // segv_handler
+#endif
+
+
+typedef               void (*loop_proc)( unsigned short xErr, Boolean fromIntUtil );
 static void setup_exception( loop_proc lo )
 {
   unsigned short err= 0;
+  unsigned short xErr;
 
-  #ifdef windows32
-    unsigned short xErr;
-  #endif
-  
-  // The UNIX exception handler, using setjmp/longjmp
+  // The UNIX exception handler, using sigsetjmp/siglongjmp
   #ifdef UNIX
     struct sigaction sa;
 
@@ -1581,58 +1608,40 @@ static void setup_exception( loop_proc lo )
     sa.sa_flags  = 0;
     
     sigaction( SIGSEGV, &sa, NULL );
-    
   #endif
   
-  // The Windows exception handler, using __try/__except
-  #ifdef windows32
-   do {
-     xErr= err;
-     err = 0;
+  do {
+    xErr= err;
+    err = 0; // preserve this in case of no exception
      
-     __try {
-       lo( xErr ); // go in with the last exception error
-     }
-     __except( segv_handler( 0 ) ) { err= 102; }
-   } while (err);
+    #ifdef windows32
+      // The Windows exception handler, using __try/__except
+      __try {
+    #endif
   
-  // The normal way of doing it 
-  #else
-    lo( err ); 
-  #endif
+    lo( xErr, false ); // go in with the last exception error
+      
+    #ifdef windows32
+      } __except( segv_handler( 0 ) ) { err= E_BUSERR; }
+    #endif
+  } while (err);
 } // setup_exception
 
 
-   
 /* Entry into OS9 emulation
  * If toolname==NULL, the os9 program is loaded from 'OS9C' Id=0
  */
 ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp, 
                    ulong memplus, ushort prior )
 {
-//#define      ARB_RATE 10 //
-
   ushort       cpid;
   process_typ* cp;
-  //ulong        lastspin;
-  
-  //ushort       spid; //
-  //regs_type*   crp;  //
-  //save_type*   svd;  //
-  //process_typ* sigp; //
-  //ulong        my_tick;  //
   
   dir_type*    drP;
   char*        errnam;
   char*        errdesc;
   char*        argv_startup[2];
   char*		   my_toolname= (char*)toolname; /* do not change <toolname> directly */
-  
-  //Boolean      cwti; //
-  //Boolean      last_arbitrate; //
-  //int          arb_cnt= 0; //
-  //alarm_typ*   aa; //
-  //ulong		   aNew; // /* new alarm number for cyclic alarm */
   int          ii;
 	
   #ifdef MACFILES
@@ -1892,7 +1901,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   CheckStartup( cpid, my_toolname, &argc, argv );
 
   /* initialize spinning cursor */ 
-//lastspin= GetSystemTick();
   eSpinCursor(0); /* reset cursor spinning */	
 
   if (withTitle) titles();
@@ -1914,326 +1922,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 		
   debugprintf(dbgStartup,dbgNorm,("# main startup: Main module loaded & prepared for launch\n"));
 
-//#ifdef PTOC_SUPPORT
-    setup_exception( os9exec_loop );
-//#else
-//  os9exec_loop();
-//#endif
-  
-  /*
-	// now start running emulated OS9 tasks
-    do {
-   	    // --- prepare for entry into OS9 world, process is "currentpid"
-    	cpid= currentpid;   // make a copy to allow currentpid to be changed by F$xxx calls
-   		cp  = &procs[cpid]; // pointer to procs   descriptor
-   		crp = &cp->os9regs; // pointer to process' registers
-   		svd = &cp->savread; // pointer to process' saved registers
-		cwti= false;
-		if (cp->isIntUtil) break; // for an int utility everything is done already
-		
-     	// --- make sure MacOS gets its time, too
-     		my_tick= GetSystemTick();
-		if (my_tick-lastspin > spininterval) {
-			lastspin= my_tick;
-			CheckInputBuffers();
-			eSpinCursor(32); // rotate forward once
-		} // if
-				
-		// --- now execute
-		if (cp->state==pSysTask) {
-			arbitrate=true; // allow arbitration by default after sysTask execution
-	
-            //if (cp->isIntUtil) 
-    	    //  printf( "%d was ?", currentpid ); // %bfo%
-
-			// --- execute system task function
-                cp->oerr= (cp->systask)(cpid,cp->systaskdataP,crp);
-            if (cp->oerr!=0) set_os9_state( cpid, pActive, "" ); // on error, continue with task execution anyway
-            if (cp->state==pActive) {
-                //if (cp->isIntUtil) 
-    	        //  printf( "%d was2 ?", currentpid ); // %bfo%
-
-				// process gets active again, report errors to OS9 programm
-				if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
-				
-				if (!cp->oerr) crp->sr &= ~CARRY;
-				else {
-					retword(crp->d[1])= cp->oerr;
-					crp->sr |= CARRY;
-				} // if
-			} // if
-		} // system task
-		
- 		else if (cp->state==pActive   ||
- 		         cp->state==pWaitRead) {
-          if    (cp->state==pActive ||
- 			     cp->way_to_icpt) {
-      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-      //  printf( "%d %d Alarmstufe 1\n", cpid,currentpid ); // %bfo%
-    	    
-      // --- go execute OS9 code until next trap or exception
-      // %%% for low-level calling interface debug: Debugger();
-      //if (cp->isIntUtil)
-      //  printf( "%d MEGA ALARM\n", currentpid ); // %bfo%
-		
-            #ifdef THREAD_SUPPORT
-              if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
-            #endif
-        
-            res= llm_os9_go(crp);
-				
-            #ifdef THREAD_SUPPORT
-              if (ptocThread) pthread_mutex_lock  ( &sysCallMutex );
-              currentpid= cpid;
-            #endif
-
-		    cp->way_to_icpt= false; // now it is done
-
-				// --- and now exec syscall
-				cp->vector= hiword(res);
-				cp->func  = loword(res);
-				
-				// --- safeguarding
-				if (debugcheck(dbgWarnings,dbgDeep)) {
-					if (cp->memstart+0x8000!=crp->a[6]) {
-						uphe_printf(">>> Warning [pid=%d]: A6 has changed from $%08lX to $%08lX !\n",cpid,cp->memstart+0x8000,crp->a[6]);
-						debug_halt(dbgWarnings);
-					} // if
-					if ((crp->a[7]>cp->memtop) || (crp->a[7]<cp->memstart)) {
-						uphe_printf(">>> Warning [pid=%d]: A7=$%08lX is out of data area ($%08lX - $%08lX) !\n",cpid,crp->a[7],cp->memstart,cp->memtop);
-						debug_halt(dbgWarnings);
-					} // if
-				} // if
-			  
-				// register will be saved, in case they are reused in pWaitRead state
-			  svd->r     = cp->os9regs;
-			  svd->vector= cp->vector;
-			  svd->func  = cp->func;
-			  
-            //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	    //  printf( "%d %d Alarmstufe 2\n", cpid, currentpid ); // %bfo%
-			} // if
-				
-			// in case of a unsuccessful read just repeat the call with saved registers
-			// correct exception handling
- 		  if (cp->state==pWaitRead) {
-          	// registers of the last command will be restored
-			  cp->os9regs= svd->r;
-			  cp->vector = svd->vector;
-			  cp->func   = svd->func;
-			} // if	
- 
-          //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-    	  //  printf( "%d %d Alarmstufe 3", cpid,currentpid ); // %bfo%
-			
-          // --- now handle trap
-          if (cp->vector!=0) {
-            if (!TCALL_or_Exception( cp, crp, cpid )) continue;
-          }
-          else {
-            // TRAP0 = OS-9 system call called
-            arbitrate=false; // disallow arbitration by default
-
-            debug_comein( cpid,crp );
-				
-    	// --- Alarm handling
-                aa= alarm_queue[0];
-            if (aa!=NULL) {
-              if (GetSystemTick()>=aa->due) {     aNew= 0; // must be zero !
-       			if (aa->cyclic) A_Make( aa->pid, &aNew, aa->signal, aa->ticks, true );
-                send_signal           ( aa->pid,        aa->signal ); // renew it
-       		    A_Remove( aa ); // and remove the old one
-    		  } // if
-            } // if
-   
-			 // ----------------------
-          //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-          //  printf( "%d %d Alarmstufe 4a\n", cpid,currentpid ); // %bfo% 
-
-				    async_area= true; 
-				if (async_pending) sig_mask( cpid,0 ); // disable signal mask
-				// asynchronous signals are allowed here
-				
-				// execute syscall
-      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-      //  printf( "%d %d Alarmstufe 4b\n", cpid,currentpid );
-				cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
-				cp->oerr       = exec_syscall( cp->func,cpid,crp, false );
-      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-      //  upe_printf( "Alarmstufe 4c\n" );
-				
-				// analyze result
-				if (debugcheck(dbgSysCall,dbgDeep)) {
-					if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
-					                                       get_syscall_name(cp->func),cpid,PStateStr(cp));
-				}
-				    async_area= false; 
-				// asynchronous signals are no longer allowed
-			 // ----------------------
-
-      //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-      //  printf( "Alarmstufe 4d\n", cpid,currentpid ); // %bfo%
-
-				// if the system is on the way to intercept, d1 and carry 
-			    // must be stored (must not override values of "send_signal"
-			    	cwti= cp->way_to_icpt;
-				if (cwti) {
-				    spid= cp->icpt_pid;
-					sigp= &procs[spid];
-					
-					if   (cp->icpt_pid==currentpid) { // in case of the own process
-						if (cp->icpt_signal!=S_Wake  &&
-							  cp->pd._sigvec!=0) crp= &cp->rteregs;
-					}
-					else {
-						cp->way_to_icpt= false;   // now the way to icpt changes
-						
-                      //if (procs[cp->icpt_pid].isIntUtil)
-					  //  printf( "%d interceptli %d\n", currentpid, cp->icpt_signal ); // %bfo%
-
-                        if (!procs[cp->icpt_pid].isIntUtil)
-  						  currentpid= cp->icpt_pid; // continue as this process 
-					}
-		    } // if cwti
-						
-				if (cp->state==pActive   || 
-				    cp->state==pWaitRead || cp->oerr) {
-					// report errors to OS9 programm
-					if (!cp->oerr) crp->sr &= ~CARRY;
-					else {
-						if ((cp->oerr & 0xFF00)==E_OKFLAG) cp->oerr &= 0x00FF; // ensure that silent errors are restored to normal error code
-						retword(crp->d[1])= cp->oerr;
-						crp->sr |= CARRY;
-					}
-				} // if
-
-				if (cwti && cp->icpt_signal!=S_Wake) {
-				  sigp->masklevel   = 1; // not interrupteable during intercept	
-					sigp->os9regs.d[1]= cp->icpt_signal; // get signal code at icpt routine
-					sigp->rtevector   = sigp->vector;
-					sigp->rtefunc     = sigp->func;		
-
-					if (sigp==cp &&
-					    sigp->state==pWaitRead &&
-						sigp->pd._sigvec!=0) {
-						         sigp->rtestate = sigp->state;
-						memcpy( (void*)&sigp->rteregs, (void*)&svd->r, sizeof(regs_type) );
-						         sigp->rtevector= svd->vector;
-						         sigp->rtefunc  = svd->func;
-						set_os9_state( spid, pActive, "" );
-				  } // if
-
-					if (sigp->state==pWaiting &&     // a signalled waiting process
-						sigp->pd._sigvec!=0) {        // will be active afterwards
-						set_os9_state( spid, pActive, "" );
-						sigp->rtestate=      pActive;
-				  } // if
-				} // if (cwti)
-			}
-		} // active OS9 process that has called a TRAP
-				
-		else {
-			if (cp->state!=pUnused   &&
-			    cp->state!=pSleeping &&
-			   (cp->state!=pDead ||
-			    cp->pd._signal==0)) {
-			// signal handling already done correctly
-			// %%% for now, fatal: current process is not pActive
-				uphe_printf("main loop: INTERNAL ERROR, active process=%d has invalid state=%s\n",
-		                  	 cpid,PStateStr(cp));
-				debug_halt( dbgAll );
-			}
-		}
-		
-  //if (cpid!=currentpid && procs[currentpid].isIntUtil) 
-  //  printf( "%d %d Alarmstufe 5\n", cpid,currentpid );  // %bfo%
-		
-		#ifdef MPW
-  		  // handle MPW signals, if any
-		  if (mpwsignal) {
-		  	  mpwsignal=0; // we've seen it now
-			  clearerr(stdin); // prevent input from causing troubles
-			  signal(SIGINT,&mpwSignalHandler); // install handler again
-			  
-			  if (debugcheck(dbgAllInfo,dbgNorm)) {
-				  // give user opportunity to just enter debug menu
-				  uphe_printf("main loop: MPW Cmd-'.' signal received, [c] to continue, [x] to send S_Abort to pid=%d\n",interactivepid);
-				  if (debugwait()) {
-					  // kill process only if special continue from debug_halt
-					  send_signal(interactivepid,S_Abort); // send keyboard abort to process
-				  }
-			  }
-			  else {
-				  // w/o debug, always send abort signal
-				  send_signal(interactivepid,S_Abort); // send keyboard abort to process
-			  }
-		  }
-		#endif
-
-		if (debugcheck(dbgTaskSwitch,dbgDetail) &&
-		    cp->state==pWaitRead) {
-		  uphe_printf("arbitrate: current pid=%d: pWaitRead (before) \n",cpid);
-		}
-
-		// do not arbitrate if way to intercept
-		if (!arb_cnt--) { arb_cnt= ARB_RATE-1; } // arbitrate= true;
-		last_arbitrate= arbitrate;	
-
-  //if (cp->isIntUtil) 
-  //  printf( "%d Alarmstufe gruen\n", cpid ); // %bfo%
-  //if (procs[currentpid].isIntUtil) 
-  //  printf( "%d Alarmstufe orange\n", currentpid ); // %bfo%
-		
-		if (cp->state==pWaitRead)
-		    memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
-		
-		if (fullArb) arbitrate= true;
-		if (!cwti) do_arbitrate();
-		if (logtiming) arb_to_os9( last_arbitrate );
-			
-		cp= &procs[currentpid];
-  //if (cp->isIntUtil) 
-  //  printf( "%d Alarmstufe rot\n", currentpid ); // %bfo%
-
-		if    (!cwti) {
-			    cwti=  cp->way_to_icpt;
-			if (cwti) {
-			    if (Dbg_SysCall( cpid,crp ))
-					upe_printf( "%d %d %d %x\n", cp->icpt_pid,currentpid,
-								 				 cp->icpt_signal,
-								 				 os9_long( (ulong)cp->pd._sigvec ) );
-
-				if (cp->icpt_pid!=currentpid) {
-					cp->way_to_icpt= false;    // reset if another process
-					currentpid= cp->icpt_pid;  // continue as this process
-				}
-				
-				if (cp->icpt_signal!=S_Wake) {
-					cp->os9regs.d[1]= cp->icpt_signal; // get signal code at icpt routine
-				}
-				
-				cp= &procs[currentpid];
-		  }
-		} // if not cwti
-
-		if (debugcheck(dbgTaskSwitch,dbgDetail) &&
-		    cp->state==pWaitRead) {
-		  uphe_printf("arbitrate: current pid=%d: pWaitRead (after) \n",cpid);
-		} // if
-
-		// --- show process changes
-		if (debugcheck(dbgTaskSwitch,dbgNorm)) {
-			if (currentpid!=cpid && 
-			    cp->state!=pWaitRead) {
-				uphe_printf("main loop: Task switch from pid=%d to pid=%d\n",cpid,currentpid);
-				debug_halt(dbgTaskSwitch);
-			}
-		} // if
-		
-		debug_return( currentpid,crp, cwti );
-  } while(currentpid<MAXPROCESSES); // while active processes
-  // End of emulation, all processes exited
-  */
+  setup_exception( os9exec_loop );
 	
   debugprintf(dbgStartup,dbgDeep,("# os9exec_nt: exited main loop\n"));
   /* --- exit status of MPW tool comes from exit status of first process */
