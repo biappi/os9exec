@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/07/06 22:57:10  bfo
+ *    function 'is_super' added (by Marin Gregorie)
+ *
  *    Revision 1.7  2006/02/19 16:38:37  bfo
  *    thread support added
  *
@@ -69,7 +72,8 @@ os9err kill_process( ushort pid );
 os9err send_signal ( ushort pid, ushort signal );
 os9err sig_mask    ( ushort pid, int    level  );
 
-void do_arbitrate(void);
+void do_arbitrate( Boolean allowIntUtil );
+
 void stop_os9exec(void);
 void lw_pid( ttydev_typ* mco );
 
