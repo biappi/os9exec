@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/06/16 16:00:14  bfo
+ *    Don't throw exceptions here anymore
+ *
  *    Revision 1.21  2006/06/11 22:14:10  bfo
  *    Some printing comments eliminated
  *
@@ -577,12 +580,6 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     if (withinIntUtil) {
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
       currentpid= pid;
-      
-    /* %%% activate this later again !! */  
-    //if (cp->state==pDead) {
-    //  if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
-    //  throw_exception( cp->exiterr );
-    //} // if
     } // if
   #endif
   
@@ -610,12 +607,19 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     cp->oerr= err;
     memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
     debug_return( pid,rp, false );
+    
+    if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
+      #ifdef THREAD_SUPPORT
+        if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
+      #endif
+      
+      return err;
+    } // if
   } // if
 
   if (logtiming) {
     xxx_to_arb( func,pid );
   } /* if (logtiming) */
-
 
   if (fdeP!=&invalidcall) {
     if     (func<NUMFCALLS) os9_long_inc( &pd->_fcalls, 1 ); /* "procs -a" uses it */
@@ -623,12 +627,13 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
       if   (func<NUMICALLS) os9_long_inc( &pd->_icalls, 1 ); 
     }
   } // if
-
+  
+  if (withinIntUtil) {
+  //os9exec_loop( 0, true );
+  }
+  
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
-    //if (currentpid!=pid)
-    //  printf( "%d %d GRAUSAM\n", currentpid, pid );
-        
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     } // if
   #endif
