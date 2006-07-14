@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2006/06/13 22:23:05  bfo
+ *    StrToInt/StrToShort added
+ *
  *    Revision 1.18  2006/03/12 19:30:24  bfo
  *    RealToStrN added
  *
@@ -404,8 +407,12 @@ void release_mem( void* membase )
     } /* for */
     
     #ifdef REUSE_MEM
-      if (memsz==0) { printf( "STRANGE BLOCK at %08X\n", membase ); return; }
-      if (memsz==1) { printf( "UNUSED  BLOCK at %08X\n", membase ); return; }
+      if (memsz==0) { 
+        printf( "STRANGE BLOCK at %08X\n", membase ); return;
+      } // if
+      if (memsz==1) { 
+        printf( "UNUSED  BLOCK at %08X\n", membase ); return;
+      } // if
       
       if (release_ok( membase,memsz )) {
         debugprintf(dbgMemory,dbgNorm,("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
