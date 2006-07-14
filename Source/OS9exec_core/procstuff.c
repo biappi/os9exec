@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/07/10 09:59:40  bfo
+ *    <allowIntUtil> param for "do_arbitrate",
+ *    svid param for "callcommand"
+ *
  *    Revision 1.34  2006/07/06 22:58:01  bfo
  *    function 'is_super' added (by Marin Gregorie)
  *
@@ -864,7 +868,7 @@ void do_arbitrate( Boolean allowIntUtil )
               HandleEvent();
               slp_idleticks+= GetSystemTick()-ticks;
             #elif defined linux
-              usleep( 1 ); /* sleep in milliseconds */
+              usleep( 1000 ); /* sleep in microseconds */
               slp_idleticks++;
             #endif
           } 
