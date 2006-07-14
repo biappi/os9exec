@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.67  2006/07/10 10:10:57  bfo
+ *    os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
+ *    os9exec_loop can be called by intUtils now
+ *    SEGV handler is common for Windows/Unix now
+ *    Some old code removed (which was commented out already)
+ *
  *    Revision 1.66  2006/07/03 13:37:32  bfo
  *    SEGV handler also re-entrant for Linux (use sigsetjmp/siglongjmp)
  *
@@ -1385,6 +1391,12 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         if (cwti) {
           spid= cp->icpt_pid;
           sigp= &procs[spid];
+          
+          if (sigp->isIntUtil) {
+            printf( "hallo\n" );
+            cp->way_to_icpt= false;   // now the way to icpt changes
+            if (sigp->isIntUtil) break; // for an int utility this is currently not allowed
+          } // if
 
           if   (cp->icpt_pid==currentpid) { // in case of the own process
             if (cp->icpt_signal!=S_Wake  &&
@@ -1393,7 +1405,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
           else {
             cp->way_to_icpt= false;   // now the way to icpt changes
 
-            if (!procs[cp->icpt_pid].isIntUtil)
+          //if (!procs[cp->icpt_pid].isIntUtil)
               currentpid= cp->icpt_pid; // continue as this process
           }
         } // if cwti
