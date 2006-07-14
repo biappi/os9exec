@@ -1360,7 +1360,12 @@
           06-07-10  Bfo     os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
           06-07-10  Bfo     os9exec_loop can be called by intUtils now
           06-07-10  Bfo     os9exec_nt  : SEGV handler is common for Windows/Unix now
-          06-07-10  Bfo     os9exec_nt  : Some old code removed (which was commented out already)    
+          06-07-10  Bfo     os9exec_nt  : Some old code removed (which was commented out already)
+          
+          06-07-14  Bfo     memstuff    : STRANGE/UNUSED BLOCK: Adapt it for easier debugging
+          06-07-14  Bfo     procstuff   : Longer usleep for MacOSX (but idle load is still up ...)
+          06-07-14  Bfo     funcdispatch: os9_xxx kk<MAX_OS9PROGS-1 problem fixed (avoid memory overrun)
+          06-07-14  Bfo     os9exec_nt  : Arbitration for intUtil prepared and improved
     3.32  06-??-??  Bfo
     ------------------- 
       
