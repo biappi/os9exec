@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/07/10 10:02:14  bfo
+ *    F_Exit special support for internal utilities
+ *    "os9exec_loop" prepared, still inactive (because unstable)
+ *
  *    Revision 1.22  2006/06/16 16:00:14  bfo
  *    Don't throw exceptions here anymore
  *
@@ -394,8 +398,8 @@ void os9_to_xxx( ushort pid, const char* name )
          || (!eli && ustrncmp( s->name," ", 1 )==0)
          || (!eli && ustrcmp ( s->name,mn     ) >0)) { /* sort them alphabetically */
 
-            kk= ii; /* search for the last item */
-            while (kk<MAX_OS9PROGS && *statistics[kk].name!=NUL) kk++;
+            kk= ii; /* search for the last item, don't go OVER the limit !! */
+            while (kk<MAX_OS9PROGS-1 && *statistics[kk].name!=NUL) kk++;
 
             for (jj= kk; jj>ii;  jj--) { /* shift up */
                 sj = &statistics[jj  ];
@@ -584,7 +588,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
   #endif
   
   if (logtiming) {
-    os9_to_xxx( pid, "" );
+    os9_to_xxx( pid, "(int)" );
         
     if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as name for debugging */
       fSS= get_stat_name(loword(rp->d[1]));
