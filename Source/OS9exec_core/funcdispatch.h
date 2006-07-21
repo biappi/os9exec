@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2006/02/19 16:31:45  bfo
+ *    Thread support added
+ *
  *    Revision 1.5  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -93,7 +96,7 @@ ulong GetSystemTick(void);
 
 const funcdispatch_entry *getfuncentry(ushort func);
 
-void os9_to_xxx             ( ushort pid, const char* name );
+void os9_to_xxx             ( ushort pid );
 void xxx_to_arb( ushort func, ushort pid );
 void arb_to_os9( Boolean last_arbitrate  );
 

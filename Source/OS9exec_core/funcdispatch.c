@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/07/14 11:48:12  bfo
+ *    os9_xxx kk<MAX_OS9PROGS-1 problem fixed (avoid memory overrun)
+ *
  *    Revision 1.23  2006/07/10 10:02:14  bfo
  *    F_Exit special support for internal utilities
  *    "os9exec_loop" prepared, still inactive (because unstable)
@@ -352,23 +355,24 @@ static ulong DiffTick( void )
 
 
 
-void os9_to_xxx( ushort pid, const char* name )
+void os9_to_xxx( ushort pid )
 /* Get systime ticks on the way from OS-9 to XXX command */
 {
-    char      *mn, *p, *q, *systime_end;
-    int       mid, ii, jj, kk;
-    mod_exec* mod;
-    st_typ    *s, *sj, *sj1;
-    Boolean   eli= false; /* end of list */
-    ulong     a= DiffTick();
-    procid*   pd= &procs[pid].pd;
+    char         *mn, *p, *q, *systime_end;
+    int          mid, ii, jj, kk;
+    mod_exec*    mod;
+    st_typ       *s, *sj, *sj1;
+    Boolean      eli= false; /* end of list */
+    ulong        a= DiffTick();
+    process_typ* cp= &procs[ pid ];
+    procid*      pd= &cp->pd;
     
     /* try to measure ticks */
     os9_long_inc( &pd->_uticks, a ); /* info for F$GPrDsc */
 
-        mid= procs[pid].mid;    
-        mod= os9mod   ( mid );
-    if (mid==0 || mod==NULL) mn= (char*) name;
+        mid=     cp->mid;    
+        mod= os9mod( mid );
+    if (mid==0 || mod==NULL) mn= cp->procName;
     else                     mn= Mod_Name( mod );
 
     /* question: must it be logged ? */
@@ -477,7 +481,7 @@ Boolean Dbg_SysCall( ushort pid, regs_type* rp )
   
 	if (!debugcheck(dbgSysCall,dbgNorm)) return false;
 	 
-	// OS9_I_WritLn
+	// OS9_I_WritLn, special masking provided for "Maloney" system
 	return cp->func!=0x8c || loword(rp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
 } /* Dbg_SysCall */
 
@@ -489,7 +493,7 @@ void debug_comein( ushort pid, regs_type* rp )
 	Boolean                   msk = cp->masklevel>0;
 
   if (!Dbg_SysCall( pid,rp )) return;
-	if (cp->state==pWaitRead)   return; /* avoid dbg display in pWaitRead mode */
+	if (cp->state==pWaitRead) return; /* avoid dbg display in pWaitRead mode */
 
 	/* (enclosed in another if to avoid get_syscall_name invocation */
 	/* in nodebug case!) */
@@ -523,7 +527,6 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
 	}
 	else {
 		if ((cp->state==pActive  || // internal utilities can be active now as well
-		  // cp->state==pIntUtil || // internal utilities as well !
 		     cp->oerr) &&
 			   cp->state!=pWaitRead) { /* avoid dbg display in pWaitRead mode */
 
@@ -588,12 +591,12 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
   #endif
   
   if (logtiming) {
-    os9_to_xxx( pid, "(int)" );
+    os9_to_xxx( pid );
         
     if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as name for debugging */
       fSS= get_stat_name(loword(rp->d[1]));
 
-    debugprintf(dbgSysCall,dbgDetail,("# %s %s\n", fName,fSS )); /* fName+fSS would be eliminated by compiler */
+  //debugprintf(dbgSysCall,dbgDetail,("# %s %s\n", fName,fSS )); /* fName+fSS would be eliminated by compiler */
   } /* if (logtiming) */
 
 
