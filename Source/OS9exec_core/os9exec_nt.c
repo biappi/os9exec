@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.68  2006/07/14 11:49:37  bfo
+ *    Arbitration for intUtil prepared and improved
+ *
  *    Revision 1.67  2006/07/10 10:10:57  bfo
  *    os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
  *    os9exec_loop can be called by intUtils now
@@ -1088,33 +1091,22 @@ static void titles( void )
 } /* titles */
 
 
-/*
-static Boolean Dbg_SysCall( process_typ* cp, regs_type* crp )
-{
-	if (!debugcheck(dbgSysCall,dbgNorm)) return false;
-	
-	// OS9_I_WritLn
-	return cp->func!=0x8c || loword(crp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
-} // Dbg_SysCall
-*/
-
-
 static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid )
 /* Exception or trap handler call */
 {				
   ushort           vect;
   traphandler_typ* tp;
   mod_exec*        mp; /* module pointer */
+  short            parentid;
    
 	if 		 (cp->vector==0xFAFA) { /* error exception */
 		vect= cp->func >> 2; /* vector number (=offset div 4 !) */
 		if (debugcheck(dbgTrapHandler,dbgNorm)) { 
 			uphe_printf("main loop: Exception occurred [pid=%d] ! Vector offset=$%04X (num=%d)\n",
 					     cpid,cp->func,vect); 
-			dumpregs(cpid);
+		  if (!cp->isIntUtil) dumpregs(cpid);
 		} // if
 		
-      //printf( "func=%d vect=%d\n", cp->func, vect );		
 		if ((vect>=FIRSTEXCEPTION) && (vect<FIRSTEXCEPTION+NUMEXCEPTIONS)) {
 			if (cp->ErrorTraps[vect-2].handleraddr!=0) {
 				/* there is an installed handler */
@@ -1140,6 +1132,13 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 					
 		if (cp->func==0) {
 			/* process does not handle exception, kill it */
+			if (cp->isIntUtil) { // in case of built-in command, the parent must be activated again
+			  parentid= os9_word( cp->pd._pid );
+		      debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] intUtil parent=%d reactivated\n", cpid, parentid ));
+			  set_os9_state( parentid, pActive, "IntCmd (excp)" ); // make it active again
+            } // if
+			
+		    debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] ready to kill\n", cpid ));
 			cp->exiterr=vect-FIRSTEXCEPTION+E_BUSERR; /* set exit code */
 			kill_process(cpid); /* kill the process, change currentpid */
 			/* show exception */
@@ -1258,7 +1257,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    	crp = &cp->os9regs; // pointer to process' registers
    	svd = &cp->savread; // pointer to process' saved registers
     cwti= false;
-    if (cp->isIntUtil) break; // for an int utility everything is done already
+    if (cp->isIntUtil && xErr==0) break; // for an int utility everything is done already
+                                         // Only in case of bus error, error handling is required
     
     // --- make sure, that good old MacOS gets its time, too
         my_tick= GetSystemTick();
@@ -1623,6 +1623,10 @@ static void setup_exception( loop_proc lo )
   #endif
   
   do {
+    if (err && debugcheck(dbgTrapHandler,dbgNorm)) { 
+      uphe_printf("Exception occurred [pid=%d] err=%d\n", currentpid, err ); 
+    } // if
+    
     xErr= err;
     err = 0; // preserve this in case of no exception
      
