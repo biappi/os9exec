@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2006/07/10 10:03:45  bfo
+ *    os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
+ *
  *    Revision 1.52  2006/06/26 22:10:37  bfo
  *    Make some more things NET_SUPPORT dependent
  *    jmp_buf main_env added
@@ -980,6 +983,7 @@ typedef struct {
                 pstate_typ        state;    /* process' state */
                 Boolean       isIntUtil;    /* Internal utility flag */
                 ushort              mid;    /* the process' primary module ID */
+                char*          procName;    /* the process' name (for internal utilities) */
 
                 os9err          exiterr;    /* process' exit OS9 error */
                 systaskfunc_typ systask;    /* the system task function if state=pSysTask */
