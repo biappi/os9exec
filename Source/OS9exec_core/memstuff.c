@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/07/14 11:43:30  bfo
+ *    STRANGE/UNUSED BLOCK: Adapt it for easier debugging
+ *
  *    Revision 1.19  2006/06/13 22:23:05  bfo
  *    StrToInt/StrToShort added
  *
@@ -726,11 +729,13 @@ void UIntToStr( char* s, unsigned int i ) {
 void UIntToStrN( char* s, unsigned int i, int n )
 {
   char form[ 20 ]; // format string
+  int  r= 0;
   
   if (n==MAXINTEGER) { UIntToStr( s, i ); return; }
   
-  sprintf   ( form, "%s0%dX", "%", n );
-  sprintf( s, form, i );
+  if (n>8) { r= n-8; n= 8; } // keep spaces for the remaining part of > 8 
+  sprintf   ( form, "%s%ds%s0%dX", "%", r, "%", n );
+  sprintf( s, form, "", i );
 } // UIntToStrN
 
 
