@@ -1349,9 +1349,9 @@
           06-06-29  Bfo     SEGV handler for Windows is re-entrant now
           06-06-29  Bfo     void llm_os9_copyback( regs_type *rp ) introduced (for register dump)
           06-07-03  Bfo     SEGV handler also re-entrant for Linux (use sigsetjmp/siglongjmp)
-          06-07-06  MG      procstuff : function 'is_super' added.
-          06-07-06  MG      intcommand: function 'int_stop' added (allowed for super user only)
-          06-07-07  Bfo     consio    : devReady for MacOS9 is ok again
+          06-07-06  MG      procstuff   : function 'is_super' added.
+          06-07-06  MG      intcommand  : function 'int_stop' added (allowed for super user only)
+          06-07-07  Bfo     consio      : devReady for MacOS9 is ok again
           
           06-07-10  Bfo     intcommand  : ushort parentid added for "callcommand"
           06-07-10  Bfo     procstuff   : <allowIntUtil> param for "do_arbitrate"
@@ -1366,6 +1366,16 @@
           06-07-14  Bfo     procstuff   : Longer usleep for MacOSX (but idle load is still up ...)
           06-07-14  Bfo     funcdispatch: os9_xxx kk<MAX_OS9PROGS-1 problem fixed (avoid memory overrun)
           06-07-14  Bfo     os9exec_nt  : Arbitration for intUtil prepared and improved
+
+          06-07-14  Bfo     os9exec_nt  : <procName> the process' name (for internal utilities) added
+          06-07-14  Bfo     funcdispatch: os9_to_xxx <name> parameter eliminated
+          06-07-16  Bfo     utilstuff   : task switch dbg display is now dbgDetail only
+          06-07-16  Bfo     os9exec_nt  : Enhancements for intUtils at bus error (dumpregs, ...)
+          06-07-16  Bfo     fcalls      : Assign <newpid> early enough (for intUtils)
+          06-07-16  Bfo     procstuff   : Child assignment strategy (intUtils) corrected
+          06-07-17  Bfo     memstuff    : UIntToStrN: Keep spaces for the remaining part of > 8
+          06-07-18  Bfo     intcommand  : Reorganisation of "ihelp" display / os9_to_xxx arg adaption
+          06-07-20  MG      intcommand  : OS9STOP env support; "stop/shutdown" : both names allowed now
     3.32  06-??-??  Bfo
     ------------------- 
       
