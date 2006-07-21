@@ -41,7 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
- *    Revision 1.25  2006/07/06 22:59:13  bfo
+ *    Revision 1.26  2006/07/10 09:56:50  bfo
+ *    ushort parentid added for "callcommand"
+ *
+ *    Revision 1.25  2006/07/06 22:59:13  MG
  *    function 'int_stop' added (allowed for super user only)
  *     (by Marin Gregorie)
  *
@@ -135,9 +138,12 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 static os9err int_stop( ushort pid, _argc_, _argv_ )
-/* "stop": exit from the OS9exec emulator */
+/* "stop/shutdown": exit from the OS9exec emulator */
 {
-    if (is_super(pid)) {
+    char *envstop;
+
+    envstop = getenv("OS9STOP");
+    if (is_super(pid) || envstop) {
         quitFlag= true;       /* only the super user can stop os9exec */
         upo_printf ("\n");
         upho_printf( "OS9 emulation stopped\n");
@@ -695,6 +701,9 @@ typedef struct {
 
 cmdtable_typ commandtable[] =
 {
+  { "ihelp/icmds",   int_help,       "shows this help text" },
+  { "dhelp",         debug_help,     "shows debug flag information" },
+  { "stop/shutdown", int_stop,       "exit from OS9exec" },
   { "rename",        int_rename,     "renames a file or directory (100% compatible)" },
   { "move",          int_move,       "moves files and directories" },
   { "ls",            int_dir,        "shows dir in [extended] format" },
@@ -708,7 +717,6 @@ cmdtable_typ commandtable[] =
   { "cmd",           int_wincmd,     "calls Windows Command Line / DOS command" },
   #endif
     
-  { "stop",          int_stop,       "exit from OS9exec" },
   { "systime",       int_systime,    "emulation timing management/display" },
   { "iprocs",        int_procs,      "shows OS9exec's processes" },
   { "imdir",         int_mdir,       "shows OS9exec's loaded OS-9 modules" },
@@ -720,9 +728,9 @@ cmdtable_typ commandtable[] =
   #endif
     
   { "idevs",         int_devs,       "shows OS9exec's devices" },
-  { "ihelp/icmds",   int_help,       "shows this help text" },
-  { "dhelp",         debug_help,     "shows debug flag information" },
-  { "debughalt/idbg",int_debughalt,  "sets debug options/enters OS9exec's debug menu" },
+  { "idbg/debughalt",int_debughalt,  "sets debug options/enters OS9exec's debug menu" },
+  { "iquit",         int_quit,       "sets flag to quit directly" },
+  { "dch/diskcache", int_ignored,    "simply ignored, because not supported by OS9exec" },
 
   #ifdef PTOC_SUPPORT
   { "ion",           int_on,         "Switch on   built-in PtoC utilities (default)" },
@@ -732,19 +740,26 @@ cmdtable_typ commandtable[] =
   { "iarb",          int_arb,        "Full arbitration" },
   { "inoarb",        int_noarb,      "Std  arbitration (default)" },
 
+  { "",              NULL,           ""                },
   { "breaker",       int_breaker,    "PtoC breaker"    },
   { "definit",       int_definit,    "PtoC definit"    },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
+
   #ifdef PTOC_FULL
     { "pascal",      int_pascal,     "PtoC pascal"     },
     { "pcall",       int_pcall,      "PtoC pcall"      },
   #endif 
+
   { "pento",         int_pento,      "PtoC pento"      },
   { "pentominos",    int_pentominos, "PtoC pentominos" },
   { "printenv",      int_printenv,   "PtoC printenv"   },
   { "ptoc",          int_ptoc,       "PtoC ptoc"       },
-  { "show",          int_show,       "PtoC show"       },
+  
+  #ifdef PTOC_FULL
+    { "show",        int_show,       "PtoC show"       },
+  #endif
+  
   { "stacks",        int_stacks,     "PtoC stacks"     },
   { "strout",        int_strout,     "PtoC strout"     },
   { "tcheck",        int_tcheck,     "PtoC tcheck"     },
@@ -755,9 +770,6 @@ cmdtable_typ commandtable[] =
   { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
   #endif
 
-  { "iquit",         int_quit,      "sets flag to quit directly" },
-  { "dch/diskcache", int_ignored,   "simply ignored, because not supported by OS9exec" },
-    
   { NULL, NULL, NULL } /* terminator */
 };
 
@@ -765,17 +777,21 @@ cmdtable_typ commandtable[] =
 /* show available internal commands */
 os9err int_help( ushort pid, _argc_, _argv_ )
 {
-    int k;
-        
-    upho_printf("%s internal commands:\n", OS9exec_Name() );
-    upho_printf("(case sensitive, so use uppercase to use external versions)\n");
-    upho_printf("\n");
-    for (k=0; commandtable[k].name!=NULL; k++) {
-        upho_printf("  %-14s: %s\n",commandtable[k].name,commandtable[k].helptext);
-    }
+  int k;
+  const char* nm;
+       
+  upho_printf("%s internal commands:\n", OS9exec_Name() );
+  upho_printf("(case sensitive, so use uppercase to use external versions)\n");
+  upho_printf("\n");
+  for (k=0 ;; k++) {
+    nm= commandtable[ k ].name; if (nm==NULL) break;
+    if  (!ptocActive  &&  strcmp( nm,"" )==0) break;
+    
+    upho_printf("  %-14s: %s\n", nm, commandtable[k].helptext) ;
+  } // for
 
-    if (pid==0) upo_printf("\n");
-    return 0;
+  if (pid==0) upo_printf("\n");
+  return 0;
 } /* int_help */
 
 
@@ -1028,6 +1044,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     ushort       sp;
     syspath_typ* spP;
     syspath_typ* spC;
+    process_typ* cp= &procs[ pid ];
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -1068,12 +1085,14 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
      * utilities. This will be done for all PtoC utilities.
      * The large buffer will be connected for this case as well.
      */
+    cp->procName= name;
+    
     if (!*asThread) {
-      sp = procs[pid].usrpaths[usrStdout];
+      sp = cp->usrpaths[usrStdout];
       spC= NULL; /* not yet in use */
-      spP= get_syspathd( pid,sp ); 
+      spP= get_syspathd( pid, sp ); 
 
-      if (spP->type==fTTY ) spC= get_syspathd( pid,spP->u.pipe.pchP->sp_lock );
+      if (spP->type==fTTY ) spC= get_syspathd( pid, spP->u.pipe.pchP->sp_lock );
       if (spP->type==fPipe) spC= spP; /* no crossover */
     
       if (spC!=NULL) large_pipe_connect( pid,spC );
@@ -1097,7 +1116,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     } // if
     
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming) os9_to_xxx( pid, name );
+    if (logtiming) os9_to_xxx( pid );
 
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
@@ -1179,4 +1198,5 @@ os9err call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv )
 } /* call_hostcmd */
 
 /* eof */
+
 
