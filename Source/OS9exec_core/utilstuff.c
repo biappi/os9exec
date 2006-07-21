@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2006/06/13 19:17:29  bfo
+ *    /p /p1 are recognized as printer devices
+ *
  *    Revision 1.45  2006/06/11 22:02:32  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -280,8 +283,8 @@ void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc )
     process_typ* cp= &procs[cpid];
     procid*      pd= &cp->pd;
     
-    debugprintf(dbgTaskSwitch,dbgNorm,("#    state %d -> %d '%s'\n", 
-                                             cp->state, state, callingProc ));
+    debugprintf(dbgTaskSwitch,dbgDetail,("#    state %d -> %d '%s'\n", 
+                                           cp->state, state, callingProc ));
     
             cp->state= state;
     switch (cp->state) {
