@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2006/07/14 11:46:20  bfo
+ *    Longer usleep for MacOSX (but idle load is still up ...)
+ *
  *    Revision 1.35  2006/07/10 09:59:40  bfo
  *    <allowIntUtil> param for "do_arbitrate",
  *    svid param for "callcommand"
@@ -309,6 +312,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->pd._rbytes= 0;
             cp->pd._wbytes= 0;
             
+            cp->procName   = NULL;         /* used for internal utilities only */
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */          
             cp->pd._pid    = os9_word(parentid); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */
@@ -487,7 +491,7 @@ os9err kill_process( ushort pid )
       /* there is a parent process */
       set_os9_state( pid, pDead, "kill_process" ); /* keep it there until parent recognizes */
       if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
-      AssignNewChild( parentid,pid );
+      if (!cp->isIntUtil) AssignNewChild( parentid,pid );
     }
     else {
     //upe_printf( "unused id=%d\n", pid );
@@ -990,8 +994,8 @@ static os9err os9exec_compatible( mod_exec* mod )
     if (ustrcmp(p,"sysdbg" )==0 && ed<=100) return E_BADREV; /* crashes right at the beginning */
     if (ustrcmp(p,"mnt"    )==0 && ed<=100) return E_BADREV; /* no "/mt" device available */
 
-    if (ustrcmp(p,"list"   )==0 && ed== 16) return E_BADREV; /* V2.4 version is buggy */
-    if (ustrcmp(p,"cmp"    )==0 && ed== 23) return E_BADREV; /* V3.0 version is buggy */
+    if (ustrcmp(p,"list"   )==0 && ed== 16) return E_BADREV; /* V2.4 version is bugy */
+    if (ustrcmp(p,"cmp"    )==0 && ed== 23) return E_BADREV; /* V3.0 version is bugy */
     
     return 0;
 } /* os9exec_compatible */
@@ -1117,7 +1121,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
         else {
           /* simulate successful F$Exit of internal command */
           
-          pp->pd._cid= cp->pd._sid; /* restore former child id */
+        //pp->pd._cid= cp->pd._sid; /* restore former child id */
           cp->exiterr= 0;
           kill_process( newpid );
         } // if
