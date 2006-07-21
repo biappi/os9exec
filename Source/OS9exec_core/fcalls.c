@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2006/06/16 22:29:07  bfo
+ *    Some comments adapted
+ *
  *    Revision 1.38  2006/06/16 15:59:30  bfo
  *    F$Exit for built-in later / avoid bad <sp> manipulation for built-in
  *
@@ -1348,22 +1351,24 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
   if (prior==0) prior= os9_word( cp->pd._prior );
 
   /* exe dir only, link style first, then load style */
-            err= new_process( cpid,      &newpid,numpaths ); if (err) return err;
-            err= link_load  ( cpid,mpath,&newmid );       
-  if (!err) err= prepFork ( newpid,mpath, newmid,
-                            (byte*)rp->a[1],rp->d[2],rp->d[1], 
-                            numpaths, grp,usr, prior );
+  err= new_process( cpid, &newpid, numpaths ); if (err) return err;
+  retword( rp->d[0] )= newpid; /* return forked process' ID, assign early enough */
 
-	np= &procs[newpid]; /* is valid, even if error */
+            err= link_load ( cpid,mpath,&newmid );       
+  if (!err) err= prepFork( newpid,mpath, newmid,
+                           (byte*)rp->a[1],rp->d[2],rp->d[1], 
+                           numpaths, grp,usr, prior );
+
+  np= &procs[ newpid ]; /* is valid, even if error */
   if (!err) {
-    retword(rp->d[0])= newpid; /* return forked process' ID */
+  //retword(rp->d[0])= newpid; /* return forked process' ID */
                 
     /* --- now actually cause process switch */
     if  (!np->isIntUtil) {
       if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
 
-      cp->pd._cid= os9_word( newpid );                  /* this is the child */
-      currentpid =           newpid;  /* continue execution in new process  */
+      cp->pd._cid= os9_word( newpid );                               /* this is the child */
+      currentpid =           newpid;                /* continue execution in new process  */
       set_os9_state        ( newpid, pActive, "OS9_F_Fork" ); /* make this process active */
     } // if
         
