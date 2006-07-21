@@ -41,7 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
- *    Revision 1.8  2006/07/06 22:57:10  bfo
+ *    Revision 1.9  2006/07/10 09:58:27  bfo
+ *    <allowIntUtil> param for "do_arbitrate"
+ *
+ *    Revision 1.8  2006/07/06 22:57:10  MG
  *    function 'is_super' added (by Marin Gregorie)
  *
  *    Revision 1.7  2006/02/19 16:38:37  bfo

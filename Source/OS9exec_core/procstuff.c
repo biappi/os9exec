@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2006/07/21 07:23:43  bfo
+ *    Child assignment strategy (intUtils) corrected
+ *
  *    Revision 1.36  2006/07/14 11:46:20  bfo
  *    Longer usleep for MacOSX (but idle load is still up ...)
  *
@@ -48,7 +51,7 @@
  *    <allowIntUtil> param for "do_arbitrate",
  *    svid param for "callcommand"
  *
- *    Revision 1.34  2006/07/06 22:58:01  bfo
+ *    Revision 1.34  2006/07/06 22:58:01  MG
  *    function 'is_super' added (by Marin Gregorie)
  *
  *    Revision 1.33  2006/06/25 22:17:40  bfo
