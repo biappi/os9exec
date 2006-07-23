@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.69  2006/07/21 07:17:11  bfo
+ *    Enhancements for intUtils at bus error (dumpregs, ...)
+ *
  *    Revision 1.68  2006/07/14 11:49:37  bfo
  *    Arbitration for intUtil prepared and improved
  *
@@ -407,6 +410,7 @@ Boolean userOpt		  = false;
 Boolean ptocActive    = true;
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
+Boolean ptocMask      = false;
 Boolean withTitle     = true; 
 
 Boolean logtiming     = true; /* syscall loging, used by int cmd "systime" */
@@ -1135,6 +1139,7 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 			if (cp->isIntUtil) { // in case of built-in command, the parent must be activated again
 			  parentid= os9_word( cp->pd._pid );
 		      debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] intUtil parent=%d reactivated\n", cpid, parentid ));
+              procs[ parentid ].pBlocked= false; // changes allowed again
 			  set_os9_state( parentid, pActive, "IntCmd (excp)" ); // make it active again
             } // if
 			
@@ -1226,7 +1231,7 @@ void os9exec_globinit(void)
 // An exception handler one level higher can recall this procedure again.
 void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 {
-  const int    ARB_RATE= 10;
+  //const int  ARB_RATE= 10;
   ushort       cpid;
   process_typ* cp;
   regs_type*   crp;
@@ -1240,14 +1245,15 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   alarm_typ*   aa;
   ulong		   aaNew; // new alarm number for cyclic alarm
   Boolean      last_arbitrate;
-  int          arb_cnt = 0;
+  //int        arb_cnt = 0;
   process_typ* sigp;
-
+  
   // If call is coming from within intUtil, one loop thru all (active) processes
   // will be done. Exit criteria is the cp->isIntUtil call, which should be reached after
   if (fromIntUtil) {
-    arbitrate= true;
-    do_arbitrate( true );
+    async_area=  false;   // don't allow this now
+    arbitrate=    true;
+    do_arbitrate( true ); // now search another active process
   } // if
   
   do {
@@ -1257,7 +1263,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    	crp = &cp->os9regs; // pointer to process' registers
    	svd = &cp->savread; // pointer to process' saved registers
     cwti= false;
-    if (cp->isIntUtil && xErr==0) break; // for an int utility everything is done already
+    if (cp->state==pActive && 
+        cp->isIntUtil && xErr==0) break; // for an int utility everything is done already
                                          // Only in case of bus error, error handling is required
     
     // --- make sure, that good old MacOS gets its time, too
@@ -1279,11 +1286,14 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         // process gets active again, report errors to OS9 programm
         if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
 
-        if (!cp->oerr) crp->sr &= ~CARRY;
-        else {
-          retword(crp->d[1])= cp->oerr;
-                  crp->sr |= CARRY;
-        } // if
+      //if (!cp->oerr) crp->sr &= ~CARRY;
+      //else {
+      //  retword(crp->d[1])= cp->oerr;
+      //          crp->sr |= CARRY;
+                  
+        if (cp->oerr) { retword(crp->d[ 1 ])= cp->oerr;
+                                crp->sr |=  CARRY; }
+        else                    crp->sr &= ~CARRY;
       } // if
     } // system task
     
@@ -1301,6 +1311,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         }
         else {
           // Threads can only run in parallel during 68k EMU access
+          // open it here
           #ifdef THREAD_SUPPORT
             if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
           #endif
@@ -1311,6 +1322,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
             if (ptocThread) pthread_mutex_lock  ( &sysCallMutex );
             currentpid= cpid;
           #endif
+          // and close it again
 
           // --- and now exec syscall
           cp->vector= hiword(resL);
@@ -1372,30 +1384,38 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         if (async_pending) sig_mask( cpid,0 ); // disable signal mask
         // asynchronous signals are allowed here
 
-        // execute syscall
-        cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
-        cp->oerr       = exec_syscall( cp->func,cpid,crp, false );
-
-        // analyze result
-        if (debugcheck(dbgSysCall,dbgDeep)) {
-          if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
-          get_syscall_name(cp->func),cpid,PStateStr(cp));
-        }
+        // execute syscall, except in case of way to intercept, where icpt routine must be done first
+        // Can be triggered by sig_mask call above
+        
+        if (!cp->way_to_icpt) {
+          cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
+          cp->oerr       = exec_syscall( cp->func,cpid,crp, false );
+         
+          // analyze result
+          if (debugcheck(dbgSysCall,dbgDeep)) {
+            if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
+            get_syscall_name(cp->func),cpid,PStateStr(cp));
+          }
+        } // if
         async_area= false; 
         // asynchronous signals are no longer allowed
         // -----------------------
         
         // if the system is on the way to intercept, d1 and carry 
-        // must be stored (must not override values of "send_signal"
+        // must be stored (must not override values of "send_signal")
             cwti= cp->way_to_icpt;
         if (cwti) {
+        //if (fromIntUtil) {
+        //  printf( "CWTI %d => %d\n", currentpid, cp->icpt_pid );
+        //} // if
+          
           spid= cp->icpt_pid;
           sigp= &procs[spid];
           
           if (sigp->isIntUtil) {
-            printf( "hallo\n" );
-            cp->way_to_icpt= false;   // now the way to icpt changes
-            if (sigp->isIntUtil) break; // for an int utility this is currently not allowed
+            printf( "intutil intercept\n" );
+          //cp->way_to_icpt= false;   // now the way to icpt changes
+          //if (sigp->isIntUtil) break; // for an int utility this is currently not allowed
           } // if
 
           if   (cp->icpt_pid==currentpid) { // in case of the own process
@@ -1404,10 +1424,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
           }
           else {
             cp->way_to_icpt= false;   // now the way to icpt changes
-
-          //if (!procs[cp->icpt_pid].isIntUtil)
-              currentpid= cp->icpt_pid; // continue as this process
-          }
+            currentpid= cp->icpt_pid; // continue as this process
+          } // if
         } // if cwti
 
         if (cp->state==pActive   || 
@@ -1421,8 +1439,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
           } // if
         } // if
 
-        if (cwti && cp->icpt_signal!=S_Wake) {
-          sigp->masklevel   = 1; // not interrupteable during intercept		
+        if (cwti && cp->icpt_signal!=S_Wake && sigp->state!=pDead) {
+          sigp->masklevel   = 1;               // not interrupteable during intercept		
           sigp->os9regs.d[1]= cp->icpt_signal; // get signal code at icpt routine
           sigp->rtevector   = sigp->vector;
           sigp->rtefunc     = sigp->func;		
@@ -1489,14 +1507,14 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     } // if
 
     // do not arbitrate if way to intercept
-    if (!arb_cnt--) arb_cnt= ARB_RATE-1; // arbitrate= true;
+  //if (!arb_cnt--) arb_cnt= ARB_RATE-1; // arbitrate= true;
     last_arbitrate= arbitrate;	
 
     if (cp->state==pWaitRead)
       memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
-		
+
     if (fullArb || fromIntUtil) arbitrate= true;
-    if (!cwti) do_arbitrate( fromIntUtil );
+    if (!cwti && cp->masklevel==0) do_arbitrate( fromIntUtil );
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
@@ -1694,6 +1712,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* ---- create the kernel process -------------------------------- */
   new_process( 0,&cpid, 0 ); /* get the kernel process */
   cp=      &procs[cpid];
+  cp->pBlocked= false;
   set_os9_state ( cpid, pSleeping, "" ); /* to be compliant to real OS-9 */
   cp->pd._prior= os9_word( 0xFFFF );     /* "  "      "     "    "    "  */
   cp->mid      = 0;                      /* take "OS9exec" as the kernel module */
