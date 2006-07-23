@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2006/07/21 07:21:07  bfo
+ *    Assign <newpid> early enough (for intUtils)
+ *
  *    Revision 1.39  2006/06/16 22:29:07  bfo
  *    Some comments adapted
  *
@@ -168,6 +171,8 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
     /* -- save exit code */
     process_typ*        cp= &procs[cpid];
     unsigned short exiterr= loword( rp->d[1] );
+    cp->pBlocked = true;
+    cp->masklevel= 0;
     
     /* internal utilities will be killed on a higher level now */
     /* because XCode will not allow to throw exception thru C context */
