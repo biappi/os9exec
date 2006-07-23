@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2006/06/17 14:17:37  bfo
+ *    Display pipe/tty sizes < 1000 not with k
+ *
  *    Revision 1.27  2006/06/13 22:21:39  bfo
  *    d1 set correctly for SS_EOF
  *
@@ -1713,8 +1716,8 @@ os9err syspath_getstat( ushort pid, ushort sp, ushort func,
         /* undefined */
         default        : err= (g->_SS_Undef)( pid,spP, d1,d2 );                break;
     } /* switch */
-        
-   return err;
+          
+    return err;
 } /* syspath_getstat */
 
 
@@ -1829,7 +1832,7 @@ os9err syspath_setstat( ushort pid, ushort path, ushort func,
         /* undefined */ 
         default: err= (s->_SS_Undef)( pid,spP, d2,*a ); break;
     } /* switch */
-        
+
     return err;
 } /* syspath_setstat */
 
