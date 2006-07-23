@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2006/07/21 07:35:50  bfo
+ *    Reorganisation of "ihelp" display / os9_to_xxx arg adaption
+ *    OS9STOP env support (by Martin gregorie)
+ *    "stop/shutdown" : both names allowed now (by Martin Gregorie)
+ *
  *    Revision 1.26  2006/07/10 09:56:50  bfo
  *    ushort parentid added for "callcommand"
  *
@@ -524,6 +529,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_nothread( _pid_, _argc_, _argv_ ) { ptocThread= false; return 0; }
   static os9err int_arb     ( _pid_, _argc_, _argv_ ) { fullArb   = true;  return 0; }
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
+  static os9err int_pmask   ( _pid_, _argc_, _argv_ ) { ptocMask  = true;  return 0; }
+  static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
   
   
   static os9err ptoc_prep( ushort pid, _argc_, char** argv )
@@ -739,6 +746,8 @@ cmdtable_typ commandtable[] =
   { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
   { "iarb",          int_arb,        "Full arbitration" },
   { "inoarb",        int_noarb,      "Std  arbitration (default)" },
+  { "ipmask",        int_pmask,      "No   arbitration during PtoC" },
+  { "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
 
   { "",              NULL,           ""                },
   { "breaker",       int_breaker,    "PtoC breaker"    },
@@ -1065,7 +1074,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
 
     // save it 
     set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
-
+    procs[ parentid ].pBlocked= true; // no more changes allowed
+    
     /* There is a problem: during internal commands, multitasking can't
      * be active. If intcommands are used via telnet, the tty/pty connection
      * will not work. The only solution is to make the tty/pty buffer large
@@ -1118,6 +1128,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
     if (logtiming) os9_to_xxx( pid );
 
+    procs[ parentid ].pBlocked= false; // changes allowed again
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
 } /* callcommand */
