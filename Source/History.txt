@@ -1376,6 +1376,14 @@
           06-07-17  Bfo     memstuff    : UIntToStrN: Keep spaces for the remaining part of > 8
           06-07-18  Bfo     intcommand  : Reorganisation of "ihelp" display / os9_to_xxx arg adaption
           06-07-20  MG      intcommand  : OS9STOP env support; "stop/shutdown" : both names allowed now
+          
+          06-07-23  Bfo     os9exec_nt  : element <pBlocked> and global var <ptocMask> added
+          06-07-23  Bfo         "       : allow intUtil to arbitrate with other programs now
+          06-07-23  Bfo     utilstuff   : Quick return if no state change
+          06-07-23  Bfo     fcalls      : Initialize <pBlocked> and <masklevel>
+          06-07-23  Bfo     procstuff   : <pBlocked> introduced
+          06-07-23  Bfo     funcdispatch: os9exec_loop call <ptocMask> and <arbitrate> dependent
+          06-07-23  Bfo     intcommand  : ipmask/inopmask commands added
     3.32  06-??-??  Bfo
     ------------------- 
       
