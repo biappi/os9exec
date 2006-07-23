@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2006/07/21 07:12:54  bfo
+ *    task switch dbg display is now dbgDetail only
+ *
  *    Revision 1.46  2006/06/13 19:17:29  bfo
  *    /p /p1 are recognized as printer devices
  *
@@ -282,9 +285,17 @@ void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc )
 {
     process_typ* cp= &procs[cpid];
     procid*      pd= &cp->pd;
+    if   (state==cp->state) return; // no change, ignore
     
     debugprintf(dbgTaskSwitch,dbgDetail,("#    state %d -> %d '%s'\n", 
                                            cp->state, state, callingProc ));
+                                           
+  //if (cp->pBlocked && state!=pDead &&
+  //                    state!=pUnused) { // new status dead is always allowed
+  //  if (cp->state==pWaiting &&
+  //          state==pActive) return;
+  //  printf( "Krise %d: %d => %d\n", cpid, cp->state, state );
+  //} // if
     
             cp->state= state;
     switch (cp->state) {
