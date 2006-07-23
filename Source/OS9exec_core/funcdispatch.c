@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/07/21 07:10:42  bfo
+ *    os9_to_xxx <name> parameter eliminated
+ *
  *    Revision 1.24  2006/07/14 11:48:12  bfo
  *    os9_xxx kk<MAX_OS9PROGS-1 problem fixed (avoid memory overrun)
  *
@@ -507,14 +510,14 @@ void debug_comein( ushort pid, regs_type* rp )
 void debug_return( ushort pid, regs_type* crp, Boolean cwti )
 {	
   process_typ* cp= &procs[pid];
-	const funcdispatch_entry* fdeP= getfuncentry(cp->func);
-	char      *errnam,*errdesc;
-	mod_exec* mod;
-	char*     p;
-	char      item[OS9NAMELEN];
+  const funcdispatch_entry* fdeP= getfuncentry(cp->func);
+  char      *errnam,*errdesc;
+  mod_exec* mod;
+  char*     p;
+  char      item[OS9NAMELEN];
   Boolean msk= cp->masklevel  >0;
-	Boolean hdl= cp->pd._sigvec!=0;
-	Boolean strt;
+  Boolean hdl= cp->pd._sigvec!=0;
+  Boolean strt;
 		
   if (!Dbg_SysCall( pid,crp )) return;
 	if (cwti) {
@@ -582,7 +585,8 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
   const   funcdispatch_entry* fdeP= getfuncentry(func);
   char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
   char*   fSS  = "";
-
+  short   sv_pid;
+  
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
@@ -635,9 +639,11 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     }
   } // if
   
-  if (withinIntUtil) {
-  //os9exec_loop( 0, true );
-  }
+  if (withinIntUtil && !ptocMask) {
+    sv_pid= currentpid;
+    if (arbitrate) { os9exec_loop( 0, true ); arbitrate= false; }
+    currentpid= sv_pid; // make sure it is not changed
+  } // if
   
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
