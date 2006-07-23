@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2006/07/21 07:06:44  bfo
+ *    <procName> the process' name (for internal utilities) added
+ *
  *    Revision 1.53  2006/07/10 10:03:45  bfo
  *    os9exec_loop( unsigned short xErr, Boolean fromIntUtil ) added
  *
@@ -981,6 +984,7 @@ typedef struct {
                 
                 /* general state */
                 pstate_typ        state;    /* process' state */
+                Boolean        pBlocked;    /* process can't be activated */    
                 Boolean       isIntUtil;    /* Internal utility flag */
                 ushort              mid;    /* the process' primary module ID */
                 char*          procName;    /* the process' name (for internal utilities) */
@@ -1195,6 +1199,7 @@ extern Boolean userOpt;
 extern Boolean ptocActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
+extern Boolean ptocMask;
 extern Boolean withTitle;
 
 extern Boolean logtiming;
