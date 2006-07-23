@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2006/07/21 07:29:16  bfo
+ *    Up to date
+ *
  *    Revision 1.37  2006/07/21 07:23:43  bfo
  *    Child assignment strategy (intUtils) corrected
  *
@@ -171,7 +174,6 @@ void show_processes(void)
                 case pDead     : sta='D'; break;
                 case pSleeping : sta='S'; break;
                 case pWaiting  : sta='W'; break;
-            //  case pIntUtil  : sta='I'; break;
                 case pSysTask  : sta='T'; break;
                 case pWaitRead : sta='S'; break;
                 default        : sta='?'; break;
@@ -316,7 +318,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->pd._wbytes= 0;
             
             cp->procName   = NULL;         /* used for internal utilities only */
-            cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */          
+            cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */
+            cp->pBlocked   = true;         
             cp->pd._pid    = os9_word(parentid); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */
             cp->pd._cid    = 0;            /* has not yet children */
@@ -420,7 +423,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             debugprintf(dbgProcess,dbgNorm,("# new_process: created pid=%d\n",npid));
             /* --- its only here where we activate the process */
             /* correct state must be set afterwards, or process will be dead from start */
-            set_os9_state( npid, pDead, "new_process" ); 
+            set_os9_state( npid, pDead, "new_process" );
+          //printf( "toedlich %d\n", npid );
             *newpid=npid; /* return new PID */
             return 0;
         }
@@ -459,6 +463,8 @@ os9err kill_process( ushort pid )
     ushort       parentid,k;
     
   //upe_printf( "kill id=%d %d\n", pid, cp->state );
+    cp->pBlocked = true; // no more changes allowed
+    cp->masklevel= 0;
     
     if (cp->state==pUnused) return os9error(E_IPRCID); /* process does not exist */
     debugprintf(dbgProcess,dbgNorm,("# kill_process: killing pid=%d, parentid=%d, exiterr=%d\n",
@@ -490,7 +496,7 @@ os9err kill_process( ushort pid )
     
     if (parentid>0 &&
         parentid<MAXPROCESSES) {
-    //upe_printf( "dead id=%d\n", pid );
+    //printf( "dead id=%d mask=%d\n", pid, cp->masklevel );
       /* there is a parent process */
       set_os9_state( pid, pDead, "kill_process" ); /* keep it there until parent recognizes */
       if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
@@ -850,7 +856,7 @@ void do_arbitrate( Boolean allowIntUtil )
       if (spid>=MAXPROCESSES) spid= 0; /* wrap */
       if (spid==1) spid++;             /* avoid process 1 */
           sprocess= &procs[spid]; /* do it in correct order */
-    //if (sprocess->isIntUtil) continue;
+      if (sprocess->isIntUtil && allowIntUtil) break;
           
       /* --- test if all processes tested */
     //if (cpid==spid &&  sprocess->state!=pIntUtil) {
@@ -924,7 +930,7 @@ void do_arbitrate( Boolean allowIntUtil )
       if (sprocess->pW_age--<=0 || chkAll) {                     /* slow down also here */
           sprocess->pW_age= NewAge;
             
-            async_area= true; 
+              async_area= true; 
 	      if (async_pending) sig_mask( spid,0 ); /* disable signal mask */
 		    /* asynchronous signals are allowed here */
 			
@@ -943,8 +949,6 @@ void do_arbitrate( Boolean allowIntUtil )
     } /* if sleeping */
         
     if (sprocess->way_to_icpt) break;
-//  if (sprocess->way_to_icpt && 
-//     !sprocess->isIntUtil)   break;
     
 //  /* --- b.t.w, remember sleeping processes */        
 //  if (cp->state==pSleeping) sleepingpid=currentpid; /* remember sleeping process */   
@@ -1097,11 +1101,12 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     for (cnt=0; cnt<paramsiz; cnt++) *(p2++)= *(p++);
     
     cp->isIntUtil= false; /* no internal command by default */
+    cp->pBlocked = false; /* now the status can be changed  */
+    
     #ifdef INT_CMD
           cp->isIntUtil= isintcommand( mpath )>=0;
       if (cp->isIntUtil) {
         set_os9_state( newpid, pActive, "prepFork" );
-      //set_os9_state( newpid, pIntUtil ); /* internal utility */
         cp->mid= 0;                 /* assign "OS9exec" module */
 
         /* prepare args */
