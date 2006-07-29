@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/07/21 07:29:54  bfo
+ *    Up to date
+ *
  *    Revision 1.9  2006/07/10 09:58:27  bfo
  *    <allowIntUtil> param for "do_arbitrate"
  *
@@ -75,7 +78,7 @@ os9err kill_process( ushort pid );
 os9err send_signal ( ushort pid, ushort signal );
 os9err sig_mask    ( ushort pid, int    level  );
 
-void do_arbitrate( Boolean allowIntUtil );
+void do_arbitrate( ushort allowedIntUtil );
 
 void stop_os9exec(void);
 void lw_pid( ttydev_typ* mco );
