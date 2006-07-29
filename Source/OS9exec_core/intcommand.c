@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2006/07/23 14:35:30  bfo
+ *    ipmask/inopmask commands added
+ *
  *    Revision 1.27  2006/07/21 07:35:50  bfo
  *    Reorganisation of "ihelp" display / os9_to_xxx arg adaption
  *    OS9STOP env support (by Martin gregorie)
@@ -639,6 +642,14 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_ptoc
 
 
+  static os9err int_ranpapp( ushort pid, int argc, char** argv )
+  { 
+    os9err    err= ptoc_prep( pid, argc,argv ); 
+    if (!err) err= int_ranpapp_call();
+    return    err;
+  } // int_ranpapp
+
+
   static os9err int_show( ushort pid, int argc, char** argv )
   { 
     os9err    err= ptoc_prep( pid, argc,argv ); 
@@ -764,6 +775,7 @@ cmdtable_typ commandtable[] =
   { "pentominos",    int_pentominos, "PtoC pentominos" },
   { "printenv",      int_printenv,   "PtoC printenv"   },
   { "ptoc",          int_ptoc,       "PtoC ptoc"       },
+  { "ranpapp",       int_ranpapp,    "PtoC ranpapp"    },
   
   #ifdef PTOC_FULL
     { "show",        int_show,       "PtoC show"       },
@@ -1074,7 +1086,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
 
     // save it 
     set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
-    procs[ parentid ].pBlocked= true; // no more changes allowed
+  //procs[ parentid ].pBlocked= true; // no more changes allowed
     
     /* There is a problem: during internal commands, multitasking can't
      * be active. If intcommands are used via telnet, the tty/pty connection
@@ -1128,7 +1140,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
     if (logtiming) os9_to_xxx( pid );
 
-    procs[ parentid ].pBlocked= false; // changes allowed again
+  //procs[ parentid ].pBlocked= false; // changes allowed again
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
 } /* callcommand */
