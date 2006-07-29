@@ -1384,6 +1384,17 @@
           06-07-23  Bfo     procstuff   : <pBlocked> introduced
           06-07-23  Bfo     funcdispatch: os9exec_loop call <ptocMask> and <arbitrate> dependent
           06-07-23  Bfo     intcommand  : ipmask/inopmask commands added
+          
+          06-07-23  Bfo     os9exec_nt  : <pBlocked> not really used now, removed again
+          06-07-23  Bfo     os9main  /
+                            filescsi /
+                            file_rbf    : "adaptor" => "adapter"
+          06-07-23  Bfo     intcommand  : <pBlocked> eliminated / "int_ranpapp" added as int util
+          06-07-23  Bfo     procstuff   : <allowedIntUtil> is now the pid of the int util (0 for none)
+          06-07-23  Bfo     fcalls      : currentpid will be correctly adapted for int utils now
+          06-07-26  Bfo     os9exec_nt  : arbitration for internal utilities corrected
+          06-07-26  Bfo     funcdispatch: "debug_return" at correct location now
+          06-07-28  MG/Bfo  procstuff   : nanosleep() introduced, according to input of Martin Gregorie
     3.32  06-??-??  Bfo
     ------------------- 
       
