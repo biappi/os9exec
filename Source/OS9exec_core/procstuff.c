@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2006/07/23 14:28:30  bfo
+ *    <pBlocked> introduced
+ *
  *    Revision 1.38  2006/07/21 07:29:16  bfo
  *    Up to date
  *
@@ -319,7 +322,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             
             cp->procName   = NULL;         /* used for internal utilities only */
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */
-            cp->pBlocked   = true;         
+          //cp->pBlocked   = true;         
             cp->pd._pid    = os9_word(parentid); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */
             cp->pd._cid    = 0;            /* has not yet children */
@@ -463,7 +466,7 @@ os9err kill_process( ushort pid )
     ushort       parentid,k;
     
   //upe_printf( "kill id=%d %d\n", pid, cp->state );
-    cp->pBlocked = true; // no more changes allowed
+  //cp->pBlocked = true; // no more changes allowed
     cp->masklevel= 0;
     
     if (cp->state==pUnused) return os9error(E_IPRCID); /* process does not exist */
@@ -808,18 +811,25 @@ static void wait_for_signal( ushort pid )
  * Note: checks global flag "arbitrate" to see if global "currentpid"
  *       should be changed to next waiting/active process
  */
-void do_arbitrate( Boolean allowIntUtil )
+void do_arbitrate( ushort allowedIntUtil )
 {
   ushort       cpid       = currentpid;
   ushort       pid, spid;
   process_typ* cp;
   process_typ* sprocess;
+  process_typ* cpw;
   ushort       sleepingpid= MAXPROCESSES; /* assume none sleeping */
   ushort       deadpid    = MAXPROCESSES; /* assume none dead */
   Boolean      done       = false;
   Boolean      chkAll     = false;        /* 2nd run when all sleeping */
   Boolean      atLeast1;                  /* at least one process is sleeping */
-    
+
+  #ifdef UNIX
+    struct timespec waitTime;
+    waitTime.tv_sec =       0;
+    waitTime.tv_nsec= 1000000;
+  #endif
+  
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
                                           currentpid, arbitrate));
                                               
@@ -856,14 +866,15 @@ void do_arbitrate( Boolean allowIntUtil )
       if (spid>=MAXPROCESSES) spid= 0; /* wrap */
       if (spid==1) spid++;             /* avoid process 1 */
           sprocess= &procs[spid]; /* do it in correct order */
-      if (sprocess->isIntUtil && allowIntUtil) break;
+      if (sprocess->isIntUtil && 
+          sprocess->state==pActive && spid==allowedIntUtil) break;
           
       /* --- test if all processes tested */
     //if (cpid==spid &&  sprocess->state!=pIntUtil) {
     //if (cpid==spid && !sprocess->isIntUtil) {
       if (cpid==spid) {
         /* -- no other process found to run */
-        if (!chkAll && (allowIntUtil || !sprocess->isIntUtil)) {
+        if (!chkAll && (spid==allowedIntUtil || !sprocess->isIntUtil)) {
           if (atLeast1) chkAll= true;
           else          done  = true; 
         }
@@ -876,13 +887,16 @@ void do_arbitrate( Boolean allowIntUtil )
 
           if  (sprocess->state==pSleeping ||
                sprocess->isIntUtil) {
-            #if defined macintosh || defined windows32
+            #ifdef UNIX
+              nanosleep( &waitTime, NULL );
+              slp_idleticks++;
+            #elif defined macintosh || defined windows32
               ulong ticks   = GetSystemTick();
               HandleEvent();
               slp_idleticks+= GetSystemTick()-ticks;
-            #elif defined linux
-              usleep( 1000 ); /* sleep in microseconds */
-              slp_idleticks++;
+          //#elif defined linux
+          //  usleep( 1000 ); /* sleep in microseconds */
+          //  slp_idleticks++;
             #endif
           } 
           else {
@@ -899,17 +913,30 @@ void do_arbitrate( Boolean allowIntUtil )
     } /* if arbitrate */
         
     /* --- test if process can be run */
-    if (sprocess->state==pWaiting && !allowIntUtil) {
+    if (sprocess->state==pWaiting /* && spid!=allowedIntUtil */) {
       /* --- search if there is a dead child of that process */
       for (pid=0; pid<MAXPROCESSES; pid++) {
-        if (os9_word(procs[pid].pd._pid)==spid && procs[pid].state==pDead) {
-          deadpid= pid; break;
+                     cpw= &procs[ pid ];
+        if (os9_word(cpw->pd._pid)==spid) {
+        //if (sprocess->isIntUtil) {
+        //  printf( "gau=%d\n", spid );
+        //} // if
+          
+          if        (cpw->state==pDead) {
+            deadpid= pid; 
+          
+          //if (spid==allowedIntUtil) {
+          //  sprocess->state= pActive;
+          //} // if
+          
+            break;
+          } // if
         } /* if */
       } /* for */
       if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
     } /* if */
     
-    if   (sprocess->isIntUtil && !allowIntUtil) {
+    if (sprocess->isIntUtil && spid!=allowedIntUtil) {
       arbitrate= true; continue;  /* don't break as internal utility */
     } // if
     
@@ -1092,7 +1119,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     err= prepData( newpid,theModule,memplus+paramsiz, &memsiz, &mp ); if (err) return err; /* no room for data */
 
     /* -- copy parameter area, for internal commands as well */
-    p= paramptr;       p2= mp+memsiz-paramsiz;
+    p= paramptr;        p2= mp+memsiz-paramsiz;
   //current_a5 = (ulong)p2; /* parameter area start */
     cp->my_args= (ulong)p2;
     
@@ -1101,7 +1128,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     for (cnt=0; cnt<paramsiz; cnt++) *(p2++)= *(p++);
     
     cp->isIntUtil= false; /* no internal command by default */
-    cp->pBlocked = false; /* now the status can be changed  */
+  //cp->pBlocked = false; /* now the status can be changed  */
     
     #ifdef INT_CMD
           cp->isIntUtil= isintcommand( mpath )>=0;
