@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/07/23 14:34:25  bfo
+ *    os9exec_loop call <ptocMask> and <arbitrate> dependent
+ *
  *    Revision 1.25  2006/07/21 07:10:42  bfo
  *    os9_to_xxx <name> parameter eliminated
  *
@@ -509,55 +512,58 @@ void debug_comein( ushort pid, regs_type* rp )
 
 void debug_return( ushort pid, regs_type* crp, Boolean cwti )
 {	
-  process_typ* cp= &procs[pid];
+  process_typ*              cp  = &procs[pid];
   const funcdispatch_entry* fdeP= getfuncentry(cp->func);
-  char      *errnam,*errdesc;
+  
+  char*     errnam;
+  char*     errdesc;
   mod_exec* mod;
   char*     p;
   char      item[OS9NAMELEN];
-  Boolean msk= cp->masklevel  >0;
-  Boolean hdl= cp->pd._sigvec!=0;
-  Boolean strt;
+  Boolean   msk= cp->masklevel  >0;
+  Boolean   hdl= cp->pd._sigvec!=0;
+  Boolean   strt;
 		
   if (!Dbg_SysCall( pid,crp )) return;
-	if (cwti) {
-		uphe_printf( "<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
-						msk ? '*':' ',currentpid,
+  
+  if (cwti) {
+    uphe_printf( "<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
+						msk ? '*':' ',pid,
 						hdl ? "" :" (no handler)", PStateStr(cp) );
 							 
-		show_maskedregs( &cp->os9regs, d_w(1)+a_l(6) );
-		upe_printf ( "\n" );
-	}
-	else {
-		if ((cp->state==pActive  || // internal utilities can be active now as well
-		     cp->oerr) &&
-			   cp->state!=pWaitRead) { /* avoid dbg display in pWaitRead mode */
+    show_maskedregs( &cp->os9regs, d_w(1)+a_l(6) );
+	upe_printf ( "\n" );
+  }
+  else {
+	if ((cp->state==pActive  || // internal utilities can be active now as well
+		 cp->oerr) &&
+         cp->state!=pWaitRead) { /* avoid dbg display in pWaitRead mode */
 
-			/* D1.w/carry error reporting will be done when process is active or syscall delivered error, */
-			/* otherwise, d1.w will be updated when suspended process gets active again */
-			    strt= (ustrcmp(fdeP->name,"START")==0);
-			if (strt) {
-				mod= (mod_exec *)cp->os9regs.a[3];
-				p  =  Mod_Name( mod );
-				strcpy( item,"\"" );
-				strcat( item, p  );
-				strcat( item,"\"" );
-			}
+      /* D1.w/carry error reporting will be done when process is active or syscall delivered error, */
+      /* otherwise, d1.w will be updated when suspended process gets active again */
+          strt= (ustrcmp(fdeP->name,"START")==0);
+      if (strt) {
+        mod= (mod_exec *)cp->os9regs.a[3];
+        p  =  Mod_Name( mod );
+        strcpy( item,"\"" );
+        strcat( item, p  );
+        strcat( item,"\"" );
+      } // if
 
-			uphe_printf("<<<%cPid=%02d: OS9 %s %s",msk ? '*':' ',
-			                currentpid,fdeP->name, strt ? item:"returns: " );
+      uphe_printf("<<<%cPid=%02d: OS9 %s %s",msk ? '*':' ',
+                   pid, fdeP->name, strt ? item:"returns: " );
 
-			if (cp->oerr) {
-				get_error_strings(cp->oerr, &errnam,&errdesc);
-			//  errnam= "XXX"; errdesc= "";
-				upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
-			}
-			else {
-				show_maskedregs( &cp->os9regs,fdeP->outregs );
-				upe_printf( "\n" );
-			}
-		} 
-	} /* if (cwti) */
+      if (cp->oerr) {
+        get_error_strings(cp->oerr, &errnam,&errdesc);
+        //  errnam= "XXX"; errdesc= "";
+        upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
+      }
+      else {
+        show_maskedregs( &cp->os9regs,fdeP->outregs );
+        upe_printf( "\n" );
+      } // if
+    } 
+  } /* if (cwti) */
 } /* debug_return */
 
 
@@ -617,7 +623,6 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     // make the debug logging for systemcalls within int commands here
     cp->oerr= err;
     memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
-    debug_return( pid,rp, false );
     
     if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
       #ifdef THREAD_SUPPORT
@@ -639,10 +644,15 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     }
   } // if
   
-  if (withinIntUtil && !ptocMask) {
-    sv_pid= currentpid;
-    if (arbitrate) { os9exec_loop( 0, true ); arbitrate= false; }
-    currentpid= sv_pid; // make sure it is not changed
+  if (withinIntUtil) {
+    if (ptocMask) {
+      debug_return( pid, rp, false );
+    }
+    else {
+      sv_pid= currentpid;
+      if (arbitrate) { os9exec_loop( 0, true ); arbitrate= false; }
+      currentpid= sv_pid; // make sure it is not changed
+    }
   } // if
   
   #ifdef THREAD_SUPPORT
