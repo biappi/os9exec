@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.70  2006/07/23 14:18:13  bfo
+ *    allow intUtil to arbitrate with other programs now
+ *
  *    Revision 1.69  2006/07/21 07:17:11  bfo
  *    Enhancements for intUtils at bus error (dumpregs, ...)
  *
@@ -1139,7 +1142,7 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 			if (cp->isIntUtil) { // in case of built-in command, the parent must be activated again
 			  parentid= os9_word( cp->pd._pid );
 		      debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] intUtil parent=%d reactivated\n", cpid, parentid ));
-              procs[ parentid ].pBlocked= false; // changes allowed again
+            //procs[ parentid ].pBlocked= false; // changes allowed again
 			  set_os9_state( parentid, pActive, "IntCmd (excp)" ); // make it active again
             } // if
 			
@@ -1232,28 +1235,41 @@ void os9exec_globinit(void)
 void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 {
   //const int  ARB_RATE= 10;
+  //int        arb_cnt = 0;
   ushort       cpid;
   process_typ* cp;
   regs_type*   crp;
   save_type*   svd;
   Boolean      cwti;
+  
   ulong        my_tick;
   ulong        lastspin= GetSystemTick();
 
-  ushort       spid;  // will be assigned before use
-  ulong        resL;  // llm_os9_go result
+  ushort       spid;          // will be assigned before use
+  ushort       svd_intpid= 0; // by default, we are not called from intutil
+  ulong        resL;          // llm_os9_go result
   alarm_typ*   aa;
-  ulong		   aaNew; // new alarm number for cyclic alarm
+  ulong		   aaNew;         // new alarm number for cyclic alarm
   Boolean      last_arbitrate;
-  //int        arb_cnt = 0;
   process_typ* sigp;
   
   // If call is coming from within intUtil, one loop thru all (active) processes
   // will be done. Exit criteria is the cp->isIntUtil call, which should be reached after
   if (fromIntUtil) {
-    async_area=  false;   // don't allow this now
-    arbitrate=    true;
-    do_arbitrate( true ); // now search another active process
+    async_area= false;   // don't allow this now
+    arbitrate =  true;
+    
+                  svd_intpid= currentpid; // allow only this one as int util
+    do_arbitrate( svd_intpid );           // now search another active process
+
+    /*
+    cpid= currentpid;   // make a copy to allow currentpid to be changed by F$xxx calls
+    cp  = &procs[cpid]; // pointer to procs   descriptor
+   	crp = &cp->os9regs; // pointer to process' registers
+    cwti= false;
+
+    debug_return( cpid, crp, cwti );
+    */
   } // if
   
   do {
@@ -1263,9 +1279,13 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    	crp = &cp->os9regs; // pointer to process' registers
    	svd = &cp->savread; // pointer to process' saved registers
     cwti= false;
-    if (cp->state==pActive && 
-        cp->isIntUtil && xErr==0) break; // for an int utility everything is done already
-                                         // Only in case of bus error, error handling is required
+
+    if (xErr==0) {
+      debug_return( cpid, crp, cwti );
+    
+      if (cp->state==pActive && 
+          cp->isIntUtil) break; // for an int utility everything is done already
+     } // if                    // only in case of bus error, error handling is required
     
     // --- make sure, that good old MacOS gets its time, too
         my_tick= GetSystemTick();
@@ -1468,6 +1488,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     else {
       if (cp->state!=pUnused   &&
           cp->state!=pSleeping &&
+          cp->state!=pWaiting  && // allow this also
          (cp->state!=pDead ||
           cp->pd._signal==0)) {
         // signal handling already done correctly
@@ -1514,7 +1535,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
 
     if (fullArb || fromIntUtil) arbitrate= true;
-    if (!cwti && cp->masklevel==0) do_arbitrate( fromIntUtil );
+    if (!cwti && cp->masklevel==0) do_arbitrate( svd_intpid );
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
@@ -1553,7 +1574,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       } // if
     } // if
 		
-    debug_return( currentpid, crp, cwti );
+  //debug_return( currentpid, crp, cwti );
   } while( currentpid<MAXPROCESSES ); /* while active processes */
 } // os9exec_loop
 
@@ -1712,7 +1733,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* ---- create the kernel process -------------------------------- */
   new_process( 0,&cpid, 0 ); /* get the kernel process */
   cp=      &procs[cpid];
-  cp->pBlocked= false;
+//cp->pBlocked= false;
   set_os9_state ( cpid, pSleeping, "" ); /* to be compliant to real OS-9 */
   cp->pd._prior= os9_word( 0xFFFF );     /* "  "      "     "    "    "  */
   cp->mid      = 0;                      /* take "OS9exec" as the kernel module */
@@ -1854,10 +1875,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     #ifdef RBF_SUPPORT
       #ifdef windows32
         if (defSCSIAdaptNo<0) {
-    	    debugprintf(dbgStartup,dbgNorm,("# main startup: scanning for SCSI adaptors/buses/devices\n"));
+    	    debugprintf(dbgStartup,dbgNorm,("# main startup: scanning for SCSI adapters/buses/devices\n"));
     	    scsi_finddefaults();
         }
-	    debugprintf(dbgStartup,dbgNorm,("# main startup: Default SCSI adaptor=%d, bus=%d\n",defSCSIAdaptNo,defSCSIBusNo));
+	    debugprintf(dbgStartup,dbgNorm,("# main startup: Default SCSI adapter=%d, bus=%d\n",defSCSIAdaptNo,defSCSIBusNo));
       #endif
     #endif
     		
