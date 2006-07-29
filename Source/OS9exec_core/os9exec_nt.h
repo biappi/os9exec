@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2006/07/23 14:08:21  bfo
+ *    element <pBlocked> and global var <ptocMask> added
+ *
  *    Revision 1.54  2006/07/21 07:06:44  bfo
  *    <procName> the process' name (for internal utilities) added
  *
@@ -984,7 +987,7 @@ typedef struct {
                 
                 /* general state */
                 pstate_typ        state;    /* process' state */
-                Boolean        pBlocked;    /* process can't be activated */    
+              //Boolean        pBlocked;    /* process can't be activated */    
                 Boolean       isIntUtil;    /* Internal utility flag */
                 ushort              mid;    /* the process' primary module ID */
                 char*          procName;    /* the process' name (for internal utilities) */
