@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/07/23 14:26:07  bfo
+ *    Initialize <pBlocked> and <masklevel>
+ *
  *    Revision 1.40  2006/07/21 07:21:07  bfo
  *    Assign <newpid> early enough (for intUtils)
  *
@@ -171,7 +174,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
     /* -- save exit code */
     process_typ*        cp= &procs[cpid];
     unsigned short exiterr= loword( rp->d[1] );
-    cp->pBlocked = true;
+  //cp->pBlocked = true;
     cp->masklevel= 0;
     
     /* internal utilities will be killed on a higher level now */
@@ -1366,28 +1369,27 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
 
   np= &procs[ newpid ]; /* is valid, even if error */
   if (!err) {
-  //retword(rp->d[0])= newpid; /* return forked process' ID */
-                
     /* --- now actually cause process switch */
     if  (!np->isIntUtil) {
       if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
 
-      cp->pd._cid= os9_word( newpid );                               /* this is the child */
-      currentpid =           newpid;                /* continue execution in new process  */
-      set_os9_state        ( newpid, pActive, "OS9_F_Fork" ); /* make this process active */
+      cp->pd._cid= os9_word( newpid );                          /* this is the child */
+      if (!cp->isIntUtil) 
+        currentpid=  newpid;                    /* continue execution in new process */
+        /* except for internal utilities, where it will be done just an moment later */
+      
+      set_os9_state( newpid, pActive, "OS9_F_Fork" );    /* make this process active */
     } // if
         
-    arbitrate= true;
+    arbitrate= true; /* really needed ! */
+    return 0;
   } // if
     
-  if  (err) {
-    /* -- save exit code */
-    close_usrpaths( newpid );
-    set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); /* unused again because of error */
-    np->exiterr= err;
-  } // if
-            
-  return err;
+  /* -- save exit code */
+  close_usrpaths( newpid );
+  set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); /* unused again because of error */
+  np->exiterr= err;            
+  return       err;
 } /* OS9_F_Fork */
 
 
@@ -1525,14 +1527,19 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
         } // if
       } // if
     } // for
-        
+    
+    cp= &procs[ cpid ];  
     if (activeChild<MAXPROCESSES) { /* there is (at least) one child, but it's not yet dead */
       retword(rp->d[0])= 0; /* no child, should never be used !! */
       retword(rp->d[1])= 0; /* no error */
                         
       debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
       set_os9_state( cpid, pWaiting, "OS9_F_Wait" ); /* put myself to wait state */
-      if (!cp->isIntUtil) currentpid= activeChild; /* activate that child */
+      if (cp->isIntUtil) {
+      //printf( "hallo wait\n" );
+      } 
+      else 
+        currentpid= activeChild; /* activate that child */
       
       arbitrate= true;
       return 0; /* continue execution with another process */
