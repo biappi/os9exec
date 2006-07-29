@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/02/19 15:42:23  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.16  2005/06/30 11:38:36  bfo
  *    SCSI not yet supported for Mach-O
  *
@@ -153,7 +156,7 @@ void scsiadaptor_help(void)
       // - show inquiry data
       adapterInfo = (PSCSI_ADAPTER_BUS_INFO) buffer;
       n= adapterInfo->NumberOfBuses;
-      upho_printf("Adaptor SCSI%d has %d %s:\n",adaptno,n, n==1 ? "bus":"buses");
+      upho_printf("Adapter SCSI%d has %d %s:\n",adaptno,n, n==1 ? "bus":"buses");
       for (i=0; i<adapterInfo->NumberOfBuses; i++) {
         inquiryData = (PSCSI_INQUIRY_DATA) (buffer +
           adapterInfo->BusData[i].InquiryDataOffset);
@@ -301,7 +304,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
       // test address first
       if (scsiAdapt<0) {
         debugprintf(dbgFiles,dbgNorm,(
-          "# SCSI subsystem: bad Adaptor No (%d>) or bad Bus No (%d)\n",
+          "# SCSI subsystem: bad adapter No (%d>) or bad Bus No (%d)\n",
           scsiAdapt,
           scsiBus
         ));

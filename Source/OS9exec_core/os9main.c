@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2006/06/17 14:19:44  bfo
+ *    <CR> adaption
+ *
  *    Revision 1.18  2006/06/17 11:09:47  bfo
  *    Global var <withTitle> introduced
  *
@@ -379,9 +382,9 @@ static void os9_usage(char *name)
 
     upho_printf("Options:\n");
     #if defined(windows32)
-    upho_printf("   -a num      Use SCSI Adaptor <num>. (IDE interfaces also count as SCSI)\n");
-    upho_printf("   -b num      Use Bus <num> on specified SCSI adaptor.\n");
-    upho_printf("   -ah         Show all devices on all SCSI (and IDE) adaptors\n");
+    upho_printf("   -a num      Use SCSI adapter <num>. (IDE interfaces also count as SCSI)\n");
+    upho_printf("   -b num      Use Bus <num> on specified SCSI adapter.\n");
+    upho_printf("   -ah         Show all devices on all SCSI (and IDE) adapters\n");
     upho_printf("               Note that devices in use by Windows cannot be used by OS9exec\n");
     #endif
     upho_printf("   -c          comment output to MPW window (preceede lines with #)\n");
@@ -535,10 +538,10 @@ void os9_main( int argc, char **argv, char **envp )
                 case 'a' :  defSCSIAdaptNo = -1; // default to none
                             if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
                             k++; /* next arg */
-                            if (k>=argc) { printf("# Error: missing SCSI Adaptor Number for '%c' option!\n",*p); exit(1); }
+                            if (k>=argc) { printf("# Error: missing SCSI Adapter Number for '%c' option!\n",*p); exit(1); }
                             p=argv[k];
                             if (sscanf(p,"%hd", &defSCSIAdaptNo)!=1) {
-                                printf("# Error in SCSI Adaptor number '%s'\n",p);
+                                printf("# Error in SCSI Adapter number '%s'\n",p);
                                 exit(1);
                             }
                             break;

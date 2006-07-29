@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2006/06/13 22:18:47  bfo
+ *    SS_EOF implementation added for RBF file manager
+ *
  *    Revision 1.47  2006/06/08 08:15:04  bfo
  *    Eliminate causes of signedness warnings with gcc 4.0
  *
@@ -1376,7 +1379,7 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "    -f         adapt for full    image size\n" );
     
     #ifdef windows32
-    upe_printf( "    -ah        show all SCSI devices on all adaptors and buses\n" );
+    upe_printf( "    -ah        show all SCSI devices on all adapters and buses\n" );
     upe_printf( "    -a=adapter specify  SCSI adapter\n" );
     upe_printf( "    -b=scsibus specify  SCSI bus\n" );
     #endif
@@ -1495,7 +1498,7 @@ os9err int_mount( ushort pid, int argc, char** argv )
 
 				        #ifdef windows32
                   case 'a' : if (*(p+1)=='h') {
-                               upho_printf("Current defaults: Adaptor=SCSI%d, Bus=%d\n\n",
+                               upho_printf("Current defaults: adapter=SCSI%d, bus=%d\n\n",
                                             defSCSIAdaptNo,defSCSIBusNo);
                                scsiadaptor_help();
                                return 0;    
