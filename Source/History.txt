@@ -1395,6 +1395,14 @@
           06-07-26  Bfo     os9exec_nt  : arbitration for internal utilities corrected
           06-07-26  Bfo     funcdispatch: "debug_return" at correct location now
           06-07-28  MG/Bfo  procstuff   : nanosleep() introduced, according to input of Martin Gregorie
+          
+          06-08-04  Bfo     New arrangement for "target_options.h"
+          06-08-04  Bfo     os9exec_nt  : Comment changes / Improved arbitration
+          06-08-04  Bfo     procstuff /
+                            fcalls      : Comment changes
+          06-08-04  Bfo     memstuff    : MEM_SHIELD test environment added
+          06-08-04  Bfo     funcdispatch: Avoid negative ticks
+          06-08-04  Bfo     intcommand  : ptoc_prep => ptoc_call (unified)
     3.32  06-??-??  Bfo
     ------------------- 
       
