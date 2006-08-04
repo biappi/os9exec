@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2006/07/29 08:39:53  bfo
+ *    <pBlocked> not really used now, removed again
+ *
  *    Revision 1.55  2006/07/23 14:08:21  bfo
  *    element <pBlocked> and global var <ptocMask> added
  *
@@ -987,7 +990,6 @@ typedef struct {
                 
                 /* general state */
                 pstate_typ        state;    /* process' state */
-              //Boolean        pBlocked;    /* process can't be activated */    
                 Boolean       isIntUtil;    /* Internal utility flag */
                 ushort              mid;    /* the process' primary module ID */
                 char*          procName;    /* the process' name (for internal utilities) */
@@ -1038,6 +1040,7 @@ typedef struct {
                 ulong   icpta6;             /* value to pass in A6 to intercept routine */
 
                 Boolean way_to_icpt;        /* is true on the way to icpt */
+              //Boolean doit_later;
                 ushort  icpt_pid,           /* keep pid and signal save */
                         icpt_signal;
 

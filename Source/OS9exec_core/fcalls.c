@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2006/07/29 08:59:59  bfo
+ *    currentpid will be correctly adapted for int utils now
+ *
  *    Revision 1.41  2006/07/23 14:26:07  bfo
  *    Initialize <pBlocked> and <masklevel>
  *
@@ -476,7 +479,7 @@ os9err OS9_F_Time( regs_type *rp, _pid_ )
         /* we need some ticks, too */
         hiword( rp->d[3] )= TICKS_PER_SEC;
         loword( rp->d[3] )= currentTick;
-    }
+    } // if
      
     return 0;
 } /* OS9_F_Time */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2006/07/29 09:07:34  bfo
+ *    nanosleep() introduced, according to input of Martin Gregorie
+ *
  *    Revision 1.39  2006/07/23 14:28:30  bfo
  *    <pBlocked> introduced
  *
@@ -322,7 +325,6 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             
             cp->procName   = NULL;         /* used for internal utilities only */
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */
-          //cp->pBlocked   = true;         
             cp->pd._pid    = os9_word(parentid); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */
             cp->pd._cid    = 0;            /* has not yet children */
