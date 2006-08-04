@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2006/07/29 09:03:56  bfo
+ *    "debug_return" at correct location now
+ *
  *    Revision 1.26  2006/07/23 14:34:25  bfo
  *    os9exec_loop call <ptocMask> and <arbitrate> dependent
  *
@@ -346,10 +349,10 @@ static ulong DiffTick( void )
 {
     process_typ* cp= &procs[1];
     ulong            t= GetSystemTick(); /* time spent since last call except idle part */
-    ulong        a = t - last_complete - rw__idleticks - slp_idleticks; 
+    ulong        r = last_complete + rw__idleticks + slp_idleticks;
+    ulong        a = 0; if ( t>r ) a= t - r;
     last_complete  = t;
-
-    
+   
     cp->iticks       += rw__idleticks + slp_idleticks;
     cp->pd._sticks= os9_long(cp->fticks + cp->iticks);
     
@@ -512,7 +515,7 @@ void debug_comein( ushort pid, regs_type* rp )
 
 void debug_return( ushort pid, regs_type* crp, Boolean cwti )
 {	
-  process_typ*              cp  = &procs[pid];
+  process_typ*              cp  = &procs[ pid ];
   const funcdispatch_entry* fdeP= getfuncentry(cp->func);
   
   char*     errnam;
@@ -523,6 +526,12 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
   Boolean   msk= cp->masklevel  >0;
   Boolean   hdl= cp->pd._sigvec!=0;
   Boolean   strt;
+
+//if (cp->oerr) {
+//  if (strcmp( fdeP->name,"F$Time" )==0) {
+//    printf( "brunz %d\n", pid );
+//  } // if
+//} // if      
 		
   if (!Dbg_SysCall( pid,crp )) return;
   
@@ -617,11 +626,25 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     debug_comein( pid,rp );
   } // if
   
+//if (pid!=4 && cp->func==F_RTE)
+//  printf( "AAA: %s %d\n", fdeP->name, currentpid );
+
+//if (strcmp( fdeP->name,"F$Time" )==0) {
+//  printf( "# === YYY=%02d: OS9 F$Time err=%d\n", pid, cp->oerr );
+//} // if
+  
   err= (fdeP->func)(rp,pid);
+//cp->oerr= err;
+
+//if (cp->func==F_RTE)
+//  printf( "BBB: %s %d err=%d\n", fdeP->name, currentpid, err );
+
+//if (strcmp( fdeP->name,"F$Time" )==0) {
+//  printf( "# === Pid=%02d: OS9 F$Time err=%d\n", pid, cp->oerr );
+//} // if
   
   if (withinIntUtil) {
     // make the debug logging for systemcalls within int commands here
-    cp->oerr= err;
     memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
     
     if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
