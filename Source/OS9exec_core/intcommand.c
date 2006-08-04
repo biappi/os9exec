@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2006/07/29 08:52:43  bfo
+ *    <pBlocked> eliminated / "int_ranpapp" added as int util
+ *
  *    Revision 1.28  2006/07/23 14:35:30  bfo
  *    ipmask/inopmask commands added
  *
@@ -534,13 +537,20 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
   static os9err int_pmask   ( _pid_, _argc_, _argv_ ) { ptocMask  = true;  return 0; }
   static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
+
+
+  typedef os9err (*int_call)(void);
   
   
-  static os9err ptoc_prep( ushort pid, _argc_, char** argv )
+  static os9err ptoc_call( ushort pid, _argc_, char** argv, int_call ic )
   {
     os9err err;
     ushort mid;
     char*  name= argv[ 0 ];
+ 
+    process_typ*   cp= &procs[pid];
+    ushort parent= cp->pd._pid;
+    Boolean isInt= procs[parent].isIntUtil;
     
     #ifdef THREAD_SUPPORT
       // mutex lock for systemcalls
@@ -549,144 +559,144 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     #endif
 
          err=   load_module( pid, name, &mid, true,true ); 
-    if (!err) OS9exec_Globs( pid, os9modules[ mid ].modulebase, procs[pid].my_args );
+    if (!err) OS9exec_Globs( pid, os9modules[ mid ].modulebase, 
+                                  procs[pid].my_args );
     
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     #endif
 
+    if (!err) {
+      err= ic();
+    //OS9exec_GlobRestore( pid,parent, isInt );
+    } // if
+    
     return err;
-  } // ptoc_prep
+  } // ptoc_call
 
 
 // ---------------------------------------------------------------
   static os9err int_breaker( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_breaker_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_breaker_call ); 
+    return err;
   } // int_breaker
   
   
   static os9err int_definit( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_definit_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_definit_call ); 
+    return err;
   } // int_definit
 
 
   static os9err int_globalvars( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_globalvars_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_globalvars_call ); 
+    return err;
   } // int_globalvars
 
 
   static os9err int_info( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_info_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_info_call ); 
+    return err;
   } // int_info
 
 
   #ifdef PTOC_FULL
+  static os9err int_maint2( ushort pid, int argc, char** argv )
+  { 
+    os9err err= ptoc_call( pid, argc,argv, int_maint2_call ); 
+    return err;
+  } // int_maint2
+  #endif
+
+
   static os9err int_pascal( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_pascal_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_pascal_call ); 
+    return err;
   } // int_pascal
 
+
+  #ifdef PTOC_FULL
   static os9err int_pcall( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_pcall_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_pcall_call ); 
+    return err;
   } // int_pcall
   #endif
   
 
   static os9err int_pento( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_pento_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_pento_call ); 
+    return err;
   } // int_pento
 
 
   static os9err int_pentominos( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_pentominos_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_pentominos_call ); 
+    return err;
   } // int_pentominos
 
 
   static os9err int_printenv( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_printenv_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_printenv_call ); 
+    return err;
   } // int_printenv
 
 
   static os9err int_ptoc( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_ptoc_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_ptoc_call ); 
+    return err;
   } // int_ptoc
 
 
   static os9err int_ranpapp( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_ranpapp_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_ranpapp_call ); 
+    return err;
   } // int_ranpapp
 
 
   static os9err int_show( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_show_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_show_call ); 
+    return err;
   } // int_show
 
 
   static os9err int_stacks( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_stacks_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_stacks_call ); 
+    return err;
   } // int_stacks
 
 
   static os9err int_strout( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_strout_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_strout_call ); 
+    return err;
   } // int_strout
 
 
   static os9err int_tcheck( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_tcheck_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_tcheck_call ); 
+    return err;
   } // int_tcheck
 
 
   static os9err int_trapsli( ushort pid, int argc, char** argv )
   { 
-    os9err    err= ptoc_prep( pid, argc,argv ); 
-    if (!err) err= int_trapsli_call();
-    return    err;
+    os9err err= ptoc_call( pid, argc,argv, int_trapsli_call ); 
+    return err;
   } // int_trapsli
 #endif
 
@@ -765,9 +775,15 @@ cmdtable_typ commandtable[] =
   { "definit",       int_definit,    "PtoC definit"    },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
+  #ifdef PTOC_FULL
+    { "maint2",      int_maint2,     "PtoC maint2"     },
+  #endif 
+
+//#ifdef PTOC_FULL
+  { "pascal",        int_pascal,     "PtoC pascal"     },
+//#endif 
 
   #ifdef PTOC_FULL
-    { "pascal",      int_pascal,     "PtoC pascal"     },
     { "pcall",       int_pcall,      "PtoC pcall"      },
   #endif 
 
@@ -1065,7 +1081,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     ushort       sp;
     syspath_typ* spP;
     syspath_typ* spC;
-    process_typ* cp= &procs[ pid ];
+    process_typ* cp= &procs[      pid ];
+    process_typ* pa= &procs[ parentid ];
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -1086,7 +1103,6 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
 
     // save it 
     set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
-  //procs[ parentid ].pBlocked= true; // no more changes allowed
     
     /* There is a problem: during internal commands, multitasking can't
      * be active. If intcommands are used via telnet, the tty/pty connection
