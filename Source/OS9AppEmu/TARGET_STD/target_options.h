@@ -22,9 +22,7 @@
 
 #define USE_UAEMU            // use UAE-68k emulator
 
-#ifdef macintosh
-  #define REUSE_MEM          // do not deallocate memory after use
-#endif
+
 
                              // Support for:
                              // ============
@@ -38,20 +36,29 @@
 #define NET_SUPPORT          // TCP/IP sockets
 
 
-// 3 different Mac versions
-#ifdef USE_CLASSIC
-  #define TERMINAL_CONSOLE   // can do single char I/O
-  #define RAM_SUPPORT        // RAM disk
-#endif
+// 4 different Mac versions
+#ifdef macintosh
+  #define REUSE_MEM          // do not deallocate memory after use
 
-#ifdef USE_CARBON
   #define TERMINAL_CONSOLE   // can do single char I/O
   #define RAM_SUPPORT        // RAM disk
-#endif
+//#define PRINTER_SUPPORT    // LPT printers
 
-#ifdef __MACH__
-  #define TERMINAL_CONSOLE   // can do single char I/O
-  #define RAM_SUPPORT        // RAM disk
+  #ifdef USE_CLASSIC         // MacOS9
+  //
+  #endif
+
+  #ifdef USE_CARBON          // Carbon
+  //
+  #endif
+
+  #ifdef __MACH__
+    #ifdef __GNUC__          // XCode
+    //
+    #else                    // CW Mach
+    //
+    #endif
+  #endif
 #endif
 
 
@@ -67,4 +74,5 @@
 #ifdef linux
   #define TERMINAL_CONSOLE   // can do single char I/O
   #define RAM_SUPPORT        // RAM disk
+//#define PRINTER_SUPPORT    // LPT printers
 #endif
