@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.71  2006/07/29 09:00:41  bfo
+ *    arbitration for internal utilities corrected
+ *
  *    Revision 1.70  2006/07/23 14:18:13  bfo
  *    allow intUtil to arbitrate with other programs now
  *
@@ -1238,9 +1241,11 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   //int        arb_cnt = 0;
   ushort       cpid;
   process_typ* cp;
+  Boolean      cwti;
+//Boolean      doit_later= false;
+  
   regs_type*   crp;
   save_type*   svd;
-  Boolean      cwti;
   
   ulong        my_tick;
   ulong        lastspin= GetSystemTick();
@@ -1252,6 +1257,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   ulong		   aaNew;         // new alarm number for cyclic alarm
   Boolean      last_arbitrate;
   process_typ* sigp;
+//const   funcdispatch_entry* fdeP;
   
   // If call is coming from within intUtil, one loop thru all (active) processes
   // will be done. Exit criteria is the cp->isIntUtil call, which should be reached after
@@ -1261,26 +1267,17 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     
                   svd_intpid= currentpid; // allow only this one as int util
     do_arbitrate( svd_intpid );           // now search another active process
-
-    /*
-    cpid= currentpid;   // make a copy to allow currentpid to be changed by F$xxx calls
-    cp  = &procs[cpid]; // pointer to procs   descriptor
-   	crp = &cp->os9regs; // pointer to process' registers
-    cwti= false;
-
-    debug_return( cpid, crp, cwti );
-    */
   } // if
   
   do {
     // --- prepare for entry into OS9 world, process is "currentpid"
-    cpid= currentpid;   // make a copy to allow currentpid to be changed by F$xxx calls
-    cp  = &procs[cpid]; // pointer to procs   descriptor
-   	crp = &cp->os9regs; // pointer to process' registers
-   	svd = &cp->savread; // pointer to process' saved registers
-    cwti= false;
+    cpid= currentpid;     // make a copy to allow currentpid to be changed by F$xxx calls
+    cp  = &procs[ cpid ]; // pointer to procs   descriptor
+   	crp = &cp->os9regs;   // pointer to process' registers
+   	svd = &cp->savread;   // pointer to process' saved registers
+    cwti=  cp->way_to_icpt;
 
-    if (xErr==0) {
+    if (xErr==0 /* && !doit_later */) {
       debug_return( cpid, crp, cwti );
     
       if (cp->state==pActive && 
@@ -1306,11 +1303,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         // process gets active again, report errors to OS9 programm
         if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
 
-      //if (!cp->oerr) crp->sr &= ~CARRY;
-      //else {
-      //  retword(crp->d[1])= cp->oerr;
-      //          crp->sr |= CARRY;
-                  
         if (cp->oerr) { retword(crp->d[ 1 ])= cp->oerr;
                                 crp->sr |=  CARRY; }
         else                    crp->sr &= ~CARRY;
@@ -1319,8 +1311,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     
     else if (cp->state==pActive   ||
  		     cp->state==pWaitRead) {
-      if    (cp->state==pActive ||
-             cp->way_to_icpt) {
+      if   ((cp->state==pActive ||
+             cp->way_to_icpt) /* && !doit_later */) {
       // --- go execute OS9 code until next trap or exception
       // %%% for low-level calling interface debug: Debugger();
         if (xErr) {
@@ -1387,7 +1379,17 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         // TRAP0 = OS-9 system call called
         arbitrate= false; // disallow arbitration by default
 
+      //if (!doit_later)
         debug_comein( cpid,crp );
+        
+        cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
+        cp->oerr       = exec_syscall( cp->func, cpid,crp, false );
+          
+        // analyze result
+        if (debugcheck(dbgSysCall,dbgDeep)) {
+          if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
+          get_syscall_name(cp->func),cpid,PStateStr(cp));
+        } // if
 				
     	// --- Alarm handling
             aa= alarm_queue[ 0 ];
@@ -1403,20 +1405,35 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         async_area= true; 
         if (async_pending) sig_mask( cpid,0 ); // disable signal mask
         // asynchronous signals are allowed here
-
-        // execute syscall, except in case of way to intercept, where icpt routine must be done first
-        // Can be triggered by sig_mask call above
         
+        // execute syscall, except in case of way to intercept, where icpt routine must be done first
+        // Can have been triggered by sig_mask call above
+        
+        /*        
+        doit_later= false;
+        if (cp->way_to_icpt) {
+        //fdeP= getfuncentry(cp->func);
+        //printf( "%d => %d / %s\n", cpid, cp->icpt_pid, fdeP->name );
+          doit_later= cp->func==F_Time;
+        }
+        */
+        
+        /*
         if (!cp->way_to_icpt) {
+        //doit_later     =               cp->func==F_RTE;
+        //if (cpid!=4 && cp->func==F_RTE)
+        //  printf( "RTE %d\n", cpid );
           cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
-          cp->oerr       = exec_syscall( cp->func,cpid,crp, false );
-         
+          cp->oerr       = exec_syscall( cp->func, cpid,crp, false );
+          
           // analyze result
           if (debugcheck(dbgSysCall,dbgDeep)) {
             if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
             get_syscall_name(cp->func),cpid,PStateStr(cp));
           }
         } // if
+        */
+        
         async_area= false; 
         // asynchronous signals are no longer allowed
         // -----------------------
