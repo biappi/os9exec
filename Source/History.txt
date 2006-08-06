@@ -1403,6 +1403,10 @@
           06-08-04  Bfo     memstuff    : MEM_SHIELD test environment added
           06-08-04  Bfo     funcdispatch: Avoid negative ticks
           06-08-04  Bfo     intcommand  : ptoc_prep => ptoc_call (unified)
+          
+          06-08-07  Bfo     memstuff    : empty string causes <convErr>
+          06-08-07  Bfo     intcommand  : more direct ptoc intcommand calling /
+                                          createsf things added
     3.32  06-??-??  Bfo
     ------------------- 
       
