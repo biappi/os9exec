@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/08/04 18:41:40  bfo
+ *    MEM_SHIELD test environment added
+ *
  *    Revision 1.21  2006/07/21 07:25:50  bfo
  *    UIntToStrN: Keep spaces for the remaining part of > 8
  *
@@ -735,6 +738,7 @@ os9err os9free( ushort pid, void* membase, ulong memsz )
 
 static IsZeroR( const char* s )
 {
+  if    (*s==NUL) return false;
   while (*s!=NUL) {
     if  (*s <'0' && *s >'9' && *s!='.' && 
          *s!='E' && *s!='-' && *s!='+') return false;
@@ -747,6 +751,7 @@ static IsZeroR( const char* s )
 
 static IsZeroI( const char* s )
 {
+  if    (*s==NUL) return false;
   while (*s!=NUL) {
     if  (*s <'0' && *s >'9' &&
          *s!='-' && *s!='+') return false;
