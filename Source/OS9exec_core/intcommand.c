@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2006/08/04 18:46:10  bfo
+ *    ptoc_prep => ptoc_call (unified)
+ *
  *    Revision 1.29  2006/07/29 08:52:43  bfo
  *    <pBlocked> eliminated / "int_ranpapp" added as int util
  *
@@ -577,126 +580,97 @@ static os9err int_devs( ushort pid, int argc, char** argv )
 
 
 // ---------------------------------------------------------------
-  static os9err int_breaker( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_breaker_call ); 
-    return err;
+  static os9err int_breaker( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_breaker_call ); 
   } // int_breaker
   
   
-  static os9err int_definit( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_definit_call ); 
-    return err;
+  static os9err int_createsf( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_createsf_call ); 
+  } // int_createsf
+  
+  
+  static os9err int_definit( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_definit_call ); 
   } // int_definit
 
 
-  static os9err int_globalvars( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_globalvars_call ); 
-    return err;
+  static os9err int_globalvars( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_globalvars_call ); 
   } // int_globalvars
 
 
-  static os9err int_info( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_info_call ); 
-    return err;
+  static os9err int_info( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_info_call ); 
   } // int_info
 
 
   #ifdef PTOC_FULL
-  static os9err int_maint2( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_maint2_call ); 
-    return err;
+  static os9err int_maint2( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_maint2_call ); 
   } // int_maint2
   #endif
 
 
-  static os9err int_pascal( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_pascal_call ); 
-    return err;
+  static os9err int_pascal( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_pascal_call ); 
   } // int_pascal
 
 
   #ifdef PTOC_FULL
-  static os9err int_pcall( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_pcall_call ); 
-    return err;
+  static os9err int_pcall( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_pcall_call ); 
   } // int_pcall
   #endif
   
 
-  static os9err int_pento( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_pento_call ); 
-    return err;
+  static os9err int_pento( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_pento_call ); 
   } // int_pento
 
 
-  static os9err int_pentominos( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_pentominos_call ); 
-    return err;
+  static os9err int_pentominos( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_pentominos_call ); 
   } // int_pentominos
 
 
-  static os9err int_printenv( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_printenv_call ); 
-    return err;
+  static os9err int_printenv( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_printenv_call ); 
   } // int_printenv
 
 
-  static os9err int_ptoc( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_ptoc_call ); 
-    return err;
+  static os9err int_ptoc( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_ptoc_call ); 
   } // int_ptoc
 
 
-  static os9err int_ranpapp( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_ranpapp_call ); 
-    return err;
+  static os9err int_ranpapp( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_ranpapp_call ); 
   } // int_ranpapp
 
 
-  static os9err int_show( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_show_call ); 
-    return err;
+  static os9err int_show( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_show_call ); 
   } // int_show
 
 
-  static os9err int_stacks( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_stacks_call ); 
-    return err;
+  static os9err int_stacks( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_stacks_call ); 
   } // int_stacks
 
 
-  static os9err int_strout( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_strout_call ); 
-    return err;
+  static os9err int_strout( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_strout_call ); 
   } // int_strout
 
 
-  static os9err int_tcheck( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_tcheck_call ); 
-    return err;
+  static os9err int_tcheck( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_tcheck_call ); 
   } // int_tcheck
 
 
-  static os9err int_trapsli( ushort pid, int argc, char** argv )
-  { 
-    os9err err= ptoc_call( pid, argc,argv, int_trapsli_call ); 
-    return err;
+  static os9err int_trapsli( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_trapsli_call ); 
   } // int_trapsli
 #endif
 
@@ -772,6 +746,7 @@ cmdtable_typ commandtable[] =
 
   { "",              NULL,           ""                },
   { "breaker",       int_breaker,    "PtoC breaker"    },
+  { "createsf",      int_createsf,   "PtoC createsf"   },
   { "definit",       int_definit,    "PtoC definit"    },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
@@ -779,9 +754,9 @@ cmdtable_typ commandtable[] =
     { "maint2",      int_maint2,     "PtoC maint2"     },
   #endif 
 
-//#ifdef PTOC_FULL
+  #ifdef PTOC_FULL
   { "pascal",        int_pascal,     "PtoC pascal"     },
-//#endif 
+  #endif 
 
   #ifdef PTOC_FULL
     { "pcall",       int_pcall,      "PtoC pcall"      },
