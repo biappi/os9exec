@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/08/06 22:43:33  bfo
+ *    more direct ptoc intcommand calling
+ *
  *    Revision 1.30  2006/08/04 18:46:10  bfo
  *    ptoc_prep => ptoc_call (unified)
  *
@@ -585,6 +588,16 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_breaker
   
   
+  static os9err int_chkcas( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_chkcas_call ); 
+  } // int_chkcas
+
+
+  static os9err int_cproto( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_cproto_call ); 
+  } // int_cproto
+  
+  
   static os9err int_createsf( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_createsf_call ); 
   } // int_createsf
@@ -593,6 +606,11 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_definit( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_definit_call ); 
   } // int_definit
+
+
+  static os9err int_gencas( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_gencas_call ); 
+  } // int_gencas
 
 
   static os9err int_globalvars( ushort pid, int argc, char** argv ) { 
@@ -610,6 +628,16 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     return ptoc_call( pid, argc,argv, int_maint2_call ); 
   } // int_maint2
   #endif
+
+
+  static os9err int_makeSTB( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_makeSTB_call ); 
+  } // int_makeSTB
+
+
+  static os9err int_newfile( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_newfile_call ); 
+  } // int_newfile
 
 
   static os9err int_pascal( ushort pid, int argc, char** argv ) { 
@@ -672,6 +700,11 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_trapsli( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_trapsli_call ); 
   } // int_trapsli
+
+
+  static os9err int_uses( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_uses_call ); 
+  } // int_uses
 #endif
 
 
@@ -746,20 +779,27 @@ cmdtable_typ commandtable[] =
 
   { "",              NULL,           ""                },
   { "breaker",       int_breaker,    "PtoC breaker"    },
+  { "chkcas",        int_chkcas,     "PtoC chkcas"     },
+  { "cproto",        int_cproto,     "PtoC cproto"     },
   { "createsf",      int_createsf,   "PtoC createsf"   },
   { "definit",       int_definit,    "PtoC definit"    },
+  { "gencas",        int_gencas,     "PtoC gencas"     },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
-  #ifdef PTOC_FULL
-    { "maint2",      int_maint2,     "PtoC maint2"     },
-  #endif 
 
   #ifdef PTOC_FULL
+  { "maint2",        int_maint2,     "PtoC maint2"     },
+  #endif 
+
+  { "makeSTB",       int_makeSTB,    "PtoC makeSTB"    },
+  { "newfile",       int_newfile,    "PtoC newfile"    },
+
+//#ifdef PTOC_FULL
   { "pascal",        int_pascal,     "PtoC pascal"     },
-  #endif 
+//#endif 
 
   #ifdef PTOC_FULL
-    { "pcall",       int_pcall,      "PtoC pcall"      },
+  { "pcall",         int_pcall,      "PtoC pcall"      },
   #endif 
 
   { "pento",         int_pento,      "PtoC pento"      },
@@ -776,6 +816,7 @@ cmdtable_typ commandtable[] =
   { "strout",        int_strout,     "PtoC strout"     },
   { "tcheck",        int_tcheck,     "PtoC tcheck"     },
   { "trapsli",       int_trapsli,    "PtoC trapsli"    },
+  { "uses",          int_uses,       "PtoC uses"       },
   #endif
 
   #ifdef MACOS9
