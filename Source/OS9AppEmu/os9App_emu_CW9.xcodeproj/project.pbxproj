@@ -757,6 +757,7 @@
 					ppc,
 					i386,
 				);
+				CONFIGURATION_BUILD_DIR = ../../Output;
 				COPY_PHASE_STRIP = YES;
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
