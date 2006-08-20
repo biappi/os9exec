@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2006/07/23 14:21:43  bfo
+ *    Quick return if no state change
+ *
  *    Revision 1.47  2006/07/21 07:12:54  bfo
  *    task switch dbg display is now dbgDetail only
  *
@@ -827,13 +830,7 @@ static struct _sgs init_consoleopts = {
         0,      /* PD_UPC   0 = upper and lower cases, 1 = upper case only */
         1,      /* PD_BSO   0 = BSE, 1 = BSE-SP-BSE */
         0,      /* PD_DLO   delete sequence */
-        
-      #ifdef linux
-        0,      /* PD_EKO   0 = no echo */
-      #else
-        1,
-      #endif
-      
+        1,      /* PD_EKO   0 = no echo */
         1,      /* PD_ALF   0 = no auto line feed */
         0,      /* PD_NUL   end of line null count */
         0,      /* PD_PAU   0 = no end of page pause */
