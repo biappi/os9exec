@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/07/29 08:49:54  bfo
+ *    "adaptor" => "adapter"
+ *
  *    Revision 1.19  2006/06/17 14:19:44  bfo
  *    <CR> adaption
  *
@@ -92,19 +95,27 @@
 
 #include "os9exec_incl.h"
 
+#ifdef UNIX
+#include <termios.h>
+#endif
 
 /* statics */
 /* ======= */
 
-int   commentoutput;    /* commenting stdout */
-int   disablefilters;   /* filtering stdout */
-ulong memplus;          /* additional memory for first process */
-ulong iniprior;         /* priority for first process */
+int   commentoutput;        /* commenting stdout */
+int   disablefilters;       /* filtering stdout */
+ulong memplus;              /* additional memory for first process */
+ulong iniprior;             /* priority for first process */
 
+#ifdef UNIX
+struct termios savedmodes;  /* saved terminal attributes     */
+#endif
 
 
 /* locally defined procedures */
 Boolean F_Avail( const char* pathname );
+void    restore_term(void);
+Boolean setup_term(void);
 /* -------------------------- */
 
 
@@ -440,6 +451,74 @@ static void GetStartTick()
 
 
 
+/* Set the the terminal for unbuffered, no-echo operation.
+   If errors are found they will be reported but the function
+   exits normally so its caller can handle the cleanup. */
+Boolean setup_term()
+{
+    int reply = 0;
+    
+    #ifdef UNIX
+      struct termios modes;
+
+      reply = tcgetattr(0, &modes);           /* retrieve terminal attrs */
+      if (reply == 0) {
+          /*
+              store the original modes so they can be restored
+          */
+          savedmodes = modes;
+
+          /*
+              change the attributes to set
+              character at a time input and
+              turn off echo.
+          */
+
+          modes.c_cc[VMIN] = 0;   /* non-blocking mode  */
+          modes.c_cc[VTIME] = 1;  /* return after 100 mSec */
+          modes.c_lflag &= ~ICANON;
+          modes.c_lflag &= ~(ECHO | ECHOE | ECHOK /*| ECHOKE*/);
+
+          /*
+              set up the terminal for OS-9
+          */
+          reply = tcsetattr(0, TCSAFLUSH, &modes);
+          if (reply) {
+              upo_printf("Error %s: %s\n",
+                         "setting up os9exec's terminal attributes",
+                         strerror(errno));
+          }
+      }
+      else {
+          upo_printf("Error reading initial terminal settings: %s\n",
+                     strerror(errno));
+      }
+
+    #endif
+
+    return (reply == 0);
+}
+
+
+/* Restore the original terminal operation.
+   It is invoked as part of the exit() function, so
+   thje error report isn't followed by an exit() */
+void restore_term()
+{
+    #ifdef UNIX
+      int reply;
+    
+      struct termios modes;
+
+      modes = savedmodes;
+      reply = tcsetattr(0, TCSAFLUSH, &modes);
+      if (reply)
+         upo_printf("Error restoring normal terminal operation: %s\n",
+                    strerror(errno));
+    #endif
+}
+
+
 /* main program */
 void os9_main( int argc, char **argv, char **envp )
 {
@@ -664,6 +743,18 @@ void os9_main( int argc, char **argv, char **envp )
 	  #if defined UNIX || defined USE_CARBON
 	    userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
 	  #endif
+
+    /* Set the terminal modes and hook mode restoration to the exit function.
+       If setting then fails, the error will already have been reported
+       for suitably detailed fault analysis but the function exits so
+       os9_main() can handle the cleanup: at present this is just to exit.
+    */
+    #ifdef UNIX
+      if (setup_term())
+          atexit(restore_term);
+      else
+          exit(1);
+    #endif
 
     /* now here starts the os9 command line: go execute it */
     debug_prep(); /* make sure debug info is adjusted */
