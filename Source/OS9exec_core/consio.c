@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2006/07/06 22:59:48  bfo
+ *     devReady for MacOS9 is ok again
+ *
  *    Revision 1.15  2006/06/26 22:11:42  bfo
  *    Adaptions for Ctrl-C
  *
@@ -108,8 +111,13 @@ os9err pEOF      ( ushort pid, syspath_typ*, ulong *maxlenP, char* buffer );
 
 void   init_SCF  ( fmgr_typ* f );
 os9err pSopen    ( ushort pid, syspath_typ*, ushort  *modeP, char* pathname );
+os9err pSclose   ( ushort pid, syspath_typ* );
 os9err pSBlink   ( ushort pid, syspath_typ*, ulong      *d2 );
 os9err pGBlink   ( ushort pid, syspath_typ*, ulong      *d2 );
+/* ------------------------------------------------------------------------- */
+
+/* -----------------------  /term pause control  --------------------------- */
+static int term_line = 0;
 /* ------------------------------------------------------------------------- */
 
 void init_Cons( fmgr_typ* f )
@@ -179,7 +187,7 @@ void init_SCF( fmgr_typ* f )
     
     /* main procedures */
     f->open       = (pathopfunc_typ)pSopen;
-    f->close      = (pathopfunc_typ)pNop;
+    f->close      = (pathopfunc_typ)pSclose;
     f->read       = (pathopfunc_typ)pBadMode; /* not allowed */
     f->readln     = (pathopfunc_typ)pBadMode; /* not allowed */
     f->write      = (pathopfunc_typ)pBadMode; /* not allowed */
@@ -271,7 +279,7 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE* stream, Boolean wrln)
       }
 
       write( 1,&c,1 );
-      
+
       // not yet supported for Mac Classic/Carbon
       #ifdef win_unix
         lw_pid( &main_mco ); /* assign for later use */
@@ -331,6 +339,7 @@ Boolean ConsGetc( char* c )
 
       if (doit) {
              n= ReadCharsFromTerminal( c,1, &main_mco );
+        term_line = 0;
         if ((n>0) && devIsReady) return true;
       } // if
       
@@ -352,13 +361,13 @@ Boolean ConsGetc( char* c )
     #else
     //devIsReady= true;
     
-      n= fread( c,1,1, stdin );
-    //     devIsReady= (n!=-1);
-    //if (!devIsReady) return false;
-     
-    //printf( "nn=%d\n", n );
-    //fflush(0);
-      if (n!=1 || !devIsReady) return false;
+      n = read(0, c, 1);
+      devIsReady= (n > 0);
+      if (!devIsReady)
+          return false;
+
+      // printf( "nn=%d  c=0x%02X\n", n, (unsigned int)c[0] );
+      // fflush(0);
     
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
@@ -430,69 +439,97 @@ static os9err ConsRead( ushort pid, syspath_typ* spP,
             if (c==ot->_sgs_kbich) { err= S_Intrpt; break; };
             if (c==ot->_sgs_kbach) { err= S_Abort;  break; };
           //#endif
+
+            /* xterm kludge: xterm consoles can only generate an escape
+               sequence (default), 0x08 or 0x7f if the Delete key is hit.
+               This kludge assumes that 0x7f has been configured for
+               Delete and translates it to the OS-9 default.
+            */ 
+          #ifdef UNIX
+            if (c == 0x7f)
+                c = 0x18;
+          #endif
+          
+            if (ot->_sgs_case && islower(c)) {
+                /* lower case -> upper case */
+                c = toupper(c);
+            }
             
             if (edit && c==ot->_sgs_dulnch) {
                 dupMode= true; /* duplicate last line */
             }
+
         } /* if not NUL char */
         
-        if (dupMode) { 
-            c=  *(buffer+cnt); 
-            if (*(buffer+cnt+1)==NUL) dupMode= false; }
-        else    *(buffer+cnt)= c;
-
-        if (edit) {
-            /* basic line editing  */
-            if (c!=NUL && c==ot->_sgs_eofch) {
-                ConsPutcEdit( CR, alf,ot->_sgs_eorch );
-                err= E_EOF;
-                break;
+        if (ot->_sgs_pause && term_line >= ot->_sgs_page) {
+            /* pause is ON and a screenful has been output,
+               so the last character read means "go on".
+               Reset the line count and swallow the character */
+            term_line = 0;
+        }
+        else {
+            if (dupMode) { 
+                c=  *(buffer+cnt); 
+                if (*(buffer+cnt+1)==NUL) dupMode= false;
             }
-            
-            else if (c!=NUL && c==ot->_sgs_bspch) {
-                /* backspace */
-                if (cnt>0) {
-                    cnt--;
-                    if (ot->_sgs_echo) {
-                        /* backspace echo */
-                        ConsPutc(ot->_sgs_bsech);
-                        if (ot->_sgs_backsp) {
-                            /* BSP-Space-BSP Sequence wanted */
-                            ConsPutc(' ');
+            else {
+                *(buffer+cnt)= c;
+            }
+        
+
+            if (edit) {
+                /* basic line editing  */
+                if (c!=NUL && c==ot->_sgs_eofch) {
+                    ConsPutcEdit( CR, alf,ot->_sgs_eorch );
+                    err= E_EOF;
+                    break;
+                }
+                else
+                if (c!=NUL && c==ot->_sgs_bspch) {
+                    /* backspace */
+                    if (cnt>0) {
+                        cnt--;
+                        if (ot->_sgs_echo) {
+                            /* backspace echo */
                             ConsPutc(ot->_sgs_bsech);
+                            if (ot->_sgs_backsp) {
+                                /* BSP-Space-BSP Sequence wanted */
+                                ConsPutc(' ');
+                                ConsPutc(ot->_sgs_bsech);
+                            }
                         }
                     }
                 }
-            }
-            
-            else if (c!=NUL && c==ot->_sgs_dlnch) {
-                /* clear line */
-                if (ot->_sgs_echo) {
-                    while (cnt>0) {
-                        ConsPutc(ot->_sgs_bsech);
-                        if (ot->_sgs_backsp) {
-                            /* BSP-Space-BSP Sequence wanted */
-                            ConsPutc(' ');
+                else
+                if (c!=NUL && c==ot->_sgs_dlnch) {
+                    /* clear line */
+                    if (ot->_sgs_echo) {
+                        while (cnt>0) {
                             ConsPutc(ot->_sgs_bsech);
-                        };
-                        cnt--;                  
+                            if (ot->_sgs_backsp) {
+                                /* BSP-Space-BSP Sequence wanted */
+                                ConsPutc(' ');
+                                ConsPutc(ot->_sgs_bsech);
+                            }
+                            cnt--;                  
+                        }
                     }
+                    cnt=0; /* clear anyway */
                 }
-                cnt=0; /* clear anyway */
+                else {
+                    cnt++;
+                    if (ot->_sgs_echo) ConsPutcEdit( c, alf,ot->_sgs_eorch );
+                }
+            }
+            else {
+                /* without Editing */
+                cnt++;
+                if (ot->_sgs_echo) ConsPutc( c );
             }
             
-            else {
-                cnt++;
-                if (ot->_sgs_echo) ConsPutcEdit( c, alf,ot->_sgs_eorch );
-            }
+            fflush(stdout); /* ensure all is written out */
+            if (endchar!=0 && endchar==c) break;
         }
-        else {
-            /* without Editing */
-            cnt++;
-            if (ot->_sgs_echo) ConsPutc( c );
-        }
-        fflush(stdout); /* ensure all is written out */
-        if (endchar!=0 && endchar==c) break;
     }
     
     *maxlenP = cnt;
@@ -565,15 +602,15 @@ os9err pCopen( ushort pid, syspath_typ* spP, _modeP_, char* name )
 os9err pSopen( _pid_, syspath_typ* spP, _modeP_, char* name )
 /* routine for opening SCF devices */
 {   
-	int k;
-
-    if (*name!=NUL) {
-    	strcpy            ( spP->name,&name[1] );
-    	    k= link_mod_id( spP->name );
-    	if (k!=MAXMODULES)  spP->mh= os9mod( k );
+    int k;
+    os9err reply = 0;
+    if (*name != NUL) {
+       	strcpy(spP->name, &name[1]);
+    	k = link_mod_id( spP->name);
+    	if (k!=MAXMODULES)  spP->mh = os9mod( k );
     } /* if */
-    
-    return 0;
+
+    return reply;
 } /* pSopen */
 
 
@@ -657,6 +694,12 @@ os9err pCclose( ushort pid, syspath_typ* spP )
     return 0;
 } /* pCclose */
 
+
+/* Close an SCF device, resetting the terminal modes to pre-open values */
+os9err pSclose( _pid_, _spP_ )
+{
+  return 0;
+} /* pSclose */
 
 
 /* input character wise from console */
@@ -773,6 +816,12 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                  cnt=0;
           while (cnt<*maxlenP) {
               c= buffer[cnt++];
+              if (ot->_sgs_case && islower(c)) {
+                  /* lower case -> upper case
+                     NOTE: this may wreck alpha escape codes */
+                  c = toupper(c);
+              }
+            
               ConsPutc( c );
 
               if (cp->state==pSysTask) { /* should never go to here */
@@ -781,6 +830,13 @@ static os9err ConsoleOut( ushort pid, syspath_typ* spP,
                   break; /* tty/pty break */
               }
 
+              if (c == CR && ot->_sgs_pause) {
+                  term_line++;
+                  if (term_line >= ot->_sgs_page) {
+                      break;
+                  }
+              }
+              
               if (wrln && c!=NUL && c==ot->_sgs_eorch) {
                   if (ot->_sgs_alf) ConsPutc( LF );
                   break;
@@ -858,7 +914,6 @@ os9err pCready( _pid_, syspath_typ* spP, ulong* n )
     
     return os9error(E_NOTRDY);
 } /* pCready */
-
 
 
 /* eof */
