@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.57  2006/08/04 18:33:33  bfo
+ *    Comment changes
+ *
  *    Revision 1.56  2006/07/29 08:39:53  bfo
  *    <pBlocked> not really used now, removed again
  *
@@ -659,6 +662,11 @@ typedef struct {
             ulong     deptr;   /* dir entry ptr                         */
         } rbf_typ;
 
+/* variant for SCF objects */
+typedef struct {
+            int       scrline;         /* line count, for pagination    */
+        } scf_typ;
+
 
 /* Mount modes for RBF images */
 #define  Img_Unchanged 0 // as is
@@ -786,6 +794,7 @@ typedef struct {
       pipe_typ pipe;          /* Pipe          object */
       disk_typ disk;          /* Disk file/dir object */
        rbf_typ rbf;           /* RBF  file/dir object */
+       scf_typ scf;           /* SCF           object */
          
       #ifdef NET_SUPPORT
         net_typ net;          /* Network       object */
