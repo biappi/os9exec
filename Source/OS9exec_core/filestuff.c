@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2006/07/23 14:30:23  bfo
+ *    Up to date
+ *
  *    Revision 1.28  2006/06/17 14:17:37  bfo
  *    Display pipe/tty sizes < 1000 not with k
  *
@@ -1002,6 +1005,7 @@ void init_syspaths()
     
     int k;
     for(k=0; k<MAXSYSPATHS; k++) {
+        memset(&syspaths[k], 0, sizeof(syspath_typ));
         spP= &syspaths[k];
         spP->type=fNone; /* no paths yet */
         spP->linkcount=0;
