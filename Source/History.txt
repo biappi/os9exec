@@ -1407,6 +1407,15 @@
           06-08-07  Bfo     memstuff    : empty string causes <convErr>
           06-08-07  Bfo     intcommand  : more direct ptoc intcommand calling /
                                           createsf things added
+                                          
+          06-08-19  Bfo     XCode Project CONFIGURATION_BUILD_DIR = ../../Output;
+          06-08-19  Bfo     intcommand  : 5 more internal commands added
+          06-08-20  MG      os9exec_nt  : Line count for pagination added
+          06-08-20  MG      os9main     : restore_term(void) / setup_term(void) added
+          06-08-20  MG      utilstuff   : "noecho" mode is default again
+          06-08-20  MG      filestuff   : path descriptors completely cleared with memset
+          06-08-20  MG      consio      : several additions and enhancemenet for pagination and others
+       
     3.32  06-??-??  Bfo
     ------------------- 
       
