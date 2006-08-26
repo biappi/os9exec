@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/06/08 08:15:04  bfo
+ *    Eliminate causes of signedness warnings with gcc 4.0
+ *
  *    Revision 1.22  2006/06/01 18:05:57  bfo
  *    differences in signedness (for gcc4.0) corrected
  *
@@ -1270,13 +1273,13 @@ modulefound:
 os9err link_module( ushort pid, const char *name, ushort *mid )
 {   
 	os9err  err;
-	Boolean isInt= false;
+	Boolean isInt = false;
 	char    lName[OS9PATHLEN];
 	
 	strcpy( lName,name );
 	
     #ifdef INT_CMD
-      if (isintcommand(lName)>=0) {
+      if (isintcommand( lName )>=0) {
       	  isInt= true;
           debugprintf(dbgModules,dbgNorm,
               ("# link_module: internal cmd '%s' => try 'OS9exec' instead\n", lName));
