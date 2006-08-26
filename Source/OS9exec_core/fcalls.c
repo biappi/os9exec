@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2006/08/04 18:39:33  bfo
+ *    Comment changes
+ *
  *    Revision 1.42  2006/07/29 08:59:59  bfo
  *    currentpid will be correctly adapted for int utils now
  *
@@ -1498,6 +1501,7 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
   ushort       activeChild;
   os9err       err= sig_mask( cpid,0 ); /* disable signal mask */
   process_typ* cp;
+  short        sv_pid;
 
   if (dummyfork) {
     /* wait for dummy fork */
@@ -1507,27 +1511,53 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
   }
   else {
     /* check if there are childs at all */
+    /*
     activeChild=MAXPROCESSES;
-    for (k=2; k<MAXPROCESSES; k++) { /* start at process 2  */
+    for (k=2; k<MAXPROCESSES; k++) { // start at process 2
           cp=  &procs[k];
       if (cp->state!=pUnused && 
-        os9_word(cp->pd._pid)==cpid) {
-                
-        /* this is a child */
+          os9_word(cp->pd._pid)==cpid) { // this is a child
+
         if (cp->state==pDead) {
-          /* child is dead, report that */
-          retword(rp->d[0])= k; /* ID of dead child */
-          retword(rp->d[1])= procs[k].exiterr; /* exit error of child */
+          // child is dead, report that
+          retword(rp->d[0])= k; // ID of dead child
+          retword(rp->d[1])= procs[k].exiterr; // exit error of child
           debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
           set_os9_state( k, pUnused, "OS9_F_Wait" );
-          return 0; /* process already died, no need to wait */
+          return 0; // process already died, no need to wait
         }
-        else {
-          /* there is a non-dead child */
-          debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d is active\n",k));
-          activeChild= k; /* remember its id */
-          break;
-        } // if
+ 
+        // there is a non-dead child
+        debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d is active\n",k));
+        activeChild= k; // remember its id
+        break;
+      } // if
+    } // for
+    */
+    
+    activeChild=MAXPROCESSES;
+    for (k=2; k<MAXPROCESSES; k++) { // start at process 2
+          cp= &procs[ k ];
+      if (cp->state==pDead && 
+          os9_word(cp->pd._pid)==cpid) { // this is a child
+        // child is dead, report that
+        retword(rp->d[0])= k; // ID of dead child
+        retword(rp->d[1])= procs[k].exiterr; // exit error of child
+        debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
+        set_os9_state( k, pUnused, "OS9_F_Wait" );
+        return 0; // process already died, no need to wait
+      } // if
+    } // for
+
+    for (k=2; k<MAXPROCESSES; k++) { // start at process 2
+          cp= &procs[ k ];
+      if (cp->state!=pUnused &&
+          cp->state!=pDead   &&
+          os9_word(cp->pd._pid)==cpid) { // this is a child
+        // there is a non-dead child
+        debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d is active\n",k));
+        activeChild= k; // remember its id
+        break;
       } // if
     } // for
     
@@ -1538,12 +1568,38 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
                         
       debugprintf(dbgProcess,dbgNorm,("# F$Wait: no dead children, go waiting, activate child pid=%d\n",activeChild));
       set_os9_state( cpid, pWaiting, "OS9_F_Wait" ); /* put myself to wait state */
-      if (cp->isIntUtil) {
-      //printf( "hallo wait\n" );
-      } 
-      else 
-        currentpid= activeChild; /* activate that child */
       
+      // in case of internal utility we have to wait until child program has finished
+      if (cp->isIntUtil) {
+        while (true) {
+          sv_pid= currentpid;
+          arbitrate= true;
+          os9exec_loop( 0, true );
+          currentpid= sv_pid; // make sure it is not changed
+
+              cp= &procs[ currentpid ];
+          if (cp->state==pActive) {
+            retword(rp->d[0])= cp->os9regs.d[0];
+            retword(rp->d[1])= cp->os9regs.d[1]; // exit error of child
+            return 0; // it's done already !!
+          } // if
+
+          for (k=2; k<MAXPROCESSES; k++) { /* start at process 2  */
+                cp= &procs[ k ];
+            if (cp->state==pDead && 
+                os9_word(cp->pd._pid)==cpid) { // this is a child
+              // child is dead, report that
+              retword(rp->d[0])= k; // ID of dead child
+              retword(rp->d[1])= procs[k].exiterr; // exit error of child
+              debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
+              set_os9_state( k, pUnused, "OS9_F_Wait" );
+              return 0; // process already died, no need to wait
+            } // if
+          } // for
+        } // loop
+      } // if
+      
+      currentpid= activeChild; /* activate that child */
       arbitrate= true;
       return 0; /* continue execution with another process */
     }
