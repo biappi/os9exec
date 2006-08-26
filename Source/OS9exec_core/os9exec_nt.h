@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.58  2006/08/20 16:46:04  bfo
+ *    line count for pagination added
+ *
  *    Revision 1.57  2006/08/04 18:33:33  bfo
  *    Comment changes
  *
@@ -1152,14 +1155,13 @@ extern  ulong  newEventId;
   extern "C" {
 #endif
 
-extern   ushort currentpid; // id of current process
-//extern ulong  current_a5; // register a5 at process start
+extern  ushort currentpid; // id of current process
+extern  short  arbitrate;  // set if arbitrate() should switch away from one running process to next
 
 #if defined __cplusplus
   } // end extern "C"
 #endif
 
-extern  short  arbitrate;  /* set if arbitrate() should switch away from one running process to next */
 extern  ushort interactivepid; /* process that will get keyboard abort signals */
 
 
