@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2006/08/04 18:43:39  bfo
+ *    Avoid negative ticks
+ *
  *    Revision 1.27  2006/07/29 09:03:56  bfo
  *    "debug_return" at correct location now
  *
@@ -488,10 +491,10 @@ Boolean Dbg_SysCall( ushort pid, regs_type* rp )
 {
   process_typ* cp= &procs[pid];
   
-	if (!debugcheck(dbgSysCall,dbgNorm)) return false;
+  if (!debugcheck(dbgSysCall,dbgNorm)) return false;
 	 
-	// OS9_I_WritLn, special masking provided for "Maloney" system
-	return cp->func!=0x8c || loword(rp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
+  // OS9_I_WritLn, special masking provided for "Maloney" system
+  return cp->func!=0x8c || loword(rp->d[0])<0x80 || debugcheck(dbgSysCall,dbgDetail);	
 } /* Dbg_SysCall */
 
 
@@ -552,11 +555,20 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
       /* otherwise, d1.w will be updated when suspended process gets active again */
           strt= (ustrcmp(fdeP->name,"START")==0);
       if (strt) {
-        mod= (mod_exec *)cp->os9regs.a[3];
-        p  =  Mod_Name( mod );
+        if  (cp->isIntUtil) {
+          p= cp->procName;
+        }
+        else {
+          mod= (mod_exec *)cp->os9regs.a[3];
+          p  =  Mod_Name( mod );
+        } // if
+        
         strcpy( item,"\"" );
         strcat( item, p  );
         strcat( item,"\"" );
+        
+        if (cp->isIntUtil)
+          strcat( item, " (built-in)" );
       } // if
 
       uphe_printf("<<<%cPid=%02d: OS9 %s %s",msk ? '*':' ',
@@ -592,7 +604,7 @@ ushort pthread_pid()
 
 
 /* perform system call */
-os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil )
+os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUtil )
 {
   os9err  err;
   process_typ* cp= &procs[pid];
@@ -614,8 +626,6 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
         
     if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as name for debugging */
       fSS= get_stat_name(loword(rp->d[1]));
-
-  //debugprintf(dbgSysCall,dbgDetail,("# %s %s\n", fName,fSS )); /* fName+fSS would be eliminated by compiler */
   } /* if (logtiming) */
 
 
@@ -626,22 +636,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean withinIntUt
     debug_comein( pid,rp );
   } // if
   
-//if (pid!=4 && cp->func==F_RTE)
-//  printf( "AAA: %s %d\n", fdeP->name, currentpid );
-
-//if (strcmp( fdeP->name,"F$Time" )==0) {
-//  printf( "# === YYY=%02d: OS9 F$Time err=%d\n", pid, cp->oerr );
-//} // if
-  
-  err= (fdeP->func)(rp,pid);
-//cp->oerr= err;
-
-//if (cp->func==F_RTE)
-//  printf( "BBB: %s %d err=%d\n", fdeP->name, currentpid, err );
-
-//if (strcmp( fdeP->name,"F$Time" )==0) {
-//  printf( "# === Pid=%02d: OS9 F$Time err=%d\n", pid, cp->oerr );
-//} // if
+  err= (fdeP->func)( rp,pid );
   
   if (withinIntUtil) {
     // make the debug logging for systemcalls within int commands here
