@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.72  2006/08/04 18:36:19  bfo
+ *    Comment changes / Improved arbitration
+ *
  *    Revision 1.71  2006/07/29 09:00:41  bfo
  *    arbitration for internal utilities corrected
  *
@@ -1237,13 +1240,9 @@ void os9exec_globinit(void)
 // An exception handler one level higher can recall this procedure again.
 void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 {
-  //const int  ARB_RATE= 10;
-  //int        arb_cnt = 0;
   ushort       cpid;
   process_typ* cp;
   Boolean      cwti;
-//Boolean      doit_later= false;
-  
   regs_type*   crp;
   save_type*   svd;
   
@@ -1257,7 +1256,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   ulong		   aaNew;         // new alarm number for cyclic alarm
   Boolean      last_arbitrate;
   process_typ* sigp;
-//const   funcdispatch_entry* fdeP;
   
   // If call is coming from within intUtil, one loop thru all (active) processes
   // will be done. Exit criteria is the cp->isIntUtil call, which should be reached after
@@ -1442,17 +1440,11 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         // must be stored (must not override values of "send_signal")
             cwti= cp->way_to_icpt;
         if (cwti) {
-        //if (fromIntUtil) {
-        //  printf( "CWTI %d => %d\n", currentpid, cp->icpt_pid );
-        //} // if
-          
           spid= cp->icpt_pid;
           sigp= &procs[spid];
           
           if (sigp->isIntUtil) {
             printf( "intutil intercept\n" );
-          //cp->way_to_icpt= false;   // now the way to icpt changes
-          //if (sigp->isIntUtil) break; // for an int utility this is currently not allowed
           } // if
 
           if   (cp->icpt_pid==currentpid) { // in case of the own process
@@ -1594,43 +1586,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   //debug_return( currentpid, crp, cwti );
   } while( currentpid<MAXPROCESSES ); /* while active processes */
 } // os9exec_loop
-
-
-/*
-#ifdef UNIX
-  static void segv_handler( int sig )
-  {
-    int          sv= sig;
-    process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
-    regs_type*   crp= &cp->os9regs;       // pointer to process' registers
-  
-  //printf("*** Bus Error ***\n" );
-  //fflush(0);
-
-    llm_os9_copyback( crp );
-  
-    in_m68k_go= 0; // remove the blocker in UAE
-    siglongjmp( main_env, 102 ); // bus error
-  } // segv_handler
-#endif
-
-#ifdef windows32
-  static ulong segv_handler( ulong sig )
-  {
-    int          sv= sig;
-    process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
-    regs_type*   crp= &cp->os9regs;       // pointer to process' registers
-
-  //printf("*** Bus Error *** %d\n", sig );
-  //fflush(0);
-
-    llm_os9_copyback( crp );
-  
-    in_m68k_go= 0; // remove the blocker in UAE
-    return EXCEPTION_EXECUTE_HANDLER;
-  } // segv_handler
-#endif
-*/
 
 
 #ifdef win_unix
