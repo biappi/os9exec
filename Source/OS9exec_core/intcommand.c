@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2006/08/20 16:31:47  bfo
+ *    5 more internal commands added
+ *
  *    Revision 1.31  2006/08/06 22:43:33  bfo
  *    more direct ptoc intcommand calling
  *
@@ -574,8 +577,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     #endif
 
     if (!err) {
-      err= ic();
-    //OS9exec_GlobRestore( pid,parent, isInt );
+      // err= ic();
+         err= Run_PtoC( name );
     } // if
     
     return err;
@@ -583,6 +586,17 @@ static os9err int_devs( ushort pid, int argc, char** argv )
 
 
 // ---------------------------------------------------------------
+  static os9err ptoc_calls( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, NULL ); 
+  } // ptoc_calls
+  
+  
+  /*
+  static os9err int_addsize( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_addsize_call ); 
+  } // int_addsize
+  
+  
   static os9err int_breaker( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_breaker_call ); 
   } // int_breaker
@@ -593,6 +607,11 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_chkcas
 
 
+  static os9err int_cntlines( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_cntlines_call ); 
+  } // int_cntlines
+  
+  
   static os9err int_cproto( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_cproto_call ); 
   } // int_cproto
@@ -608,6 +627,11 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_definit
 
 
+  static os9err int_delbak( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_delbak_call ); 
+  } // int_delbak
+  
+  
   static os9err int_gencas( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_gencas_call ); 
   } // int_gencas
@@ -682,6 +706,11 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   } // int_show
 
 
+  static os9err int_src_as_file( ushort pid, int argc, char** argv ) { 
+    return ptoc_call( pid, argc,argv, int_src_as_file_call ); 
+  } // int_src_as_file
+  
+  
   static os9err int_stacks( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_stacks_call ); 
   } // int_stacks
@@ -705,8 +734,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_uses( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, int_uses_call ); 
   } // int_uses
+  */
 #endif
-
 
 
 static os9err int_quit( _pid_, _argc_, _argv_ )
@@ -717,8 +746,6 @@ static os9err int_quit( _pid_, _argc_, _argv_ )
 static os9err int_ignored( _pid_, _argc_, _argv_ )
 {   return 0; /* do nothing */
 } /* int_ignored */
-
-
 
 
 /* Command table */
@@ -767,6 +794,10 @@ cmdtable_typ commandtable[] =
   { "iquit",         int_quit,       "sets flag to quit directly" },
   { "dch/diskcache", int_ignored,    "simply ignored, because not supported by OS9exec" },
 
+  #ifdef MACOS9
+  { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
+  #endif
+
   #ifdef PTOC_SUPPORT
   { "ion",           int_on,         "Switch on   built-in PtoC utilities (default)" },
   { "ioff",          int_off,        "Switch off  built-in PtoC utilities" },
@@ -777,12 +808,16 @@ cmdtable_typ commandtable[] =
   { "ipmask",        int_pmask,      "No   arbitration during PtoC" },
   { "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
 
+  /*
   { "",              NULL,           ""                },
+  { "addsize",       int_addsize,    "PtoC addsize"    },
   { "breaker",       int_breaker,    "PtoC breaker"    },
   { "chkcas",        int_chkcas,     "PtoC chkcas"     },
+  { "cntlines",      int_cntlines,   "PtoC cntlines"   },
   { "cproto",        int_cproto,     "PtoC cproto"     },
   { "createsf",      int_createsf,   "PtoC createsf"   },
   { "definit",       int_definit,    "PtoC definit"    },
+  { "delbak",        int_delbak,     "PtoC delbak"     },
   { "gencas",        int_gencas,     "PtoC gencas"     },
   { "globalvars",    int_globalvars, "PtoC globalvars" },
   { "info",          int_info,       "PtoC info"       },
@@ -793,10 +828,7 @@ cmdtable_typ commandtable[] =
 
   { "makeSTB",       int_makeSTB,    "PtoC makeSTB"    },
   { "newfile",       int_newfile,    "PtoC newfile"    },
-
-//#ifdef PTOC_FULL
   { "pascal",        int_pascal,     "PtoC pascal"     },
-//#endif 
 
   #ifdef PTOC_FULL
   { "pcall",         int_pcall,      "PtoC pcall"      },
@@ -812,15 +844,15 @@ cmdtable_typ commandtable[] =
     { "show",        int_show,       "PtoC show"       },
   #endif
   
+  { "src_as_file",   int_src_as_file,"PtoC src_as_file"},
   { "stacks",        int_stacks,     "PtoC stacks"     },
   { "strout",        int_strout,     "PtoC strout"     },
   { "tcheck",        int_tcheck,     "PtoC tcheck"     },
   { "trapsli",       int_trapsli,    "PtoC trapsli"    },
   { "uses",          int_uses,       "PtoC uses"       },
-  #endif
-
-  #ifdef MACOS9
-  { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
+  */
+  
+  { "ptoc_calls",    ptoc_calls,     "PtoC calls"      },
   #endif
 
   { NULL, NULL, NULL } /* terminator */
@@ -852,7 +884,7 @@ os9err int_help( ushort pid, _argc_, _argv_ )
 /* Routines */
 /* -------- */
 
-static Boolean IntCmdOK( char* name, int* index )
+static Boolean IntCmdOK( const char* name, int* index )
 {
   cmdtable_typ* cp;
   char          *p, *q;
@@ -880,6 +912,7 @@ static Boolean IntCmdOK( char* name, int* index )
 } // IntCmdOK
 
 
+/*
 Boolean Is_PtoC( char* name )
 {
   int           index;
@@ -890,20 +923,32 @@ Boolean Is_PtoC( char* name )
                  cp= &commandtable[ index ];
   return strstr( cp->helptext,"PtoC " )==cp->helptext;
 } // Is_PtoC
+*/
 
 
-
-/* checks if command is internal
- * -1 if not,
- * command index otherwise
- */
-int isintcommand( char* name)
+// checks if command is internal
+// -1 if not,
+// command index otherwise
+//
+int isintcommand( const char* name )
 {
-  int                  index;
+  int     index;  
+  Boolean isPtoc= false;
+  
+  #ifdef PTOC_SUPPORT
+    isPtoc= ptocActive && Is_PtoC( name, &index );
+  #endif
+  
+  if (isPtoc)   name= "ptoc_calls";
+  if (IntCmdOK( name, &index )) return index;
+  else                          return -1;
+  
+  /*
   if (IntCmdOK( name, &index ) && 
      (ptocActive || !Is_PtoC( name ))) return index;
   else                                 return -1;
-} /* isintcommand */
+  */
+} // isintcommand
 
 
 /* print error message in OS-9 format */
@@ -1099,6 +1144,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     syspath_typ* spC;
     process_typ* cp= &procs[      pid ];
     process_typ* pa= &procs[ parentid ];
+    Boolean      isPtoc;
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -1109,12 +1155,15 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     icmpid = pid;  /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
     
-     *asThread= ptocThread;
-     #ifdef THREAD_SUPPORT
-      *asThread= *asThread && Is_PtoC( name );
-     #endif
+    #ifdef PTOC_SUPPORT
+      isPtoc= Is_PtoC( name, &index );
+    #else
+      isPtoc= false;
+    #endif
     
-        index= isintcommand(name);
+    *asThread= ptocThread && isPtoc;
+    
+        index= isintcommand( name );
     if (index<0) return os9error(E_PNNF);
 
     // save it 
@@ -1156,6 +1205,9 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
                      arb_to_os9( false ); }
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
+    if (isPtoc) 
+      debug_return( pid, &cp->os9regs, false );
+    
     #ifdef THREAD_SUPPORT
       if (*asThread) {
         PrepareParams              ( pid, index, argc, argv, &t );
@@ -1170,9 +1222,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     } // if
     
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming) os9_to_xxx( pid );
+    if (logtiming && !isPtoc) os9_to_xxx( pid );
 
-  //procs[ parentid ].pBlocked= false; // changes allowed again
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
 } /* callcommand */
