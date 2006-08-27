@@ -1415,8 +1415,20 @@
           06-08-20  MG      utilstuff   : "noecho" mode is default again
           06-08-20  MG      filestuff   : path descriptors completely cleared with memset
           06-08-20  MG      consio      : several additions and enhancemenet for pagination and others
+          
+          06-08-21  Bfo     consio      : Switched back to the older version for the moment due to a
+                                          problem with MGR programs.
+                                          
+          06-08-26  Bfo     intcommand  : "Is_PtoC" no longer visible, "isintcommand" with const char*
+          06-08-26  Bfo     mod_stuff   : Formatting beautified
+          06-08-26  Bfo     os9exec_nt  : <arbitrate> is now with in "C" format section
+          06-08-26  Bfo     fcalls      : OS9_F_Wait for internal commands returns the err correctly now
+          06-08-27  Bfo     os9exec_nt  : A lot of old commented out stuff eliminated
+          06-08-27  Bfo     funcdispatch: "START" for built-in cmds done correctly
+          06-0-27   Bfo     intcommand  : "ptoc_calls" replaces all the direct PtoC calls now /
+                                          debug logging is counting now correctly
        
-    3.32  06-??-??  Bfo
+    3.32  06-09-??  Bfo
     ------------------- 
       
 */
