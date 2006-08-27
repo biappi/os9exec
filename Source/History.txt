@@ -1425,7 +1425,7 @@
           06-08-26  Bfo     fcalls      : OS9_F_Wait for internal commands returns the err correctly now
           06-08-27  Bfo     os9exec_nt  : A lot of old commented out stuff eliminated
           06-08-27  Bfo     funcdispatch: "START" for built-in cmds done correctly
-          06-0-27   Bfo     intcommand  : "ptoc_calls" replaces all the direct PtoC calls now /
+          06-08-27  Bfo     intcommand  : "ptoc_calls" replaces all the direct PtoC calls now /
                                           debug logging is counting now correctly
        
     3.32  06-09-??  Bfo
@@ -1453,7 +1453,6 @@
 
 /* To do: */
 /*
-    -   RBF disk cache not yet implemented.
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
     -   direct line editing on Linux (over network)
@@ -1467,6 +1466,6 @@
     -   paging for SCF devices
     -   tab expansion for SCF devices
 
-   (+)  return of d1.l from pipe-systasks
-   (+)  passing of d2.l to pipe open
+   (+)  return  of d1.l from pipe-systasks
+   (+)  passing of d2.l to   pipe-open
 */
