@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/08/04 18:37:31  bfo
+ *    Comment changes
+ *
  *    Revision 1.40  2006/07/29 09:07:34  bfo
  *    nanosleep() introduced, according to input of Martin Gregorie
  *
@@ -843,8 +846,6 @@ void do_arbitrate( ushort allowedIntUtil )
   } // if
     
   cp= &procs[cpid];
-//if (cp->isIntUtil)
-//  printf( "%d nicht gut !!\n", currentpid ); /* %bfo% */
 
   if (!arbitrate) {
     if (cp->state==pSysTask ||                 /* we need aritration or we'll get stuck in systasks */
@@ -864,17 +865,18 @@ void do_arbitrate( ushort allowedIntUtil )
                                             spid,PStateStr(sprocess),arbitrate));
     if (arbitrate) {
       /* next process */
-          spid++;
-      if (spid>=MAXPROCESSES) spid= 0; /* wrap */
-      if (spid==1) spid++;             /* avoid process 1 */
-          sprocess= &procs[spid]; /* do it in correct order */
+      do {  spid++;
+        if (spid>=MAXPROCESSES)  spid= 0; /* wrap */
+        if (spid==1)             spid++;  /* avoid process 1 */
+                sprocess= &procs[spid];   /* do it in correct order */
+      } while ((sprocess->state==pUnused ||
+                sprocess->state==pDead)  && spid!=cpid); // break loop for sure
+          
       if (sprocess->isIntUtil && 
           sprocess->state==pActive && spid==allowedIntUtil) break;
           
       /* --- test if all processes tested */
-    //if (cpid==spid &&  sprocess->state!=pIntUtil) {
-    //if (cpid==spid && !sprocess->isIntUtil) {
-      if (cpid==spid) {
+      if (spid==cpid) {
         /* -- no other process found to run */
         if (!chkAll && (spid==allowedIntUtil || !sprocess->isIntUtil)) {
           if (atLeast1) chkAll= true;
@@ -896,9 +898,6 @@ void do_arbitrate( ushort allowedIntUtil )
               ulong ticks   = GetSystemTick();
               HandleEvent();
               slp_idleticks+= GetSystemTick()-ticks;
-          //#elif defined linux
-          //  usleep( 1000 ); /* sleep in microseconds */
-          //  slp_idleticks++;
             #endif
           } 
           else {
@@ -919,18 +918,9 @@ void do_arbitrate( ushort allowedIntUtil )
       /* --- search if there is a dead child of that process */
       for (pid=0; pid<MAXPROCESSES; pid++) {
                      cpw= &procs[ pid ];
-        if (os9_word(cpw->pd._pid)==spid) {
-        //if (sprocess->isIntUtil) {
-        //  printf( "gau=%d\n", spid );
-        //} // if
-          
+        if (os9_word(cpw->pd._pid)==spid) {          
           if        (cpw->state==pDead) {
             deadpid= pid; 
-          
-          //if (spid==allowedIntUtil) {
-          //  sprocess->state= pActive;
-          //} // if
-          
             break;
           } // if
         } /* if */
@@ -1097,6 +1087,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     process_typ* pp= &procs[os9_word(cp->pd._pid)];  
     regs_type*   rp= &cp->os9regs;
     Boolean      asThread;
+    Boolean      isPtoc;
 
     #ifdef INT_CMD
       ushort     argc;
@@ -1133,10 +1124,10 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
   //cp->pBlocked = false; /* now the status can be changed  */
     
     #ifdef INT_CMD
-          cp->isIntUtil= isintcommand( mpath )>=0;
+          cp->isIntUtil= isintcommand( mpath, &isPtoc )>=0;
       if (cp->isIntUtil) {
         set_os9_state( newpid, pActive, "prepFork" );
-        cp->mid= 0;                 /* assign "OS9exec" module */
+        if (!isPtoc) cp->mid= 0; // assign "OS9exec" module, for non-PtoC modules
 
         /* prepare args */
         prepArgs( (char*)paramptr, &argc,&arguments );
@@ -1151,7 +1142,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
           
         /* execute command */
         err= callcommand( mpath,newpid,svid, argc,arguments, &asThread );
-        release_mem( arguments );
+        release_mem                             ( arguments );
         
         if (asThread) 
           currentpid= svid; // don't change current pid for threads
