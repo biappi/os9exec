@@ -1427,6 +1427,15 @@
           06-08-27  Bfo     funcdispatch: "START" for built-in cmds done correctly
           06-08-27  Bfo     intcommand  : "ptoc_calls" replaces all the direct PtoC calls now /
                                           debug logging is counting now correctly
+                                          
+          06-08-29  Bfo     os9main     : an error of tcgetattr() will not terminate the program
+                                          (this error happens e.g. with CW in debugger mode)
+          06-08-29  Bfo/MG  consio      : New version introduced again, this time w/o 0x7f -> 0x08 conv
+          06-08-29  Bfo     intcommand  : isintcommand with additional <isPtoc> parameter /
+                                          universal "ptoc_calls" support / no large pipes for ptoc
+          06-08-30  Bfo     funcdispatch: mid==0 test replaced by cp->isIntUtil
+          06-08-30  Bfo     modstuff    : isintcommand adaptions
+          06-08-30  Bfo     procstuff   : arbitration improvements
        
     3.32  06-09-??  Bfo
     ------------------- 
