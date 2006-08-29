@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/08/26 23:46:49  bfo
+ *    "Is_PtoC" no longer visible, "isintcommand" with const char*
+ *
  *    Revision 1.7  2006/07/10 09:55:58  bfo
  *    ushort parentid added for "callcommand"
  *
@@ -78,7 +81,7 @@ os9err int_wincmd( ushort pid, int argc, char **argv );
 /* utility */
 os9err  _errmsg( os9err err, char* format, ...);
 
-int     isintcommand( const char* name );
+int     isintcommand( const char* name, Boolean *isPtoc );
 
 os9err  prepArgs    ( char* arglist, ushort *argcP, char*** argP);
 os9err  callcommand ( char* name,    ushort pid, ushort parentid,
