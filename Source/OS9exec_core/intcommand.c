@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/08/27 00:00:47  bfo
+ *    "ptoc_calls" replaces all the direct PtoC calls now /
+ *    debug logging is counting now correctly
+ *
  *    Revision 1.32  2006/08/20 16:31:47  bfo
  *    5 more internal commands added
  *
@@ -548,13 +552,16 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
 
 
+  /*
   typedef os9err (*int_call)(void);
-  
-  
   static os9err ptoc_call( ushort pid, _argc_, char** argv, int_call ic )
+  */
+  
+
+  static os9err ptoc_calls( ushort pid, _argc_, char** argv )
   {
     os9err err;
-    ushort mid;
+  //ushort mid;
     char*  name= argv[ 0 ];
  
     process_typ*   cp= &procs[pid];
@@ -567,28 +574,37 @@ static os9err int_devs( ushort pid, int argc, char** argv )
       currentpid= pid;
     #endif
 
-         err=   load_module( pid, name, &mid, true,true ); 
+    /*   err=   load_module( pid, name, &mid, true,true ); 
     if (!err) OS9exec_Globs( pid, os9modules[ mid ].modulebase, 
                                   procs[pid].my_args );
-    
+    */
+   
+    OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
+                                 procs[ pid ].my_args );
+     
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     #endif
 
+    /*
     if (!err) {
       // err= ic();
          err= Run_PtoC( name );
     } // if
+    */
     
+           err= Run_PtoC( name );
     return err;
-  } // ptoc_call
+  } // ptoc_calls
 
 
 // ---------------------------------------------------------------
+  /*
   static os9err ptoc_calls( ushort pid, int argc, char** argv ) { 
     return ptoc_call( pid, argc,argv, NULL ); 
   } // ptoc_calls
+  */
   
   
   /*
@@ -884,17 +900,20 @@ os9err int_help( ushort pid, _argc_, _argv_ )
 /* Routines */
 /* -------- */
 
-static Boolean IntCmdOK( const char* name, int* index )
+static int IntCmdIndex( const char* name )
 {
   cmdtable_typ* cp;
-  char          *p, *q;
+  char*         p;
+  char*         q;
   char          part[OS9NAMELEN];
+  int           index= 0;
 
-  *index= 0;
   while (true) {
-       cp= &commandtable[ *index ];
-    p= cp->name; if (p==NULL) return false;
+           cp= &commandtable[ index ];
+        p= cp->name; 
+    if (p==NULL) return -1; // not found
 
+    // search for eventual sub strings
     do {  q= strstr( p,PSEP_STR ); /* more than one part ? */
       if (q!=NULL) {
         strncpy( part,p, q-p );
@@ -902,14 +921,14 @@ static Boolean IntCmdOK( const char* name, int* index )
         p= part;
       } // if
 
-      if (strcmp( p,name )==0) return true;
+      if (strcmp( p, name )==0) return index; // found
             
       p= q+1;
     } while (q!=NULL);
         
-    (*index)++;
+    index++;
   } /* loop */
-} // IntCmdOK
+} // IntCmdIndex
 
 
 /*
@@ -930,24 +949,19 @@ Boolean Is_PtoC( char* name )
 // -1 if not,
 // command index otherwise
 //
-int isintcommand( const char* name )
+int isintcommand( const char* name, Boolean *isPtoc )
 {
-  int     index;  
-  Boolean isPtoc= false;
+  int index;  
   
   #ifdef PTOC_SUPPORT
-    isPtoc= ptocActive && Is_PtoC( name, &index );
+    *isPtoc= ptocActive && Is_PtoC( name, &index );
+  #else
+    *isPtoc= false;
   #endif
   
-  if (isPtoc)   name= "ptoc_calls";
-  if (IntCmdOK( name, &index )) return index;
-  else                          return -1;
-  
-  /*
-  if (IntCmdOK( name, &index ) && 
-     (ptocActive || !Is_PtoC( name ))) return index;
-  else                                 return -1;
-  */
+  if (*isPtoc)        name= "ptoc_calls"; // one entry point for all
+  index= IntCmdIndex( name );
+  return index;
 } // isintcommand
 
 
@@ -1144,7 +1158,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     syspath_typ* spC;
     process_typ* cp= &procs[      pid ];
     process_typ* pa= &procs[ parentid ];
-    Boolean      isPtoc;
+    Boolean      isPtoC;
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -1155,15 +1169,17 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     icmpid = pid;  /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
     
+    /*
     #ifdef PTOC_SUPPORT
       isPtoc= Is_PtoC( name, &index );
     #else
       isPtoc= false;
     #endif
+    */
     
-    *asThread= ptocThread && isPtoc;
+    index    = isintcommand( name, &isPtoC );
+    *asThread= ptocThread &&        isPtoC;
     
-        index= isintcommand( name );
     if (index<0) return os9error(E_PNNF);
 
     // save it 
@@ -1198,14 +1214,14 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
       if (spP->type==fTTY ) spC= get_syspathd( pid, spP->u.pipe.pchP->sp_lock );
       if (spP->type==fPipe) spC= spP; /* no crossover */
     
-      if (spC!=NULL) large_pipe_connect( pid,spC );
+      if (spC!=NULL && !isPtoC) large_pipe_connect( pid,spC );
     } // if
 
     if (logtiming) { xxx_to_arb( F_Fork, pid );
                      arb_to_os9( false ); }
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
-    if (isPtoc) 
+    if (isPtoC) 
       debug_return( pid, &cp->os9regs, false );
     
     #ifdef THREAD_SUPPORT
@@ -1222,7 +1238,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     } // if
     
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming && !isPtoc) os9_to_xxx( pid );
+    if (logtiming && !isPtoC) os9_to_xxx( pid );
 
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
