@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2006/08/26 23:57:31  bfo
+ *    "START" for built-in cmds done correctly /
+ *    A lot of old commented out stuff eliminated
+ *
  *    Revision 1.28  2006/08/04 18:43:39  bfo
  *    Avoid negative ticks
  *
@@ -427,7 +431,7 @@ void os9_to_xxx( ushort pid )
             } /* inner for */
         
             strcpy( s->name,mn );
-            s->intern= !eli && mid==0;
+            s->intern= !eli && cp->isIntUtil;
             s->ticks = 0;
             s->num   = 0;
         }
