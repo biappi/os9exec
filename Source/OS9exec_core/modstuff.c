@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/08/26 23:48:55  bfo
+ *    Formatting beautified
+ *
  *    Revision 1.23  2006/06/08 08:15:04  bfo
  *    Eliminate causes of signedness warnings with gcc 4.0
  *
@@ -1272,31 +1275,30 @@ modulefound:
 
 os9err link_module( ushort pid, const char *name, ushort *mid )
 {   
-	os9err  err;
-	Boolean isInt = false;
-	char    lName[OS9PATHLEN];
+  os9err  err;
+  Boolean isInt= false;
+  Boolean isPtoc;
+  char    lName[OS9PATHLEN];
+  strcpy( lName, name );
 	
-	strcpy( lName,name );
-	
-    #ifdef INT_CMD
-      if (isintcommand( lName )>=0) {
-      	  isInt= true;
-          debugprintf(dbgModules,dbgNorm,
-              ("# link_module: internal cmd '%s' => try 'OS9exec' instead\n", lName));
-		  strcpy( lName,OS9exec_name );
-      }
-    #endif
+  #ifdef INT_CMD
+        isInt= isintcommand( lName, &isPtoc )>=0 && !isPtoc;
+    if (isInt) {
+      debugprintf(dbgModules,dbgNorm,
+                 ( "# link_module: internal cmd '%s' => try 'OS9exec' instead\n", lName ));
+      strcpy( lName,OS9exec_name );
+    } // if
+  #endif
     
- 	err= load_module( pid, lName, mid, true,true );
- 	
- 	if (err && isInt) {
-        *mid= 0; /* simulate load by using main module as result (it can't be unlinked!!!) */
-        err = 0;
-        debugprintf(dbgModules,dbgNorm,
-            ("# link_module: 'OS9exec' not found, returned ptr to main module\n"));
- 	} /* if */
- 	
- 	return err;
+      err= load_module( pid, lName, mid, true,true );
+  if (err && isInt) {
+    *mid= 0; /* simulate load by using main module as result (it can't be unlinked!!!) */
+    err = 0;
+    debugprintf(dbgModules,dbgNorm,
+               ( "# link_module: 'OS9exec' not found, returned ptr to main module\n" ));
+  } // if
+
+  return err;
 } /* link_module */
 
 
