@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/08/20 18:34:59  MG
+ *    restore_term(void) / setup_term(void) added
+ *    (Changes done by Martin Gregorie)
+ *
  *    Revision 1.20  2006/07/29 08:49:54  bfo
  *    "adaptor" => "adapter"
  *
@@ -497,7 +501,7 @@ Boolean setup_term()
     #endif
 
     return (reply == 0);
-}
+} // setup_term
 
 
 /* Restore the original terminal operation.
@@ -516,7 +520,7 @@ void restore_term()
          upo_printf("Error restoring normal terminal operation: %s\n",
                     strerror(errno));
     #endif
-}
+} // restore_term
 
 
 /* main program */
@@ -752,8 +756,10 @@ void os9_main( int argc, char **argv, char **envp )
     #ifdef UNIX
       if (setup_term())
           atexit(restore_term);
+      /*
       else
           exit(1);
+      */
     #endif
 
     /* now here starts the os9 command line: go execute it */
