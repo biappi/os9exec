@@ -1438,7 +1438,12 @@
           06-08-30  Bfo     procstuff   : arbitration improvements
     3.32  06-08-31  Bfo                   V3.32 released
     ------------------- 
-      
+        
+          06-09-01  Bfo                   Version changed to V3.33
+          06-09-01  Bfo     XCode Proj  : Target file name changes to "*_univ" / "*_udbg"
+          06-09-01  Bfo     consio      : Problem with empty console reading for MacOS9 fixed
+    3.33  06-??-??  Bfo
+    -------------------  
 */
 
 
