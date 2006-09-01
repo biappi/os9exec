@@ -1436,8 +1436,7 @@
           06-08-30  Bfo     funcdispatch: mid==0 test replaced by cp->isIntUtil
           06-08-30  Bfo     modstuff    : isintcommand adaptions
           06-08-30  Bfo     procstuff   : arbitration improvements
-       
-    3.32  06-09-??  Bfo
+    3.32  06-08-31  Bfo                   V3.32 released
     ------------------- 
       
 */
