@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.73  2006/08/26 23:55:08  bfo
+ *    A lot of old commented out stuff eliminated
+ *
  *    Revision 1.72  2006/08/04 18:36:19  bfo
  *    Comment changes / Improved arbitration
  *
@@ -750,7 +753,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x32;
+	exec_revision= 0x33;
 	#endif
 } /* getversions */
 
