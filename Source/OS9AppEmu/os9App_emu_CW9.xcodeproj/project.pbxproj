@@ -116,7 +116,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		477F459C0A31C24F001898B3 /* os9App_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		477F459C0A31C24F001898B3 /* os9App_udbg */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_udbg; sourceTree = BUILT_PRODUCTS_DIR; };
 		477F45A80A31C24F001898B3 /* cpuemu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpuemu.c; path = UAE68emulator/cpuemu.c; sourceTree = SOURCE_ROOT; };
 		477F45A90A31C24F001898B3 /* cpustbl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpustbl.c; path = UAE68emulator/cpustbl.c; sourceTree = SOURCE_ROOT; };
 		477F45AA0A31C24F001898B3 /* cpudefs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpudefs.c; path = UAE68emulator/cpudefs.c; sourceTree = SOURCE_ROOT; };
@@ -263,7 +263,7 @@
 		477F458C0A31C24F001898B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				477F459C0A31C24F001898B3 /* os9App_xcode */,
+				477F459C0A31C24F001898B3 /* os9App_udbg */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -617,7 +617,7 @@
 			);
 			name = "OS9AppEmu Mach-O";
 			productName = "OS9AppEmu Mach-O";
-			productReference = 477F459C0A31C24F001898B3 /* os9App_xcode */;
+			productReference = 477F459C0A31C24F001898B3 /* os9App_udbg */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -736,7 +736,7 @@
 				);
 				OTHER_REZFLAGS = "";
 				PREBINDING = YES;
-				PRODUCT_NAME = os9App_xcode;
+				PRODUCT_NAME = os9App_udbg;
 				REZ_SCRIPT_TYPE = Roman;
 				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
 				SECTORDER_FLAGS = "";
@@ -780,7 +780,7 @@
 				);
 				OTHER_REZFLAGS = "";
 				PREBINDING = YES;
-				PRODUCT_NAME = os9App_xcode;
+				PRODUCT_NAME = os9App_univ;
 				REZ_SCRIPT_TYPE = Roman;
 				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
 				SECTORDER_FLAGS = "";
