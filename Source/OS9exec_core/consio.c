@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2006/08/29 22:08:23  bfo
+ *    New version introduced again, this time w/o 0x7f -> 0x08 conv
+ *
  *    Revision 1.18  2006/08/21 19:47:12  bfo
  *    Switched back to the older version for the moment due to a
  *    problem with MGR programs.
@@ -369,13 +372,17 @@ Boolean ConsGetc( char* c )
     #else
     //devIsReady= true;
     
-      n = read(0, c, 1);
-      devIsReady= (n > 0);
-      if (!devIsReady)
-          return false;
+      #ifdef linux
+        n = read(0, c, 1);
+        devIsReady= (n > 0);
+        if (!devIsReady) return false;
 
-      // printf( "nn=%d  c=0x%02X\n", n, (unsigned int)c[0] );
-      // fflush(0);
+        // printf( "nn=%d  c=0x%02X\n", n, (unsigned int)c[0] );
+        // fflush(0);
+      #else
+            n= fread( c,1,1, stdin );
+        if (n!=1 || !devIsReady) return false;
+      #endif
     
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
