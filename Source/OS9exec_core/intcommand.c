@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/08/29 22:13:38  bfo
+ *    universal "ptoc_calls" support / no large pipes for ptoc
+ *
  *    Revision 1.33  2006/08/27 00:00:47  bfo
  *    "ptoc_calls" replaces all the direct PtoC calls now /
  *    debug logging is counting now correctly
@@ -552,17 +555,9 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
 
 
-  /*
-  typedef os9err (*int_call)(void);
-  static os9err ptoc_call( ushort pid, _argc_, char** argv, int_call ic )
-  */
-  
-
   static os9err ptoc_calls( ushort pid, _argc_, char** argv )
   {
-    os9err err;
-  //ushort mid;
-    char*  name= argv[ 0 ];
+    char* name= argv[ 0 ];
  
     process_typ*   cp= &procs[pid];
     ushort parent= cp->pd._pid;
@@ -574,11 +569,6 @@ static os9err int_devs( ushort pid, int argc, char** argv )
       currentpid= pid;
     #endif
 
-    /*   err=   load_module( pid, name, &mid, true,true ); 
-    if (!err) OS9exec_Globs( pid, os9modules[ mid ].modulebase, 
-                                  procs[pid].my_args );
-    */
-   
     OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
                                  procs[ pid ].my_args );
      
@@ -587,170 +577,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     #endif
 
-    /*
-    if (!err) {
-      // err= ic();
-         err= Run_PtoC( name );
-    } // if
-    */
-    
-           err= Run_PtoC( name );
-    return err;
+    return Run_PtoC( name );
   } // ptoc_calls
-
-
-// ---------------------------------------------------------------
-  /*
-  static os9err ptoc_calls( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, NULL ); 
-  } // ptoc_calls
-  */
-  
-  
-  /*
-  static os9err int_addsize( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_addsize_call ); 
-  } // int_addsize
-  
-  
-  static os9err int_breaker( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_breaker_call ); 
-  } // int_breaker
-  
-  
-  static os9err int_chkcas( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_chkcas_call ); 
-  } // int_chkcas
-
-
-  static os9err int_cntlines( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_cntlines_call ); 
-  } // int_cntlines
-  
-  
-  static os9err int_cproto( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_cproto_call ); 
-  } // int_cproto
-  
-  
-  static os9err int_createsf( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_createsf_call ); 
-  } // int_createsf
-  
-  
-  static os9err int_definit( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_definit_call ); 
-  } // int_definit
-
-
-  static os9err int_delbak( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_delbak_call ); 
-  } // int_delbak
-  
-  
-  static os9err int_gencas( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_gencas_call ); 
-  } // int_gencas
-
-
-  static os9err int_globalvars( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_globalvars_call ); 
-  } // int_globalvars
-
-
-  static os9err int_info( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_info_call ); 
-  } // int_info
-
-
-  #ifdef PTOC_FULL
-  static os9err int_maint2( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_maint2_call ); 
-  } // int_maint2
-  #endif
-
-
-  static os9err int_makeSTB( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_makeSTB_call ); 
-  } // int_makeSTB
-
-
-  static os9err int_newfile( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_newfile_call ); 
-  } // int_newfile
-
-
-  static os9err int_pascal( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_pascal_call ); 
-  } // int_pascal
-
-
-  #ifdef PTOC_FULL
-  static os9err int_pcall( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_pcall_call ); 
-  } // int_pcall
-  #endif
-  
-
-  static os9err int_pento( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_pento_call ); 
-  } // int_pento
-
-
-  static os9err int_pentominos( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_pentominos_call ); 
-  } // int_pentominos
-
-
-  static os9err int_printenv( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_printenv_call ); 
-  } // int_printenv
-
-
-  static os9err int_ptoc( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_ptoc_call ); 
-  } // int_ptoc
-
-
-  static os9err int_ranpapp( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_ranpapp_call ); 
-  } // int_ranpapp
-
-
-  static os9err int_show( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_show_call ); 
-  } // int_show
-
-
-  static os9err int_src_as_file( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_src_as_file_call ); 
-  } // int_src_as_file
-  
-  
-  static os9err int_stacks( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_stacks_call ); 
-  } // int_stacks
-
-
-  static os9err int_strout( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_strout_call ); 
-  } // int_strout
-
-
-  static os9err int_tcheck( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_tcheck_call ); 
-  } // int_tcheck
-
-
-  static os9err int_trapsli( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_trapsli_call ); 
-  } // int_trapsli
-
-
-  static os9err int_uses( ushort pid, int argc, char** argv ) { 
-    return ptoc_call( pid, argc,argv, int_uses_call ); 
-  } // int_uses
-  */
 #endif
 
 
@@ -823,52 +651,7 @@ cmdtable_typ commandtable[] =
   { "inoarb",        int_noarb,      "Std  arbitration (default)" },
   { "ipmask",        int_pmask,      "No   arbitration during PtoC" },
   { "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
-
-  /*
-  { "",              NULL,           ""                },
-  { "addsize",       int_addsize,    "PtoC addsize"    },
-  { "breaker",       int_breaker,    "PtoC breaker"    },
-  { "chkcas",        int_chkcas,     "PtoC chkcas"     },
-  { "cntlines",      int_cntlines,   "PtoC cntlines"   },
-  { "cproto",        int_cproto,     "PtoC cproto"     },
-  { "createsf",      int_createsf,   "PtoC createsf"   },
-  { "definit",       int_definit,    "PtoC definit"    },
-  { "delbak",        int_delbak,     "PtoC delbak"     },
-  { "gencas",        int_gencas,     "PtoC gencas"     },
-  { "globalvars",    int_globalvars, "PtoC globalvars" },
-  { "info",          int_info,       "PtoC info"       },
-
-  #ifdef PTOC_FULL
-  { "maint2",        int_maint2,     "PtoC maint2"     },
-  #endif 
-
-  { "makeSTB",       int_makeSTB,    "PtoC makeSTB"    },
-  { "newfile",       int_newfile,    "PtoC newfile"    },
-  { "pascal",        int_pascal,     "PtoC pascal"     },
-
-  #ifdef PTOC_FULL
-  { "pcall",         int_pcall,      "PtoC pcall"      },
-  #endif 
-
-  { "pento",         int_pento,      "PtoC pento"      },
-  { "pentominos",    int_pentominos, "PtoC pentominos" },
-  { "printenv",      int_printenv,   "PtoC printenv"   },
-  { "ptoc",          int_ptoc,       "PtoC ptoc"       },
-  { "ranpapp",       int_ranpapp,    "PtoC ranpapp"    },
-  
-  #ifdef PTOC_FULL
-    { "show",        int_show,       "PtoC show"       },
-  #endif
-  
-  { "src_as_file",   int_src_as_file,"PtoC src_as_file"},
-  { "stacks",        int_stacks,     "PtoC stacks"     },
-  { "strout",        int_strout,     "PtoC strout"     },
-  { "tcheck",        int_tcheck,     "PtoC tcheck"     },
-  { "trapsli",       int_trapsli,    "PtoC trapsli"    },
-  { "uses",          int_uses,       "PtoC uses"       },
-  */
-  
-  { "ptoc_calls",    ptoc_calls,     "PtoC calls"      },
+  { "ptoc_calls",    ptoc_calls,     "PtoC calls" },
   #endif
 
   { NULL, NULL, NULL } /* terminator */
@@ -931,20 +714,6 @@ static int IntCmdIndex( const char* name )
 } // IntCmdIndex
 
 
-/*
-Boolean Is_PtoC( char* name )
-{
-  int           index;
-  cmdtable_typ* cp;
-
-  if (!IntCmdOK( name, &index )) return false;
-  
-                 cp= &commandtable[ index ];
-  return strstr( cp->helptext,"PtoC " )==cp->helptext;
-} // Is_PtoC
-*/
-
-
 // checks if command is internal
 // -1 if not,
 // command index otherwise
@@ -954,7 +723,7 @@ int isintcommand( const char* name, Boolean *isPtoc )
   int index;  
   
   #ifdef PTOC_SUPPORT
-    *isPtoc= ptocActive && Is_PtoC( name, &index );
+    *isPtoc= ptocActive && Is_PtoC( name );
   #else
     *isPtoc= false;
   #endif
