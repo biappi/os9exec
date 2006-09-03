@@ -1442,6 +1442,14 @@
           06-09-01  Bfo                   Version changed to V3.33
           06-09-01  Bfo     XCode Proj  : Target file name changes to "*_univ" / "*_udbg"
           06-09-01  Bfo     consio      : Problem with empty console reading for MacOS9 fixed
+
+          06-09-01  Bfo     intcommand  : Old PtoC bridge stuff eliminated
+          06-09-03  Bfo     os9exec_nt  : "ftp put" hanger fixed: test cp->masklevel <= 0
+          06-09-03  Bfo     consio      : Some more small <devReady> adaption for MacOS9/Windows
+          06-09-03  Bfo     procstuff   : No mask levels below 0 any more
+          06-09-03  Bfo     funcdispatch: STIM_ORDERED 0x0020 added
+                                          "systime -h" will show the highest tick count first
+          
     3.33  06-??-??  Bfo
     -------------------  
 */
