@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2006/08/29 22:40:37  bfo
+ *    arbitration improvements
+ *
  *    Revision 1.41  2006/08/04 18:37:31  bfo
  *    Comment changes
  *
@@ -737,12 +740,14 @@ os9err sig_mask( ushort cpid, int level )
     sig_typ*      s= &sig_queue;
     int    i, j;
     ushort pid, signal;
-    
+	    
     switch (level) {
         case  0 :  *plv= 0; break;
         case  1 : (*plv)++; break;
-        case -1 : (*plv)--; break;
+        case -1 : (*plv)--; if (*plv<0) *plv= 0; break; // no mask levels below zero
     } /* switch */
+
+	debugprintf(dbgSysCall,dbgNorm, ("# masklevel=%d cpid=%d\n", cp->masklevel, cpid ));
 
     for (i=0; i<s->cnt; i++) {    /* remove one element from stack */
         pid   = s->pid   [i]; /* use it as a fifo, save them first */
@@ -834,6 +839,11 @@ void do_arbitrate( ushort allowedIntUtil )
     waitTime.tv_sec =       0;
     waitTime.tv_nsec= 1000000;
   #endif
+
+//cp= &procs[ justthis_pid ];
+//if (cp->state==pWaitRead) {
+//   debugprintf(dbgTaskSwitch,dbgNorm,("# REIN arbitrate spid=%d\n", currentpid ));
+//} // if
   
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
                                           currentpid, arbitrate));
@@ -875,7 +885,7 @@ void do_arbitrate( ushort allowedIntUtil )
       if (sprocess->isIntUtil && 
           sprocess->state==pActive && spid==allowedIntUtil) break;
           
-      /* --- test if all processes tested */
+      /* --- test if all processes are tested already */
       if (spid==cpid) {
         /* -- no other process found to run */
         if (!chkAll && (spid==allowedIntUtil || !sprocess->isIntUtil)) {
@@ -976,6 +986,11 @@ void do_arbitrate( ushort allowedIntUtil )
     arbitrate= true; /* now advance anyway */
     if    (done) spid= MAXPROCESSES; /* should have exited via break by now */
   } while(!done);
+  
+//cp= &procs[ justthis_pid ];
+//if (cp->state==pWaitRead) {
+//   debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate spid=%d\n", spid ));
+//} // if
   
 //if (done && sprocess->isIntUtil)
 //  printf( "%d ALLARM !!\n", currentpid ); /* %bfo% */
