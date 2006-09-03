@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/09/01 15:19:03  bfo
+ *    Problem with empty console reading for MacOS9 fixed
+ *
  *    Revision 1.19  2006/08/29 22:08:23  bfo
  *    New version introduced again, this time w/o 0x7f -> 0x08 conv
  *
@@ -314,16 +317,9 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE* stream, Boolean wrln)
 Boolean ConsGetc( char* c )
 {
     int n;
-  //process_typ* cp;
-    
-    /*
-    #ifdef win_unix
-      Boolean doit;
-    #endif
-    */
     
     if (gConsoleID>=TTY_Base) {
-        n= ReadCharsFromPTY( c,1, gConsoleID);
+                n= ReadCharsFromPTY( c,1, gConsoleID);        
         return (n>0) && devIsReady;
     } /* if */
 
@@ -373,16 +369,18 @@ Boolean ConsGetc( char* c )
     //devIsReady= true;
     
       #ifdef linux
-        n = read(0, c, 1);
-        devIsReady= (n > 0);
-        if (!devIsReady) return false;
+        n= read( 0, c, 1 );
 
         // printf( "nn=%d  c=0x%02X\n", n, (unsigned int)c[0] );
         // fflush(0);
       #else
-            n= fread( c,1,1, stdin );
-        if (n!=1 || !devIsReady) return false;
+        n= fread( c,1,1, stdin );
+        
+      //if (n!=1 || !devIsReady) return false;
       #endif
+             
+           devIsReady= n>0;
+      if (!devIsReady) return false;
     
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
