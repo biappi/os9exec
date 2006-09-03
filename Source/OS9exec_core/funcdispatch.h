@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2006/07/21 07:09:14  bfo
+ *    os9_to_xxx <name> parameter eliminated
+ *
  *    Revision 1.6  2006/02/19 16:31:45  bfo
  *    Thread support added
  *
@@ -90,6 +93,7 @@ extern  ulong glob_callticks;
 #define STIM_OS9       0x0004
 #define STIM_TICKAVAIL 0x0008
 #define STIM_PERCENT   0x0010
+#define STIM_ORDERED   0x0020
 #define STARTCALL      0xffff
 
 ulong GetSystemTick(void);
