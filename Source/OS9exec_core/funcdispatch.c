@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2006/08/29 22:37:13  bfo
+ *    mid==0 test replaced by cp->isIntUtil
+ *
  *    Revision 1.29  2006/08/26 23:57:31  bfo
  *    "START" for built-in cmds done correctly /
  *    A lot of old commented out stuff eliminated
@@ -873,53 +876,118 @@ static void show_sline( char* name,  ulong t, int n, ulong active )
 
 
 /* show system call timers */
+static void Get_FI_tn( ushort k, Boolean icalls, int *t, int *n )
+{
+  *t= icalls ? icall_time[ k ] : fcall_time[ k ];
+  *n= icalls ? icall_num [ k ] : fcall_num [ k ];
+} // Get_FI_tn
+
+
 static void show_syscalltimers( Boolean icalls, ushort mode, ulong active, 
                                                 ulong *call, ulong *num, int ticksLim )
 {
-    ushort   k;
-    int      t, n;
-    char*    name;
-    Boolean  show=    icalls ? mode & STIM_ICALLS : mode & STIM_FCALLS;
-    ushort   max =    icalls ?          NUMICALLS :          NUMFCALLS;
-    show_title( show, icalls ?            "I$XXX" :            "F$XXX" );
+  ushort   k, j, kInd;
+  ulong    mxTicks, mxNum;
+  int      t, n;
+  char*    name;
+  Boolean  kDone[ NUMFCALLS ]; // NUMFALLS is larger than NUMICALLS
+  Boolean  sort= mode & STIM_ORDERED;
+  
+  Boolean  show=    icalls ? mode & STIM_ICALLS : mode & STIM_FCALLS;
+  ushort   max =    icalls ?          NUMICALLS :          NUMFCALLS;
+  show_title( show, icalls ?            "I$XXX" :            "F$XXX" );
 
-    *call= 0;
-    *num = 0;
+  *call= 0;
+  *num = 0;
 
-    for ( k=0; k<=max; k++ ) {
-        t= icalls ? icall_time[k] : fcall_time[k];
-        n= icalls ? icall_num [k] : fcall_num [k];
+  if (sort) {
+    for ( k=0; k<max; k++ ) kDone[ k ]= false;
+  } // if
+
+  for   ( k=0; k<=max; k++ ) {
+    kInd= k;
+
+    if (sort) {
+      mxTicks= 0; mxNum= 0;
+           
+      for ( j=0; j<max; j++ ) {
+        if (!kDone[ j ]) {
+          Get_FI_tn( j, icalls, &t, &n );
+          
+          if (t==mxTicks && // do this first
+              n>=mxNum  ) { mxNum  = n; kInd= j; }
+          if (t >mxTicks) { mxTicks= t; kInd= j; }
+        } // if
+      } // for
+          
+      kDone[ kInd ]= true;
+    } // if
+
+  //t= icalls ? icall_time[k] : fcall_time[k];
+  //n= icalls ? icall_num [k] : fcall_num [k];
         
-        if (k==max) name= icalls ? "I$xxx (other progs)":"F$xxx (other progs)";
-        else        name= icalls ?  icalltable[k].name  : fcalltable[k].name;
+    Get_FI_tn( kInd,  icalls, &t, &n );
+    if (kInd==max) name= icalls ? "I$xxx (other progs)":"F$xxx (other progs)";
+    else           name= icalls ?  icalltable[kInd].name  : fcalltable[kInd].name;
         
-        show_line( show,mode, ' ',name, t,n, active, ticksLim );
-        if (n>0) { *call+= t; *num+= n; }
-    } /* for */
+    show_line( show,mode, ' ',name, t,n, active, ticksLim );
+    if (n>0) { *call+= t; *num+= n; }
+  } /* for */
 } /* show_syscalltimers */
 
 
 
 /* show system call timers */
+static void Get_Statistics_tn( ushort k, st_typ** s, int *t, int *n )
+{
+       *s= &statistics[ k ];
+  *t= (*s)->ticks;
+  *n= (*s)->num;
+} // GetStatistics_tn
+
+
 static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num, int ticksLim )
 {
-    ushort  k;
-    st_typ* s;
-    int     t, n;
-    Boolean show= mode & STIM_OS9;
+  ushort  k, j, kInd;
+  ulong   mxTicks, mxNum;
+  st_typ* s;
+  int     t, n;
+  Boolean kDone[ MAX_OS9PROGS ];
+  Boolean sort= mode & STIM_ORDERED;
+  Boolean show= mode & STIM_OS9;
     
-    show_title( show,"OS-9" );
-    *call= 0;
-    *num = 0;
+  show_title( show,"OS-9" );
+  *call= 0;
+  *num = 0;
+    
+  if (sort) {
+    for ( k=0; k<MAX_OS9PROGS; k++ ) kDone[ k ]= false;
+   } // if
 
-    for ( k=0; k<MAX_OS9PROGS; k++ ) {
-           s= &statistics[k];
-        t= s->ticks;
-        n= s->num;
+  for   ( k=0; k<MAX_OS9PROGS; k++ ) {
+    kInd= k;
         
-        show_line( show,mode, s->intern ? '>':' ', s->name, t,n, active, ticksLim );
-        if (n>0) { *call+= t; *num+= n; }
-    } /* for */
+    if (sort) {
+      mxTicks= 0; mxNum= 0;
+           
+      for ( j=0; j<MAX_OS9PROGS; j++ ) {
+        if (!kDone[ j ]) {
+          Get_Statistics_tn( j, &s, &t, &n );
+          
+          if (t==mxTicks && // do this first
+              n>=mxNum  ) { mxNum  = n; kInd= j; }
+          if (t >mxTicks) { mxTicks= t; kInd= j; }
+        } // if
+      } // for
+          
+      kDone[ kInd ]= true;
+    } // if
+     
+    Get_Statistics_tn( kInd, &s, &t, &n );   
+        
+    show_line( show,mode, s->intern ? '>':' ', s->name, t,n, active, ticksLim );
+    if (n>0) { *call+= t; *num+= n; }
+  } /* for */
 } /* show_os9timers */
 
 
@@ -1050,6 +1118,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
                               break;
                     
                     case 'p': mode |= STIM_PERCENT;   /* >=1 percent */       break;
+                    case 'h': mode |= STIM_ORDERED;   /* highest cnt 1st */   break;
                     
                     default : upe_printf("Error: unknown option '%c'!\n",*p); 
                               usage(argv[0],pid); return 1;
@@ -1061,9 +1130,11 @@ os9err int_systime(ushort pid, int argc, char **argv)
         else {
             upe_printf("Error: no arguments allowed\n"); return 1;
         }
-    }   
+    } // for
+       
     if (mode!=STIM_NONE) show_timing( mode,ticksLim );
     return 0;
-}
+} // int_systime
+
     
 /* eof */
