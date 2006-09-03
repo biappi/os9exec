@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.74  2006/09/01 15:13:24  bfo
+ *    Version changed to V3.33
+ *
  *    Revision 1.73  2006/08/26 23:55:08  bfo
  *    A lot of old commented out stuff eliminated
  *
@@ -1546,8 +1549,12 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     if (cp->state==pWaitRead)
       memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
 
+    if (currentpid==justthis_pid) {
+      debugprintf(dbgTaskSwitch,dbgNorm,("# LOOOPI cwti=%d masklevel=%d arbitrate=%d\n", cwti, cp->masklevel, arbitrate ));
+    } // if
+
     if (fullArb || fromIntUtil) arbitrate= true;
-    if (!cwti && cp->masklevel==0) do_arbitrate( svd_intpid );
+    if (!cwti && cp->masklevel<=0) do_arbitrate( svd_intpid );
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
