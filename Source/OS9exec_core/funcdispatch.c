@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/09/03 20:56:09  bfo
+ *    "systime -h" will show the highest tick count first
+ *
  *    Revision 1.30  2006/08/29 22:37:13  bfo
  *    mid==0 test replaced by cp->isIntUtil
  *
@@ -907,16 +910,16 @@ static void show_syscalltimers( Boolean icalls, ushort mode, ulong active,
   for   ( k=0; k<=max; k++ ) {
     kInd= k;
 
-    if (sort) {
+    if (sort && k<max) {
       mxTicks= 0; mxNum= 0;
            
       for ( j=0; j<max; j++ ) {
-        if (!kDone[ j ]) {
+        if  (!kDone[ j ]) {
           Get_FI_tn( j, icalls, &t, &n );
           
           if (t==mxTicks && // do this first
-              n>=mxNum  ) { mxNum  = n; kInd= j; }
-          if (t >mxTicks) { mxTicks= t; kInd= j; }
+              n>=mxNum  ) {             mxNum= n; kInd= j; }
+          if (t >mxTicks) { mxTicks= t; mxNum= n; kInd= j; }
         } // if
       } // for
           
@@ -926,7 +929,7 @@ static void show_syscalltimers( Boolean icalls, ushort mode, ulong active,
   //t= icalls ? icall_time[k] : fcall_time[k];
   //n= icalls ? icall_num [k] : fcall_num [k];
         
-    Get_FI_tn( kInd,  icalls, &t, &n );
+    Get_FI_tn( kInd,     icalls, &t, &n );
     if (kInd==max) name= icalls ? "I$xxx (other progs)":"F$xxx (other progs)";
     else           name= icalls ?  icalltable[kInd].name  : fcalltable[kInd].name;
         
@@ -975,8 +978,8 @@ static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num, 
           Get_Statistics_tn( j, &s, &t, &n );
           
           if (t==mxTicks && // do this first
-              n>=mxNum  ) { mxNum  = n; kInd= j; }
-          if (t >mxTicks) { mxTicks= t; kInd= j; }
+              n>=mxNum  ) {             mxNum= n; kInd= j; }
+          if (t >mxTicks) { mxTicks= t; mxNum= n; kInd= j; }
         } // if
       } // for
           
@@ -1064,6 +1067,7 @@ static void usage( char *name, _pid_ )
     upe_printf("          -i          show I$xxx call timing list\n");
     upe_printf("          -o          show OS-9 progs timing list\n");
     upe_printf("          -s          show I$xxx + F$xxx calls + OS-9 progs (same as -fio)\n");
+    upe_printf("          -h          display highest tickcnt first\n" );
     upe_printf("          -t=[<n>]    a minimum of <n> ticks must have been counted\n");
     copyright ();
 } /* usage */
