@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.75  2006/09/03 20:45:41  bfo
+ *    "ftp put" hanger fixed: test cp->masklevel <= 0
+ *
  *    Revision 1.74  2006/09/01 15:13:24  bfo
  *    Version changed to V3.33
  *
@@ -417,6 +420,7 @@ Boolean in_recursion = false;
 
 /* global settings */
 int     dbgOut        = -1;
+ushort  dbgPath       =  0;
 int      without_pid  =  0;
 int     justthis_pid  =  0;
 Boolean quitFlag	  = false;
@@ -1248,7 +1252,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 {
   ushort       cpid;
   process_typ* cp;
-  Boolean      cwti;
+  Boolean      cwti, cwti_svd;
   regs_type*   crp;
   save_type*   svd;
   
@@ -1280,6 +1284,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    	crp = &cp->os9regs;   // pointer to process' registers
    	svd = &cp->savread;   // pointer to process' saved registers
     cwti=  cp->way_to_icpt;
+    cwti_svd= cwti;
 
     if (xErr==0 /* && !doit_later */) {
       debug_return( cpid, crp, cwti );
@@ -1407,7 +1412,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    
         // ----------------------
         async_area= true; 
-        if (async_pending) sig_mask( cpid,0 ); // disable signal mask
+        if (async_pending && cp->masklevel<=0) sig_mask( cpid,0 ); // disable signal mask
         // asynchronous signals are allowed here
         
         // execute syscall, except in case of way to intercept, where icpt routine must be done first
@@ -1553,8 +1558,9 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       debugprintf(dbgTaskSwitch,dbgNorm,("# LOOOPI cwti=%d masklevel=%d arbitrate=%d\n", cwti, cp->masklevel, arbitrate ));
     } // if
 
-    if (fullArb || fromIntUtil) arbitrate= true;
-    if (!cwti && cp->masklevel<=0) do_arbitrate( svd_intpid );
+  //if (fullArb || fromIntUtil) arbitrate= true;
+    if (fullArb)                arbitrate= true;
+    if (!cwti && !cwti_svd && cp->masklevel<=0) do_arbitrate( svd_intpid );
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
