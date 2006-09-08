@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2006/06/17 14:22:13  bfo
+ *    Debugging for default sizes
+ *
  *    Revision 1.14  2006/06/11 22:09:49  bfo
  *    set_os9_state with 3rd param <callingProc>
  *    DEFAULTPTYSZ used for pty/tty system
@@ -427,6 +430,7 @@ static void Reactivate( ushort pid, process_typ* cp, const char* callingProc )
 static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP, 
                                 ulong *lenP, char* buffer, Boolean wrln, systaskfunc_typ wr_func )
 {
+    os9err        err= 0;
     int           numfree, remaining, bytes, nn;
     byte*         buf;
     pipechan_typ* p= spP->u.pipe.pchP;
@@ -435,6 +439,7 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     char          eorch;
     Boolean       wrln_break;
     process_typ*  cp= &procs[pid];
+    int           xx;
     
     if (spP->name[ 0 ]!=NUL) {
       GetTim( &p->pipeTim );
@@ -496,9 +501,15 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: %ld bytes written, remaining now=%ld\n",nn,remaining));
 
     if (bytes>nn &&                   spP->signal_to_send!=0) {
-        send_signal( spP->signal_pid, spP->signal_to_send );
-                                      spP->signal_to_send= 0;
-    }
+        if (currentpid!=8 &&
+            currentpid!=10) {
+          xx= nn;
+        }
+        
+        err= send_signal( spP->signal_pid, spP->signal_to_send );
+        if (!err)                          spP->signal_to_send= 0;
+      //if (err) upe_printf( "BAD SIGNAL err=%d\n", err );
+    } // if
 
     /* check how things go on */
   //if (remaining || cp->state==pSysTask) printf( "FULL remain=%d pid=%d state=%d\n", remaining, pid, cp->state ); 
