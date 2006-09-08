@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/09/03 20:43:02  bfo
+ *    Old PtoC bridge stuff eliminated
+ *
  *    Revision 1.34  2006/08/29 22:13:38  bfo
  *    universal "ptoc_calls" support / no large pipes for ptoc
  *
@@ -186,12 +189,15 @@ static os9err int_stop( ushort pid, _argc_, _argv_ )
 static os9err int_debughalt( ushort pid, int argc, char** argv )
 /* OS9exec debug halt */
 {
-    ushort k;
-    Boolean opt;
-    Boolean fullScreen= false;
-    char    *p;
-    ushort  *usp;
-    ushort  level;
+    os9err    err;
+    ushort    k;
+    Boolean   opt;
+    Boolean   fullScreen= false;
+    char*     p;
+    ushort*   usp;
+    ushort    level;
+    ptype_typ type;
+    ulong     size;
     
     /* get arguments and options */
     opt=false;
@@ -265,13 +271,35 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                             if (sscanf( p,"%d", &justthis_pid )<1) justthis_pid= 0;
                             break;
             
-                case 'o' :  if (*(p+1)=='=') p+=2;
-                            else {  k++; /* next arg */
-                                if (k>=argc) { dbgOut= 0; break; }
-                                p= argv[k];
-                            }
+                case 'o' :  // switch off a potentialy open dbgPath
+                            if (dbgPath>0) {
+                              err= syspath_close( 0, dbgPath );
+                              dbgPath=  0;
+                            } // if
                             
-                            if (sscanf( p,"%d", &dbgOut )<1) dbgOut= 0;
+                            if (*(p+1)=='=') p+=2;
+                            else {  k++; /* next arg */
+                                if (k>=argc)  { dbgOut= 0; break; }
+                                p= argv[k];
+                            } // if
+                            
+                            // try as path number first
+                            if (sscanf( p,"%d", &dbgOut )>=1) break;
+                            dbgOut= 0;
+                      
+                            // open log file, create it if not yet existing ...
+                            if (*p!=NUL) {                         type= IO_Type( 0,  p, 0x03 );
+                                   err= syspath_open( 0, &dbgPath, type,              p, 0x03 );
+                              if  (err==E_PNNF)
+                                   err= syspath_open( 0, &dbgPath, type, p, poCreateMask|0x03 );
+                              if (!err) {
+                                   err= syspath_gs_size( 0, dbgPath, &size );
+                                   err= syspath_seek   ( 0, dbgPath,  size );
+                              } // if
+                              
+                              if (err) dbgPath= 0;
+                              dbgOut=  dbgPath;
+                            } // if
                             break;
 				
 				case 'z' :  fullScreen= true; break; /* full screen mode */

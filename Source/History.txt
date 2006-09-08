@@ -1449,6 +1449,10 @@
           06-09-03  Bfo     procstuff   : No mask levels below 0 any more
           06-09-03  Bfo     funcdispatch: STIM_ORDERED 0x0020 added
                                           "systime -h" will show the highest tick count first
+                                          
+          06-09-08  Bfo     os9exec_nt  : <dbgPath> added / <cwti_svd> added
+          06-09-08  Bfo     pipefiles   : signal sending will be cleared only w/o error
+          06-09-08  Bfo     intcommand  : enhanced "-o <fileName>" (recommended by Martin Gregorie)
           
     3.33  06-??-??  Bfo
     -------------------  
