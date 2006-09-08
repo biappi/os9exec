@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.59  2006/08/26 23:51:11  bfo
+ *    <arbitrate> is now with in "C" format section
+ *
  *    Revision 1.58  2006/08/20 16:46:04  bfo
  *    line count for pagination added
  *
@@ -1208,6 +1211,7 @@ extern Boolean in_recursion;
 
 /* global settings */
 extern int     dbgOut;
+extern ushort  dbgPath;
 extern int      without_pid;
 extern int     justthis_pid;
 extern Boolean quitFlag;
