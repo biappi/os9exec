@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2006/09/08 21:59:16  bfo
+ *    enhanced "-o <fileName>" (recommended by Martin Gregorie)
+ *
  *    Revision 1.35  2006/09/03 20:43:02  bfo
  *    Old PtoC bridge stuff eliminated
  *
@@ -579,8 +582,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_nothread( _pid_, _argc_, _argv_ ) { ptocThread= false; return 0; }
   static os9err int_arb     ( _pid_, _argc_, _argv_ ) { fullArb   = true;  return 0; }
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
-  static os9err int_pmask   ( _pid_, _argc_, _argv_ ) { ptocMask  = true;  return 0; }
-  static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
+//static os9err int_pmask   ( _pid_, _argc_, _argv_ ) { ptocMask  = true;  return 0; }
+//static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
 
 
   static os9err ptoc_calls( ushort pid, _argc_, char** argv )
@@ -675,10 +678,10 @@ cmdtable_typ commandtable[] =
   { "ioff",          int_off,        "Switch off  built-in PtoC utilities" },
   { "ithread",       int_thread,     "Threading   built-in PtoC utilities" },
   { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
-  { "iarb",          int_arb,        "Full arbitration" },
-  { "inoarb",        int_noarb,      "Std  arbitration (default)" },
-  { "ipmask",        int_pmask,      "No   arbitration during PtoC" },
-  { "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
+  { "iarb",          int_arb,        "Full        arbitration" },
+  { "inoarb",        int_noarb,      "Std         arbitration             (default)" },
+//{ "ipmask",        int_pmask,      "No   arbitration during PtoC" },
+//{ "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
   { "ptoc_calls",    ptoc_calls,     "PtoC calls" },
   #endif
 
@@ -955,7 +958,6 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     syspath_typ* spC;
     process_typ* cp= &procs[      pid ];
     process_typ* pa= &procs[ parentid ];
-    Boolean      isPtoC;
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -966,16 +968,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     icmpid = pid;  /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
     
-    /*
-    #ifdef PTOC_SUPPORT
-      isPtoc= Is_PtoC( name, &index );
-    #else
-      isPtoc= false;
-    #endif
-    */
-    
-    index    = isintcommand( name, &isPtoC );
-    *asThread= ptocThread &&        isPtoC;
+    index    = isintcommand( name, &cp->isPtoC );
+    *asThread= ptocThread &&        cp->isPtoC;
     
     if (index<0) return os9error(E_PNNF);
 
@@ -1011,14 +1005,14 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
       if (spP->type==fTTY ) spC= get_syspathd( pid, spP->u.pipe.pchP->sp_lock );
       if (spP->type==fPipe) spC= spP; /* no crossover */
     
-      if (spC!=NULL && !isPtoC) large_pipe_connect( pid,spC );
+      if (spC!=NULL && !cp->isPtoC) large_pipe_connect( pid,spC );
     } // if
 
     if (logtiming) { xxx_to_arb( F_Fork, pid );
                      arb_to_os9( false ); }
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
-    if (isPtoC) 
+    if (cp->isPtoC) 
       debug_return( pid, &cp->os9regs, false );
     
     #ifdef THREAD_SUPPORT
@@ -1035,7 +1029,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     } // if
     
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming && !isPtoC) os9_to_xxx( pid );
+    if (logtiming && !cp->isPtoC) os9_to_xxx( pid );
 
     set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
