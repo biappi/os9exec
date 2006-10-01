@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/02/19 16:19:32  bfo
+ *    use <isIntUtil>
+ *
  *    Revision 1.16  2005/06/30 11:07:24  bfo
  *    Mach-O support
  *
@@ -219,6 +222,7 @@ void trigcheck(char *message, char *name)
 void _debugprintf(char *format, ...)
 {
     char buffer[MAXPRINTFLEN];
+    process_typ* cp= &procs[ currentpid ];
     va_list vp= NULL;
     
     /* message enabled for that level */
@@ -226,8 +230,9 @@ void _debugprintf(char *format, ...)
     vsprintf(buffer,format,vp);
     va_end                (vp);
     
-    if (procs[currentpid].isIntUtil) printf( buffer );
-    else                         upe_printf( buffer );
+    if (cp->isIntUtil &&
+       !cp->isPtoC) printf( buffer );
+    else        upe_printf( buffer );
 
     /* look if also halt enabled for that class */
     debug_halt( tempmask );
