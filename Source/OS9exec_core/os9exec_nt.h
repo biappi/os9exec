@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.60  2006/09/08 21:54:49  bfo
+ *    <dbgPath> added
+ *
  *    Revision 1.59  2006/08/26 23:51:11  bfo
  *    <arbitrate> is now with in "C" format section
  *
@@ -516,6 +519,7 @@ typedef struct {
 #define DEFAULTPTYSZ  1024
 #define MINPIPESZ       90
 
+#define MAX_SLEEP 0x7fffffff
 
 /* attribute definitions */
 typedef enum { poRead      =0x0001,
@@ -1006,6 +1010,7 @@ typedef struct {
                 /* general state */
                 pstate_typ        state;    /* process' state */
                 Boolean       isIntUtil;    /* Internal utility flag */
+                Boolean          isPtoC;    /* PtoC command */
                 ushort              mid;    /* the process' primary module ID */
                 char*          procName;    /* the process' name (for internal utilities) */
 
@@ -1023,11 +1028,11 @@ typedef struct {
                 /* memory */
                 ulong memstart;             /* the process' static storage start addr (unbiased) */ 
                 ulong memtop;               /* the process' static storage top pointer (unbiased) */
-                memblock_typ os9memblocks[MAXMEMBLOCKS]; /* the process' allocated memory blocks */
+                memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated memory blocks */
                 byte sigdat[SIG_SCRATCH];
                 
                 /* exceptions */
-                errortrap_typ ErrorTraps[NUMEXCEPTIONS];        /* BusErr .. Privilege (Vector #2..#8) */
+                errortrap_typ     ErrorTraps[NUMEXCEPTIONS];    /* BusErr .. Privilege (Vector #2..#8) */
                 traphandler_typ TrapHandlers[NUMTRAPHANDLERS];  /* TRAP 1..15 = vector #32..#47 */
 
                 /* paths */
@@ -1055,7 +1060,6 @@ typedef struct {
                 ulong   icpta6;             /* value to pass in A6 to intercept routine */
 
                 Boolean way_to_icpt;        /* is true on the way to icpt */
-              //Boolean doit_later;
                 ushort  icpt_pid,           /* keep pid and signal save */
                         icpt_signal;
 
@@ -1220,7 +1224,7 @@ extern Boolean userOpt;
 extern Boolean ptocActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
-extern Boolean ptocMask;
+//extern Boolean ptocMask;
 extern Boolean withTitle;
 
 extern Boolean logtiming;
