@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.76  2006/09/08 21:56:06  bfo
+ *    <dbgPath> added / <cwti_svd> added
+ *
  *    Revision 1.75  2006/09/03 20:45:41  bfo
  *    "ftp put" hanger fixed: test cp->masklevel <= 0
  *
@@ -429,7 +432,7 @@ Boolean userOpt		  = false;
 Boolean ptocActive    = true;
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
-Boolean ptocMask      = false;
+//Boolean ptocMask    = false;
 Boolean withTitle     = true; 
 
 Boolean logtiming     = true; /* syscall loging, used by int cmd "systime" */
@@ -1286,7 +1289,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     cwti=  cp->way_to_icpt;
     cwti_svd= cwti;
 
-    if (xErr==0 /* && !doit_later */) {
+    if (xErr==0) {
+      if (cwti) cp->masklevel= 1;
       debug_return( cpid, crp, cwti );
     
       if (cp->state==pActive && 
@@ -1321,7 +1325,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     else if (cp->state==pActive   ||
  		     cp->state==pWaitRead) {
       if   ((cp->state==pActive ||
-             cp->way_to_icpt) /* && !doit_later */) {
+             cp->way_to_icpt)) {
       // --- go execute OS9 code until next trap or exception
       // %%% for low-level calling interface debug: Debugger();
         if (xErr) {
@@ -1387,8 +1391,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       else {
         // TRAP0 = OS-9 system call called
         arbitrate= false; // disallow arbitration by default
-
-      //if (!doit_later)
         debug_comein( cpid,crp );
         
         cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
@@ -1412,37 +1414,13 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
    
         // ----------------------
         async_area= true; 
-        if (async_pending && cp->masklevel<=0) sig_mask( cpid,0 ); // disable signal mask
+        if (async_pending &&
+            cp->masklevel<=0) sig_mask( cpid, 0 ); /* pending signals */
         // asynchronous signals are allowed here
         
         // execute syscall, except in case of way to intercept, where icpt routine must be done first
         // Can have been triggered by sig_mask call above
-        
-        /*        
-        doit_later= false;
-        if (cp->way_to_icpt) {
-        //fdeP= getfuncentry(cp->func);
-        //printf( "%d => %d / %s\n", cpid, cp->icpt_pid, fdeP->name );
-          doit_later= cp->func==F_Time;
-        }
-        */
-        
-        /*
-        if (!cp->way_to_icpt) {
-        //doit_later     =               cp->func==F_RTE;
-        //if (cpid!=4 && cp->func==F_RTE)
-        //  printf( "RTE %d\n", cpid );
-          cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
-          cp->oerr       = exec_syscall( cp->func, cpid,crp, false );
-          
-          // analyze result
-          if (debugcheck(dbgSysCall,dbgDeep)) {
-            if (cp->state!=pActive) uphe_printf("  * OS9 %s sets Pid=%d into new state=%s\n",
-            get_syscall_name(cp->func),cpid,PStateStr(cp));
-          }
-        } // if
-        */
-        
+                
         async_area= false; 
         // asynchronous signals are no longer allowed
         // -----------------------
@@ -1554,9 +1532,9 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     if (cp->state==pWaitRead)
       memcpy( (void*)&cp->os9regs, (void*)&svd->r, sizeof(regs_type) ); // save all regs
 
-    if (currentpid==justthis_pid) {
-      debugprintf(dbgTaskSwitch,dbgNorm,("# LOOOPI cwti=%d masklevel=%d arbitrate=%d\n", cwti, cp->masklevel, arbitrate ));
-    } // if
+  //if (currentpid==justthis_pid) {
+  //  debugprintf(dbgTaskSwitch,dbgNorm,("# LOOOPI cwti=%d masklevel=%d arbitrate=%d\n", cwti, cp->masklevel, arbitrate ));
+  //} // if
 
   //if (fullArb || fromIntUtil) arbitrate= true;
     if (fullArb)                arbitrate= true;
@@ -1568,9 +1546,9 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     if  (!cwti) {
           cwti=  cp->way_to_icpt;
       if (cwti) {
-        if (Dbg_SysCall( cpid,crp ))
-          upe_printf( "%d %d %d %x\n", cp->icpt_pid,currentpid,
-                                       cp->icpt_signal, os9_long( (ulong)cp->pd._sigvec ) );
+      //if (Dbg_SysCall( cpid,crp ))
+      //  upe_printf( "%d %d %d %x\n", cp->icpt_pid,currentpid,
+      //                               cp->icpt_signal, os9_long( (ulong)cp->pd._sigvec ) );
 
         if (cp->icpt_pid!=currentpid) {
             cp->way_to_icpt= false;  // reset if another process
@@ -1598,8 +1576,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         debug_halt(dbgTaskSwitch);
       } // if
     } // if
-		
-  //debug_return( currentpid, crp, cwti );
   } while( currentpid<MAXPROCESSES ); /* while active processes */
 } // os9exec_loop
 
