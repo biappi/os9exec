@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2006/09/03 20:50:08  bfo
+ *    No mask levels below 0 any more
+ *
  *    Revision 1.42  2006/08/29 22:40:37  bfo
  *    arbitration improvements
  *
@@ -622,7 +625,8 @@ os9err send_signal(ushort spid, ushort signal)
     debugprintf(dbgProcess,dbgNorm,("# send signal=%d to pid=%d queued (level=%d)\n",
                                            signal,spid, s->cnt ));
     /* synchronise it (must be inside the os9exec area) */
-    if (!async_area && sigp->masklevel==0) async_pending= true;
+  //if (!async_area && sigp->masklevel==0) async_pending= true;
+    if (!async_area)                       async_pending= true;
     return 0;
   } /* if */
     
@@ -636,7 +640,8 @@ os9err send_signal(ushort spid, ushort signal)
 //  printf( "%d wer sendet denn da %d\n", currentpid, signal ); /* %bfo% */
         
   /* first, wakeup process, if sleeping */
-  if (sigp->state==pSleeping) {
+  if (sigp->state==pSleeping &&
+     !sigp->isIntUtil) {
     debugprintf(dbgProcess,dbgNorm,("# send_signal: waking pid=%d from sleep\n",spid));
     set_os9_state( spid, pActive, "send_signal" );
     sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
@@ -671,7 +676,8 @@ os9err send_signal(ushort spid, ushort signal)
     sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
     /* now, check if target can catch signal */
-    if (sigp->pd._sigvec!=0) { /* prepare execution of intercept routine */
+    if (sigp->pd._sigvec!=0 &&
+       !sigp->isIntUtil) {          /* prepare execution of intercept routine */
         sigp->way_to_icpt= true;    /* activate both */
           cp->way_to_icpt= true;
       if (sigp->state==pWaitRead) {
@@ -747,7 +753,7 @@ os9err sig_mask( ushort cpid, int level )
         case -1 : (*plv)--; if (*plv<0) *plv= 0; break; // no mask levels below zero
     } /* switch */
 
-	debugprintf(dbgSysCall,dbgNorm, ("# masklevel=%d cpid=%d\n", cp->masklevel, cpid ));
+  //debugprintf(dbgSysCall,dbgNorm, ("# masklevel=%d cpid=%d\n", cp->masklevel, cpid ));
 
     for (i=0; i<s->cnt; i++) {    /* remove one element from stack */
         pid   = s->pid   [i]; /* use it as a fifo, save them first */
@@ -960,14 +966,16 @@ void do_arbitrate( ushort allowedIntUtil )
           sprocess->pW_age= NewAge;
             
               async_area= true; 
-	      if (async_pending) sig_mask( spid,0 ); /* disable signal mask */
+	      if (async_pending && 
+	          sprocess->masklevel<=0) sig_mask( spid, 0 ); /* pending signals */
 		    /* asynchronous signals are allowed here */
 			
         wait_for_signal( spid );
   	    async_area= false; 
 	      /* asynchronous signals are no longer allowed */
                         
-        if (sprocess->wakeUpTick < GetSystemTick()) {
+        if (sprocess->wakeUpTick==MAX_SLEEP ||
+            sprocess->wakeUpTick<=GetSystemTick()) {
             sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
             sprocess->os9regs.sr &= ~CARRY; /* error-free return */
           set_os9_state( spid, pActive, "do_arbitrate" ); break;
@@ -1102,7 +1110,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     process_typ* pp= &procs[os9_word(cp->pd._pid)];  
     regs_type*   rp= &cp->os9regs;
     Boolean      asThread;
-    Boolean      isPtoc;
+  //Boolean      isPtoC;
 
     #ifdef INT_CMD
       ushort     argc;
@@ -1139,10 +1147,10 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
   //cp->pBlocked = false; /* now the status can be changed  */
     
     #ifdef INT_CMD
-          cp->isIntUtil= isintcommand( mpath, &isPtoc )>=0;
+          cp->isIntUtil= isintcommand( mpath, &cp->isPtoC )>=0;
       if (cp->isIntUtil) {
         set_os9_state( newpid, pActive, "prepFork" );
-        if (!isPtoc) cp->mid= 0; // assign "OS9exec" module, for non-PtoC modules
+        if (!cp->isPtoC) cp->mid= 0; // assign "OS9exec" module, for non-PtoC modules
 
         /* prepare args */
         prepArgs( (char*)paramptr, &argc,&arguments );
