@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2006/08/26 23:53:35  bfo
+ *    OS9_F_Wait for internal commands returns the err correctly now
+ *
  *    Revision 1.43  2006/08/04 18:39:33  bfo
  *    Comment changes
  *
@@ -181,7 +184,7 @@ os9err OS9_F_Exit( regs_type *rp, ushort cpid )
     process_typ*        cp= &procs[cpid];
     unsigned short exiterr= loword( rp->d[1] );
   //cp->pBlocked = true;
-    cp->masklevel= 0;
+  //cp->masklevel= 0;
     
     /* internal utilities will be killed on a higher level now */
     /* because XCode will not allow to throw exception thru C context */
@@ -767,11 +770,13 @@ os9err OS9_F_RTE( _rp_, ushort cpid )
         if (cp->os9regs.sr & CARRY) err= cp->os9regs.d[1];
          
         /* in case of F_Sleep, return remaining ticks */        
-        if (cp->func==F_Sleep) {
+        if   (cp->func==F_Sleep) {
+              cp->os9regs.d[ 0 ]= 0;
+          if (cp->wakeUpTick<MAX_SLEEP) {
                                syt= GetSystemTick();
-            if (cp->wakeUpTick>syt) cp->os9regs.d[0]= cp->wakeUpTick-syt;
-            else                    cp->os9regs.d[0]= 0;
-        }
+            if (cp->wakeUpTick>syt) cp->os9regs.d[ 0 ]= cp->wakeUpTick-syt;
+          } // if
+        } // if
     } /* if */
     
     sig_mask( cpid,0 ); /* disable signal mask */
@@ -1645,7 +1650,7 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
         /* --- put process to indefinite sleep */
         debugprintf(dbgProcess,dbgNorm,
                    ("# F$Sleep: put pid=%d to indefinite sleep!\n",cpid));
-        cp->wakeUpTick= 0x7fffffff; /* maxint */
+        cp->wakeUpTick= MAX_SLEEP;
     }
     else {
         /* --- timed sleep */
