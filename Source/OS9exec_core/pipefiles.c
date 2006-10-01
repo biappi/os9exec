@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.16  2006/09/08 21:57:23  bfo
+ *    signal sending will be cleared only w/o error
+ *
  *    Revision 1.15  2006/06/17 14:22:13  bfo
  *    Debugging for default sizes
  *
@@ -439,7 +442,6 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     char          eorch;
     Boolean       wrln_break;
     process_typ*  cp= &procs[pid];
-    int           xx;
     
     if (spP->name[ 0 ]!=NUL) {
       GetTim( &p->pipeTim );
@@ -494,21 +496,19 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
         uphe_printf("pWriteSysTaskExe: written='");
         for (kk=0; kk<nn; kk++) putc(*dp++,stderr);
         upe_printf ("'\n");
-    }
+    } // if
     
     p->bwritten+= bytes-nn; /* we have written so many now */
     if (remaining<0) remaining= 0;
     debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: %ld bytes written, remaining now=%ld\n",nn,remaining));
 
-    if (bytes>nn &&                   spP->signal_to_send!=0) {
-        if (currentpid!=8 &&
-            currentpid!=10) {
-          xx= nn;
-        }
-        
-        err= send_signal( spP->signal_pid, spP->signal_to_send );
-        if (!err)                          spP->signal_to_send= 0;
-      //if (err) upe_printf( "BAD SIGNAL err=%d\n", err );
+    if (bytes>nn &&                      spP->signal_to_send!=0) {
+      err= send_signal( spP->signal_pid, spP->signal_to_send );
+      
+      debugprintf(dbgSysCall,dbgNorm,("# pipe is full: pid=%d => pid=%d sig=%d err=%d\n", 
+                                         pid, spP->signal_pid, spP->signal_to_send, err ));
+                                         
+      if (!err)                          spP->signal_to_send= 0;
     } // if
 
     /* check how things go on */
