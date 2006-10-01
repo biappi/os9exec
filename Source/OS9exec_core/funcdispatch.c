@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.32  2006/09/04 14:52:22  bfo
+ *    systime sorting corrected / -h added to -? help text
+ *
  *    Revision 1.31  2006/09/03 20:56:09  bfo
  *    "systime -h" will show the highest tick count first
  *
@@ -662,7 +665,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   } // if
 
   if (logtiming) {
-    xxx_to_arb( func,pid );
+    xxx_to_arb( func, pid );
   } /* if (logtiming) */
 
   if (fdeP!=&invalidcall) {
@@ -673,14 +676,17 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   } // if
   
   if (withinIntUtil) {
-    if (ptocMask) {
-      debug_return( pid, rp, false );
+    sv_pid= pid;
+
+    if (arbitrate) { 
+      os9exec_loop( 0, true );
+      arbitrate= false;
     }
     else {
-      sv_pid= currentpid;
-      if (arbitrate) { os9exec_loop( 0, true ); arbitrate= false; }
-      currentpid= sv_pid; // make sure it is not changed
-    }
+      debug_return( pid, rp, false );
+    } // if
+    
+    pid= sv_pid; // make sure it is not changed
   } // if
   
   #ifdef THREAD_SUPPORT
