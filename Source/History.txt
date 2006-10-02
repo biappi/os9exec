@@ -1453,8 +1453,19 @@
           06-09-08  Bfo     os9exec_nt  : <dbgPath> added / <cwti_svd> added
           06-09-08  Bfo     pipefiles   : signal sending will be cleared only w/o error
           06-09-08  Bfo     intcommand  : enhanced "-o <fileName>" (recommended by Martin Gregorie)
-          
-    3.33  06-??-??  Bfo
+
+          06-10-01  Bfo     intcommand  : "ipmask" / "inopmask" internal commands eliminated
+                                          <isPtoC> replaced by <cp->isPtoC>
+          06-10-01  Bfo     os9exec_nt  : <cp->isPtoc> introduced; <ptocMask> eliminated
+                                          some masklevel adaptions for PtoC handling
+          06-10-01  Bfo     pipefiles   : Debug output for signal sending when pipe full
+          06-10-01  Bfo     debug       :Êprintf() for internal utilities, but not PtoC
+          06-10-01  Bfo     fcalls      :ÊMAX_SLEEP adaption for Sleep
+          06-10-01  Bfo     procstuff   : <cp->isPtoc> introduced; MAX_SLEEP support;
+                                          debugging the missing signal problem
+          06-10-01  Bfo     funcdispatch: <ptocMask> eliminated; os9exec_loop call rearranged
+                
+    3.33  06-10-??  Bfo
     -------------------  
 */
 
