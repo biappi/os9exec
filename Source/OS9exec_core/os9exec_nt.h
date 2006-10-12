@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.61  2006/10/01 15:19:06  bfo
+ *    <cp->isPtoc> introduced; <ptocMask> eliminated
+ *
  *    Revision 1.60  2006/09/08 21:54:49  bfo
  *    <dbgPath> added
  *
@@ -1337,8 +1340,9 @@ void    eAdvanceCursor(void);
 
 #ifdef win_unix
   #define AppDo ".AppleDouble"   /* specific netatalk file names */
-  #define AppDt ".AppleDesktop"  
+  #define AppDt ".AppleDesktop"
   #define L_P   ":2e"            /* specific netatalk way for "." files */
+  #define DsSto ".DS_Store"      /* specific desktop info store file */
 #endif
 
 /* OS9exec builtin module definitons */

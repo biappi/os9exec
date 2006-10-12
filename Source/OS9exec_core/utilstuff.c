@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/08/20 18:35:29  bfo
+ *    "noecho" mode is default again
+ *    (Changes done by Martin Gregorie)
+ *
  *    Revision 1.48  2006/07/23 14:21:43  bfo
  *    Quick return if no state change
  *
@@ -1425,7 +1429,8 @@ os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
       
       if (strcmp( (*dEnt)->d_name,".."  )!=0 &&
           strcmp( (*dEnt)->d_name,"."   )!=0 &&
-         ustrcmp( (*dEnt)->d_name,AppDo )!=0) i++;
+         ustrcmp( (*dEnt)->d_name,AppDo )!=0 &&
+         ustrcmp( (*dEnt)->d_name,DsSto )!=0) i++;
     } while ( i<n );
   } while (false);
   
@@ -1492,7 +1497,7 @@ os9err RemoveAppledouble( syspath_typ* spP )
     
     app_d= opendir( app ); if (app_d==NULL) return 0; /* already removed */
 
-    while (err==0) { /* delete all entries of the .AppleDouble directory */
+    while (!err) { /* delete all entries of the .AppleDouble directory */
             dEnt= ReadTDir( app_d );
         if (dEnt==NULL) break;
         
