@@ -1464,8 +1464,16 @@
           06-10-01  Bfo     procstuff   : <cp->isPtoc> introduced; MAX_SLEEP support;
                                           debugging the missing signal problem
           06-10-01  Bfo     funcdispatch: <ptocMask> eliminated; os9exec_loop call rearranged
-                
-    3.33  06-10-??  Bfo
+          
+          06-10-01  Bfo     os9exec_nt /
+                            utilstuff   : Extended for ".DS_Store" support
+          06-10-02  Bfo     funcdispatch: Show the correct registers for F$GPrDBT
+          06-10-12  Bfo     fileaccess  : Several adaptions for Windows directory reading:
+                                          - handling EOF correctly
+                                          - pDsetatt with additional E_EOF support
+                                          - rmdir with /S /Q parameters
+                                          - dir flag adaption                
+    3.33  06-10-12  Bfo
     -------------------  
 */
 
