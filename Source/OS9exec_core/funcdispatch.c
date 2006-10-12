@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/10/01 15:39:10  bfo
+ *    <ptocMask> eliminated; os9exec_loop call rearranged
+ *
  *    Revision 1.32  2006/09/04 14:52:22  bfo
  *    systime sorting corrected / -h added to -? help text
  *
@@ -230,7 +233,7 @@ const funcdispatch_entry fcalltable[NUMFCALLS] =
     { /* 0x1C */ OS9_F_SUser,  "F$SUser",  d_l(1),               0      }, /* Set User ID number */
     { /* 0x1D */ OS9_F_UnLoad, "F$UnLoad", d_w(0)+a_p(0),        a_l(0) }, /* Unlink Module by name */
     { /* 0x1E */ OS9_F_RTE,    "F$RTE",    0,                    0      }, /* Return from Intercept routine */
-    { /* 0x1F */ OS9_F_GPrDBT, "F$GPrDBT", d_w(0),               d_w(1) }, /* Get system global data copy */
+    { /* 0x1F */ OS9_F_GPrDBT, "F$GPrDBT", a_l(0)+d_l(1),        d_l(1) }, /* Get system global data copy */
     { /* 0x20 */ OS9_F_Julian, "F$Julian", d_l(0)+d_l(1),        d_l(0)+d_l(1) }, /* Convert gregorian to Julian date */
     { /* 0x21 */ OS9_F_TLink,  "F$TLink",  d_w(0)+d_l(1)+a_p(0), a_l(0)+a_l(1)+a_l(2) }, /* Link trap subroutine package */
     { /* 0x22 */ OS9_F_UnImp,  "F$DFork",  d_w(0),               d_w(1) }, /* Debugging Fork call */
