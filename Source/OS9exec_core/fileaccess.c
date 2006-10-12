@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/06/18 14:36:05  bfo
+ *    Use 'SITD' instead of 'SIT!' for Mac file type now
+ *
  *    Revision 1.33  2006/06/08 08:15:04  bfo
  *    Eliminate causes of signedness warnings with gcc 4.0
  *
@@ -1428,7 +1431,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
           FindClose( hFile );
           // now extract all the data from WIN32_FIND_DATA structure
           // - is it a folder?
-          isFolder= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
+        //isFolder= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
+          isFolder= PathFound( pathname ); /* don't call stat_ for directories under Windows */
+        //printf( "%d '%s'\n", isFolder, pathname );
           
           // - basic r or rw
           *att=poRead | (poRead<<3); // always readable
@@ -1441,7 +1446,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
           if (isFolder) {
               *att |= 0x3F; // all permissions
               *att |= 0x80; // and dir bit
-          }
+          } // if
           
           // - owner
           fdbeg[1] =0;
@@ -1477,6 +1482,14 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       }
       else {
           isFolder= true; /* assuming it is the top directory */
+          *att    = 0xBF; /* dir bit and all permissions */
+
+          /*
+          if (isFolder) {
+              *att |= 0x3F; // all permissions
+              *att |= 0x80; // and dir bit
+          } // if
+          */
 
 //     // file does not exist (any more)
 //        *att= 0; // not accessible
@@ -2159,59 +2172,63 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
 /* read from (simulated) directory file */
 os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
 {
-    os9err err;
+  os9err err;
     
-    ulong* pos  = &spP->u.disk.u.dir.pos; /* current file position */
-    ulong  offs = *pos & 0x1F;            /* offset    to start */
-    ushort index= *pos >> 5;              /* dir index to start */
-    char*  myb= buffer;
+  ulong* pos  = &spP->u.disk.u.dir.pos; /* current file position */
+  ulong  offs = *pos & 0x1F;            /* offset    to start */
+  ushort index= *pos >> 5;              /* dir index to start */
+  char*  myb= buffer;
     
-    ulong  cnt, nbytes;
-    os9direntry_typ os9dirent;
-    
-    #ifdef win_unix
-      dirent_typ*  dEnt;
-      int          len;
-      ulong        fdpos;
-      Boolean      topFlag= false;
-   // Boolean      de_call;
+  ulong  cnt, nbytes;
+  os9direntry_typ os9dirent;
+//int ii;
+  
+  #ifdef win_unix
+    dirent_typ*  dEnt;
+    int          len;
+    ulong        fdpos;
+    Boolean      topFlag= false;
+  //Boolean      de_call;
       
-      #ifdef windows32
-        dirent_typ dField;
-      #endif
+    #ifdef windows32
+      dirent_typ dField;
     #endif
+  #endif
     
-//  printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
-    debugprintf(dbgFiles,dbgDetail,("# pDread: requests $%lX bytes\n",*n)); 
-    cnt= *n;
-    if  (*n==0) return 0;
+//printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
+  debugprintf(dbgFiles,dbgDetail,("# pDread: requests $%lX bytes\n",*n)); 
+  cnt= *n;
+  if  (*n==0) return 0;
         
-    /* now copy remaining entries (if any) */
-    /* now do it in one single step (bfo)  */
-    while (cnt>0) {
-        #ifdef MACFILES
-          err= get_dir_entry( index, &os9dirent, spP );
+  /* now copy remaining entries (if any) */
+  /* now do it in one single step (bfo)  */
+  while (cnt>0) {
+    #ifdef MACFILES
+      err= get_dir_entry( index, &os9dirent, spP );
           
-        #elif defined win_unix
-          err= 0;
-          memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
+    #elif defined win_unix
+      memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
           
-          err= DirNthEntry( spP,index, &dEnt );
-          #ifdef windows32
-            if (dEnt==NULL && err==E_EOF && index<=1) {
-                dEnt= &dField; /* virtual field */
+      err= DirNthEntry( spP,index, &dEnt );
+      #ifdef windows32
+        if (dEnt==NULL && err==E_EOF && index<=1) {
+            dEnt= &dField; /* virtual field */
               
-              if (index==0) strcpy( dEnt->d_name,".." );
-              if (index==1) strcpy( dEnt->d_name,"."  );
-              err= 0;
-            } // if
-          #endif
+          if (index==0) strcpy( dEnt->d_name,".." );
+          if (index==1) strcpy( dEnt->d_name,"."  );
+          err= 0;
+        } // if
+      #endif
           
-        //printf( "nth=%d err=%d '%s' '%s'\n", index, err, spP->fullName,
-        //         dEnt==NULL ? "<NULL>" : dEnt->d_name );
-          if (err) return err;
-       
-          /* ".." and "." are swapped in UXIX !! */
+    //printf( "nth=%d err=%d '%s' '%s'\n", 
+    //         index, err, spP->fullName, dEnt==NULL ? "<NULL>" : dEnt->d_name );
+                   
+      if      (err) {
+        if    (err==E_EOF && cnt<*n) break; // EOF can be handled !!
+        return err;
+      } // if
+          
+        /* ".." and "." are swapped in UXIX !! */
         //if (*pos-offs==DIRENTRYSZ) { /* if 2nd entry */
         //  strncpy( (char*)&os9dirent.name,".", DIRNAMSZ );
         //  fdpos= spP->u.disk.u.dir.fdcur; /* get current dir info */
@@ -2268,7 +2285,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
                 } while( dEnt!=NULL && strcmp( dEnt->d_name,".." )!=0 );
               } // if
               */
-            }
+            } // if
             
             /*
             else {
@@ -2286,49 +2303,51 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
             else err= E_EOF;
         //} /* if (*pos-offs==DIRENTRYSZ) */
           
-          if (!err) {
-          //printf( "==> '%s' %08X\n", os9dirent.name, fdpos );
-            len= strlen( os9dirent.name );
-            os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
-            os9dirent.fdsect= os9_long( fdpos );
-          }
+      if (!err) {
+      //printf( "==> '%s' %08X\n", os9dirent.name, fdpos );
+        len= strlen( os9dirent.name );
+        os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
+        os9dirent.fdsect= os9_long( fdpos );
+      } // if
       
-        #else
-          /* %%% no directory read possible w/o native OS access */
-          return E_UNKSVC;
-        #endif
+    #else
+      /* %%% no directory read possible w/o native OS access */
+      return E_UNKSVC;
+    #endif
         
-        if (!err) {
-            nbytes = (offs+cnt)>DIRENTRYSZ ? DIRENTRYSZ-offs:cnt;
-            memcpy(myb,(byte*)&os9dirent+offs, nbytes);
+    if (!err) {
+      nbytes = (offs+cnt)>DIRENTRYSZ ? DIRENTRYSZ-offs:cnt;
+      memcpy(myb,(byte*)&os9dirent+offs, nbytes);
             
-            cnt -= nbytes;
-            myb += nbytes;
-            offs = (offs+nbytes) & 0x1F;
-            *pos+= nbytes;
-            if (offs==0) index++;
-        }
-        else {
-            if (err==E_EOF) {
-                if (cnt==*n) return err;  /* nothing to be read */
-                /* ok, no more to read, but something was there */
-                break;
-            }
-            else return err;
-        }
-    } /* while */
+      cnt -= nbytes;
+      myb += nbytes;
+      offs = (offs+nbytes) & 0x1F;
+      *pos+= nbytes;
+      if (offs==0) index++;
+    }
+    else {
+      if (err==E_EOF) {
+        if (cnt==*n) return err;  /* nothing to be read */
+        /* ok, no more to read, but something was there */
+        break;
+      }
+      else return err;
+    } // if
+  } /* while */
     
-    /* sucessful, set number of bytes actually read */
-    *n-= cnt; /* adjust to show actually read # of bytes */
-    debugprintf(dbgFiles,dbgDetail,("# pDread: returned $%lX bytes\n",*n)); 
+  /* sucessful, set number of bytes actually read */
+  *n-= cnt; /* adjust to show actually read # of bytes */
+  debugprintf(dbgFiles,dbgDetail,("# pDread: returned $%lX bytes\n",*n)); 
 
-//  printf( "buf=%8d n=%4d '%s'\n", buffer, *n, spP->name );
-//  for (ii=0;ii<*n;ii++) {
-//      printf( "%04X ", (byte)buffer[ii] );
-//      if (ii%8==7) printf( "\n" );
-//  }
-    
-    return 0;
+  /*
+  printf( "buf=%8d n=%4d '%s'\n", buffer, *n, spP->name );
+  for (ii=0; ii<*n; ii++) {
+    printf( "%02X ", (byte)buffer[ii] );
+    if (ii%16==15) printf( "\n" );
+  } // for
+  */
+  
+  return 0;
 } /* pDread */
 
 
@@ -2569,6 +2588,8 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       
     #ifdef win_unix
           err= RemoveAppledouble( spP ); /* because this file is not visible */
+    //printf( "pDsetatt err=%d\n", err );
+      if (err==E_EOF) err= 0; // this is not an error !!
       if (err) return err;
     #endif
       
@@ -2607,7 +2628,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 //      return 0; 
 //    }
 
-      sprintf( cmd, "rmdir %s", pp );
+      sprintf( cmd, "rmdir /S /Q %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
     #elif defined UNIX
