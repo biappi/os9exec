@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.77  2006/10/01 15:21:06  bfo
+ *    <ptocMask> eliminated; some masklevel adaptions for PtoC handling
+ *
  *    Revision 1.76  2006/09/08 21:56:06  bfo
  *    <dbgPath> added / <cwti_svd> added
  *
@@ -763,7 +766,7 @@ void getversions()
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x33;
+	exec_revision= 0x34;
 	#endif
 } /* getversions */
 
@@ -1167,6 +1170,7 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 			
 		    debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] ready to kill\n", cpid ));
 			cp->exiterr=vect-FIRSTEXCEPTION+E_BUSERR; /* set exit code */
+			debug_procdump(cp, cpid);
 			kill_process(cpid); /* kill the process, change currentpid */
 			/* show exception */
 			debugprintf(dbgAnomaly,dbgNorm,("# main loop: Process pid=%d aborted: Exception vector=$%02X, err=#%03d\n",
