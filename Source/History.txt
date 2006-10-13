@@ -1436,10 +1436,10 @@
           06-08-30  Bfo     funcdispatch: mid==0 test replaced by cp->isIntUtil
           06-08-30  Bfo     modstuff    : isintcommand adaptions
           06-08-30  Bfo     procstuff   : arbitration improvements
-    3.32  06-08-31  Bfo                   V3.32 released
+    3.32  06-08-31  Bfo     V3.32 released
     ------------------- 
         
-          06-09-01  Bfo                   Version changed to V3.33
+          06-09-01  Bfo     Version changed to V3.33
           06-09-01  Bfo     XCode Proj  : Target file name changes to "*_univ" / "*_udbg"
           06-09-01  Bfo     consio      : Problem with empty console reading for MacOS9 fixed
 
@@ -1473,7 +1473,14 @@
                                           - pDsetatt with additional E_EOF support
                                           - rmdir with /S /Q parameters
                                           - dir flag adaption                
-    3.33  06-10-12  Bfo
+    3.33  06-10-12  Bfo     V3.33 released (for Windows version)
+    -------------------  
+
+          06-10-13  Bfo     Version changed to V3.34
+          06-10-13  MG      debug       : "debug_procdump" (bus error reporting) added
+          06-10-13  MG      os9exec_nt  : "debug_procdump" (bus error reporting) called
+            
+    3.34  06-??-??  Bfo
     -------------------  
 */
 
