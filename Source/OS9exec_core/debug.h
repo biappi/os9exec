@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.7  2006/02/19 15:37:20  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.6  2004/11/20 11:44:06  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -128,6 +131,7 @@ void    trigcheck ( char  *msg, char *name );
 
 void  _debugprintf( char *format, ... );
 void   debug_prep ( void );
+void   debug_procdump(process_typ *cp, int cpid);
 os9err debug_help ( ushort pid, int argc, char **argv );
 void   dumpregs   ( ushort pid );
 ushort debugwait  ( void );

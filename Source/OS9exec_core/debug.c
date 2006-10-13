@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.18  2006/10/01 15:25:23  bfo
+ *    printf() for internal utilities, but not PtoC
+ *
  *    Revision 1.17  2006/02/19 16:19:32  bfo
  *    use <isIntUtil>
  *
@@ -258,6 +261,206 @@ void debug_prep()
       debug[dbgNorm]   |= debug[dbgDetail]; /* detail also enables normal */
     #endif
 } /* debug_prep */
+
+
+/* Dump the process descriptor */
+void debug_procdump(process_typ *cp, int cpid)
+{
+   char                       *code    = NULL;
+   char                       *desc    = NULL;
+   mod_exec                   *me      = get_module_ptr(cp->mid);
+   ushort                     sync_id  = os9_word(0x4afc);
+   ushort                     modsync  = 0;
+   Boolean                    sync_ok  = false;
+   static int                 depth    = 0;
+   
+   int                        i;
+   int                        j;
+   int                        up;
+   char                       *prefix  = "";
+   syspath_typ                *spP;
+   char                       *typename = "";
+   char                       filename[OS9PATHLEN];
+   char                       devname[OS9NAMELEN];
+   char                       modelist[9];
+   const funcdispatch_entry*  fdeP = getfuncentry(cp->lastsyscall);
+   regs_type                  *rp;
+   memblock_typ               *mb;
+   errortrap_typ              *et;
+   traphandler_typ            *th;
+   mod_exec                   *tme;
+
+   #ifdef USE_UAEMU
+      uaecptr aa;
+   #endif
+   
+   /* trap segfaults within this function to avoid looping*/ 
+   if (++depth > 1) {
+      upo_printf("*** BUSERR during process dump: Emulation terminated\n");
+      exit(0);
+   }
+
+   /* check that the sync bytes are $4afc */
+   modsync = me->_mh._msync;
+   sync_ok = (modsync == sync_id);
+
+   /* output the module identity line */
+   upo_printf("\nProcess   Pid: %d", cpid);
+   if (cp->procName)
+      upo_printf(" %s\n", cp->procName);
+   else {
+      if (sync_ok)
+         upo_printf(", %s, edition %d",
+                    Mod_Name(me),
+                    os9_word(me->_mh._medit));
+      else
+         upo_printf(" Invalid sync bytes: corrupted module?");
+   }
+
+   if (cp->isIntUtil)
+      upo_printf(" (internal)");
+
+   upo_printf("\n");        /* End of the module identity line */
+
+   /* Output the exit code */
+   get_error_strings(cp->exiterr, &code, &desc);
+   upo_printf("    Exit code: %s(%d) %s\n", code, cp->exiterr, desc);
+
+   /* Show current and execution directories */
+   upo_printf("  Directories: Current   - %s\n", cp->d.path);
+   upo_printf("               Execution - %s\n", cp->x.path);
+
+   /* List open files */
+   prefix = "Files:";
+   for (i = 0; i < MAXUSRPATHS; i++) {
+      up = cp->usrpaths[i];
+      if (up) {
+         spP = &syspaths[up];
+         typename = spP_TypeStr(spP);
+         syspath_gs_devnm( cpid, spP->nr, devname );
+         strcpy(filename, spP->name);         
+         if (ustrcmp(filename, devname) !=0) {
+            if (*filename == NUL)
+               strcpy(filename, "''");
+         }
+         else
+               strcpy(filename, "");
+    
+         upo_printf("        %06s %02d %-05s /%s",
+                    prefix,
+                    i,
+                    typename,
+                    devname);
+         if (strlen(filename))
+            upo_printf(" -> %s", filename);
+
+         strcpy(modelist, "");
+         if (spP->mode & 0x80) strcat(modelist, "d");
+         if (spP->mode & 0x40) strcat(modelist, "n");
+         if (spP->mode & 0x20) strcat(modelist, "i");
+         if (spP->mode & 0x10) strcat(modelist, "4");
+         if (spP->mode & 0x08) strcat(modelist, "3");
+         if (spP->mode & 0x04) strcat(modelist, "e");
+         if (spP->mode & 0x02) strcat(modelist, "w");
+         if (spP->mode & 0x01) strcat(modelist, "r");
+         if (strlen(modelist))
+            upo_printf(" [%s]", modelist);
+
+         upo_printf("\n");
+      }
+
+      prefix = "";
+   }
+
+   /* Report the last system call */
+   upo_printf(" Last syscall: %s (0x%04x)\n", fdeP->name, cp->lastsyscall);
+
+   /* Dump the registers */
+   rp = &(cp->os9regs);
+   for (i = 0; i < 2; i++) {
+      if (i == 0)
+         upo_printf("    Registers: Dn=");
+      else
+         upo_printf("                  ");
+         
+      for (j = 0; j < 4; j++)
+         upo_printf("%08X ", rp->d[i * 4 + j]);
+
+      upo_printf("\n");
+   }
+
+   for (i = 0; i < 2; i++) {
+      if (i == 0) 
+         upo_printf("               An=");
+      else
+         upo_printf("                  ");
+         
+      for (j = 0 ;j < 4; j++)
+         upo_printf("%08X ", rp->a[i * 4 + j]);
+
+      upo_printf("\n");
+   }
+   
+   upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
+
+   /* Show the failing instruction. */
+   #ifdef USE_UAEMU
+      upo_printf("    Executing: ");
+      m68k_disasm(rp->pc, &aa, 1, (dbg_func)upo_printf);
+   #endif
+
+   /* Static memory */
+   upo_printf("       Memory: Static    -     %08X - %08X\n",
+          cp->memstart,
+          cp->memtop);
+
+   /* List allocated memory segments */
+   prefix = "Allocated -";
+   for (i = 0; i < MAXMEMBLOCKS; i++) {
+      mb = &cp->os9memblocks[i];
+      if (mb->base != 0) {
+         upo_printf("              %12s %03d %08X - %08X\n",
+                    prefix,
+                    i,
+                    mb->base,
+             (ulong)mb->base + mb->size);
+         prefix = "";
+      }
+   }
+
+   /* List error traps */
+   prefix = "Error trap:";
+   for (i = 0; i < NUMEXCEPTIONS; i++) {
+      et = &cp->ErrorTraps[i];
+      if (et->handleraddr != 0) {
+         upo_printf("   %11s #%01d addr=%08X stack=%08X\n",
+                    prefix,
+                    i + 2,
+                    et->handleraddr,
+                    et->handlerstack);
+         prefix = "";
+      }
+   }
+
+   /* Trap handlers */
+   prefix = "Trap handler:";
+   for (i = 0; i < NUMTRAPHANDLERS; i++) {
+      th = &cp->TrapHandlers[i];
+      tme = &th->trapmodule->progmod;
+      if (tme != 0) {
+         upo_printf(" %13s %02d #%02d %s, edition %d\n",
+                    prefix,
+                    i + 1,
+                    i + 32,
+                    Mod_Name(tme),
+                    os9_word(tme->_mh._medit));
+         prefix = "";
+      }
+   }
+      
+   /* Clear the segfault trap */
+   depth = 0;
+}		    
 
 
 os9err debug_help( ushort pid, _argc_, _argv_ )
