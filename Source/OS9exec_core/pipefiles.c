@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.17  2006/10/01 15:23:36  bfo
+ *    Debug output for signal sending when pipe full
+ *
  *    Revision 1.16  2006/09/08 21:57:23  bfo
  *    signal sending will be cleared only w/o error
  *
@@ -481,8 +484,8 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
             if (p->do_lf) {
                 p->do_lf= false;
                 PipePutc( p, LF );
-            }
-                
+            } // if
+            
             remaining= 0;
             break; /* writeln aborts at first CR found */
         }
@@ -500,20 +503,24 @@ static os9err pWriteSysTaskExe( ushort  pid, syspath_typ* spP,
     
     p->bwritten+= bytes-nn; /* we have written so many now */
     if (remaining<0) remaining= 0;
+    
     debugprintf(dbgFiles,dbgDetail,("# pWriteSysTaskExe: %ld bytes written, remaining now=%ld\n",nn,remaining));
 
     if (bytes>nn &&                      spP->signal_to_send!=0) {
-      err= send_signal( spP->signal_pid, spP->signal_to_send );
-      
-      debugprintf(dbgSysCall,dbgNorm,("# pipe is full: pid=%d => pid=%d sig=%d err=%d\n", 
-                                         pid, spP->signal_pid, spP->signal_to_send, err ));
+    //debugprintf(dbgSysCall,dbgNorm,("# SEND SIGNAL isInt=%d: pid=%d => pid=%d sig=%d\n", 
+    //                                   cp->isIntUtil, pid, spP->signal_pid, spP->signal_to_send ));
                                          
+      err= send_signal( spP->signal_pid, spP->signal_to_send );
       if (!err)                          spP->signal_to_send= 0;
     } // if
 
     /* check how things go on */
   //if (remaining || cp->state==pSysTask) printf( "FULL remain=%d pid=%d state=%d\n", remaining, pid, cp->state ); 
     if (remaining) {
+      //if (cp->isIntUtil)
+      //  debugprintf(dbgSysCall,dbgNorm,("# isInt=%d remaining=%d: pid=%d state=%d bytes=%d nn=%d arbitrate=%d\n", 
+      //                                     cp->isIntUtil, remaining, pid, cp->state, bytes, nn, arbitrate ));
+    
         /* caller wants to write more... */
         if (spP->linkcount<2 && spP->name[0]==0) {
             /* ...but no one else will read it, so end things now (unnamed pipes only) */
