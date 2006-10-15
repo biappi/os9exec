@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.78  2006/10/13 10:26:03  bfo
+ *    Version changed to V3.34
+ *    "debug_procdump" (bus error reporting) called (by Martin Gregorie)
+ *
  *    Revision 1.77  2006/10/01 15:21:06  bfo
  *    <ptocMask> eliminated; some masklevel adaptions for PtoC handling
  *
@@ -1416,18 +1420,21 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
           } // if
         } // if
    
-        // ----------------------
-        async_area= true; 
-        if (async_pending &&
-            cp->masklevel<=0) sig_mask( cpid, 0 ); /* pending signals */
+        // --------------------------------------------
         // asynchronous signals are allowed here
+        async_area= true; 
+        if (async_pending && cp->masklevel<=0) {
+          sig_mask( cpid, 0 ); /* pending signals */
+        //debugprintf(dbgSysCall,dbgNorm,("# SIGNAL HANDLED isInt=%d pid=%d sig9=%d\n", 
+        //            cp->isIntUtil, cpid, procs[ 9 ].icpt_signal ));
+        } // if
         
         // execute syscall, except in case of way to intercept, where icpt routine must be done first
         // Can have been triggered by sig_mask call above
                 
         async_area= false; 
         // asynchronous signals are no longer allowed
-        // -----------------------
+        // --------------------------------------------
         
         // if the system is on the way to intercept, d1 and carry 
         // must be stored (must not override values of "send_signal")
@@ -1542,7 +1549,13 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 
   //if (fullArb || fromIntUtil) arbitrate= true;
     if (fullArb)                arbitrate= true;
-    if (!cwti && !cwti_svd && cp->masklevel<=0) do_arbitrate( svd_intpid );
+    if (!cwti && !cwti_svd && cp->masklevel<=0) {
+      do_arbitrate( svd_intpid );
+    //if (cp->isIntUtil)
+    //  debugprintf(dbgSysCall,dbgNorm,("# int after arb: pid=%d state=%d isInt=%d\n", 
+    //                                     currentpid, cp->state, cp->isIntUtil ));
+    } // if
+    
     if (logtiming) arb_to_os9( last_arbitrate );
 
     cp= &procs[currentpid];
