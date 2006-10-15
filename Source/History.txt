@@ -1479,7 +1479,10 @@
           06-10-13  Bfo     Version changed to V3.34
           06-10-13  MG      debug       : "debug_procdump" (bus error reporting) added
           06-10-13  MG      os9exec_nt  : "debug_procdump" (bus error reporting) called
-            
+          
+          06-10-14  Bfo     os9exec_nt  : slightly rearranged for debugging purposes
+          06-10-14  Bfo     procstuff   : icpt_signal assignment problem fixed for internal 
+                                          utilities, still a problem for "clock2"
     3.34  06-??-??  Bfo
     -------------------  
 */
@@ -1499,6 +1502,7 @@
 
    (+)  Take tty00/pty00 first (problems with arbitration)
    (+)  setime_Y2K version with param passing --> 1900
+   (+)  icpt_signal problem with "clock2" utility
 */
 
 
