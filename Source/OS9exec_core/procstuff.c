@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2006/10/01 15:36:49  bfo
+ *    <cp->isPtoc> introduced; MAX_SLEEP support;
+ *    debugging the missing signal problem
+ *
  *    Revision 1.43  2006/09/03 20:50:08  bfo
  *    No mask levels below 0 any more
  *
@@ -618,6 +622,9 @@ os9err send_signal(ushort spid, ushort signal)
     s= &sig_queue; /* store it, but don't do anything */
     s->pid   [s->cnt]= spid;
     s->signal[s->cnt]= signal;
+    
+//  debugprintf(dbgSysCall,dbgNorm,("# STACK SIGNAL intUtil=%d spid=%d signal=%d lvl=%d\n", 
+//                                     cp->isIntUtil, spid, signal, s->cnt ));
         
     if (s->cnt<MAXSIGNALS) s->cnt++;
 //  upe_printf("# send signal=%d to pid=%d queued (level=%d) %d\n",
@@ -646,14 +653,17 @@ os9err send_signal(ushort spid, ushort signal)
     set_os9_state( spid, pActive, "send_signal" );
     sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
     sigp->os9regs.sr &= ~CARRY; /* error-free return */
+    
     sigp->way_to_icpt = true;   /* activate both */
       cp->way_to_icpt = true;
+  //if (!cp->isIntUtil) cp->way_to_icpt= true;
+    
     arbitrate= false;           /* don't arbitrate, continue with woken-up process */
     
     if (currentpid==0 && signal==S_Wake) {
-      if (sigp->isIntUtil) { 
-        cp->way_to_icpt= false; return 0; /* don't switch */
-      } // if
+    //if (sigp->isIntUtil) { 
+    //  cp->way_to_icpt= false; return 0; /* don't switch */
+    //} // if
       
       currentpid= spid;
       arbitrate = true;
@@ -680,6 +690,7 @@ os9err send_signal(ushort spid, ushort signal)
        !sigp->isIntUtil) {          /* prepare execution of intercept routine */
         sigp->way_to_icpt= true;    /* activate both */
           cp->way_to_icpt= true;
+      
       if (sigp->state==pWaitRead) {
                           svd= &sigp->savread; 
         sigp->rtevector=  svd->vector;   /* save original info */
@@ -703,11 +714,15 @@ os9err send_signal(ushort spid, ushort signal)
       sigp->os9regs.pc  = os9_long((ulong)sigp->pd._sigvec);
       sigp->os9regs.a[6]= sigp->icpta6;
       sigp->os9regs.d[1]= signal;
-            
+      sigp->icpt_signal = signal;  
+ 
+    //debugprintf(dbgSysCall,dbgNorm,("# PREP SIGNAL intUtil=%d pid=%d spid=%d signal=%d\n", 
+    //                                   cp->isIntUtil, sigp->pd._id, spid, signal ));
+
       if (currentpid==0) { /* for this special case we have to do it here */
-        if (sigp->isIntUtil) { 
-          cp->way_to_icpt= false; return 0; /* don't switch */
-        }
+      //if (sigp->isIntUtil) { 
+      //  cp->way_to_icpt= false; return 0; /* don't switch */
+      //}
         
         currentpid= spid;
         arbitrate = true;
@@ -846,11 +861,6 @@ void do_arbitrate( ushort allowedIntUtil )
     waitTime.tv_nsec= 1000000;
   #endif
 
-//cp= &procs[ justthis_pid ];
-//if (cp->state==pWaitRead) {
-//   debugprintf(dbgTaskSwitch,dbgNorm,("# REIN arbitrate spid=%d\n", currentpid ));
-//} // if
-  
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
                                           currentpid, arbitrate));
                                               
@@ -949,13 +959,17 @@ void do_arbitrate( ushort allowedIntUtil )
     } // if
     
     /* --- check if process can be activated */
-    if   (sprocess->state==pActive  ||       /* process can run, if one of these states */
-          sprocess->state==pSysTask) break;
+    if    (sprocess->state==pActive) break;               /* process can run, if active */
 
-    if   (sprocess->state==pWaitRead) {            /* only every nth time for this mode */
-      if (sprocess->pW_age--<=0) { 
-          sprocess->pW_age= NewAge;  break;
-      }
+    if    (sprocess->state==pSysTask) {  /* process can run, if SysTask and not intUtil */
+      if (!sprocess->isIntUtil) break;
+      done= false;
+    } // if
+
+    if    (sprocess->state==pWaitRead) {           /* only every nth time for this mode */
+      if  (sprocess->pW_age--<=0) { 
+           sprocess->pW_age= NewAge;  break;
+      } // if
       done= false;
     } // if
 
@@ -965,14 +979,22 @@ void do_arbitrate( ushort allowedIntUtil )
       if (sprocess->pW_age--<=0 || chkAll) {                     /* slow down also here */
           sprocess->pW_age= NewAge;
             
-              async_area= true; 
-	      if (async_pending && 
-	          sprocess->masklevel<=0) sig_mask( spid, 0 ); /* pending signals */
-		    /* asynchronous signals are allowed here */
+        // --------------------------------------------
+        // asynchronous signals are allowed here
+        async_area= true; 
+	    if (async_pending && sprocess->masklevel<=0) {
+        //debugprintf(dbgSysCall,dbgNorm,("# SIGNAL HANDLED1 isInt=%d pid=%d sig9=%d d1=%d\n", 
+        //            cp->isIntUtil, cpid, procs[ 9 ].icpt_signal, procs[ 9 ].os9regs.d[1] ));
+	      sig_mask( spid, 0 ); /* pending signals */
+        //debugprintf(dbgSysCall,dbgNorm,("# SIGNAL HANDLED2 isInt=%d pid=%d sig9=%d d1=%d\n", 
+        //            cp->isIntUtil, cpid, procs[ 9 ].icpt_signal, procs[ 9 ].os9regs.d[1] ));
+		} // if
 			
         wait_for_signal( spid );
+        
   	    async_area= false; 
-	      /* asynchronous signals are no longer allowed */
+        // asynchronous signals are no longer allowed
+        // --------------------------------------------
                         
         if (sprocess->wakeUpTick==MAX_SLEEP ||
             sprocess->wakeUpTick<=GetSystemTick()) {
