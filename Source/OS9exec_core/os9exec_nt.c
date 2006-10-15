@@ -41,7 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
- *    Revision 1.78  2006/10/13 10:26:03  bfo
+ *    Revision 1.79  2006/10/15 13:14:28  bfo
+ *    slightly rearranged for debugging purposes
+ *
+ *    Revision 1.78  2006/10/13 10:26:03  MG
  *    Version changed to V3.34
  *    "debug_procdump" (bus error reporting) called (by Martin Gregorie)
  *
