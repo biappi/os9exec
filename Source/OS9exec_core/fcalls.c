@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2006/10/01 15:33:43  bfo
+ *    MAX_SLEEP adaption for Sleep
+ *
  *    Revision 1.44  2006/08/26 23:53:35  bfo
  *    OS9_F_Wait for internal commands returns the err correctly now
  *
@@ -1639,7 +1642,7 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     if (cp->way_to_icpt) return 0; /* don't sleep if signaled */
     
     arbitrate= true;          /* allow next process to run */
-    if (sleep_x==1) return 0; /* do not really sleep */
+  //if (sleep_x==1) return 0; /* do not really sleep */
     
     CheckInputBuffers(); /* make shure that special chars like
                             CtrlC/CtrlE/XOn/XOff will be handled */         

@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2006/10/15 13:26:33  bfo
+ *    icpt_signal assignment problem fixed for internal utilities,
+ *    still a problem for "clock2"
+ *
  *    Revision 1.44  2006/10/01 15:36:49  bfo
  *    <cp->isPtoc> introduced; MAX_SLEEP support;
  *    debugging the missing signal problem
@@ -854,11 +858,10 @@ void do_arbitrate( ushort allowedIntUtil )
   Boolean      done       = false;
   Boolean      chkAll     = false;        /* 2nd run when all sleeping */
   Boolean      atLeast1;                  /* at least one process is sleeping */
+  Boolean      pDone;
 
   #ifdef UNIX
-    struct timespec waitTime;
-    waitTime.tv_sec =       0;
-    waitTime.tv_nsec= 1000000;
+    struct timespec wait_time;
   #endif
 
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
@@ -891,13 +894,78 @@ void do_arbitrate( ushort allowedIntUtil )
                                             spid,PStateStr(sprocess),arbitrate));
     if (arbitrate) {
       /* next process */
+      pDone= false;
       do {  spid++;
-        if (spid>=MAXPROCESSES)  spid= 0; /* wrap */
+      //if (spid>=MAXPROCESSES)  spid= 0; /* wrap */
+        
+        if (spid>=MAXPROCESSES) {
+            spid= 2; /* process 0 and 1 do not exist */
+          
+          // search for any process that could run 
+          while (true) {
+                sprocess= &procs[spid];   /* do it in correct order */
+            if (sprocess->state==pActive ||
+                sprocess->state==pSysTask) {
+              if  (spid<=cpid) pDone= true; // it's immediately ok
+
+              spid= 0;                      // do it later
+              break;
+            } // if
+            
+            if   (sprocess->state==pSleeping) {
+              if (sprocess->wakeUpTick<=GetSystemTick()) {
+              //  sprocess->os9regs.d[0]= 0;
+              //  sprocess->os9regs.sr &= ~CARRY; // error-free return
+              //set_os9_state( spid, pActive, "do_arbitrate" ); 
+                if  (spid<=cpid) pDone= true; // it's immediately ok
+                
+                spid= 0;                      // do it later
+                break;
+              } // if
+            } // if
+            
+            spid++;
+            if (spid==MAXPROCESSES) { // no running process found => sleep a little bit !
+              #ifdef THREAD_SUPPORT
+                if (sprocess->isIntUtil && ptocThread) 
+                  pthread_mutex_unlock( &sysCallMutex );
+              #endif
+
+              #ifdef UNIX
+                wait_time.tv_sec =        0;
+                wait_time.tv_nsec= 10000000;
+                nanosleep( &wait_time, NULL );
+                slp_idleticks++;
+              #elif defined macintosh || defined windows32
+                ulong ticks   = GetSystemTick();
+                
+                #ifdef windows32
+                  Sleep( 10 ); // sleep for one tick
+                #endif
+                
+                HandleEvent();
+                slp_idleticks+= GetSystemTick()-ticks;
+              #endif
+           
+              #ifdef THREAD_SUPPORT
+                if (sprocess->isIntUtil && ptocThread)
+                  pthread_mutex_lock( &sysCallMutex );
+              #endif
+              
+              spid= 0; /* process 0 and 1 do not exist */
+              break;
+            } // if
+          } // loop
+        } // if spid>=MAXPROCESSES
+        
+        if (pDone) break;
+        
         if (spid==1)             spid++;  /* avoid process 1 */
                 sprocess= &procs[spid];   /* do it in correct order */
       } while ((sprocess->state==pUnused ||
                 sprocess->state==pDead)  && spid!=cpid); // break loop for sure
           
+          sprocess= &procs[spid];   /* do it in correct order */
       if (sprocess->isIntUtil && 
           sprocess->state==pActive && spid==allowedIntUtil) break;
           
@@ -918,7 +986,9 @@ void do_arbitrate( ushort allowedIntUtil )
           if  (sprocess->state==pSleeping ||
                sprocess->isIntUtil) {
             #ifdef UNIX
-              nanosleep( &waitTime, NULL );
+              wait_time.tv_sec =        0;
+              wait_time.tv_nsec= 10000000;
+              nanosleep( &wait_time, NULL );
               slp_idleticks++;
             #elif defined macintosh || defined windows32
               ulong ticks   = GetSystemTick();

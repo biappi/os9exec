@@ -1483,6 +1483,8 @@
           06-10-14  Bfo     os9exec_nt  : slightly rearranged for debugging purposes
           06-10-14  Bfo     procstuff   : icpt_signal assignment problem fixed for internal 
                                           utilities, still a problem for "clock2"
+          06-10-20  Bfo     fcalls/
+                            procstuff   : idle load of OS9exec nearly reduced to 0 %
     3.34  06-??-??  Bfo
     -------------------  
 */
