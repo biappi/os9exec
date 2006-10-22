@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.80  2006/10/15 13:15:54  bfo
+ *    Up to date
+ *
  *    Revision 1.79  2006/10/15 13:14:28  bfo
  *    slightly rearranged for debugging purposes
  *
@@ -1301,7 +1304,10 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     cwti_svd= cwti;
 
     if (xErr==0) {
-      if (cwti) cp->masklevel= 1;
+      if (cp->isIntUtil && 
+          cp->state==pSleeping) cwti= false;
+      
+      if (cwti && !cp->isIntUtil) cp->masklevel= 1;
       debug_return( cpid, crp, cwti );
     
       if (cp->state==pActive && 
