@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2006/10/20 08:32:53  bfo
+ *    idle load of OS9exec nearly reduced to 0 %
+ *
  *    Revision 1.45  2006/10/01 15:33:43  bfo
  *    MAX_SLEEP adaption for Sleep
  *
@@ -1642,7 +1645,7 @@ os9err OS9_F_Sleep( regs_type *rp, ushort cpid )
     if (cp->way_to_icpt) return 0; /* don't sleep if signaled */
     
     arbitrate= true;          /* allow next process to run */
-  //if (sleep_x==1) return 0; /* do not really sleep */
+    if (sleep_x==1) return 0; /* do not really sleep */
     
     CheckInputBuffers(); /* make shure that special chars like
                             CtrlC/CtrlE/XOn/XOff will be handled */         

@@ -1485,6 +1485,9 @@
                                           utilities, still a problem for "clock2"
           06-10-20  Bfo     fcalls/
                             procstuff   : idle load of OS9exec nearly reduced to 0 %
+                            
+          06-10-22  Bfo     fcalls      : sleep_x==1 special treatment reactivated
+          06-10-22  Bfo     os9exec_nt  : intUtil <cwti> handling improved
     3.34  06-??-??  Bfo
     -------------------  
 */
