@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.82  2006/10/25 19:35:46  bfo
+ *    Use <dbgAnomaly> flag and call debug_procdump()
+ *
  *    Revision 1.81  2006/10/22 17:26:19  bfo
  *    intUtil <cwti> handling improved
  *
@@ -1184,8 +1187,8 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 			
 		    debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] ready to kill\n", cpid ));
 			cp->exiterr=vect-FIRSTEXCEPTION+E_BUSERR; /* set exit code */
-                        if (!debugcheck(dbgAnomaly,dbgNorm)) /* dump proc if not debugging */
-			    debug_procdump(cp, cpid);
+          //            if (!debugcheck(dbgAnomaly,dbgNorm)) /* dump proc if not debugging */
+		  //    debug_procdump(cp, cpid);
 			kill_process(cpid); /* kill the process, change currentpid */
 			/* show exception */
 			debugprintf(dbgAnomaly,dbgNorm,("# main loop: Process pid=%d aborted: Exception vector=$%02X, err=#%03d\n",

@@ -1492,6 +1492,8 @@
           06-10-25  Bfo/MG  procstuff   : Slow response eliminated: wait_time.tv_nsec= 1000000
           06-10-25  MG      debug       : Suppress zerodiv logging and intutil disassembly
           06-10-25  MG      os9exec_nt  : Use <dbgAnomaly> flag and call debug_procdump()
+          06-10-25  Bfo     os9main     : <dbgAnomaly> flag will be switched on by default
+          06-10-25  Bfo     os9exec_nt  : error dump ONLY with dbgAnomaly (which is on by default) 
     3.34  06-??-??  Bfo
     -------------------  
 */
