@@ -1488,6 +1488,10 @@
                             
           06-10-22  Bfo     fcalls      : sleep_x==1 special treatment reactivated
           06-10-22  Bfo     os9exec_nt  : intUtil <cwti> handling improved
+          
+          06-10-25  Bfo/MG  procstuff   : Slow response eliminated: wait_time.tv_nsec= 1000000
+          06-10-25  MG      debug       : Suppress zerodiv logging and intutil disassembly
+          06-10-25  MG      os9exec_nt  : Use <dbgAnomaly> flag and call debug_procdump()
     3.34  06-??-??  Bfo
     -------------------  
 */
