@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/08/29 22:04:13  bfo
+ *    an error of tcgetattr() will not terminate the program
+ *    (this error happens e.g. with CW in debugger mode)
+ *
  *    Revision 1.21  2006/08/20 18:34:59  MG
  *    restore_term(void) / setup_term(void) added
  *    (Changes done by Martin Gregorie)
@@ -539,7 +543,7 @@ void os9_main( int argc, char **argv, char **envp )
 
     /* set default options */
     /* - debug options */
-    debug[dbgNorm  ]= 0; /* normal debug flags */
+    debug[dbgNorm  ]= 1; /* normal debug flags */
     debug[dbgDetail]= 0;
     debug[dbgDeep  ]= 0;
     debughalt       = 0;
