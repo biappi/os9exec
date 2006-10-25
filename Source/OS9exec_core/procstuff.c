@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2006/10/20 08:33:04  bfo
+ *    idle load of OS9exec nearly reduced to 0 %
+ *
  *    Revision 1.45  2006/10/15 13:26:33  bfo
  *    icpt_signal assignment problem fixed for internal utilities,
  *    still a problem for "clock2"
@@ -933,7 +936,8 @@ void do_arbitrate( ushort allowedIntUtil )
 
               #ifdef UNIX
                 wait_time.tv_sec =        0;
-                wait_time.tv_nsec= 10000000;
+//              wait_time.tv_nsec= 10000000;
+                wait_time.tv_nsec=  1000000;
                 nanosleep( &wait_time, NULL );
                 slp_idleticks++;
               #elif defined macintosh || defined windows32
@@ -987,7 +991,8 @@ void do_arbitrate( ushort allowedIntUtil )
                sprocess->isIntUtil) {
             #ifdef UNIX
               wait_time.tv_sec =        0;
-              wait_time.tv_nsec= 10000000;
+//            wait_time.tv_nsec= 10000000;
+              wait_time.tv_nsec=  1000000;
               nanosleep( &wait_time, NULL );
               slp_idleticks++;
             #elif defined macintosh || defined windows32
@@ -1332,3 +1337,4 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
 
 
 /* eof */
+
