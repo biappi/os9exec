@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.83  2006/10/25 20:36:44  bfo
+ *    error dump ONLY with dbgAnomaly (which is on by default)
+ *
  *    Revision 1.82  2006/10/25 19:35:46  bfo
  *    Use <dbgAnomaly> flag and call debug_procdump()
  *
@@ -1139,6 +1142,7 @@ static void titles( void )
 static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid )
 /* Exception or trap handler call */
 {				
+  #define          ZERO_DIVISION_TRAP 5
   ushort           vect;
   traphandler_typ* tp;
   mod_exec*        mp; /* module pointer */
@@ -1146,11 +1150,13 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
    
 	if 		 (cp->vector==0xFAFA) { /* error exception */
 		vect= cp->func >> 2; /* vector number (=offset div 4 !) */
-		if (debugcheck(dbgAnomaly,dbgNorm)) { 
+		if (debugcheck(dbgAnomaly,dbgNorm)) {
+		  if (vect!=ZERO_DIVISION_TRAP) {
 			uphe_printf("main loop: Exception occurred [pid=%d] ! Vector offset=$%04X (num=%d)\n",
 					     cpid,cp->func,vect); 
-		  // if (!cp->isIntUtil) dumpregs(cpid);
-		  debug_procdump(cp, cpid);
+		    // if (!cp->isIntUtil) dumpregs(cpid);
+		    debug_procdump(cp, cpid);
+		  } // if
 		} // if
 		
 		if ((vect>=FIRSTEXCEPTION) && (vect<FIRSTEXCEPTION+NUMEXCEPTIONS)) {
@@ -1191,9 +1197,9 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 		  //    debug_procdump(cp, cpid);
 			kill_process(cpid); /* kill the process, change currentpid */
 			/* show exception */
-			debugprintf(dbgAnomaly,dbgNorm,("# main loop: Process pid=%d aborted: Exception vector=$%02X, err=#%03d\n",
+			debugprintf(dbgTrapHandler,dbgNorm,("# main loop: Process pid=%d aborted: Exception vector=$%02X, err=#%03d\n",
 						                     cpid,vect,cp->exiterr));
-			debug_halt( dbgAnomaly );
+			debug_halt( dbgTrapHandler );
 			/* will continue with another process */
 		}
 	}

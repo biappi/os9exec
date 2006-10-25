@@ -1493,7 +1493,9 @@
           06-10-25  MG      debug       : Suppress zerodiv logging and intutil disassembly
           06-10-25  MG      os9exec_nt  : Use <dbgAnomaly> flag and call debug_procdump()
           06-10-25  Bfo     os9main     : <dbgAnomaly> flag will be switched on by default
-          06-10-25  Bfo     os9exec_nt  : error dump ONLY with dbgAnomaly (which is on by default) 
+          06-10-25  Bfo     os9exec_nt  : error dump ONLY with dbgAnomaly (which is on by default)
+          06-10-25  Bfo     debug/
+                            0s9exec_nt  : div 0 will be masked with TRAP 5 instead of error 105
     3.34  06-??-??  Bfo
     -------------------  
 */

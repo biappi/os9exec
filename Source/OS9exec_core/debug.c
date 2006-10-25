@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.20  2006/10/25 19:29:29  bfo
+ *    Suppress zerodiv logging and intutil disassembly
+ *
  *    Revision 1.19  2006/10/13 10:24:45  bfo
  *    "debug_procdump" (bus error reporting) added (by Martin Gregorie)
  *
@@ -300,8 +303,8 @@ void debug_procdump(process_typ *cp, int cpid)
    /*
       Omit all reporting if the error is E_ZERDIV
    */
-   if (cp->exiterr == E_ZERDIV)
-      return;
+ //if (cp->exiterr == E_ZERDIV) // do this at exception handling already (bfo)
+ //   return;
    
    /* trap segfaults within this function to avoid looping*/ 
    if (++depth > 1) {
