@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2006/10/13 10:24:45  bfo
+ *    "debug_procdump" (bus error reporting) added (by Martin Gregorie)
+ *
  *    Revision 1.18  2006/10/01 15:25:23  bfo
  *    printf() for internal utilities, but not PtoC
  *
@@ -293,6 +296,12 @@ void debug_procdump(process_typ *cp, int cpid)
    #ifdef USE_UAEMU
       uaecptr aa;
    #endif
+
+   /*
+      Omit all reporting if the error is E_ZERDIV
+   */
+   if (cp->exiterr == E_ZERDIV)
+      return;
    
    /* trap segfaults within this function to avoid looping*/ 
    if (++depth > 1) {
@@ -375,39 +384,47 @@ void debug_procdump(process_typ *cp, int cpid)
    /* Report the last system call */
    upo_printf(" Last syscall: %s (0x%04x)\n", fdeP->name, cp->lastsyscall);
 
-   /* Dump the registers */
-   rp = &(cp->os9regs);
-   for (i = 0; i < 2; i++) {
-      if (i == 0)
-         upo_printf("    Registers: Dn=");
-      else
-         upo_printf("                  ");
+   /*
+      Dump registers and failing instruction
+      only if this isn't an internal command
+   */
+   if (!cp->isIntUtil) {
+      /* Dump the registers */
+      rp = &(cp->os9regs);
+      for (i = 0; i < 2; i++) {
+         if (i == 0)
+            upo_printf("    Registers: Dn=");
+         else
+            upo_printf("                  ");
          
-      for (j = 0; j < 4; j++)
-         upo_printf("%08X ", rp->d[i * 4 + j]);
+         for (j = 0; j < 4; j++)
+            upo_printf("%08X ", rp->d[i * 4 + j]);
 
-      upo_printf("\n");
-   }
+         upo_printf("\n");
+      }
 
-   for (i = 0; i < 2; i++) {
-      if (i == 0) 
-         upo_printf("               An=");
-      else
-         upo_printf("                  ");
+      for (i = 0; i < 2; i++) {
+         if (i == 0) 
+            upo_printf("               An=");
+         else
+            upo_printf("                  ");
          
-      for (j = 0 ;j < 4; j++)
-         upo_printf("%08X ", rp->a[i * 4 + j]);
+         for (j = 0 ;j < 4; j++)
+            upo_printf("%08X ", rp->a[i * 4 + j]);
 
-      upo_printf("\n");
-   }
+         upo_printf("\n");
+      }
    
-   upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
+      upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
 
-   /* Show the failing instruction. */
-   #ifdef USE_UAEMU
-      upo_printf("    Executing: ");
-      m68k_disasm(rp->pc, &aa, 1, (dbg_func)upo_printf);
-   #endif
+      /* Show the failing instruction. */
+      #ifdef USE_UAEMU
+         upo_printf(" Executing: -->");
+         m68k_disasm(rp->pc, &aa, 1, (dbg_func)upo_printf);
+         upo_printf("               ");
+         m68k_disasm(aa, &aa, 1, (dbg_func)upo_printf);
+      #endif
+   }
 
    /* Static memory */
    upo_printf("       Memory: Static    -     %08X - %08X\n",
@@ -1049,5 +1066,6 @@ char* get_syscall_name(ushort syscall)
  
 
 /* eof */
+
 
 
