@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/09/03 20:48:20  bfo
+ *    Some more small <devReady> adaption for MacOS9/Windows
+ *
  *    Revision 1.20  2006/09/01 15:19:03  bfo
  *    Problem with empty console reading for MacOS9 fixed
  *
@@ -318,56 +321,32 @@ Boolean ConsGetc( char* c )
 {
     int n;
     
+    // other terminal ?
     if (gConsoleID>=TTY_Base) {
-                n= ReadCharsFromPTY( c,1, gConsoleID);        
-        return (n>0) && devIsReady;
-    } /* if */
+              n= ReadCharsFromPTY( c,1, gConsoleID);        
+      return (n>0) && devIsReady;
+    } // if
 
-    /*
-    #ifdef win_unix
-      HandleEvent();
-    #endif
-    */
-    
-    #if defined windows32 // || defined __MACH__ // || defined linux
+    #if defined windows32
       HandleEvent();
       n= ReadCharsFromTerminal( c,1, &main_mco );
       return (n>0) && devIsReady;
-    #endif
-    
-    /*
-    #ifdef win_unix
-      #ifdef windows32
-        HandleEvent();
-        doit= true; // always
-      #else
-        doit= main_mco.inBufUsed;
-      #endif
-
-      if (doit) {
-             n= ReadCharsFromTerminal( c,1, &main_mco );
-        term_line = 0;
-        if ((n>0) && devIsReady) return true;
-      } // if
-      
-      #ifdef windows32
-         return false;
-      #endif
-    #endif
-    */
     
     /* as a UNIX-function, EOLN is delivered as 0x0A */
 //      *c= getchar();
 //  if (*c==0x00 || !devIsReady) return false;
 
-    #ifdef __MACH__
+    #elif defined __MACH__
       n= getchar(); // problems with fread
            devIsReady= (n!=-1);
       if (!devIsReady) return false;
       *c= n;
-    #else
-    //devIsReady= true;
+      
+    #elif defined MACOS9
+          n= fread( c,1,1, stdin );
+      if (n!=1 || !devIsReady) return false;
     
+    #else
       #ifdef linux
         n= read( 0, c, 1 );
 
@@ -375,8 +354,8 @@ Boolean ConsGetc( char* c )
         // fflush(0);
       #else
         n= fread( c,1,1, stdin );
-        
-      //if (n!=1 || !devIsReady) return false;
+ 
+        //if (n!=1 || !devIsReady) return false;
       #endif
              
            devIsReady= n>0;
@@ -385,21 +364,10 @@ Boolean ConsGetc( char* c )
       debugprintf(dbgTerminal,dbgDetail,("# ConsGetc: returns=%X\n",*c));
     #endif
 
-    /*
-        cp= &procs[ currentpid ]; // signal pending ?
-    if (cp->way_to_icpt &&
-        cp->icpt_signal!=S_Wake) {
-      printf( "soso\n" );
-      fflush(0);
-      return false;
-    } // if
-    */
-    
     /* now swap 0x0A and 0x0D */
     if      (*c==LF) *c= CR; /* convert LF to OS-9 style CR */
     else if (*c==CR) *c= LF; /* convert CR to LF, in case we need it */
 
-//  printf( ">> '%c' %x\n", *c, *c );
     return true;
 } /* ConsGetc */
 
