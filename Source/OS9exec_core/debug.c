@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.21  2006/10/25 21:41:20  bfo
+ *    div 0 will be masked with TRAP 5 instead of error 105
+ *
  *    Revision 1.20  2006/10/25 19:29:29  bfo
  *    Suppress zerodiv logging and intutil disassembly
  *
@@ -488,15 +491,15 @@ os9err debug_help( ushort pid, _argc_, _argv_ )
 {
     upho_printf("Debug and Stop masks:\n");
     upho_printf("\n");
-    upho_printf("  dbgAnomaly      0x0001  anomalies such as unimplemented/dummy system calls\n");
+    upho_printf("  dbgAnomaly      0x0001  anomalies: exceptions and unimplemented/dummy system calls\n");
     upho_printf("  dbgSysCall      0x0002  call and return status of system calls\n");
     upho_printf("  dbgFMgrType     0x0004  the file manager type\n");
-    upho_printf("  dbgProcess      0x0008  Process creation/killing\n");
+    upho_printf("  dbgProcess      0x0008  process creation/killing\n");
     upho_printf("  dbgTaskSwitch   0x0010  task switching/arbitration\n");
     upho_printf("  dbgModules      0x0020  module link/load/unlink\n");
     upho_printf("  dbgMemory       0x0040  memory allocation/deallocation\n");
     upho_printf("  dbgUtils        0x0080  internal utilities\n");
-    upho_printf("  dbgTrapHandler  0x0100  traphandlers and exception handlers\n");
+    upho_printf("  dbgTrapHandler  0x0100  trap handlers\n");
     upho_printf("  dbgFiles        0x0200  file operations\n");
     upho_printf("  dbgErrors       0x0400  error generation/translation\n");
     upho_printf("  dbgStartup      0x0800  os9exec/nt startup and initial argument preparation\n");
