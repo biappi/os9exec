@@ -1496,7 +1496,11 @@
           06-10-25  Bfo     os9exec_nt  : error dump ONLY with dbgAnomaly (which is on by default)
           06-10-25  Bfo     debug/
                             0s9exec_nt  : div 0 will be masked with TRAP 5 instead of error 105
-    3.34  06-??-??  Bfo
+          06-10-29  Bfo     consio      : "ConsGetC" for MacOS9 repaired (again) /
+                                          Some commented old things removed
+          06-10-29  Bfo     debug       : Adapted texts for "-dh" output
+          06-10-29  Bfo     funcdispatch: <l2.hw_location> will be written only when changed
+    3.34  06-11-??  Bfo
     -------------------  
 */
 
