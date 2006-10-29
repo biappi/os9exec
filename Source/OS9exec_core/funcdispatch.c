@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2006/10/12 19:48:49  bfo
+ *    Show the correct registers for F$GPrDBT
+ *
  *    Revision 1.33  2006/10/01 15:39:10  bfo
  *    <ptocMask> eliminated; os9exec_loop call rearranged
  *
@@ -720,8 +723,9 @@ void init_L2(void)
 
 static void update_L2( ulong t )
 {
-    byte ll;
-    ulong diff;
+    byte   ll;
+    ushort v;
+    ulong  diff;
     
     /* make the /L2 interrupt handling */
     	diff= t-lastTick; lastTick= t;
@@ -737,10 +741,11 @@ static void update_L2( ulong t )
     		l2.phase      = 1;
     		l2.lcount     = l2.ratio1;
      		ll            = l2.col1;
-    	}
-    		
-    //	if (ll>L2_Off) ll= L2_Off;    /* allow blue also !! */
-    	l2.hw_location= os9_word(ll); 
+    	} // if
+    	
+    	    v= os9_word( ll );
+    	if (v!=l2.hw_location) 
+    	       l2.hw_location= v; 
     } /* if */
 } /* update_L2 */
 
