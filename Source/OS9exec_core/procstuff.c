@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2006/10/25 19:21:23  bfo
+ *    Slow response eliminated: wait_time.tv_nsec= 1000000
+ *
  *    Revision 1.46  2006/10/20 08:33:04  bfo
  *    idle load of OS9exec nearly reduced to 0 %
  *
@@ -306,6 +309,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
         if (procs[npid].state==pUnused) {
             /* this process descriptor is free, use it */
             cp= &procs[npid];
+            memset( cp,0, sizeof(procid) ); /* cleanup the whole proc descriptor */
+            
             /* initialize link to traphandler table, first entry=TRAP 1 */
             cp->os9regs.ttP=&(cp->TrapHandlers[0]);
             /* initialize flags */

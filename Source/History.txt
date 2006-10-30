@@ -1500,6 +1500,7 @@
                                           Some commented old things removed
           06-10-29  Bfo     debug       : Adapted texts for "-dh" output
           06-10-29  Bfo     funcdispatch: <l2.hw_location> will be written only when changed
+          06-10-30  Bfo     procstuff   : "show" crash problem of MacOS9 fixed (memset 0 for proc vars)
     3.34  06-11-??  Bfo
     -------------------  
 */
