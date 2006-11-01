@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2006/10/01 15:17:47  bfo
+ *    "ipmask" / "inopmask" internal commands eliminated;
+ *    <isPtoC> replaced by <cp->isPtoc>
+ *
  *    Revision 1.36  2006/09/08 21:59:16  bfo
  *    enhanced "-o <fileName>" (recommended by Martin Gregorie)
  *
@@ -582,8 +586,6 @@ static os9err int_devs( ushort pid, int argc, char** argv )
   static os9err int_nothread( _pid_, _argc_, _argv_ ) { ptocThread= false; return 0; }
   static os9err int_arb     ( _pid_, _argc_, _argv_ ) { fullArb   = true;  return 0; }
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
-//static os9err int_pmask   ( _pid_, _argc_, _argv_ ) { ptocMask  = true;  return 0; }
-//static os9err int_nopmask ( _pid_, _argc_, _argv_ ) { ptocMask  = false; return 0; }
 
 
   static os9err ptoc_calls( ushort pid, _argc_, char** argv )
@@ -601,7 +603,7 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     #endif
 
     OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
-                                 procs[ pid ].my_args );
+                                 procs[ pid ].my_args, (void*)&cp->os9regs );
      
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
