@@ -1501,6 +1501,14 @@
           06-10-29  Bfo     debug       : Adapted texts for "-dh" output
           06-10-29  Bfo     funcdispatch: <l2.hw_location> will be written only when changed
           06-10-30  Bfo     procstuff   : "show" crash problem of MacOS9 fixed (memset 0 for proc vars)
+
+          06-11-01  Bfo     intcommand  : The <os9regs> reference will be provided to internal 
+                                          commands additionally
+          06-11-01  Bfo     funcdispatch: Copyback of <os9regs> for int commands no longer needed
+                                          (because <os9regs> reference directly copies them to the 
+                                          right place)
+          06-11-01  Bfo     procstuff   : Clean up proc desc no longer needed, because int commands do
+                                          not overwrite FPU regs with bad values anymore
     3.34  06-11-??  Bfo
     -------------------  
 */
