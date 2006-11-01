@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/10/29 18:52:27  bfo
+ *    <l2.hw_location> will be written only when changed
+ *
  *    Revision 1.34  2006/10/12 19:48:49  bfo
  *    Show the correct registers for F$GPrDBT
  *
@@ -548,13 +551,24 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
   Boolean   msk= cp->masklevel  >0;
   Boolean   hdl= cp->pd._sigvec!=0;
   Boolean   strt;
+//int       ii;
 
 //if (cp->oerr) {
 //  if (strcmp( fdeP->name,"F$Time" )==0) {
 //    printf( "brunz %d\n", pid );
 //  } // if
-//} // if      
-		
+//} // if
+  /*
+  if (cp->pd.FPUsave) upe_printf( "FPUsave\n" );
+  for (ii= 0; ii<7; ii++) {
+    if (cp->pd.FPExcpt[ ii ]) upe_printf( "FPExcpt\n" );
+    if (cp->pd.FPExStk[ ii ]) upe_printf( "FPExStk\n" );
+  }
+  if (cp->os9regs.fpcr)  upe_printf( "fpcr\n" );
+  if (cp->os9regs.fpsr)  upe_printf( "fpsr\n" );
+  if (cp->os9regs.fpiar) upe_printf( "fpiar\n" );
+  */
+  
   if (!Dbg_SysCall( pid,crp )) return;
   
   if (cwti) {
@@ -659,7 +673,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   
   if (withinIntUtil) {
     // make the debug logging for systemcalls within int commands here
-    memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
+  //memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
     
     if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
       #ifdef THREAD_SUPPORT
