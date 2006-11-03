@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2006/11/01 11:42:08  bfo
+ *    Copyback of <os9regs> for int commands no longer needed
+ *    (because <os9regs> reference directly copies them to the right place)
+ *
  *    Revision 1.35  2006/10/29 18:52:27  bfo
  *    <l2.hw_location> will be written only when changed
  *
@@ -649,6 +653,11 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
+      // make the debug logging prep for systemcalls within int commands here
+    //memcpy( (void*)&cp->os9regs,   (void*)rp,       sizeof(regs_type) );
+      memcpy( (void*)&cp->os9regs.d, (void*)&rp->d, 5*sizeof(ulong) );
+      memcpy( (void*)&cp->os9regs.a, (void*)&rp->a, 6*sizeof(ulong) );
+      
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
       currentpid= pid;
     } // if
@@ -672,8 +681,10 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   err= (fdeP->func)( rp,pid );
   
   if (withinIntUtil) {
-    // make the debug logging for systemcalls within int commands here
-  //memcpy( (void*)&cp->os9regs, (void*)rp, sizeof(regs_type) );
+    // make the debug logging prep for systemcalls within int commands here
+  //memcpy( (void*)&cp->os9regs,   (void*)rp,       sizeof(regs_type) );
+    memcpy( (void*)&cp->os9regs.d, (void*)&rp->d, 5*sizeof(ulong) );
+    memcpy( (void*)&cp->os9regs.a, (void*)&rp->a, 6*sizeof(ulong) );
     
     if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
       #ifdef THREAD_SUPPORT
