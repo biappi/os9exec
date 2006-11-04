@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/11/01 11:44:39  bfo
+ *    Clean up proc desc no longer needed, because int commands do
+ *    not overwrite FPU regs with bad values anymore
+ *
  *    Revision 1.48  2006/10/30 00:07:21  bfo
  *    "show" crash problem of MacOS9 fixed (memset 0 for proc vars)
  *
@@ -351,7 +355,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             cp->pd._rbytes= 0;
             cp->pd._wbytes= 0;
             
-            cp->procName   = NULL;         /* used for internal utilities only */
+            strcpy( cp->intProcName, "" ); /* used for internal utilities only */
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */
             cp->pd._pid    = os9_word(parentid); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */

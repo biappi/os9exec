@@ -1513,7 +1513,13 @@
           06-11-04  Bfo     funcdispatch: Copy only used aX/dX registers for int commands
           06-11-04  Bfo     os9exec_nt  : Catch BusErrors and divisions by 0 as well
           06-11-04  Bfo     intcommand  : "icrash" added
-
+          
+          06-11-05  Bfo     os9exec_nt  : <procName> (ptr) renamed/changed to <intProcName> ( char[] )
+          06-11-05  MG/Bfo  debug       : no more newline / stack remove problem (intProcName) fixed
+          06-11-05  Bfo     funcdispatch/
+                            procstuff   /
+                            intcommand  : <procName> => <intProcName>
+          06-11-05  MG/Bfo  intcommand  : comment for -j=<pid> added
     3.34  06-11-??  Bfo
     -------------------  
 */
