@@ -146,10 +146,7 @@
 		477F45C90A31C24F001898B3 /* Carbon.r */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.rez; path = Carbon.r; sourceTree = SOURCE_ROOT; };
 		477F45CA0A31C24F001898B3 /* os9app.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = os9app.c; path = ../OS9App/os9app.c; sourceTree = SOURCE_ROOT; };
 		477F45CB0A31C24F001898B3 /* os9app.r */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.rez; name = os9app.r; path = ../OS9App/os9app.r; sourceTree = SOURCE_ROOT; };
-		477F45CD0A31C24F001898B3 /* os9app_emu_CW9_carbon.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = os9app_emu_CW9_carbon.pch; path = TARGET_STD/os9app_emu_CW9_carbon.pch; sourceTree = SOURCE_ROOT; };
-		477F45CE0A31C24F001898B3 /* os9App_emu_CW9_classic.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = os9App_emu_CW9_classic.pch; path = TARGET_STD/os9App_emu_CW9_classic.pch; sourceTree = SOURCE_ROOT; };
 		477F45CF0A31C24F001898B3 /* os9app_emu_CW9_mach.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = os9app_emu_CW9_mach.pch; path = TARGET_STD/os9app_emu_CW9_mach.pch; sourceTree = SOURCE_ROOT; };
-		477F45D00A31C24F001898B3 /* os9App_emu_CW9_x86.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = os9App_emu_CW9_x86.pch; path = TARGET_STD/os9App_emu_CW9_x86.pch; sourceTree = SOURCE_ROOT; };
 		477F45D10A31C24F001898B3 /* target_options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = target_options.h; path = TARGET_STD/target_options.h; sourceTree = SOURCE_ROOT; };
 		477F45D30A31C24F001898B3 /* alarms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = alarms.h; path = ../OS9exec_core/alarms.h; sourceTree = SOURCE_ROOT; };
 		477F45D40A31C24F001898B3 /* alarms.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = alarms.c; path = ../OS9exec_core/alarms.c; sourceTree = SOURCE_ROOT; };
@@ -373,10 +370,7 @@
 		477F45CC0A31C24F001898B3 /* STD */ = {
 			isa = PBXGroup;
 			children = (
-				477F45CD0A31C24F001898B3 /* os9app_emu_CW9_carbon.pch */,
-				477F45CE0A31C24F001898B3 /* os9App_emu_CW9_classic.pch */,
 				477F45CF0A31C24F001898B3 /* os9app_emu_CW9_mach.pch */,
-				477F45D00A31C24F001898B3 /* os9App_emu_CW9_x86.pch */,
 				477F45D10A31C24F001898B3 /* target_options.h */,
 			);
 			name = STD;
