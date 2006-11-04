@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.84  2006/10/25 21:41:20  bfo
+ *    div 0 will be masked with TRAP 5 instead of error 105
+ *
  *    Revision 1.83  2006/10/25 20:36:44  bfo
  *    error dump ONLY with dbgAnomaly (which is on by default)
  *
@@ -1631,6 +1634,16 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
     regs_type*   crp= &cp->os9regs;       // pointer to process' registers
   
+    cp->exiterr= E_BUSERR;
+    
+    #ifdef UNIX
+      switch (sig) {
+      //case SIGSEGV : cp->exiterr= E_BUSERR; break;
+      //case SIGBUS  : cp->exiterr= E_BUSERR; break;
+        case SIGFPE  : cp->exiterr= E_ZERDIV; break;
+      } // switch
+    #endif
+  
   //printf("*** Bus Error *** %d\n", sig );
   //fflush(0);
 
@@ -1640,7 +1653,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     #ifdef windows32
       return EXCEPTION_EXECUTE_HANDLER;
     #else
-      siglongjmp( main_env, E_BUSERR );   // go back with bus error
+      siglongjmp( main_env, cp->exiterr );   // go back with bus error
     #endif
   } // segv_handler
 #endif
@@ -1652,6 +1665,10 @@ static void setup_exception( loop_proc lo )
   unsigned short err= 0;
   unsigned short xErr;
 
+  #ifdef windows32
+    process_typ* cp;
+  #endif
+  
   // The UNIX exception handler, using sigsetjmp/siglongjmp
   #ifdef UNIX
     struct sigaction sa;
@@ -1659,10 +1676,12 @@ static void setup_exception( loop_proc lo )
     err= sigsetjmp( main_env, 1 );
     
     sa.sa_handler= &segv_handler;
-    sigemptyset( &sa.sa_mask );
+    sigemptyset  ( &sa.sa_mask );
     sa.sa_flags  = 0;
     
-    sigaction( SIGSEGV, &sa, NULL );
+    sigaction( SIGSEGV, &sa, NULL ); // catch SEG faults
+    sigaction( SIGBUS,  &sa, NULL ); // ... and others as well
+    sigaction( SIGFPE,  &sa, NULL ); 
   #endif
   
   do {
@@ -1681,7 +1700,7 @@ static void setup_exception( loop_proc lo )
     lo( xErr, false ); // go in with the last exception error
       
     #ifdef windows32
-      } __except( segv_handler( 0 ) ) { err= E_BUSERR; }
+      } __except( segv_handler( 0 ) ) { cp= &procs[currentpid]; err= cp->exiterr; }
     #endif
   } while (err);
 } // setup_exception
@@ -1977,6 +1996,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   #endif
     
   /* prepare initial process */
+  // NOTE: An internal command can crash here, because segv_handler is not yet up
 	  cp->oerr= prepLaunch( my_toolname, argv,argc,envp, memplus,prior );
   if (cp->oerr) goto mainabort; /* prepare for execution */
 		
