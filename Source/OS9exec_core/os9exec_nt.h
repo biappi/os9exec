@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.62  2006/10/12 19:47:19  bfo
+ *    Extended for ".DS_Store" support
+ *
  *    Revision 1.61  2006/10/01 15:19:06  bfo
  *    <cp->isPtoc> introduced; <ptocMask> eliminated
  *
@@ -1015,7 +1018,8 @@ typedef struct {
                 Boolean       isIntUtil;    /* Internal utility flag */
                 Boolean          isPtoC;    /* PtoC command */
                 ushort              mid;    /* the process' primary module ID */
-                char*          procName;    /* the process' name (for internal utilities) */
+                
+                char intProcName[OS9NAMELEN]; /* the process' name (for internal utilities) */
 
                 os9err          exiterr;    /* process' exit OS9 error */
                 systaskfunc_typ systask;    /* the system task function if state=pSysTask */
