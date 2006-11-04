@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/10/29 18:50:42  bfo
+ *    Adapted texts for "-dh" output
+ *
  *    Revision 1.21  2006/10/25 21:41:20  bfo
  *    div 0 will be masked with TRAP 5 instead of error 105
  *
@@ -321,8 +324,8 @@ void debug_procdump(process_typ *cp, int cpid)
 
    /* output the module identity line */
    upo_printf("\nProcess   Pid: %d", cpid);
-   if (cp->procName)
-      upo_printf(" %s\n", cp->procName);
+   if           (strcmp(cp->intProcName,"")!=0)
+      upo_printf(" %s", cp->intProcName);
    else {
       if (sync_ok)
          upo_printf(", %s, edition %d",
@@ -1072,6 +1075,7 @@ char* get_syscall_name(ushort syscall)
  
 
 /* eof */
+
 
 
 
