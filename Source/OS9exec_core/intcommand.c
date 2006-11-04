@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2006/11/01 11:38:45  bfo
+ *    The <os9regs> reference will be provided to internal commands additionally
+ *
  *    Revision 1.37  2006/10/01 15:17:47  bfo
  *    "ipmask" / "inopmask" internal commands eliminated;
  *    <isPtoC> replaced by <cp->isPtoc>
@@ -603,7 +606,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     #endif
 
     OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
-                                 procs[ pid ].my_args, (void*)&cp->os9regs );
+                                 procs[ pid ].my_args );
+                              /* (void*)&cp->os9regs */
      
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
@@ -613,6 +617,18 @@ static os9err int_devs( ushort pid, int argc, char** argv )
     return Run_PtoC( name );
   } // ptoc_calls
 #endif
+
+
+static os9err int_crash( _pid_, _argc_, _argv_ )
+{   
+  ulong* a;
+  
+  a= (ulong*)0xCE00BEF0;                            /* non existing address */
+  a= (ulong*)*a;
+  upe_printf( "a=%08X\n", a );  /* must do something with <a>, because high */
+                    /* optimizing system would remove the <a> assignment !! */
+  return 0;
+} /* int_crash */
 
 
 static os9err int_quit( _pid_, _argc_, _argv_ )
@@ -668,6 +684,8 @@ cmdtable_typ commandtable[] =
     
   { "idevs",         int_devs,       "shows OS9exec's devices" },
   { "idbg/debughalt",int_debughalt,  "sets debug options/enters OS9exec's debug menu" },
+  { "icrash",        int_crash,      "accesses an invalid address: 0xCE00BEFO" },
+//{ "idiv0",         int_div0,       "force a division by 0" },
   { "iquit",         int_quit,       "sets flag to quit directly" },
   { "dch/diskcache", int_ignored,    "simply ignored, because not supported by OS9exec" },
 
@@ -682,8 +700,6 @@ cmdtable_typ commandtable[] =
   { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
   { "iarb",          int_arb,        "Full        arbitration" },
   { "inoarb",        int_noarb,      "Std         arbitration             (default)" },
-//{ "ipmask",        int_pmask,      "No   arbitration during PtoC" },
-//{ "inopmask",      int_nopmask,    "With arbitration during PtoC (default)" },
   { "ptoc_calls",    ptoc_calls,     "PtoC calls" },
   #endif
 
