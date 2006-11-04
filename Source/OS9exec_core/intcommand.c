@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2006/11/04 01:16:53  bfo
+ *    "icrash" added.
+ *
  *    Revision 1.38  2006/11/01 11:38:45  bfo
  *    The <os9regs> reference will be provided to internal commands additionally
  *
@@ -226,6 +229,7 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                             upe_printf("    -n=[<name>]  set name to trigger/disable trigger (causes debug stop)\n");
                             upe_printf("    -q           quit emulator\n");
                             upe_printf("    -o=<syspath> redirect debug output to <syspath>\n");
+                            upe_printf("    -j=<pid>     generate debug output only   for <pid>\n");
                             upe_printf("    -w=<pid>     do not generate debug output for <pid>\n");
     						upe_printf("    -x=<width>   define MGR screen width\n" );
     						upe_printf("    -y=<height>  define MGR screen height\n" );
@@ -1013,7 +1017,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
      * utilities. This will be done for all PtoC utilities.
      * The large buffer will be connected for this case as well.
      */
-    cp->procName= name;
+    strcpy( cp->intProcName, name );
     
     if (!*asThread) {
       sp = cp->usrpaths[usrStdout];
