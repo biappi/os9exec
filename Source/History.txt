@@ -1520,6 +1520,7 @@
                             procstuff   /
                             intcommand  : <procName> => <intProcName>
           06-11-05  MG/Bfo  intcommand  : comment for -j=<pid> added
+          06-11-05  MG/Bfo  os9exec_nt  : some legacy debug logger stuff eliminated
     3.34  06-11-??  Bfo
     -------------------  
 */

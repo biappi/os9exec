@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.85  2006/11/04 01:14:31  bfo
+ *    Catch BusErrors and divisions by 0 as well
+ *
  *    Revision 1.84  2006/10/25 21:41:20  bfo
  *    div 0 will be masked with TRAP 5 instead of error 105
  *
@@ -1155,8 +1158,8 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 		vect= cp->func >> 2; /* vector number (=offset div 4 !) */
 		if (debugcheck(dbgAnomaly,dbgNorm)) {
 		  if (vect!=ZERO_DIVISION_TRAP) {
-			uphe_printf("main loop: Exception occurred [pid=%d] ! Vector offset=$%04X (num=%d)\n",
-					     cpid,cp->func,vect); 
+          //uphe_printf("main loop: Exception occurred [pid=%d] ! Vector offset=$%04X (num=%d)\n",
+          //		     cpid,cp->func,vect); 
 		    // if (!cp->isIntUtil) dumpregs(cpid);
 		    debug_procdump(cp, cpid);
 		  } // if
