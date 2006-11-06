@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/11/04 23:33:22  bfo/MG
+ *    no more newline / stack remove problem (intProcName) fixed
+ *
  *    Revision 1.22  2006/10/29 18:50:42  bfo
  *    Adapted texts for "-dh" output
  *
@@ -50,7 +53,7 @@
  *    Revision 1.20  2006/10/25 19:29:29  bfo
  *    Suppress zerodiv logging and intutil disassembly
  *
- *    Revision 1.19  2006/10/13 10:24:45  bfo
+ *    Revision 1.19  2006/10/13 10:24:45  MG
  *    "debug_procdump" (bus error reporting) added (by Martin Gregorie)
  *
  *    Revision 1.18  2006/10/01 15:25:23  bfo
@@ -436,20 +439,22 @@ void debug_procdump(process_typ *cp, int cpid)
    }
 
    /* Static memory */
-   upo_printf("       Memory: Static    -     %08X - %08X\n",
+   upo_printf("       Memory: Static    -     %08X - %08X  %6ld bytes\n",
           cp->memstart,
-          cp->memtop);
+          cp->memtop,
+          (cp->memtop - cp->memstart));
 
    /* List allocated memory segments */
    prefix = "Allocated -";
    for (i = 0; i < MAXMEMBLOCKS; i++) {
       mb = &cp->os9memblocks[i];
       if (mb->base != 0) {
-         upo_printf("              %12s %03d %08X - %08X\n",
+         upo_printf("              %12s %03d %08X - %08X  %6ld bytes\n",
                     prefix,
                     i,
                     mb->base,
-             (ulong)mb->base + mb->size);
+             (ulong)mb->base + mb->size,
+                    mb->size);
          prefix = "";
       }
    }
@@ -1075,6 +1080,7 @@ char* get_syscall_name(ushort syscall)
  
 
 /* eof */
+
 
 
 
