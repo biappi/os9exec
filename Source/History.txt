@@ -1521,6 +1521,8 @@
                             intcommand  : <procName> => <intProcName>
           06-11-05  MG/Bfo  intcommand  : comment for -j=<pid> added
           06-11-05  MG/Bfo  os9exec_nt  : some legacy debug logger stuff eliminated
+          06-11-06  MG/Bfo  debug       : size of allocated blocks will be displayed as well
+          
     3.34  06-11-??  Bfo
     -------------------  
 */
