@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2006/11/04 23:34:49  bfo
+ *    <procName> => <intProcName>
+ *
  *    Revision 1.37  2006/11/03 23:48:29  bfo
  *    Copy only used aX/dX registers for int commands
  *
@@ -652,7 +655,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   const   funcdispatch_entry* fdeP= getfuncentry(func);
   char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
   char*   fSS  = "";
-  short   sv_pid;
+//short   sv_pid;
   
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
@@ -710,17 +713,18 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   } // if
   
   if (withinIntUtil) {
-    sv_pid= pid;
+  //sv_pid= pid;
 
     if (arbitrate) { 
       os9exec_loop( 0, true );
       arbitrate= false;
+      currentpid= pid; // make sure it is not changed
     }
     else {
       debug_return( pid, rp, false );
     } // if
     
-    pid= sv_pid; // make sure it is not changed
+  //pid= sv_pid; // make sure it is not changed
   } // if
   
   #ifdef THREAD_SUPPORT
