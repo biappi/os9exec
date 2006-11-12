@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2006/10/22 17:24:53  bfo
+ *    sleep_x==1 special treatment reactivated
+ *
  *    Revision 1.46  2006/10/20 08:32:53  bfo
  *    idle load of OS9exec nearly reduced to 0 %
  *
@@ -252,7 +255,7 @@ os9err OS9_F_Load( regs_type *rp, ushort cpid )
       ("# F$Load: requested %sload of '%s', mode=$%04X\n", exedir ? "exec ":"", mpath,mode ));
 
     /* --- really load module, anyway */
-    err= load_module( cpid,mpath,&mid, exedir,false); if (err) return err;
+    err= load_module( cpid,mpath,&mid, exedir ); if (err) return err;
     
     theModule=(mod_exec *)get_module_ptr(mid);
     retword(rp->d[0])=os9_word(theModule->_mh._mtylan);
