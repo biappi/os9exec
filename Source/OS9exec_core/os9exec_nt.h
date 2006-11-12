@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.63  2006/11/04 23:30:55  bfo
+ *    <procName> ( ptr ) renamed/changed to <intProcName> ( char[] )
+ *
  *    Revision 1.62  2006/10/12 19:47:19  bfo
  *    Extended for ".DS_Store" support
  *
@@ -1227,6 +1230,7 @@ extern int      without_pid;
 extern int     justthis_pid;
 extern Boolean quitFlag;
 extern Boolean userOpt;
+extern Boolean catch_ctrlC;
 
 extern Boolean ptocActive;
 extern Boolean ptocThread;
