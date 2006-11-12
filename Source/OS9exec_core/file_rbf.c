@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/07/29 08:49:54  bfo
+ *    "adaptor" => "adapter"
+ *
  *    Revision 1.48  2006/06/13 22:18:47  bfo
  *    SS_EOF implementation added for RBF file manager
  *
@@ -1797,7 +1800,7 @@ static ulong DirLSN( os9direntry_typ* dir_entry )
 } /* DirLSN */
 
 
-static os9err ReadFD( syspath_typ* spP )
+os9err ReadFD( syspath_typ* spP )
 /* read the current file description sector */
 {   
     rbf_typ*    rbf= &spP->u.rbf;

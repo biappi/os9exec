@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2006/02/19 15:42:23  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.12  2005/05/13 17:24:22  bfo
  *    Use <imgMode>
  *
@@ -158,6 +161,7 @@ os9err  MountDev        ( ushort pid, char* name, char* mnt_dev,
 os9err  int_mount       ( ushort pid, int argc, char **argv );
 os9err  int_unmount     ( ushort pid, int argc, char **argv );
 void    Disp_RBF_Devs   ( Boolean statistic );
+os9err  ReadFD          ( syspath_typ* spP );
 
 
 /* external pipe   support routines */
