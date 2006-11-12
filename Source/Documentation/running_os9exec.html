@@ -84,16 +84,24 @@
 
     <dt>idbg -q</dt>
 
-    <dd>can be executed as a shell command line from any user if
-    the OS9STOP environment variable is defined. Otherwise it can
-    only be used by the super user. The <b>q</b> command can be
-    issued interactively within the <i>idbg</i> emulator debugging
-    environment. Interactive use is <b>not</b> controlled by the
-    OS9STOP environment variable.</dd>
-    
-    <dt><i>Ctrl-C</i></dt>
-    <dd>OS9exec can be terminated immediately with typing <b>Ctrl-C</b>,
-    if started with option <b>"-v"</b></dd>
+    <dd>can be executed as a shell command line from any user or
+    the <b>q</b> command can be issued interactively within the
+    <i>idbg</i> emulator debugging environment if the OS9STOP
+    environment variable is defined. Otherwise they can only be
+    used by the super user.</dd>
+
+    <dt>Ctrl-C</dt>
+
+    <dd>OS9exec can be terminated immediately by typing
+    <b>Ctrl-C</b> if this was enabled by starting OS9exec with
+    option <b>-v</b>.
+    <br>
+    <br>
+    <b>NOTE:</b> setting the <b>-v</b> option will ensure that
+    OS9exec sees <b>Ctrl-C</b> before any OS-9 process. If you are
+    running an interactive OS-9 process that normally intercepts
+    <b>Ctrl-C</b>, then typing it will stop OS9exec instead of
+    controlling your process.</dd>
   </dl>
 </body>
 </html>

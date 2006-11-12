@@ -18,54 +18,68 @@
 
   <p><b>OS9Boot</b> will be loaded at startup if a file with this
   name is available. That means all modules are then visible in
-  <i>mdir</i>. For <b>OS9exec V3.33</b> (and older versions) 
+  <i>mdir</i>. For <b>OS9exec V3.33</b> and older versions
   <b>OS9Boot</b> is accessed by name, not via the reference in RBF
-  sector 0. For <b>OS9exec V3.34</b> (and later) the searching and
-  loading strategy with information of RBF sector 0 is used.
-  This will be done <i>before</i> trying to load a file named OS9Boot.
-  Therefore <i>os9gen</i> is supported for OS9exec V3.34 (and later),
-  including the <i>extended boot</i> mode "-e". The only restriction
-  is, that even if switched off with <i>os9gen -r</i>, <b>OS9Boot</b>
-  will be still loaded, if available as file under this name.<p>
-  On the host's file system <b>OS9Boot</b> can of course only be loaded 
-  by name.
+  sector 0. From <b>OS9exec V3.34</b> onwards the boot file
+  referenced in RBF sector 0 is used. This will be done
+  <i>before</i> trying to load a file named <b>OS9Boot</b>.
+  Therefore <i>os9gen</i> is supported from OS9exec V3.34 onwards,
+  including the <i>extended boot</i> mode <b>-e</b>. The only
+  limitation is that the <i>os9gen -r</i> option has no effect, so
+  if <b>/dd</b> contains a boot file named <b>OS9Boot</b> it will
+  always be loaded.</p>
+
+  <p>If <b>/dd</b> is the host's native filing system
+  <b>OS9Boot</b> can, of course, only be loaded by name.</p>
 
   <p>The module loading sequence during startup is:</p>
 
   <ol>
     <li>the built-in module <i>OS9exec</i> will be linked: This is
-    the primary module for process 1 and a placeholder module for 
-    the internal utilities</li>
-    
-    <li>an <i>init</i> module is first loaded from
-    the OS9MDIR folder, if available.</li>
+    the primary module for process 1 and a placeholder module for
+    the internal utilities.</li>
+
+    <li>an <i>init</i> module is first loaded from the OS9MDIR
+    folder, if available.</li>
 
     <li>if (2) failed, <b>/dd/init</b> is loaded.</li>
 
-    <li>for RBF devices the boot file (according to sector 0 information)
-    will be loaded <i>(OS9exec V3.34 and later)</i>.</li>
+    <li>for RBF devices the boot file referenced by sector 0 will
+    be loaded <i>(OS9exec V3.34 and later)</i>.</li>
 
-    <li>if (3) and (4) failed, an <i>OS9Boot</i> file is loaded from
-    the OS9MDIR folder, if available.</li>
+    <li>if (3) and (4) failed, an <i>OS9Boot</i> file is loaded
+    from the OS9MDIR folder, if available.</li>
 
-    <li>if (5) failed, <b>/dd/OS9Boot</b> is loaded. If it 
-    contains an <i>init</i> module, this becomes the currently loaded
-    copy, if its revision number is higher.</li>
+    <li>if (5) failed, <b>/dd/OS9Boot</b> is loaded. If it contains
+    an <i>init</i> module, this becomes the currently loaded copy
+    if its revision number is higher than the current
+    <i>init</i>.</li>
 
-    <li>if (6) failed, the OS9exec built-in <i>init</i> is linked to ensure 
-    that an <i>init</i> module is always available.</li>
+    <li>if (6) failed, the OS9exec built-in <i>init</i> is linked
+    to ensure that an <i>init</i> module is always available.</li>
 
     <li>the OS9exec built-in <i>socket</i> module is linked from
     OS9exec.</li>
   </ol>
 
   <p>The effect is that the first copy of <i>init</i> found by
-  looking in order at <b>/dd/init</b>, <b>/dd/OS9Boot</b> and the
-  internal <i>init</i> will be used. All the other modules in
-  <b>/dd/OS9Boot</b> are loaded though the kernel, io managers and
-  drivers will not be used, except for some descriptor information
-  like SCSI ID of <i>RBF descriptors</i>. Finally the internal 
-  <i>socket</i> module is loaded for use by TCP/IP connections.</p>
+  looking in order at:</p>
+
+  <ol>
+    <li>the folder referenced by $OS9MDIR</li>
+
+    <li><b>/dd/init</b></li>
+
+    <li><b>/dd/OS9Boot</b></li>
+
+    <li>the internal <i>init</i></li>
+  </ol>
+
+  <p>will be used. All the other modules in <b>/dd/OS9Boot</b> are
+  loaded though the kernel, io managers and drivers will not be
+  used, except for some descriptor information like the SCSI ID
+  from <i>RBF descriptors</i>. Finally the internal <i>socket</i>
+  module is loaded for use by TCP/IP connections.</p>
 
   <p>After this a normal OS-9 startup sequence runs.</p>
 
@@ -240,9 +254,11 @@
 
   <h2>Drivers, descriptors and file managers</h2>
 
-  <p>OS9exec does not use any OS-9 drivers, descriptors or file
-  managers. All I/O is built-in. Some descriptor information will
-  be used, e.g. the SCSI ID of RBF descriptors.</p>
+  <p>All I/O is built-in to OS9exec. No OS-9 drivers or file
+  managers are used and most descriptors are ignored. One exception
+  is that when a SCSI disk is accessed, its ID is taken
+  from the corresponding RBF descriptor. The default RAM disk
+  size will be read from its descriptor as well.</p>
 
   <h2>Environment variables</h2>
 
@@ -372,7 +388,9 @@
 
   <h2>Printing</h2>
 
-  <p>Is supported for the Windows version.<p>The MacOS and Linux 
-  version of OS9exec currently have no printer support.</p>
+  <p>Printing is supported for the Windows version.</p>
+
+  <p>The MacOS and Linux versions of OS9exec currently have no
+  printer support.</p>
 </body>
 </html>

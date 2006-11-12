@@ -28,13 +28,35 @@
   os9exec/Output</p>
 
   <p>Then change into the <b>os9exec/Source</b> directory and
-  run</p>
+  run:</p>
 
-  <p class="c1">cvs checkout</p>
+  <p class="c1">cvs
+  -d:pserver:anonymous@os9exec.cvs.sourceforge.net:/cvsroot/os9exec
+  login
+  <br>
+  cvs -z3
+  -d:pserver:anonymous@os9exec.cvs.sourceforge.net:/cvsroot/os9exec
+  co -P Source</p>
 
-  <p>to retrieve the OS9exec source tree from SourceForge.
-  Subsequent <i>cvs</i> operations should also be done from within
-  <b>os9exec/Source</b>.</p>
+  <p>to retrieve the OS9exec source tree from SourceForge. When
+  prompted for a password for anonymous, simply press the Enter
+  key. Subsequent <i>cvs</i> operations should also be done from
+  within <b>os9exec/Source</b>.</p>
+
+  <p>There's one final set of tasks to do before you can compile
+  OS9exec:</p>
+
+  <ul>
+    <li>copy the header files <i>errno.h, module.h, procid.h</i>
+    and <i>sgstat.h</i> into
+    <b>os9exec/Source/OS9exec_core/os9defs</b></li>
+
+    <li>convert them into native ASCII text files for your host
+    operating system, i.e. change their line terminators.</li>
+
+    <li>follow the directions in
+    <b>os9exec/Source/OS9exec_core/os9defs/defs_files.txt</b></li>
+  </ul>
 
   <h2>Compilation</h2>
 
