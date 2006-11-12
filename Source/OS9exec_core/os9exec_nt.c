@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.86  2006/11/05 00:09:20  bfo
+ *    some legacy debug logger stuff eliminated
+ *
  *    Revision 1.85  2006/11/04 01:14:31  bfo
  *    Catch BusErrors and divisions by 0 as well
  *
@@ -456,11 +459,11 @@ int      without_pid  =  0;
 int     justthis_pid  =  0;
 Boolean quitFlag	  = false;
 Boolean userOpt		  = false;
+Boolean catch_ctrlC   = true;
 
 Boolean ptocActive    = true;
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
-//Boolean ptocMask    = false;
 Boolean withTitle     = true; 
 
 Boolean logtiming     = true; /* syscall loging, used by int cmd "systime" */
@@ -1007,31 +1010,47 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
 
 static void BootLoader( int cpid )
-/* try to load "init" first, then "OS9Boot" */
+/* Search order:
+ *
+ * 1)  "OS9exec" built-in version
+ * 2)  "init"    at "OS9MDIR"
+ * 3)  "init"    at startup device
+ * 4)  <OS9Boot> at startup device (according to sector 0 position)
+ * 5)  "OS9Boot" at "OS9MDIR"
+ * 6)  "OS9Boot" at startup device
+ * 7)  "init"    built-in version
+ * 8)  "socket"  built-in version
+ *
+ */
 {
-	os9err   err;
-	char*    p;
-	ushort   mid;
+	os9err       err;
+	char*        p;
+	ushort       mid;
+    process_typ* cp= &procs[ cpid ];
 
 	p= "OS9exec";
         err= link_module( cpid, p, &mid ); /* do not abort on error */
 		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
 
 	p= "init";
-        err= load_module( cpid, p, &mid, false,false );
+        err= load_module( cpid, p, &mid, false );
    		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err )); 
+   	
+   	if (cp->d.type==fRBF) {
+   	  err= load_OS9Boot( cpid );
+   	} // if
    	
     p= "OS9Boot";
    	if (err) {
-	    err= load_module( cpid, p, &mid, false,false );
+	    err= load_module( cpid, p, &mid, false );
 		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
-	} /* if */
+	} // if
 
 	p= "init";
     if (err) {
         err= link_module( cpid, p, &mid );
 		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
-	}
+	} // if
 	
 	p= "socket";
         err= link_module( cpid, p, &mid );
@@ -1076,12 +1095,11 @@ static void CheckStartup( int cpid, char* toolname, int *argc, char **argv )
     }
 
     return false; /* abort for other events */
-  } /* CtrlC_Handler */
+  } // CtrlC_Handler
 #endif
 
-
 #ifdef UNIX
-  static void int_handler( int sig )
+  static void CtrlC_Handler( int sig )
   {
     Boolean fnd= false;
   
@@ -1090,7 +1108,7 @@ static void CheckStartup( int cpid, char* toolname, int *argc, char **argv )
 
   //printf("Ctrl-C Addr: %d %d fnd=%s\n", sig, main_mco.spP->lastwritten_pid, fnd ? "TRUE":"FALSE" );
   //fflush(0);
-  } // int_handler
+  } // CtrlC_Handler
 #endif
 
 
@@ -1759,7 +1777,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* ---- create the kernel process -------------------------------- */
   new_process( 0,&cpid, 0 ); /* get the kernel process */
   cp=      &procs[cpid];
-//cp->pBlocked= false;
   set_os9_state ( cpid, pSleeping, "" ); /* to be compliant to real OS-9 */
   cp->pd._prior= os9_word( 0xFFFF );     /* "  "      "     "    "    "  */
   cp->mid      = 0;                      /* take "OS9exec" as the kernel module */
@@ -1780,25 +1797,30 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   #endif
 
   #ifdef windows32
-    hStdin= GetStdHandle(STD_INPUT_HANDLE);
-    SetConsoleCtrlHandler( CtrlC_Handler, true );
+    hStdin= GetStdHandle( STD_INPUT_HANDLE );
     WindowTitle    ( &title,false ); /* adapt title line of DOS window */
     SetConsoleTitle( &title );     	  
   #endif
 
-  #ifdef UNIX
-    ia.sa_handler= &int_handler;
-    sigemptyset( &ia.sa_mask );
-    ia.sa_flags  = 0;
+  if (catch_ctrlC) {
+    #ifdef windows32
+      SetConsoleCtrlHandler( CtrlC_Handler, true );
+    #endif
+
+    #ifdef UNIX
+      ia.sa_handler= &CtrlC_Handler;
+      sigemptyset( &ia.sa_mask );
+      ia.sa_flags  = 0;
         
-    sigaction( SIGINT, &ia, NULL );
-  #endif
-  	
+      sigaction( SIGINT, &ia, NULL );
+    #endif
+  } // if
+  
   // some global init moved from here to os9exec_globinit() to allow them being
   // called in os9main.c already	
 	
-  interactivepid=  0;        /* send aborts to first process by default */
-  sig_queue.cnt =  0;        /* no signal pending at the beginning */
+  interactivepid= 0; // send aborts to first process by default
+  sig_queue.cnt = 0; // no signal pending at the beginning
 	
   #if defined windows32 || defined macintosh
     for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
