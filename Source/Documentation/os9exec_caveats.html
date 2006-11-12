@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Caveats</title>
+<style type="text/css">
+ p.c1 {font-weight: bold}
+</style>
+</head>
+
+<body>
+  <h1>Caveats</h1>
+
+  <p>This section documents places where OS9exec differs from OS-9
+  in ways that could affect OS-9 executables and library
+  functions.</p>
+
+  <ul>
+    <li>The <i>_pmodul</i> field in the OS-9 process descriptor is
+    not initialised The only time it is referenced is in the
+    <i>F$GPrDsc</i> call, which contains code that looks rather
+    like a work-round for it never being initialised. <i>Where
+    <b>SHOULD</b> it be initialised?</i></li>
+  </ul>
+</body>
+</html>

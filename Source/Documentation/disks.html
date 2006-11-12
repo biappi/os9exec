@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Disk handling</title>
+<style type="text/css">
+ p.c1 {font-style: italic}
+</style>
+</head>
+
+<body>
+  <h1>Disk handling</h1>
+
+  <h2>Making and mounting RBF disk images</h2>
+
+  <p>RBF disk images are fixed size binary files that OS9exec
+  handles exactly like a physical RBF disk. They are created with
+  the <i>crefile</i> utility, which should be installed in
+  <b>/dd/CMDS</b>. It is an OS9 executable and run from within
+  OS9exec with the <b>-p</b> option. The command:</p>
+
+  <p class="c1">crefile -p xxx 104857600</p>
+
+  <p>will create a file called xxx containing a 100 MB RBF disk
+  image. The command:</p>
+
+  <p class="c1">crefile -p xxx 104857600 -d</p>
+
+  <p>will run a bit faster. For disk images larger than 120 MB you
+  may need larger sector (<i>-s</i> option) and cluster sizes
+  (<i>-c</i> option).</p>
+
+  <p>If the RBF file image is called <b>dd</b> and is in the
+  current directory it will be mounted automatically when OS9exec
+  is started. Other RBF image files can be mounted by using the
+  built-in <i>mount</i> command:</p>
+
+  <table summary="mount commands">
+    <tr>
+      <td><i>mount xxx</i></td>
+
+      <td>will mount it as <b>/xxx</b></td>
+    </tr>
+
+    <tr>
+      <td><i>mount xxx /h1</i></td>
+
+      <td>will mount it as <b>/h1</b></td>
+    </tr>
+  </table>
+
+  <p>A way of accommodating programs that refer to the RBF image
+  <b>/dd</b> as <b>/h0</b> is to mount the image file a second
+  time:</p>
+
+  <p class="c1">mount /home/osk/dd /h0</p>
+
+  <p>This will enable the RBF image to be accessed as either
+  <b>/dd</b> or as <b>/h0</b>. There are no bad side effects from
+  doing this but there is a restriction that prevents more than
+  three descriptors being associated with any given RBF image.</p>
+
+  <p>Using <i>chd</i> to change your reference point to a different
+  an RBF image file will mount it automatically, using the filename
+  as the device name. In both cases the file must be referred to by
+  its absolute pathname:</p>
+
+  <p class="c1">chd /home/osk/dd.saved</p>
+
+  <p>will mount the RBF disk image in <b>dd.saved</b> as the
+  <b>/dd.saved</b> device.</p>
+
+  <p>The internal command <i>idevs</i> shows the status of mounted
+  devices.</p>
+
+  <h2>Native filing system access</h2>
+
+  <p>If <b>dd</b> is a native host directory rather than an RBF
+  image file you can read and write to any files in subdirectories
+  below it. You can use <i>chd</i> to move round the structure,
+  create directories with <i>mkdir</i> and delete directories with
+  <i>deldir</i>.</p>
+
+  <p><b>NOTE:</b> You must replace the standard OS-9 version of
+  <i>deldir</i> with the version supplied as part of the OS9exec
+  package before you can delete directories but the standard
+  <i>chd</i> and <a>makdir</a> commands work as expected.</p>
+
+  <p>You can <i>chd</i> to any other host directory, create and
+  delete directories, and read and write files provided that the
+  user running OS9exec has suitable access rights. When changing
+  your reference point to another native directory that's outside
+  your current directory tree structure you must use an absolute
+  pathname.</p>
+
+  <p><i>mount/unmount</i>, which are used to access RBF images
+  stored as Linux files, are not needed when accessing the Linux
+  file system. Using them this way doesn't cause or report errors:
+  it just has no effect.</p>
+
+  <h2>Floppy disk access</h2>
+
+  <p>You can access any floppies from within OS9exec that the host
+  system is able to read and write.</p>
+
+  <p><b>Linux users:</b> DOS-formatted floppies which are normally
+  readable under OS-9 via the <b>PCFS</b> I/O Manager can be
+  accessed. Floppies using OS9 formats cannot usually be accessed
+  unless you are using a suitable kernel module, such as <a href=
+  "http://www.geocities.com/linuxrbf">LinuxRBF</a>, that
+  understands the disk format.</p>
+
+  <p><b>Windows users:</b> DOS-formatted floppies which are
+  normally readable under OS-9 via the <b>PCFS</b> I/O Manager can
+  be accessed directly with <b>/A/*</b>.</p>
+
+  <p><b>Mac users:</b> DOS-formatted floppies can
+  be accessed directly with the floppy device name visible on the Mac's 
+  desktop.</p>
+
+  <h2>OS-9 programs that use /h0</h2>
+
+  <p>Some OS-9 programs refer to the default disk as <b>/h0</b>
+  rather than conforming to the convention of referring to it as
+  <b>/dd</b>.</p>
+
+  <p>A way of accommodating these programs is to create an alias,
+  <b>h0</b>, for <b>dd</b> in the same directory. You should be
+  aware that this may create security breaches and that it will
+  only work if the host operating system supports file and
+  directory aliasing. Aliases are known as links in UNIX-like
+  operating systems.</p>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Known problems with OS-9 executables and library
+  functions</title>
+</head>
+
+<body>
+  <h1>Known problems with OS-9 executables and library
+  functions</h1>
+
+  <p>This section lists OS-9 executables and library functions that
+  are known to fail when run under OS9exec. The problem is
+  described and, where known, a work-round is given. Some of the
+  problems listed in this section are also potential problems under
+  OS-9.</p>
+
+  <h2>Bus errors</h2>
+
+  <p>Some programs cause bus errors due to the way <i>F$Fork</i> is
+  called. Shells set the registers up in a standardized way,
+  especially the command and environment sections. However, some
+  other programs set up the parameters in a slightly different way.
+  In particular these don't align parameter addresses on word
+  boundaries: this can cause problems when they are run on 68000
+  and 68010 CPUs. Some programs have no problems with this, others
+  crash.</p>
+
+  <h2>C compiler error</h2>
+
+  <p>The OS9 v2.4 C preprocessor crashes with a bus error if it
+  reads a source with UNIX/Linux line terminators. Make sure you
+  have the right line terminators before compiling the source
+  file.</p>
+
+  <p>Some versions of Kermit, e.g. 8.0.211 for Linux, replace CR
+  with LF even during a binary file transfer. This will silently
+  modify your source file and cause this problem if you use the
+  following sequence of operations to move a source file from an
+  OS-9 system into an OS9exec system:</p>
+
+  <ol>
+    <li>use <i>kermit</i> to copy a source file from the OS-9
+    system into a Linux filing system</li>
+
+    <li>start OS9exec</li>
+
+    <li>use the OS-9 <i>copy</i> utility to move the file into your
+    OS9exec filing system</li>
+  </ol>
+
+  <p>This sequence is most likely to occur if you don't have the
+  ISP package installed in both OS-9 and OS9exec and you are using
+  an RBF disk image as your OS9exec filing system. Its easy to see
+  if this has happened by using <i>dump</i> to look at the source
+  file once it has arrived in the OS9exec filing system. The
+  workround is to use <i>autolf</i>, <i>ux2osk</i> or equivalent
+  fix the line separators. <i>autolf</i> and <i>ux2osk</i> can be
+  downloaded from the <a href="http://os9archive.rtsi.com/">OS9
+  Archive</a>.</p>
+
+  <h2>cmp</h2>
+
+  <p>The 3.0 version #23 of <i>cmp</i> has a problem. The V2.4
+  version is ok.</p>
+
+  <h2>deldir</h2>
+
+  <p>The original <i>deldir</i> does not work in OS9exec because it
+  has a fundamental bug. Install the replacement <i>deldir</i>,
+  which is part of the OS9exec release.</p>
+
+  <h2>less</h2>
+
+  <p><i>less</i> version 358 is known to cause bus errors.</p>
+
+  <h2>list</h2>
+
+  <p>The V2.4 version #16 of <i>list</i> causes bus errors. The
+  V3.0 version is ok. Install the replacement <i>list</i>, which is
+  part of the OS9exec release. This replacement will also compile
+  and run under Linux and DOS/Windows (tested with Borland C 4.5).
+  It will produce a correctly formatted display from any text files
+  that follow OS-9, Linux and DOS/Windows newline conventions.</p>
+
+  <h2>telnetd</h2>
+
+  <p>If no other telnet daemon is active in Linux, OS9exec listens
+  on 23 as usual. If the Linux telnetd daemon is active, OS9exec
+  will listen on Port 9923. Make sure your firewall is closed for
+  ports 23 and 9923 to prevent unauthorised access to OS9exec.</p>
+
+  <h2>Termcap functions</h2>
+
+  <p>The OS-9 <i>tgetent()</i> function is partly broken:</p>
+
+  <ul>
+    <li>there's a hardwired termcap definition limit of 1 Kb.</li>
+
+    <li>this limit includes the whitespace at the start of a line
+    and the continuation markers at the end. This was proved to be
+    the case by successively editing whitespace out of an
+    <i>xterm</i> definition. When the definition, including
+    whitespace, was reduced below 1024 bytes it was accepted by
+    <i>tgetent()</i>. This is a surprising implementation fault:
+    the rational assumption is that <i>tgetent()</i> would strip
+    whitespace out while loading the definition into the
+    buffer.</li>
+
+    <li>if the definition exceeds 1 Kb the message "Termcap entry
+    is too big" is output by <i>tgetent()</i> but it still returns
+    1, indicating success.</li>
+
+    <li><b>ANY</b> definition in the termcap file that is scanned
+    during a search for the required definition causes the message
+    "Termcap entry is too big" to be output if it exceeds 1Kb. It
+    doesn't matter whether its the definition you were looking for
+    or not.</li>
+  </ul>
+
+  <p>There is a documentation deficiency in the Microware Language
+  Manual for the <i>tgetstr()</i> function. The manual defines the
+  return value correctly as <i>char*</i> but doesn't say what is
+  returned if the capability isn't defined in the current terminal
+  definition. In fact a NULL pointer is returned and the output
+  buffer is not modified. This corresponds to the behaviour
+  described in the Linux manpage. If you get this wrong OS-9 may
+  trap a bus error and crash your process. OS9exec will certainly
+  trap it.</p>
+</body>
+</html>

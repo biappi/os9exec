@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Internals</title>
+<style type="text/css">
+ p.c1 {font-style: italic}
+</style>
+</head>
+
+<body>
+  <h1>Internals</h1>
+
+  <h2>Booting</h2>
+
+  <p><b>OS9Boot</b> will be loaded at startup if a file with this
+  name is available. That means all modules are then visible in
+  <i>mdir</i>. For <b>OS9exec V3.33</b> (and older versions) 
+  <b>OS9Boot</b> is accessed by name, not via the reference in RBF
+  sector 0. For <b>OS9exec V3.34</b> (and later) the searching and
+  loading strategy with information of RBF sector 0 is used.
+  This will be done <i>before</i> trying to load a file named OS9Boot.
+  Therefore <i>os9gen</i> is supported for OS9exec V3.34 (and later),
+  including the <i>extended boot</i> mode "-e". The only restriction
+  is, that even if switched off with <i>os9gen -r</i>, <b>OS9Boot</b>
+  will be still loaded, if available as file under this name.<p>
+  On the host's file system <b>OS9Boot</b> can of course only be loaded 
+  by name.
+
+  <p>The module loading sequence during startup is:</p>
+
+  <ol>
+    <li>the built-in module <i>OS9exec</i> will be linked: This is
+    the primary module for process 1 and a placeholder module for 
+    the internal utilities</li>
+    
+    <li>an <i>init</i> module is first loaded from
+    the OS9MDIR folder, if available.</li>
+
+    <li>if (2) failed, <b>/dd/init</b> is loaded.</li>
+
+    <li>for RBF devices the boot file (according to sector 0 information)
+    will be loaded <i>(OS9exec V3.34 and later)</i>.</li>
+
+    <li>if (3) and (4) failed, an <i>OS9Boot</i> file is loaded from
+    the OS9MDIR folder, if available.</li>
+
+    <li>if (5) failed, <b>/dd/OS9Boot</b> is loaded. If it 
+    contains an <i>init</i> module, this becomes the currently loaded
+    copy, if its revision number is higher.</li>
+
+    <li>if (6) failed, the OS9exec built-in <i>init</i> is linked to ensure 
+    that an <i>init</i> module is always available.</li>
+
+    <li>the OS9exec built-in <i>socket</i> module is linked from
+    OS9exec.</li>
+  </ol>
+
+  <p>The effect is that the first copy of <i>init</i> found by
+  looking in order at <b>/dd/init</b>, <b>/dd/OS9Boot</b> and the
+  internal <i>init</i> will be used. All the other modules in
+  <b>/dd/OS9Boot</b> are loaded though the kernel, io managers and
+  drivers will not be used, except for some descriptor information
+  like SCSI ID of <i>RBF descriptors</i>. Finally the internal 
+  <i>socket</i> module is loaded for use by TCP/IP connections.</p>
+
+  <p>After this a normal OS-9 startup sequence runs.</p>
+
+  <h2>Bus errors</h2>
+
+  <p>All memory access violations are trapped, so OS9exec should
+  never segfault. If an OS-9 process or an OS9exec internal command
+  causes a memory access violation it is terminated with an
+  E_BUSERR or E_ADRERR error and its state is reported on
+  <i>stdout</i>.</p>
+
+  <h2>Debugging</h2>
+
+  <p>Every process writes its debug info to its own <i>stderr</i>.
+  If <i>stderr</i> is closed, you'll not see the debug output. If
+  you follow the sequence shown below your internal tracing output
+  will always be visible:</p>
+
+  <ol>
+    <li>Decide where the tracing output is to go:
+
+      <p>If you want tracing to appear on your terminal, issue the
+      command:</p>
+
+      <p class="c1">idbg -o 1</p>
+
+      <p>All tracing output will be written to system path 1, which
+      is always connected to <i>/term</i> so you should be able to
+      see all tracing output on your console. The system path
+      number is not the same as a process path number: it is unique
+      within the scope of OS9exec. Process path numbers are only
+      unique within the scope of a process. You can specify where
+      tracing is to go by writing the appropriate command as the
+      first line in your startup file or by typing it at a command
+      prompt.</p>
+
+      <p><b>NOTE:</b> If you you're trying to trace problems that
+      occur before the first shell prompt or login prompt the trace
+      initialisation commands must be the first lines in
+      <b>/dd/startup</b>.</p>
+
+      <p>If you want to capture the tracing information in a file,
+      use the command:</p>
+
+      <p class="c1">idbg -o /dd/trace.log</p>
+
+      <p>and all debugging output will be written to
+      <b>/dd/trace.log</b></p>
+    </li>
+
+    <li>Starting and stopping tracing output.
+
+      <p>Output is started by setting (optional the tracing level
+      and) the debugging mask:</p>
+
+      <p class="c1">idbg -d 2</p>
+
+      <p class="c1">idbg -d1 2</p>
+
+      <p>The most useful debug flag is bit 1 ( -d 2 ), which shows
+      all system call entries and exits: OS9 START is something
+      like a "half" system call to the start point of an OS-9
+      program. There is a 2nd "half" system call to F$Exit but this
+      never returns.</p>
+
+      <p>In the second example the debug level is set to 1
+      (detailed) and the mask is set to 2 (dbgSysCall). The debug
+      level defaults to zero (normal). It can be set to normal with
+      either <b>-d</b> or <b>-d0</b>. There is a separate mask for
+      each debug level. Setting the mask at a given debug level
+      also sets the masks at all lower debug levels. Masks, whose
+      values are bit-significant, can be set by using a decimal or
+      hexadecimal value. In the latter case it is prefixed by 0x
+      (e.g. 0x2). The internal commands <b>dhelp</b> and <b>idbg
+      -dh</b> can be used to display the meanings of the debug
+      mask's bits. The command <b>idbg -?</b> lists the arguments
+      and options accepted by the <b>idbg</b> command.</p>
+
+      <p>Output is stopped by clearing all debug masks and setting
+      the debug level to normal:</p>
+
+      <p class="c1">idbg -d1 0
+      <br>
+      idbg -d 0</p>
+
+      <p>Tracing can be started and stopped as many times as you
+      want by repeating this sequence.</p>
+    </li>
+
+    <li>Selective logging for a specific process id &lt;pid&gt; can
+    be done:
+      <br>
+
+      <table summary="Writing comments">
+        <tr>
+          <td><i>idbg -j &lt;pid&gt;</i></td>
+
+          <td>shows just process &lt;pid&gt;</td>
+        </tr>
+
+        <tr>
+          <td><i>idbg -w &lt;pid&gt;</i></td>
+
+          <td>shows all but process &lt;pid&gt;</td>
+        </tr>
+      </table>
+      <br>
+    </li>
+
+    <li>
+      <p>The debugger has a stop mask, set with the <b>-s</b>
+      option:</p>
+
+      <p class="c1">idbg -s 0x0002</p>
+
+      <p>If a traced item's debug mask bit matches one set in the
+      stop mask the process is halted and the OS9exec debugger is
+      entered in interactive mode. The commands available in this
+      mode can be listed by entering <b>?</b>. The <b>D</b> command
+      lists the mask bit meanings, <b>G</b> resumes the process
+      execution and <b>Q</b> terminates OS9exec.</p>
+    </li>
+
+    <li>
+      <p>It's also possible to halt the current process and enter
+      interactive debugger mode if a named file is accessed:</p>
+
+      <p class="c1">idbg -n=filename</p>
+    </li>
+
+    <li>Adding comments to the tracing file.
+
+      <p>You can write comments to the debug file with the
+      <b>echo</b> command:</p>
+
+      <table summary="Writing comments">
+        <tr>
+          <td>OS-9 shell:</td>
+
+          <td><i>echo "comment line" &gt;+/dd/trace.log</i></td>
+        </tr>
+
+        <tr>
+          <td>EFFO shell:</td>
+
+          <td><i>echo "comment line" &gt;&gt;/dd/trace.log</i></td>
+        </tr>
+      </table>
+    </li>
+  </ol>
+
+  <p>The tracing file is a normal OS9 text file, so if you want to
+  read it outside OS9 you should send it to the host's native
+  filing system and convert newlines to match the host convention
+  or it may nor be legible. If you've compiled and installed the
+  version of <b>list</b> supplied as part of the OS9exec package as
+  a utility for your host system, the command:</p>
+
+  <blockquote>
+    <p class="c1">list tracefile | less</p>
+  </blockquote>
+
+  <p>will allow you to display the file without conversion.</p>
+
+  <p>The debugging level is significant if you are tracing i/o
+  operations. At normal debug level (0 - default) the system calls
+  are traced including all the unsuccessful scans for input while
+  the shell is waiting for a command. At detail debug level (1) the
+  contents of the read and write buffers are shown in hex and ASCII
+  with nonprintable characters in the ASCII representation replaced
+  by dots.</p>
+
+  <h2>Drivers, descriptors and file managers</h2>
+
+  <p>OS9exec does not use any OS-9 drivers, descriptors or file
+  managers. All I/O is built-in. Some descriptor information will
+  be used, e.g. the SCSI ID of RBF descriptors.</p>
+
+  <h2>Environment variables</h2>
+
+  <dl>
+    <dt>OS9CMDS</dt>
+
+    <dd>usually defined as <i>$OS9DISK/CMDS</i>, it sets OS9exec's
+    default execution directory, so should be defined after
+    OS9DISK. It is mainly useful where a startup file isn't being
+    used.</dd>
+
+    <dt>OS9DISK</dt>
+
+    <dd>names the OS9exec default disk, which can be an RBF image
+    file or the host's native filing system</dd>
+
+    <dt>OS9MDIR</dt>
+
+    <dd>names a directory from where modules can be loaded at boot
+    time. By default it's a directory called OS9MDIR in the same
+    folder as <b>dd</b>. The idea is that you just can link to
+    modules without loading them. At the beginning of the OS9exec
+    project <i>init</i>, <i>cio</i>, <i>math</i> and <i>shell</i>
+    had to be there to allow a consistent startup from a physical
+    hard disk. Now OS9exec can boot from an RBF disk image or a
+    host's native filing system without needing the special module
+    directory. The contents of OS9MDIR must be linked by commands
+    in <b>/dd/startup</b> to load them before you can see them in
+    the <i>mdir</i> display.</dd>
+
+    <dt>OS9PATH</dt>
+
+    <dd>usually defined as <i>.:$OS9DISK:$OS9CMDS:</i>, it sets up
+    the OS9exec default search path, so should be defined after
+    OS9CMDS. It is mainly useful where a startup file isn't being
+    used.</dd>
+
+    <dt>OS9STOP</dt>
+
+    <dd>allows the internal <i>stop</i> or <i>shutdown</i> command
+    to be executed by any OS-9 user. If OS9STOP isn't defined these
+    commands can only be executed by the super user.</dd>
+  </dl>
+
+  <h2>Graphics</h2>
+
+  <p>Graphics is supported (on X11 for Linux and MacOS / on MGP for
+  Windows) if the original MGR from Reccoware is installed.</p>
+
+  <h2>Internal commands</h2>
+
+  <p>A command <i>ihelp</i> or <i>icmds</i> lists the available
+  built-in commands. These are either replacements of the standard
+  OS-9 commands or do things for which OS-9 has no equivalent.</p>
+
+  <p>You can use the built-in <i>mount</i> command to create RAM
+  disks and to connect to RBF images with arbitrary Linux
+  filenames. <i>mount -?</i> gives more info.</p>
+
+  <h2>Linking/loading modules</h2>
+
+  <p>If <i>F$Load</i> is called, the module is always loaded from a
+  file. This is the same for both OS-9 and OS9exec. That's because
+  the module name could differ from the file name.</p>
+
+  <p><i>F$Link</i> should check if the module is already in the
+  in-memory module chain. If it is, the link count is incremented.
+  Otherwise OS9exec will attempt to load the module from a file of
+  the same name.</p>
+
+  <h2>Logins</h2>
+
+  <p>OS9exec's login should behave the same as OS-9, but it will
+  always login via <i>/term</i>, which maps onto the <i>stdin</i>,
+  <i>stdout</i> and <i>stderr</i> paths inherited by
+  <i>os9linux</i>. <i>/term</i> is written in a very
+  straight-forward approach.</p>
+
+  <p>If you have the Reccoware MGR package installed it can use an
+  X-terminal window with all the termcap features supported as
+  usual.</p>
+
+  <p>Another possibility is to login via MGR with a telnet client
+  from within your preferred terminal emulator. Of course you need
+  Microware's <i>telnetd</i>, which is supplied as part of the ISP
+  package, for that.</p>
+
+  <h2>Memory access</h2>
+
+  <p>OS9exec uses simple <i>malloc()</i> calls, so it will get as
+  much memory as it requires. If however <i>F$SRqMem</i> passes an
+  incredible amount of memory to be requested, you can get a
+  segfault. The UAE, OS9exec's built-in 68000 emulator, directly
+  accesses this memory. That means it's quite easy to create
+  segfaults, which will be trapped and reported by OS9exec as a bus
+  error, when an OS-9 system would only give a bus error if a
+  hardware MMU was installed. As a result, OS9exec will intercept
+  and report memory access violations that would go un-noticed
+  under OS-9.</p>
+
+  <p>Each <i>F$SRqMem</i> request causes a separate <i>malloc()</i>
+  to be executed by the host OS. In consequence the emulator's
+  memory map is fragmented in exactly the same way as occurs in a
+  real OS-9 system. When a process terminates, the memory fragments
+  are released by calls to the host OS <i>free()</i> function. The
+  only consequence is that, unlike a real OS-9 system, the emulator
+  should never die due to excessive memory fragmentation provided
+  that the host OS is capable of coalescing the released fragments
+  back into a single unused memory pool.</p>
+
+  <h2>Networking</h2>
+
+  <p>Networking over TCP/IP is supported if Microware's original
+  Internet Support Package (ISP) is installed.</p>
+
+  <p>All network access code is in <b>OS9exec_core/network.c</b>.
+  Comments give the <i>getstt/setstt</i> sequences needed for some
+  of the operations, but not close, which crashes. This crash
+  happens regardless of which end closes the connection: its an
+  unsolved bug.</p>
+
+  <p>The system can be used as multiple listener, so multiple
+  telnet sessions can be opened in parallel. There are up to 100
+  tty/pty pairs. Usually the system opens one. If it's taken
+  already, you'll get a E_DEVBSY. Repeating the attempt to open a
+  tty/pty pair should ask for the next one.</p>
+
+  <h2>Printing</h2>
+
+  <p>Is supported for the Windows version.<p>The MacOS and Linux 
+  version of OS9exec currently have no printer support.</p>
+</body>
+</html>

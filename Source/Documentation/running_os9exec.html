@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Running</title>
+<style type="text/css">
+ p.c1 {font-style: italic}
+</style>
+</head>
+
+<body>
+  <h1>Running</h1>
+
+  <h2>Starting the emulator</h2>
+
+  <p>The os9exec executable is called <i>os9App</i> for MacOS9,
+  <i>os9App_univ</i> for MacOSX, <i>os9App.exe</i> for Windows or
+  <i>os9linux</i> for Linux. Throughout this page <i>os9exec</i> is
+  used as the executable name, but you should substitute the
+  appropriate name for your system:</p>
+
+  <p class="c1">os9exec shell</p>
+
+  <p>starts OS9exec in single user mode using the OS9 standard
+  shell. <b>/dd/startup</b> is ignored. This is chiefly useful for
+  debugging startup problems.</p>
+
+  <p>The command:</p>
+
+  <p class="c1">os9exec</p>
+
+  <p>reads and executes <b>/dd/startup</b>. If <b>/dd/startup</b>
+  contains at least one line that starts a copy of <i>tsmon</i>
+  then OS9exec will run in multiuser mode and a login prompt will
+  be output.</p>
+
+  <p><i>/term</i> connects to copies of <i>stdin</i>, <i>stdout</i>
+  and <i>stderr</i> inherited from the shell. If you are running
+  OS9linux from an X-terminal console make sure that you are using
+  a console profile with <b>Backspace</b> set to <i>Control-H</i>
+  and <b>Delete</b> set to <i>ASCII Del</i>. Add the line:</p>
+
+  <p class="c1">xmode /term bs=08 del=7f</p>
+
+  <p>to <b>/dd/startup</b> before it starts any copies of
+  <i>tsmon</i> so that the <i>/term</i> device descriptor matches
+  the terminal's key assignments. Make sure that:</p>
+
+  <p class="c1">tmode bs=08 del=7f</p>
+
+  <p>is run during login. This makes <b>Backspace</b> and
+  <b>Delete</b> work correctly during command line editing. If you
+  use the EFFO shell, put it in <b>/dd/sys/profile</b> inside a
+  condition that limits it to being called for the outermost shell
+  invocation.</p>
+
+  <p>You should ensure that <b>/dd/SYS/termcap</b> includes the
+  <i>xterm</i> definition and that <b>TERM</b> is set to
+  <i>xterm</i>. This is necessary for the EFFO shell and
+  <i>umacs</i> to run successfully. It will also affect the
+  operation of <i>less</i> and <i>pvic</i> amongst other programs.
+  It does <b><i>not</i></b> affect the OS-9 standard shell.</p>
+
+  <h2>Stopping the emulator</h2>
+
+  <p>OS9exec can only be shut down cleanly by a command issued from
+  within an OS-9 shell.</p>
+
+  <dl>
+    <dt>stop</dt>
+
+    <dd>is a built-in command that stops OS9exec immediately. It
+    can normally only be run from the super user. If you want to be
+    able to stop the emulator from any user you should set the host
+    operating system environment variable <b>OS9STOP</b> to
+    <b><i>yes</i></b>.</dd>
+
+    <dt>shutdown</dt>
+
+    <dd>is a synonym for <i>stop</i>.</dd>
+
+    <dt>idbg -q</dt>
+
+    <dd>can be executed as a shell command line from any user if
+    the OS9STOP environment variable is defined. Otherwise it can
+    only be used by the super user. The <b>q</b> command can be
+    issued interactively within the <i>idbg</i> emulator debugging
+    environment. Interactive use is <b>not</b> controlled by the
+    OS9STOP environment variable.</dd>
+    
+    <dt><i>Ctrl-C</i></dt>
+    <dd>OS9exec can be terminated immediately with typing <b>Ctrl-C</b>,
+    if started with option <b>"-v"</b></dd>
+  </dl>
+</body>
+</html>

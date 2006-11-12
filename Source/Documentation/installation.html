@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1 September 2005), see www.w3.org">
+
+  <title>Installing</title>
+<style type="text/css">
+ p.c1 {font-style: italic}
+</style>
+</head>
+
+<body>
+  <h1>Installing</h1>
+
+  <p>The OS9exec emulator is called <i>os9App</i> for MacOS9,
+  <i>os9App_univ</i> for MacOSX, <i>os9App.exe</i> for Windows or
+  <i>os9linux</i> for Linux.</p>
+
+  <h2>Installation for Linux</h2>
+
+  <ol>
+    <li>Put the OS9exec program somewhere where it will be in the
+    current path.</li>
+
+    <li>Create a base directory.</li>
+
+    <li>The base directory must be either:
+
+      <ul>
+        <li>a directory called <b>dd</b> which contains a
+        directory, <b>dd/CMDS</b>, that must contain the original
+        OS-9 binaries.</li>
+
+        <li>a 1:1 RBF raw image from an original OS-9 system as a
+        file called <b>dd</b>.</li>
+      </ul>The performance of the RBF emulation is usually better
+      and sometimes more compliant for tricky things. Nevertheless
+      you can always create an empty RBF Image file and copy files
+      into it. Or use the RamDisk <b>/r0</b>, which is also a
+      normal RBF RamDisk.
+    </li>
+
+    <li>If a file called <i>startup</i> is in <b>dd</b>, it will be
+    called at the beginning. Try the existing <b>/dd/startup</b>.
+    It might work as it stands, so try it. There is a built-in
+    debugger system which you can call with <i>os9linux -d 3
+    shell</i> to get more info about what's going on.</li>
+
+    <li>The host's Mac/Windows/Linux directory paths can be
+    accessed directly. Relative paths work as expected. Files and
+    directories below the <b>dd</b> directory can be referred to as
+    <b>/dd/...</b>, but any host's files or directories outside the
+    <b>dd</b> directory structure must be referred to by absolute
+    name until <i>mount</i> is extended to allow them to be mounted
+    as pseudo devices.
+
+      <p>NOTE (for Linux/MacOSX): In the mean time, if you have
+      root privileges you can put a symbolic link in the root
+      (<b>/</b>) directory that points to the directory you want to
+      reference:</p>
+
+      <p class="c1">ln -s /home/osk/fd0 fdx</p>
+
+      <p>allows you the refer to the directory as either
+      <b>/home/osk/fd0</b> or as <b>/fdx</b> from inside OS9exec.
+      However this is not recommended because of possible security
+      breaches.</p>
+    </li>
+  </ol>
+</body>
+</html>
