@@ -42,6 +42,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/02/19 16:14:12  bfo
+ *    void* for MoveBlk
+ *
  *    Revision 1.7  2004/11/20 11:44:08  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -72,13 +75,15 @@ void   release_module ( ushort mid, Boolean modOK );
 mod_exec*  get_module_ptr( int   mid     );
 int        get_mid       ( void *modptr );
 
-int       find_mod_id            ( const char* name );
-int       link_mod_id                  ( char* name );
-os9err    load_module( ushort pid,       char* name, ushort *midP, Boolean exedir, Boolean linkstyle );
-os9err    link_module( ushort pid, const char* name, ushort *midP );
-os9err    link_load  ( ushort pid,       char* name, ushort *midP );
-void    unlink_module( ushort mid );
+int       find_mod_id             ( const char* name );
+int       link_mod_id                   ( char* name );
+os9err    load_module ( ushort pid,       char* name, ushort *midP, Boolean exedir );
+os9err    link_module ( ushort pid, const char* name, ushort *midP );
+os9err    link_load   ( ushort pid,       char* name, ushort *midP );
+os9err    load_OS9Boot( ushort pid );
+void    unlink_module ( ushort mid );
 void      free_modules();
+
 
 void init_exceptions  ( ushort pid );
 void init_traphandlers( ushort pid );
