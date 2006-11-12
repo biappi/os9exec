@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/08/29 22:38:54  bfo
+ *    isintcommand adaptions
+ *
  *    Revision 1.24  2006/08/26 23:48:55  bfo
  *    Formatting beautified
  *
@@ -812,9 +815,11 @@ static void adapt_L2( mod_exec* mh )
 } /* adapt_L2 */
 
 
-
-os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir, 
-                                                         Boolean linkstyle)
+static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean exedir, 
+                                                                       Boolean linkstyle,
+                                                                       ushort  path,
+                                                                       ulong   bootPos,
+                                                                       ulong   bootSiz )
 /* load a module by name or path
  * Note: if a null pointer is passed for name, load defaults
  *       to 'OS9C' id 0 (only on Mac)
@@ -855,7 +860,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
     char realmodname[MODNLEN];
     
     ulong modSize;    /* OS-9 module size */
-    ushort path, mode, sync;
+    ushort mode, sync;
     ptype_typ type; /* distinguish which file manager to be used */
     
     /* first, find an empty module dir entry */
@@ -1034,40 +1039,36 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
 //      mode= exedir ? 0x05 : 0x01;
 //      type= IO_Type( pid,name, mode );
         if (type==fFile || type==fDir) name= datapath;
-            
-            err= usrpath_open( pid, &path,type, name,mode );
-        if (err) {
-//          if (!isPath) {
-//              /* if it is not a path, try to link it */
-//                  linkmid= link_module( name );
-//              if (linkmid<MAXMODULES) {
-//                  debugprintf(dbgModules,dbgNorm,
-//                    ("# load_module: module '%s' found in module dir mid=%d, link=%d\n",
-//                        name,linkmid,os9modules[linkmid].linkcount));
-//                        
-//                  *midP= linkmid;
-//                  return 0;
-//              }
-//          }
-            
-            return os9error( linkstyle ? E_MNF:err ); /* as the real OS-9 */
-        }
-
-            err= usrpath_getstat( pid,path,SS_Size, NULL,NULL,NULL,&dsize,NULL ); 
-        if (err) return err;
         
+        err= 0;
+        if (bootPos==0) {     // for <bootPos> > 0, it's already opened for boot reading
+              err= usrpath_open( pid, &path,type, name,mode );
+          if (err)
+            return os9error( linkstyle ? E_MNF:err ); /* as the real OS-9 */
+        } // if
+
+        if (bootSiz==0) {
+              err= usrpath_getstat( pid,path,SS_Size, NULL,NULL,NULL,&dsize,NULL ); 
+          if (err) return err;
+        }
+        else {
+          dsize= bootSiz;
+        } // if
+          
             pp= get_mem( dsize );
         if (pp==NULL) {
-            err= usrpath_close(pid, path); 
-            return os9error(E_NORAM); /* not enough memory */
-        }
+          if (bootPos==0) err= usrpath_close( pid, path );
+              
+          return os9error(E_NORAM); /* not enough memory */
+        } // if
             
         loadbytes = dsize;
         theModuleP= pp;
         
-            err= usrpath_read( pid,path, &loadbytes, theModuleP, false ); 
+            err= usrpath_read ( pid, path, &loadbytes, theModuleP, false ); 
         if (err || loadbytes<dsize) {
-            err= usrpath_close(pid, path); return E_READ;
+          if (bootPos==0) err= usrpath_close( pid, path );
+          return E_READ;
         } /* if */         
               
         isBuiltIn= false; /* is no resource-based module */
@@ -1075,7 +1076,7 @@ os9err load_module(ushort pid, char *name, ushort *midP, Boolean exedir,
         debugprintf(dbgModules,dbgNorm,
           ("# load_module: loaded %ld bytes from module's file\n", loadbytes));
           
-        err= usrpath_close(pid, path);
+        if (bootPos==0) err= usrpath_close( pid, path );
         break; /* module data loaded */
                   
 
@@ -1199,18 +1200,13 @@ modulefound:
         } /* if */
         
         	crc= calc_crc( (byte*)theModuleP, modSize, 0xFFFFFFFF );
- //     if (ustrcmp(name,"le0")==0) {
- //         upe_printf( "crc %08X\n", crc );
- //         crc= 0xFF800FE3;
- //     }
         if (crc!=0xFF800FE3) {
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: bad crc, crc result=$%08lX (should be $FF800FE3)\n",crc));
             /* bad CRC */
             err= E_BMCRC; break;
         } /* if */
-        
-        
+         
         /* --- module loaded is ok */
         /* now check if we already have something like this in our module dir */
         nullterm(realmodname,Mod_Name( theModuleP ),MODNLEN);
@@ -1269,8 +1265,12 @@ modulefound:
     /* --- bad module */
     release_module(mid,false); /* forget it again */
     return os9error( linkstyle ? err:E_FNA );
-} /* load_module */
+} // load_module_local
 
+
+os9err load_module( ushort pid, char* name, ushort* midP, Boolean exedir ) {
+  return load_module_local( pid, name, midP, exedir, false, 0,0,0 );
+} // load_module
 
 
 os9err link_module( ushort pid, const char *name, ushort *mid )
@@ -1290,7 +1290,7 @@ os9err link_module( ushort pid, const char *name, ushort *mid )
     } // if
   #endif
     
-      err= load_module( pid, lName, mid, true,true );
+      err= load_module_local( pid, lName, mid, true,true, 0,0,0 );
   if (err && isInt) {
     *mid= 0; /* simulate load by using main module as result (it can't be unlinked!!!) */
     err = 0;
@@ -1302,15 +1302,68 @@ os9err link_module( ushort pid, const char *name, ushort *mid )
 } /* link_module */
 
 
-
 os9err link_load( ushort pid, char *name, ushort *midP )
 /* try to link first, then try to load */
 {
     os9err   err= link_module( pid, name, midP );
-    if (err) err= load_module( pid, name, midP, true,false );
+    if (err) err= load_module( pid, name, midP, true );
     return   err;
 } /* link_load */
 
+
+os9err load_OS9Boot( ushort pid )
+{
+  os9err err, cErr;
+  short  path;
+  char   name[OS9PATHLEN];
+  
+  byte                  sect0[ 256 ];
+  int     size= sizeof( sect0 );
+  ulong*  lp;
+  ushort* sp;
+  ushort* sc;
+  ulong   pos, siz, scs;
+  ushort  mid;
+
+  process_typ* cp= &procs[ pid ];
+  syspath_typ* spP;
+  rbf_typ*     rbf;
+  
+  strcpy( name, cp->d.path );
+  strcat( name, "@" );
+  
+  err=   usrpath_open( pid, &path, cp->d.type, name, 0x01 ); if (err) return err;
+  
+  do {
+    err= usrpath_read( pid,  path, &size, &sect0,   false ); if (err) break;
+    
+    lp= (ulong *)&sect0[ 0x15 ]; pos= os9_long(*lp)>>BpB;
+    sp= (ushort*)&sect0[ 0x18 ]; siz= os9_word(*sp);
+    sc= (ushort*)&sect0[ 0x68 ]; scs= os9_word(*sc);
+    
+    if (pos==0) { err= E_PNNF; break; } // no sector 0 reference
+    if (scs==0) scs= 256; // default
+  //printf( "%08X %d: (%d)\n", pos, siz, scs );
+
+          spP= get_syspathd( pid, cp->usrpaths[ path ] );
+    rbf= &spP->u.rbf;
+      
+    if (siz==0) {          // large OS9Boot files => use as file
+      spP->rawMode= false; // no longer raw device
+      rbf->currPos= 0;     // initialize position to 0 */
+      rbf->fd_nr= pos;
+      err= ReadFD( spP ); if (err) break; // change structure to boot file
+    }
+    else {
+      err= usrpath_seek( pid, path, pos*scs ); if (err) break;
+    } // if
+      
+    err= load_module_local( pid, name, &mid, false,false, path, pos,siz );
+  } while (false); // if
+  
+  cErr= usrpath_close( pid,  path ); if (!err) err= cErr;
+  return err;
+} // load_OS9Boot
 
 
 void unlink_module( ushort mid )
@@ -1328,7 +1381,6 @@ void unlink_module( ushort mid )
                            
 	release_module( mid,true ); }
 /* unlink_module */
-
 
 
 void free_modules()
