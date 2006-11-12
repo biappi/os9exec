@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/11/12 13:32:59  bfo
+ *    "-?" text updated / <userOpt> adaption for MacOSX/Linux
+ *
  *    Revision 1.23  2006/10/25 20:36:27  bfo
  *    <dbgAnomaly> flag will be switched on by default
  *
@@ -433,6 +436,7 @@ static void os9_usage(char *name)
     upho_printf("   -z          define MGR fullscreen mode\n" );
     upho_printf("   -g ip_addr  open   MGR screen at IP address\n");
     upho_printf("   -u          user defined option\n" );
+    upho_printf("   -v          ctrl-C will stop OS9exec immediately\n" );
     upho_printf("   -h[h]       show this help [and conditions for using the software]\n");
     upho_printf("\n");
 
