@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/11/06 22:59:32  MG
+ *    size of allocated blocks will be displayed as well
+ *
  *    Revision 1.23  2006/11/04 23:33:22  bfo/MG
  *    no more newline / stack remove problem (intProcName) fixed
  *
@@ -309,17 +312,11 @@ void debug_procdump(process_typ *cp, int cpid)
       uaecptr aa;
    #endif
 
-   /*
-      Omit all reporting if the error is E_ZERDIV
-   */
- //if (cp->exiterr == E_ZERDIV) // do this at exception handling already (bfo)
- //   return;
-   
    /* trap segfaults within this function to avoid looping*/ 
    if (++depth > 1) {
       upo_printf("*** BUSERR during process dump: Emulation terminated\n");
       exit(0);
-   }
+   } // if
 
    /* check that the sync bytes are $4afc */
    modsync = me->_mh._msync;
@@ -578,7 +575,7 @@ static void dumpmem(ulong *memptrP,int numlines)
         upe_printf("\n");
         (*memptrP)+=16;
     }
-}
+} /* dumpmem */
 
 
 /* show regs in debugger */
