@@ -1523,6 +1523,22 @@
           06-11-05  MG/Bfo  os9exec_nt  : some legacy debug logger stuff eliminated
           06-11-06  MG/Bfo  debug       : size of allocated blocks will be displayed as well
           
+          06-11-12  Bfo     debug       : Some outdated comments eliminated
+          06-11-12  Bfo     funcdispatch: Problem with changed <currentpid> (internal commands) fixed
+          06-11-12  Bfo     os9exec_nt  : <catch_ctrlC> flag and support added /
+                                          Boot search order description  added /
+                                          "load_OS9Boot" call (sector 0 searching strategy) added
+          06-11-12  Bfo     modstuff    : "load_OS9Boot" implemented /
+                                          "load_module_local" extended for the OS9Boot requirements
+                                          "load_module" <linkstyle> parameter eliminated
+          06-11-12  Bfo     fcalls      : "load_module" <linkstyle> parameter eliminated
+          06-11-12  Bfo     filestuff.h /
+                            file_rbf    : "ReadFD" visible from outside
+          06-11-12  Bfo     os9main     : "-?" text updated / <userOpt> adaption for MacOSX/Linux
+          06-11-12  Bfo     OS9App_FAT_CW9.mcp: PtoC "FULL" target added
+          
+          06-11-12  Bfo     DOCUMENTATION added to CVS
+          
     3.34  06-11-??  Bfo
     -------------------  
 */
@@ -1535,7 +1551,7 @@
     
     -   MPW uses its I/O currently partly also for the tty/pty system.
     -   "mgencas" will not startup over network (Linux), "mme" has also problems.
-    -   Linux telnet close still quits emulator (recognition of end cond not correctly)
+    -   Linux/MacOSX telnet close still quits emulator (recognition of end cond not correctly)
     -   "inetd" superdaemon is not yet running correctly.
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
     -   Deadlocking MGR when too small DEFAULTPTYSZ 
@@ -1551,13 +1567,11 @@
     -   RBF: do read only, if write larger than a sector
     -   SCSI subsystem for Linux
     -   direct line editing on Linux (over network)
-    -   gs_ready Linux for CR
     -   Faster directory read (Windows)
     -   Implement internal command "ls" in UNIX style: "ls -la".
     -   <in_recursion> for debug load
     -   btree optimisation
     -   termcap support for the DOS window.
-    -   "OS9Boot" will be loaded by name, not by reference on RBF images
     -   paging for SCF devices
     -   tab expansion for SCF devices
 
