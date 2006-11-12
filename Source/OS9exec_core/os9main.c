@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/10/25 20:36:27  bfo
+ *    <dbgAnomaly> flag will be switched on by default
+ *
  *    Revision 1.22  2006/08/29 22:04:13  bfo
  *    an error of tcgetattr() will not terminate the program
  *    (this error happens e.g. with CW in debugger mode)
@@ -389,8 +392,8 @@ static void show_wish(void)
 static void os9_usage(char *name)
 {
     /* print help */    
-    upho_printf("Usage:    %s [options] <os9program> [<os9parameters>,...]\n",name);
-    upho_printf("Function: Executes OS9-Program (which may start other os9 processes\n");
+    upho_printf("Usage:    %s [options] [<os9program> [<os9parameters>,...]]\n",name);
+    upho_printf("Function: Executes OS-9 program (which may start other os9 processes\n");
     upho_printf("          itself).\n");
     upho_printf("          <os9program> must be present within the tool's 'OS9C' resources,\n");
     upho_printf("          in the {OS9MDIR} directory or in the {OS9CMDS} directory\n");
@@ -412,9 +415,9 @@ static void os9_usage(char *name)
     upho_printf("   -o          disable output filtering (error message conversion)\n");        
     upho_printf("   -oh         show available output filters\n");      
     upho_printf("   -t          enable timing measurements\n");     
-    upho_printf("   -m  n[k|M]  Give 1st OS9 process extra static storage (kilo/mega)\n");      
-    upho_printf("   -mm n[k|M]  Give all OS9 process extra static storage (kilo/mega)\n");      
-    upho_printf("   -p prio     Run  1st OS9 process with prio (default=%d, NOIRQ>=%d)\n",MYPRIORITY,IRQBLOCKPRIOR);        
+    upho_printf("   -m  n[k|M]  Give 1st OS-9 process extra static storage (kilo/mega)\n");      
+    upho_printf("   -mm n[k|M]  Give all OS-9 process extra static storage (kilo/mega)\n");      
+    upho_printf("   -p prio     Run  1st OS-9 process with prio (default=%d, NOIRQ>=%d)\n",MYPRIORITY,IRQBLOCKPRIOR);        
     upho_printf("   -d[n] msk   set  debug info mask [of level n, default=0] (default=1)\n");
     upho_printf("   -s msk      set  debug stop mask (default=0)\n");
     upho_printf("   -dh         show debug/stop mask help\n");
@@ -428,8 +431,8 @@ static void os9_usage(char *name)
     upho_printf("   -x width    define MGR screen width\n" );
     upho_printf("   -y height   define MGR screen width\n" );
     upho_printf("   -z          define MGR fullscreen mode\n" );
+    upho_printf("   -g ip_addr  open   MGR screen at IP address\n");
     upho_printf("   -u          user defined option\n" );
-    upho_printf("   -g ip_addr  open MGR screen at IP address\n");
     upho_printf("   -h[h]       show this help [and conditions for using the software]\n");
     upho_printf("\n");
 
@@ -662,8 +665,9 @@ void os9_main( int argc, char **argv, char **envp )
                             }
                             break;
 
-				case 'u' :  userOpt   = true; break; /* set user option */
-				case 'z' :  fullScreen= true; break; /* full screen mode */
+				case 'u' :  userOpt    =  true; break; // set user option
+				case 'v' :  catch_ctrlC= false; break; // don not install a ctrl C handler
+				case 'z' :  fullScreen =  true; break; // full screen mode
  
                 case 'g' :  if (g_ipAddr==NULL) {
                               k++; /* next arg */
@@ -741,17 +745,20 @@ void os9_main( int argc, char **argv, char **envp )
     }
     else {
         toolname= argv[kX];
-    }
+    } // if
 
-	  if (fullScreen) {
-		  screenW= 0; /* full screen mode */
-		  screenH= 0;
-	  } // if
+	if (fullScreen) {
+	  screenW= 0; /* full screen mode */
+	  screenH= 0;
+	} // if
 
-	  #if defined UNIX || defined USE_CARBON
-	    userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
-	  #endif
-
+  //#if defined linux || defined USE_CARBON
+	#ifdef USE_CARBON
+	      userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
+	#else
+      if (userOpt) catch_ctrlC= false;
+    #endif
+    
     /* Set the terminal modes and hook mode restoration to the exit function.
        If setting then fails, the error will already have been reported
        for suitably detailed fault analysis but the function exits so
@@ -759,11 +766,7 @@ void os9_main( int argc, char **argv, char **envp )
     */
     #ifdef UNIX
       if (setup_term())
-          atexit(restore_term);
-      /*
-      else
-          exit(1);
-      */
+        atexit(restore_term);
     #endif
 
     /* now here starts the os9 command line: go execute it */
