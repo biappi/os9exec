@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2006/11/12 13:18:06  bfo
+ *    Problem with changed <currentpid> (internal commands) fixed
+ *
  *    Revision 1.38  2006/11/04 23:34:49  bfo
  *    <procName> => <intProcName>
  *
@@ -416,7 +419,7 @@ void os9_to_xxx( ushort pid )
 
         mid=     cp->mid;    
         mod= os9mod( mid );
-    if (mid==0 || mod==NULL) mn= &cp->intProcName;
+    if (mid==0 || mod==NULL) mn= (char*)&cp->intProcName;
     else                     mn= Mod_Name( mod );
 
     /* question: must it be logged ? */
@@ -598,8 +601,8 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
       /* otherwise, d1.w will be updated when suspended process gets active again */
           strt= (ustrcmp(fdeP->name,"START")==0);
       if (strt) {
-        if   (cp->isIntUtil) {
-          p= &cp->intProcName;
+        if (cp->isIntUtil) {
+          p= (char*)&cp->intProcName;
         }
         else {
           mod= (mod_exec *)cp->os9regs.a[3];
