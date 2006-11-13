@@ -1537,7 +1537,10 @@
           06-11-12  Bfo     os9main     : "-?" text updated / <userOpt> adaption for MacOSX/Linux
           06-11-12  Bfo     OS9App_FAT_CW9.mcp: PtoC "FULL" target added
           
-          06-11-12  Bfo     DOCUMENTATION added to CVS
+          06-11-12  MG/Bfo  DOCUMENTATION added to CVS
+          06-11-12  MG/Bfo  os9main     : "-v" description added
+          06-11-13  MG/Bfo  funcdispatch: (char*) type casting for GCC
+          06-11-13  MG/Bfo  modstuff    : type adaptions       for GCC
           
     3.34  06-11-??  Bfo
     -------------------  
