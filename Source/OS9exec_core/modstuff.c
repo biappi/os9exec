@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/11/12 13:25:31  bfo
+ *    "load_OS9Boot" implemented /
+ *    "load_module_local" extended for the OS9Boot requirements
+ *
  *    Revision 1.25  2006/08/29 22:38:54  bfo
  *    isintcommand adaptions
  *
@@ -1314,11 +1318,11 @@ os9err link_load( ushort pid, char *name, ushort *midP )
 os9err load_OS9Boot( ushort pid )
 {
   os9err err, cErr;
-  short  path;
+  ushort path;
   char   name[OS9PATHLEN];
   
   byte                  sect0[ 256 ];
-  int     size= sizeof( sect0 );
+  ulong   size= sizeof( sect0 );
   ulong*  lp;
   ushort* sp;
   ushort* sc;
