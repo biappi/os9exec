@@ -1542,7 +1542,21 @@
           06-11-13  MG/Bfo  funcdispatch: (char*) type casting for GCC
           06-11-13  MG/Bfo  modstuff    : type adaptions       for GCC
           
-    3.34  06-11-??  Bfo
+          06-11-18  Bfo     os9exec_nt  : <mnt_sctSize> and <mnt_cluSize> added
+          06-11-18  Bfo     target_options.h (OS9AppEmu/TARGET_STD) RAM disk activated for Windows
+          06-11-18  Bfo     filestuff   : "MountDev" params <sctSize>, <cluSize> added
+          06-11-18  Bfo     debug       : me!=NULL test added for <modsync> check
+          06-11-18  Bfo     intcommand  : comment line removed
+          06-11-18  Bfo     file_rbf    : PrepareRAM adapted:
+                                        - Offset to sector 1 is now dev->sctSize, no longer A_Base 0x100
+                                        - MaxKB introduced and checked
+                                        - <cluSize> must be a power of 2 now
+                                        - dev->sas= DD_MINALLOC
+                                        - <sctSize>, <cluSize> + root sector calculations correcty
+                                        - Params -n and -c added for "mount" command
+                                        - bb/coff calculation corrected (for wMode || mlt)
+          
+    3.34  06-??-??  Bfo
     -------------------  
 */
 
