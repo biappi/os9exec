@@ -65,7 +65,7 @@
 // Windows
 #ifdef windows32
   #define TERMINAL_CONSOLE   // can do single char I/O
-//#define RAM_SUPPORT        // RAM disk
+  #define RAM_SUPPORT        // RAM disk
   #define PRINTER_SUPPORT    // LPT printers
 #endif
 
