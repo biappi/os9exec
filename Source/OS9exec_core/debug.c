@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/11/12 13:15:56  bfo
+ *    Some outdated comments eliminated
+ *
  *    Revision 1.24  2006/11/06 22:59:32  MG
  *    size of allocated blocks will be displayed as well
  *
@@ -319,9 +322,11 @@ void debug_procdump(process_typ *cp, int cpid)
    } // if
 
    /* check that the sync bytes are $4afc */
-   modsync = me->_mh._msync;
-   sync_ok = (modsync == sync_id);
-
+   if (me!=NULL) {
+     modsync=  me->_mh._msync;
+     sync_ok= (modsync == sync_id);
+   } // if
+   
    /* output the module identity line */
    upo_printf("\nProcess   Pid: %d", cpid);
    if           (strcmp(cp->intProcName,"")!=0)
