@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2006/11/12 13:30:29  bfo
+ *    "ReadFD" visible from outside
+ *
  *    Revision 1.49  2006/07/29 08:49:54  bfo
  *    "adaptor" => "adapter"
  *
@@ -132,52 +135,44 @@
 
 /* the RBF device entry itself */			
 typedef struct {
-			/* common for all types */
-			char     name [OS9NAMELEN];	   /* device         name */
-			char     name2[OS9NAMELEN];	   /* device 2nd     name */
-			char     name3[OS9NAMELEN];	   /* device 3rd     name %%% dirty solution */
-			char     alias[OS9PATHLEN];	   /* device's alias name */
+  /* common for all types */
+  char    name [OS9NAMELEN];	 /* device         name */
+  char    name2[OS9NAMELEN];	 /* device 2nd     name */
+  char    name3[OS9NAMELEN];	 /* device 3rd     name %%% dirty solution */
+  char    alias[OS9PATHLEN];	 /* device's alias name */
 
-			int      nr;					         /* own reference number (array index) */
-			ulong    sctSize;			         /* sector size for this device */
-			ushort   mapSize;              /* size of allocation map */
-			byte     pdtyp;                /* device type: hard disk, floppy */
-			ushort   sas;				           /* sector allocation size */
-			ulong    root_fd_nr;           /* sector nr of root fd */
-			ulong    clusterSize;          /* cluster size (allocation) */
-			ulong    totScts;              /* total   number of sectors */
-			ulong    imgScts;              /* current number of sectors at this image */
-			ushort   last_diskID;          /* last disk ID, inherited by new paths */
-      ulong    last_alloc;           /* the last allocation was here */
-			ulong	   currPos;			         /* current position at image */
-			ulong    rMiss, rTot,		       /* device statistics */
-					     wMiss, wTot;
-			ushort   sp_img;			         /* syspath number of image file */
-			char	   img_name[OS9PATHLEN]; /* full path name of image file */
+  int      nr;					 /* own reference number (array index) */
+  ulong    sctSize;			     /* sector size for this device */
+  ushort   mapSize;              /* size of allocation map */
+  byte     pdtyp;                /* device type: hard disk, floppy */
+  ushort   sas;				     /* sector allocation size */
+  ulong    root_fd_nr;           /* sector nr of root fd */
+  ulong    clusterSize;          /* cluster size (allocation) */
+  ulong    totScts;              /* total   number of sectors */
+  ulong    imgScts;              /* current number of sectors at this image */
+  ushort   last_diskID;          /* last disk ID, inherited by new paths */
+  ulong    last_alloc;           /* the last allocation was here */
+  ulong	   currPos;			     /* current position at image */
+  ulong    rMiss, rTot,		     /* device statistics */
+           wMiss, wTot;
+  ushort   sp_img;			     /* syspath number of image file */
+  char	   img_name[OS9PATHLEN]; /* full path name of image file */
 	
-			byte*    tmp_sct; 			       /* temporary buffer sector */
-			Boolean  wProtected;			     /* true, if write  protected */
-			Boolean  fProtected;			     /* true, if format protected */
-			Boolean  imgMode;              /* true, if reduced img size is allowed/supported */
-			Boolean  multiSct;             /* true, if multi sector support */
+  byte*    tmp_sct; 			 /* temporary buffer sector */
+  Boolean  wProtected;			 /* true, if write  protected */
+  Boolean  fProtected;			 /* true, if format protected */
+  Boolean  imgMode;              /* true, if reduced img size is allowed/supported */
+  Boolean  multiSct;             /* true, if multi sector support */
 			
-	    // #ifdef RAM_SUPPORT
-      Boolean  isRAM;                /* true, if RAM disk */
-      byte*    ramBase;              /* start address of RAM disk */
-      // #endif
+  Boolean  isRAM;                /* true, if RAM disk */
+  byte*    ramBase;              /* start address of RAM disk */
       
-      scsi_dev scsi;                 /* SCSI device variables    */
-	 // int	     scsiID;               /* SCSI ID, -1 if NO_SCSI   */
-	 // short    scsiAdapt;            /* SCSI Adaptor, -1 if none */
-	 // short    scsiBus;              /* SCSI Bus, normally 0     */
-	 // short    scsiLUN;              /* SCSI LUN, normally 0     */
-
-			Boolean  installed;			       /* true, if device is already installed */
-		} rbfdev_typ;
+  scsi_dev scsi;                 /* SCSI device variables */
+  Boolean  installed;			       /* true, if device is already installed */
+} rbfdev_typ;
 
 /* the RBF devices */
 rbfdev_typ  rbfdev[MAXRBFDEV];		
-
 
 
 /* OS9exec builtin module, defined as constant array */
@@ -199,7 +194,6 @@ const byte RAM_zero[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  // ................
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00   // ................
 };    
-
 
 
 
@@ -950,23 +944,45 @@ static Boolean MWrong( int cdv )
 // #ifdef RAM_SUPPORT
 static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
 {
-    #define DefaultScts 8192
-    #define A_Base      0x100
-    #define MaxScts     0x00fffffc
+    #define DefaultScts   8192
+    #define MaxKB         0x001ffffe // 2097151 kB = 2047.999 MB
+    #define SectsPerTrack 0x20
     
-    ulong    allocSize, allocN, allocScts;
+    ulong    allocSize, allocN, allocClu, mapSize,
+             f, r, fN, rN, totBits, tracks, cluRest;
     ulong*   u;
     ushort*  w;
     byte*    b;
-    ulong    f, r, fN, rN;
-    int      ii, v;
+    int      ii, v, 
+             clu= mnt_cluSize;
     byte     pt;
     mod_dev* mod;
     char*    p;
+    Boolean  ok= false;
     
-        dev->totScts= mnt_ramSize*KByte/dev->sctSize; /* adapt to KBytes */
-    if (dev->totScts==0) dev->totScts= DefaultScts;
-    dev->imgScts=        dev->totScts;
+    for (ii=0; ii<31; ii++) {
+      if (1<<ii==clu) { ok= true; break; }
+    } // for
+    if (!ok) {
+      upe_printf( "mount: cluster size must be a power of 2\n" );
+      return 1;
+    } // if
+    
+    if (mnt_ramSize>MaxKB) {
+      upe_printf( "mount: error - size is too large for this device.\n" );
+      return 1;
+    } // if
+    
+    if (mnt_sctSize>0) dev->sctSize    = mnt_sctSize;
+                       dev->clusterSize= clu;
+                       dev->sas        = DD__MINALLOC;
+    
+              dev->totScts= mnt_ramSize*KByte/dev->sctSize; /* adapt to KBytes */
+    tracks = (dev->totScts-1) / SectsPerTrack + 1;
+              dev->totScts=     SectsPerTrack * tracks;     /* granulate to tracks */
+    totBits= (dev->totScts-1) / clu + 1;
+              dev->totScts=     clu * totBits;              /* granulate to clusters */
+    if       (dev->totScts==0)  dev->totScts= DefaultScts;
     
     if ( mnt_ramSize==0 
       && IsDesc( cmp, &mod, &p )  
@@ -975,43 +991,63 @@ static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
         if (ustrcmp( p,"ram" )==0) {
             w= (ushort*)(&mod->_mdtype + PD_SCT);
             dev->totScts= os9_word( *w );
-            dev->imgScts= dev->totScts;
         } // if
     } // if
 
-    if (dev->totScts>MaxScts) dev->totScts= MaxScts;
     dev->imgScts= dev->totScts;
-    
-    allocSize= (dev->totScts-1)/(dev->sctSize*BpB) + 1; /* round up */
-    allocN   =       allocSize * dev->sctSize*BpB;
-    allocScts= 1 +   allocSize + 2;
+
+             mapSize= (totBits-1)/BpB + 1; // rounding up
+    if      (mapSize>0xffff) {
+      while (mapSize>0xffff) { mapSize= mapSize/2; clu= clu*2; }
+      upe_printf( "mount: error - cluster size is too small for this device.\n" );
+      upe_printf( "cluster size must be at least %d.\n", clu );
+      return 1;
+    } // if
+  
+    allocSize= (totBits-1)/(dev->sctSize*BpB) + 1; // nr of allocation sectors, rounded up
+    allocN   =  allocSize * dev->sctSize*BpB;      // nr of allocation bits
+    allocClu =  allocSize/clu + 1;                 // nr of allocated clusters ( including sect 0 )
     
             dev->ramBase= get_mem( dev->sctSize*dev->totScts );
     if    ( dev->ramBase==NULL ) return E_NORAM;
+    memset( dev->ramBase,          dev->sctSize*dev->totScts, 0 ); // clear all
     memcpy( dev->ramBase,RAM_zero, dev->sctSize );
     
+  //f= allocClu*clu;
+    
+  //f= allocSize + 2; // strategy is a little bit strange
+  //f= f / 2;
+  //f= f * 2; // odd( f ) => + 1
+  
+    f= allocSize + 1; fN= f*dev->sctSize; // root dir fd sector position
+    r=         f + 1; rN= r*dev->sctSize;
+
+    cluRest=       r/clu + 1;
+    cluRest= cluRest*clu - r;
+
+    /* Reserve all these bits in the allocation map */
     pt= 0x80;
     for (ii=0; ii<allocN; ii++) {
-        if  (ii<allocScts || ii>=dev->totScts) {
-          v= ii/BpB;
-          b= &dev->ramBase[A_Base+v]; *b |= pt;
-        }
+      if  (ii<=r/clu || ii>=totBits) { // including fd + dir
+        v= ii/BpB;
+        b= &dev->ramBase[ dev->sctSize + v ]; *b |= pt;
+      } // if
         
-        pt= pt/2; if (pt==0) pt= 0x80; /* prepare the next pattern */
-    } /* for */
+      pt= pt/2; if (pt==0) pt= 0x80; /* prepare the next pattern */
+    } // for
     
-    f=  1 + allocSize; fN= f*dev->sctSize;
-    r=  f + 1;         rN= r*dev->sctSize;
-    
-    u= (ulong*) &dev->ramBase[ TOT_POS ]; *u=          os9_long(  dev->totScts << BpB ); /* 0x03 overwritten, is 0 anyway */
-    w= (ushort*)&dev->ramBase[ MAP_POS ]; *w= (ushort) os9_word( (dev->totScts-1)/BpB + 1 );
-    u= (ulong*) &dev->ramBase[ DIR_POS ]; *u=          os9_long(             f << BpB ); /* 0x0b overwritten, is 0 anyway */
-                        
+    u= (ulong*) &dev->ramBase[ TOT_POS ]; *u=         os9_long( dev->totScts << BpB ); /* 0x03 overwritten, is 0 anyway */
+                 dev->ramBase[ TRK_POS ]= SectsPerTrack;                                  /* number of sector per track */
+    w= (ushort*)&dev->ramBase[ MAP_POS ]; *w= (ushort)os9_word( mapSize );
+    w= (ushort*)&dev->ramBase[ BIT_POS ]; *w= (ushort)os9_word( clu );
+    u= (ulong*) &dev->ramBase[ DIR_POS ]; *u=         os9_long(            f << BpB ); /* 0x0b overwritten, is 0 anyway */
+    w= (ushort*)&dev->ramBase[SECT_POS ]; *w= (ushort)os9_word( dev->sctSize );
+                       
                  dev->ramBase[ fN      ]= 0xbf; /* prepare the fd sector */
                  dev->ramBase[ fN+0x08 ]= 0x01;
                  dev->ramBase[ fN+0x0C ]= 0x40;
-    u= (ulong*) &dev->ramBase[ fN+0x10 ]; *u= os9_long( r<<BpB );
-                 dev->ramBase[ fN+0x14 ]= 0x01;
+    u= (ulong*) &dev->ramBase[ fN+0x10 ]; *u= os9_long( r << BpB );                 /* fN+0x14 overwritten, is 0 anyway */
+                 dev->ramBase[ fN+0x14 ]= cluRest;
             
                  dev->ramBase[ rN      ]= 0x2e; /* prepare the directory entry */
                  dev->ramBase[ rN+0x01 ]= 0xae;
@@ -1313,7 +1349,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         dev->installed= true;   /* now it is installed */
 
      // #ifdef RAM_SUPPORT
-          if (isRAMDisk) { err= PrepareRAM( dev, cmp ); break; }  /* no more actions for RAM disk */
+        if (isRAMDisk) { err= PrepareRAM( dev, cmp ); break; }  /* no more actions for RAM disk */
      // #endif
         
         if (IsSCSI(dev)) break; /* no more actions for SCSI */
@@ -1377,27 +1413,29 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "Syntax:   %s <image_file> [<device>]\n", name );
     upe_printf( "Function: mount an RBF image file\n" );
     upe_printf( "Options:  \n" );
-    upe_printf( "    -w         open with write protection on\n" );
-    upe_printf( "    -i         adapt for reduced image size\n" );
-    upe_printf( "    -f         adapt for full    image size\n" );
+    upe_printf( "    -w           open with write protection on\n" );
+    upe_printf( "    -i           adapt for reduced image size\n" );
+    upe_printf( "    -f           adapt for full    image size\n" );
     
     #ifdef windows32
-    upe_printf( "    -ah        show all SCSI devices on all adapters and buses\n" );
-    upe_printf( "    -a=adapter specify  SCSI adapter\n" );
-    upe_printf( "    -b=scsibus specify  SCSI bus\n" );
+    upe_printf( "    -ah          show all SCSI devices on all adapters and buses\n" );
+    upe_printf( "    -a=<adapter> specify  SCSI adapter\n" );
+    upe_printf( "    -b=<scsibus> specify  SCSI bus\n" );
     #endif
     
-    upe_printf( "    -s=scsiID  connect to SCSI ID\n" );
-    
-    upe_printf( "    -l=lun     connect to LUN (default=0)\n" );
-    upe_printf( "    -r=size    create RAM disk with size (in kBytes)\n" );
+    upe_printf( "    -s=<scsiID>  connect to SCSI ID\n" );
+    upe_printf( "    -l=<lun>     connect to LUN (default=0)\n" );
+    upe_printf( "    -r=<size>    create RAM disk with size (in kBytes)\n" );
+    upe_printf( "    -n=<bytes>   sector  size in bytes     for RAM disk\n" );
+    upe_printf( "    -c=<num>     cluster size (default: 1) for RAM disk\n" );
 } /* mount_usage */
 
 
 
-os9err MountDev( ushort pid, char* name, char* mnt_dev, 
-                             short adapt, ushort scsibus, short scsiID, ushort scsiLUN, 
-                             int ramSize, Boolean wProtect, int imgMode )
+os9err MountDev( ushort pid, char* name, char* mnt_dev, short adapt,
+                             ushort scsibus, short scsiID, ushort scsiLUN, 
+                             int ramSize, int sctSize, int cluSize, 
+                             Boolean wProtect, int imgMode )
 {
     os9err    err= 0;
     char      tmp[OS9NAMELEN];
@@ -1416,20 +1454,22 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     if (*mnt_dev!=NUL || scsiID!=NO_SCSI || ramSize>0) {
         mnt_name   = mnt_dev;
         mnt_ramSize= ramSize;
+        mnt_sctSize= sctSize;
+        mnt_cluSize= cluSize;
        
         if (scsiID!=NO_SCSI) {
-            mnt_name= name;
-            mnt_scsiID    = scsiID;
-            mnt_scsiAdapt = adapt;
-            mnt_scsiBus   = scsibus;
-            mnt_scsiLUN   = scsiLUN;
+            mnt_name     = name;
+            mnt_scsiID   = scsiID;
+            mnt_scsiAdapt= adapt;
+            mnt_scsiBus  = scsibus;
+            mnt_scsiLUN  = scsiLUN;
             
             if (!AbsPath(name)) { /* make a device path */
                 strcpy ( tmp,PSEP_STR );
                 strncat( tmp,name, OS9NAMELEN-1 );
                 name=    tmp;
-            }
-        }
+            } // if
+        } // if
         
         if (AbsPath(mnt_name)) mnt_name++;
         for (ii=0; ii<OS9NAMELEN; ii++) {
@@ -1461,6 +1501,8 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev,
     mnt_name    = "";
     mnt_scsiID  = NO_SCSI;
     mnt_ramSize = 0;
+    mnt_sctSize = 0;
+    mnt_cluSize = 1;
     
     if   (!err) err= syspath_close( pid, sp );
     return err;
@@ -1478,9 +1520,10 @@ os9err int_mount( ushort pid, int argc, char** argv )
     short     scsiID  = NO_SCSI;
     short     scsiLUN = 0;
     int       ramSize = 0;
-    
-    Boolean   wProtect  = false;
-    int       imgMode   = Img_Unchanged;
+    int       sctSize = 0;
+    int       cluSize = 1;
+    Boolean   wProtect= false;
+    int       imgMode = Img_Unchanged;
     char      *p;
     int       k;
     
@@ -1499,31 +1542,31 @@ os9err int_mount( ushort pid, int argc, char** argv )
                 case 'i' : imgMode = Img_Reduced;  break;
                 case 'f' : imgMode = Img_FullSize; break;
 
-				        #ifdef windows32
-                  case 'a' : if (*(p+1)=='h') {
-                               upho_printf("Current defaults: adapter=SCSI%d, bus=%d\n\n",
+				#ifdef windows32
+                case 'a' : if (*(p+1)=='h') {
+                             upho_printf("Current defaults: adapter=SCSI%d, bus=%d\n\n",
                                             defSCSIAdaptNo,defSCSIBusNo);
-                               scsiadaptor_help();
-                               return 0;    
-                             } // if
+                             scsiadaptor_help();
+                             return 0;    
+                           } // if
                              
-                             if (*(p+1)=='=') p+=2;
-                             else { k++; /* next arg */
-                               if  (k>=argc) break;
-                               p= argv[k];
-                             } // if
+                           if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
                              
-                             sscanf( p,"%hd", &adapt );
-                             break;
+                           sscanf( p,"%hd", &adapt );
+                           break;
                             
-                  case 'b' : if (*(p+1)=='=') p+=2;
-                             else { k++; /* next arg */
-                               if  (k>=argc) break;
-                               p= argv[k];
-                             } // if
+                case 'b' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
                              
-                             sscanf( p,"%hd", &scsibus );
-                             break;
+                           sscanf( p,"%hd", &scsibus );
+                           break;
                 #endif
                             
                 case 's' : if (*(p+1)=='=') p+=2;
@@ -1551,6 +1594,24 @@ os9err int_mount( ushort pid, int argc, char** argv )
                            
                            sscanf( p,"%d", &ramSize );
                            break;
+  
+                case 'n' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           
+                           sscanf( p,"%d", &sctSize );
+                           break;
+                           
+                case 'c' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           
+                           sscanf( p,"%d", &cluSize );
+                           break;
                             
                 default  : upe_printf("Error: unknown option '%c'!\n",*p); 
                            mount_usage( argv[0],pid ); return 1;
@@ -1572,8 +1633,9 @@ os9err int_mount( ushort pid, int argc, char** argv )
 
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
-        err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt, scsibus, scsiID, scsiLUN, 
-                       ramSize, wProtect, imgMode );
+           err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt,
+                          scsibus, scsiID, scsiLUN, 
+                          ramSize, sctSize, cluSize, wProtect, imgMode );
     if    (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
     return err;
 } /* int_mount */
@@ -2322,8 +2384,8 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer,
       //if (sect==0) upe_printf( "Write 0 raw=%d\n", spP->rawMode );
                 
         if (lnmode) {       /* depends on read or write */
-            if (wMode) { bb= (byte*)buffer; coff= boffs; }
-            else       { bb=   spP->rw_sct; coff=  offs; }
+            if (wMode || mlt) { bb= (byte*)buffer; coff= boffs; }
+            else              { bb=   spP->rw_sct; coff=  offs; }
 
             for (ii=coff; ii<coff+maxc; ii++) {
                 if (bb[ii]==CR) { done= true; maxc= ii-coff+1; break; }
