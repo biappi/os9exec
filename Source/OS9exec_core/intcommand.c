@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2006/11/04 23:37:29  bfo
+ *    <procName> => <intProcName> / comment for -j=<pid> added
+ *
  *    Revision 1.39  2006/11/04 01:16:53  bfo
  *    "icrash" added.
  *
@@ -689,7 +692,6 @@ cmdtable_typ commandtable[] =
   { "idevs",         int_devs,       "shows OS9exec's devices" },
   { "idbg/debughalt",int_debughalt,  "sets debug options/enters OS9exec's debug menu" },
   { "icrash",        int_crash,      "accesses an invalid address: 0xCE00BEFO" },
-//{ "idiv0",         int_div0,       "force a division by 0" },
   { "iquit",         int_quit,       "sets flag to quit directly" },
   { "dch/diskcache", int_ignored,    "simply ignored, because not supported by OS9exec" },
 
