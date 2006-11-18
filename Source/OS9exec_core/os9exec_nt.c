@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.87  2006/11/12 13:22:30  bfo
+ *    <catch_ctrlC> flag and support added /
+ *    Boot search order description  added /
+ *    "load_OS9Boot" call (sector 0 searching strategy) added
+ *
  *    Revision 1.86  2006/11/05 00:09:20  bfo
  *    some legacy debug logger stuff eliminated
  *
@@ -526,12 +531,14 @@ Boolean with_intcmds  = true;   /* by default, internal commands will be used */
 ulong   spininterval= DEFAULTSPININTERVAL;
 
 /* mount device name and write protection   */
-char*   mnt_name     = "";
-int     mnt_ramSize  =  0;
+char*   mnt_name     =  "";
+int     mnt_ramSize  =   0;
+int     mnt_sctSize  =   0;
+int     mnt_cluSize  =   1;
 int     mnt_scsiID   = NO_SCSI;
-short   mnt_scsiAdapt= -1; // use default adaptor
-short   mnt_scsiBus  = -1; // use default bus
-short   mnt_scsiLUN  = -1; // use default LUN
+short   mnt_scsiAdapt=  -1; // use default adaptor
+short   mnt_scsiBus  =  -1; // use default bus
+short   mnt_scsiLUN  =  -1; // use default LUN
 Boolean mnt_wProtect = false;
 Boolean mnt_imgMode  = false;
 /* ---------------------------------------- */

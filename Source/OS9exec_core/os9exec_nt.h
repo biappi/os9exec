@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.64  2006/11/12 13:20:21  bfo
+ *    <catch_ctrlC> flag added
+ *
  *    Revision 1.63  2006/11/04 23:30:55  bfo
  *    <procName> ( ptr ) renamed/changed to <intProcName> ( char[] )
  *
@@ -549,6 +552,7 @@ typedef enum { fNone, fCons,fTTY,fNIL,fVMod,fSCF, fFile,fDir,
 
 
 #define  TOT_POS  0x00       /* Total number of sectors */
+#define  TRK_POS  0x03       /* Number of sectors per track */
 #define  MAP_POS  0x04       /* Number of bytes in allocation map */
 #define  BIT_POS  0x06       /* Cluster size */
 #define  DIR_POS  0x08       /* Position of root dir */
@@ -1301,6 +1305,8 @@ extern ulong spininterval;
 /* mount device name and write protection */
 extern  char*   mnt_name;
 extern  int     mnt_ramSize;
+extern  int     mnt_sctSize;
+extern  int     mnt_cluSize;
 
 #define NO_SCSI -1
 extern  int     mnt_scsiID;
