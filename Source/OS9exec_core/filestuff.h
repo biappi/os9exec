@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2006/11/12 13:30:30  bfo
+ *    "ReadFD" visible from outside
+ *
  *    Revision 1.13  2006/02/19 15:42:23  bfo
  *    Header changed to 2006
  *
@@ -156,7 +159,7 @@ void    ConsPutcEdit    ( char  c, Boolean alf, char eorch );
 os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, 
                           short  adapt, ushort scsibus, 
                           short scsiID, ushort scsiLUN, 
-                          int  ramSize, Boolean wProtect, int imgMode );
+                          int  ramSize, int sctSize, int cluSize, Boolean wProtect, int imgMode );
                              
 os9err  int_mount       ( ushort pid, int argc, char **argv );
 os9err  int_unmount     ( ushort pid, int argc, char **argv );
