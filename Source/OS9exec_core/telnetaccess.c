@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/06/11 22:07:13  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.9  2006/06/01 15:17:15  bfo
  *    Signedness adaptions (for gcc 4.0)
  *
@@ -276,47 +279,11 @@ void HandleEvent( void )
 #endif
 
 
-#if defined MPW || defined linux
+#if defined MPW || defined UNIX
 void HandleEvent( void )
 {
 } /* empty implementation */
 #endif
-
-
-#if defined __MACH__
-void HandleEvent( void )
-{
-  /*
-  #define STARTVAL -200
-  static int hvv= STARTVAL;
-
-  int  n;
-  char c;
-    
-  if (hvv<0) hvv++;
-  else { 
-    hvv= STARTVAL; 
-    usleep( 1000 ); // sleep in microseconds
-  } // if
-
-  n= fread( &c,1,1, stdin );
-  if (n==0) return;
-  printf( "hallo=%d\n", n );
-  
-//if (feof  (stdin)) { printf( "eof\n"   ); return; }
-//if (ferror(stdin)) { printf( "error\n" ); return; }
-  
-//    n= getchar(); // problems with fread
-//printf( "hallo=%d\n", n );
-//if (n==-1) return;
-//c=  n;
-
-  printf( "hallo='%c'\n", c );
-  KeyToBuffer( &main_mco, c );
-  */
-} /* empty implementation */
-#endif
-
 
 
 /* CheckInputBuffers */
