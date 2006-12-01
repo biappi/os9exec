@@ -1555,6 +1555,18 @@
                                         - <sctSize>, <cluSize> + root sector calculations correcty
                                         - Params -n and -c added for "mount" command
                                         - bb/coff calculation corrected (for wMode || mlt)
+                                        
+          06-12-01  Bfo     os9exec_nt  : <mnt_devCopy> added
+          06-12-01  Bfo     console.stubs /
+                            consio      /
+                            procstuff   : <consoleSleep> param for "HandleOneEvent" (reduce MacClassic load)
+          06-12-01  Bfo     telnetaccess: "HandleEvent": no more separate MACH implementation
+          06-12-01  Bfo     funcdispatch/
+                            os9main     : Enhanced (and shorter) "systime" display
+          06-12-01  Bfo     filestuff   /
+                            file_rbf    /
+                            utilstuff   : "MountDev" with <devCopy> support ( -d )
+                         
           
     3.34  06-??-??  Bfo
     -------------------  
