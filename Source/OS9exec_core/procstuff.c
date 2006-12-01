@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2006/11/04 23:35:40  bfo
+ *    <procName> => <intProcName>
+ *
  *    Revision 1.49  2006/11/01 11:44:39  bfo
  *    Clean up proc desc no longer needed, because int commands do
  *    not overwrite FPU regs with bad values anymore
@@ -948,18 +951,21 @@ void do_arbitrate( ushort allowedIntUtil )
 
               #ifdef UNIX
                 wait_time.tv_sec =        0;
-//              wait_time.tv_nsec= 10000000;
-                wait_time.tv_nsec=  1000000;
+                wait_time.tv_nsec=  1000000; // = 1 millisecond 
                 nanosleep( &wait_time, NULL );
                 slp_idleticks++;
-              #elif defined macintosh || defined windows32
-                ulong ticks   = GetSystemTick();
                 
-                #ifdef windows32
-                  Sleep( 10 ); // sleep for one tick
-                #endif
+              #elif defined windows32
+                ulong ticks= GetSystemTick();
+                Sleep( 10 ); // sleep for one tick
                 
                 HandleEvent();
+                slp_idleticks+= GetSystemTick()-ticks;
+                
+              #elif defined macintosh
+                ulong ticks= GetSystemTick();
+
+                HandleOneEvent( nil, 10 );
                 slp_idleticks+= GetSystemTick()-ticks;
               #endif
            
