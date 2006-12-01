@@ -19,6 +19,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/05/26 14:31:02  bfo
+ *    Renamed to "ResourceConstants.h"
+ *
  *    Revision 1.9  2005/06/30 10:51:45  bfo
  *    ifndef USE_CARBON => ifdef USE_CLASSIC; type casting
  *
@@ -147,7 +150,7 @@ void EventLoop();
 #ifdef MACOS9
   void DoUpdate(WindowPtr window);
   void DoEvent       ( EventRecord*  event );
-  void HandleOneEvent( EventRecord* pEvent );
+  void HandleOneEvent( EventRecord* pEvent, int consoleSleep );
 #endif
 
 short      InstallConsole( short fd );
@@ -653,7 +656,7 @@ static void HandleVModUpdate( TermWindowPtr tw, ttydev_typ* mco )
 
 /* Define an event loop, so the user doesn't have to
 */
-void HandleOneEvent(EventRecord* pEvent)
+void HandleOneEvent( EventRecord* pEvent, int consoleSleep )
 {
 //  RgnHandle      cursorRgn;
     Boolean        gotEvent;
@@ -688,7 +691,7 @@ void HandleOneEvent(EventRecord* pEvent)
         // LATER: check for WaitNextEvent trap; if unavailable, do something else!
         if (first)
             first= false; /* can be used as brkpnt place for ugly starter */
-        gotEvent = WaitNextEvent(everyEvent, &event, gConsoleSleep, 0);
+        gotEvent = WaitNextEvent( everyEvent, &event, consoleSleep, 0 );
         eventPtr = &event;
     } else {
         gotEvent = 1;
@@ -742,7 +745,7 @@ void HandleOneEvent(EventRecord* pEvent)
 
 
 void HandleEvent( void )
-{    HandleOneEvent(nil);
+{    HandleOneEvent( nil, gConsoleSleep );
 } /* HandleEvent */
 
 

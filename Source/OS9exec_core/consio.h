@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/02/19 15:51:07  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.8  2005/06/30 11:04:15  bfo
  *    win_linux => win_unix
  *
@@ -101,7 +104,7 @@ extern  ulong        gNetLast;
     extern FSSpec  gFS;
     
     extern void    Install_AppleEvents( void );
-    extern void    HandleOneEvent     ( EventRecord* pEvent );
+    extern void    HandleOneEvent     ( EventRecord* pEvent, int consoleSleep );
     extern long    WriteCharsToConsole( char *buffer, long n );
     extern ulong   SysPathWindow      ( syspath_typ* );
     extern ulong   CurrentWindow      ( void );
