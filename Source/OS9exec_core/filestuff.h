@@ -43,6 +43,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.15  2006/11/18 09:56:54  bfo
+ *    "MountDev" params <sctSize>, <cluSize> added
+ *
  *    Revision 1.14  2006/11/12 13:30:30  bfo
  *    "ReadFD" visible from outside
  *
@@ -156,7 +159,7 @@ void    ConsPutcEdit    ( char  c, Boolean alf, char eorch );
 
 
 /* external RBF    support routines */
-os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, 
+os9err  MountDev        ( ushort pid, char* name, char* mnt_dev, char* devCopy,
                           short  adapt, ushort scsibus, 
                           short scsiID, ushort scsiLUN, 
                           int  ramSize, int sctSize, int cluSize, Boolean wProtect, int imgMode );

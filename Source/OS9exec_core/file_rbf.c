@@ -41,6 +41,16 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2006/11/18 10:07:12  bfo
+ *    PrepareRAM adapted:
+ *    - Offset to sector 1 is now dev->sctSize, no longer A_Base 0x100
+ *    - MaxKB introduced and checked
+ *    - <cluSize> must be a power of 2 now
+ *    - dev->sas= DD_MINALLOC
+ *    - <sctSize>, <cluSize> + root sector calculations correcty
+ *    - Params -n and -c added for "mount" command
+ *    - bb/coff calculation corrected (for wMode || mlt)
+ *
  *    Revision 1.50  2006/11/12 13:30:29  bfo
  *    "ReadFD" visible from outside
  *
@@ -926,39 +936,66 @@ Boolean InstalledDev( const char* os9path, const char* curpath,
 static Boolean MWrong( int cdv )
 /* check if already installed on a different device */
 {
-    rbfdev_typ*  dev;
-    int          ii;
+  rbfdev_typ*  dev;
+  int          ii;
 
-	for (ii=1; ii<MAXRBFDEV; ii++) {       
-    	    dev= &rbfdev[ ii ];             /* get RBF device  */
-    	if (dev->installed && ii!=cdv && (ustrcmp( mnt_name,dev->name  )==0 ||
-                                        ustrcmp( mnt_name,dev->name2 )==0 ||
-                                        ustrcmp( mnt_name,dev->name3 )==0)) return true;
-    } /* for */
+  for (ii=1; ii<MAXRBFDEV; ii++) {       
+        dev= &rbfdev[ ii ];             /* get RBF device  */
+    if (dev->installed && ii!=cdv && (ustrcmp( mnt_name,dev->name  )==0 ||
+                                      ustrcmp( mnt_name,dev->name2 )==0 ||
+                                      ustrcmp( mnt_name,dev->name3 )==0)) return true;
+  } /* for */
     
-    return false;
+  return false;
 } /* MWrong */
 
 
 
 // #ifdef RAM_SUPPORT
-static os9err PrepareRAM( rbfdev_typ* dev, char* cmp )
+static os9err PrepareRAM( ushort pid, rbfdev_typ* dev, char* cmp )
 {
     #define DefaultScts   8192
     #define MaxKB         0x001ffffe // 2097151 kB = 2047.999 MB
     #define SectsPerTrack 0x20
     
-    ulong    allocSize, allocN, allocClu, mapSize,
-             f, r, fN, rN, totBits, tracks, cluRest;
-    ulong*   u;
-    ushort*  w;
-    byte*    b;
-    int      ii, v, 
-             clu= mnt_cluSize;
-    byte     pt;
-    mod_dev* mod;
-    char*    p;
-    Boolean  ok= false;
+    os9err    err, cErr;
+    ulong     allocSize, allocN, allocClu, mapSize,
+              f, r, fN, rN, totBits, tracks, cluRest, iSize;
+    ulong*    u;
+    ushort*   w;
+    byte*     b;
+    int       ii, v, 
+              clu= mnt_cluSize;
+    byte      pt;
+    mod_dev*  mod;
+    char*     p;
+    Boolean   ok= false;
+    ptype_typ type;
+    ushort    sp;
+    
+    if (strcmp( mnt_devCopy,"" )!=0) {
+    //upe_printf( "devCopy='%s'\n", mnt_devCopy );
+      type= IO_Type        ( pid,            mnt_devCopy, poDir );   
+      err = syspath_open   ( pid, &sp, type, mnt_devCopy, poDir ); if (err) return err;
+      err = syspath_gs_size( pid,  sp, &iSize );
+      
+      if (!err && iSize>0) {
+      //upe_printf( "size=%d\n", iSize );
+             dev->ramBase= get_mem( iSize );
+        if ( dev->ramBase==NULL ) return E_NORAM;
+        err= syspath_read( pid, sp, &iSize, dev->ramBase, false );
+      } // if
+      
+      cErr= syspath_close( pid, sp ); if (!err) err= cErr;
+      if (err) return err;
+      
+      u= (ulong*) &dev->ramBase[ TOT_POS ]; dev->totScts    = os9_long( *u ) >> BpB;
+                                            dev->imgScts    = dev->totScts;
+      w= (ushort*)&dev->ramBase[ BIT_POS ]; dev->clusterSize= os9_word( *w );
+      w= (ushort*)&dev->ramBase[SECT_POS ]; dev->sctSize    = os9_word( *w );
+                                            dev->sas        = DD__MINALLOC;
+      return 0;
+    } // if
     
     for (ii=0; ii<31; ii++) {
       if (1<<ii==clu) { ok= true; break; }
@@ -1303,7 +1340,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     dev->totScts   = 0;            /* set default values */
    
  // #ifdef RAM_SUPPORT
-      dev->isRAM   = isRAMDisk;    /* RAM disk flag */
+    dev->isRAM   = isRAMDisk;      /* RAM disk flag */
  // #endif
    
     strcpy( dev->img_name,"" );    /* no  image name by default */
@@ -1349,7 +1386,10 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
         dev->installed= true;   /* now it is installed */
 
      // #ifdef RAM_SUPPORT
-        if (isRAMDisk) { err= PrepareRAM( dev, cmp ); break; }  /* no more actions for RAM disk */
+        if (isRAMDisk) { 
+          err= PrepareRAM( pid, dev, cmp );
+          break; /* no more actions for RAM disk */
+        } // if
      // #endif
         
         if (IsSCSI(dev)) break; /* no more actions for SCSI */
@@ -1428,11 +1468,12 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "    -r=<size>    create RAM disk with size (in kBytes)\n" );
     upe_printf( "    -n=<bytes>   sector  size in bytes     for RAM disk\n" );
     upe_printf( "    -c=<num>     cluster size (default: 1) for RAM disk\n" );
+    upe_printf( "    -d=<device>  create RAM disk as a copy of <device>\n" );
 } /* mount_usage */
 
 
 
-os9err MountDev( ushort pid, char* name, char* mnt_dev, short adapt,
+os9err MountDev( ushort pid, char* name, char* mnt_dev, char* devCopy, short adapt,
                              ushort scsibus, short scsiID, ushort scsiLUN, 
                              int ramSize, int sctSize, int cluSize, 
                              Boolean wProtect, int imgMode )
@@ -1451,12 +1492,13 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev, short adapt,
     /* Is there a different name for the mount device ? */
     /* OS9exec can't switch the task in-between */
     /* NOTE: mnt_name is only valid within this context here */
-    if (*mnt_dev!=NUL || scsiID!=NO_SCSI || ramSize>0) {
+    if (*mnt_dev!=NUL || scsiID!=NO_SCSI || ramSize>0 || strcmp( devCopy,"" )!=0) {
         mnt_name   = mnt_dev;
         mnt_ramSize= ramSize;
         mnt_sctSize= sctSize;
         mnt_cluSize= cluSize;
-       
+        mnt_devCopy= devCopy;
+        
         if (scsiID!=NO_SCSI) {
             mnt_name     = name;
             mnt_scsiID   = scsiID;
@@ -1503,6 +1545,7 @@ os9err MountDev( ushort pid, char* name, char* mnt_dev, short adapt,
     mnt_ramSize = 0;
     mnt_sctSize = 0;
     mnt_cluSize = 1;
+    mnt_devCopy = "";
     
     if   (!err) err= syspath_close( pid, sp );
     return err;
@@ -1522,6 +1565,7 @@ os9err int_mount( ushort pid, int argc, char** argv )
     int       ramSize = 0;
     int       sctSize = 0;
     int       cluSize = 1;
+    char      devCopy[OS9PATHLEN];
     Boolean   wProtect= false;
     int       imgMode = Img_Unchanged;
     char      *p;
@@ -1529,7 +1573,7 @@ os9err int_mount( ushort pid, int argc, char** argv )
     
     #define     MAXARGS_ 2
     char* nargv[MAXARGS_];
-    
+    strcpy( devCopy,"" ); // default
 
     for (k=1; k<argc; k++) {
              p= argv[ k ];    
@@ -1612,7 +1656,16 @@ os9err int_mount( ushort pid, int argc, char** argv )
                            
                            sscanf( p,"%d", &cluSize );
                            break;
-                            
+
+                case 'd' : if (*(p+1)=='=') p+=2;
+                           else { k++; /* next arg */
+                             if  (k>=argc) break;
+                             p= argv[k];
+                           } // if
+                           
+                           strncpy( devCopy, p, OS9NAMELEN );
+                           break;
+                           
                 default  : upe_printf("Error: unknown option '%c'!\n",*p); 
                            mount_usage( argv[0],pid ); return 1;
             }   
@@ -1626,15 +1679,16 @@ os9err int_mount( ushort pid, int argc, char** argv )
         }
     } /* for */
 
-    if (nargc==0) { /* no param is not really allowed: exception is ramDisk with size>0 */
-        if (ramSize>0) { nargv[0]= "/r0"; nargc= 1; }
-        else return _errmsg( E_BPNAM, "can't mount device \"\".\n" );
-    }
+    if (nargc==0) {      /* no param is not really allowed: exception is ramDisk with */
+      if (ramSize>0 || /* size>0 or <devCopy> defined */
+          strcmp( devCopy,"" )!=0) { nargv[0]= "/r0"; nargc= 1; }
+      else return _errmsg( E_BPNAM, "can't mount device \"\".\n" );
+    } // if
 
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
-           err= MountDev( pid, nargv[0], nargc<2 ? "":nargv[1], adapt,
-                          scsibus, scsiID, scsiLUN, 
+           err= MountDev( pid, nargv[ 0 ], nargc<2 ? "":nargv[ 1 ], devCopy,
+                          adapt, scsibus, scsiID, scsiLUN, 
                           ramSize, sctSize, cluSize, wProtect, imgMode );
     if    (err) return _errmsg( err, "can't mount device \"%s\".\n", nargv[0] );
     return err;

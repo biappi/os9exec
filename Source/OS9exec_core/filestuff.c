@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2006/11/18 09:56:54  bfo
+ *    "MountDev" params <sctSize>, <cluSize> added
+ *
  *    Revision 1.30  2006/08/20 18:35:56  bfo
  *    path descriptors completely cleared with memset
  *    (Changes done by Martin Gregorie)
@@ -461,7 +464,7 @@ static void CheckH0( char* name, char* p, char** p3 )
       q= name + strlen( name )-2; *q= NUL; /* cut "h0" again */
       strcat          ( name,"dd" );
       MakeOS9Path     ( name ); /* it might come as Mac or DOS path name ... --> OS-9 notation */
-      err= MountDev( 0, name,p, 0,0,NO_SCSI,0, 0,0,1, false,Img_Unchanged ); if (err) return;
+      err= MountDev( 0, name,"", p, 0,0,NO_SCSI,0, 0,0,1, false,Img_Unchanged ); if (err) return;
     
       strcpy( name,"/h0" ); *p3= name;
 

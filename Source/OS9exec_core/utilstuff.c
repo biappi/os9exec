@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2006/10/12 19:50:23  bfo
+ *    Extended for ".DS_Store" support
+ *
  *    Revision 1.49  2006/08/20 18:35:29  bfo
  *    "noecho" mode is default again
  *    (Changes done by Martin Gregorie)
@@ -2121,7 +2124,7 @@ Boolean RAM_Device( const char* os9path )
     char*    p;
     
     GetOS9Dev( os9path, (char*)&cmp );
-    if (mnt_ramSize>0) return true;
+    if (mnt_ramSize>0 || strcmp( mnt_devCopy,"" )!=0) return true;
     
     if (IsDesc( cmp, &mod, &p )  && ustrcmp( p,"RBF" )==0) {
         p= (char*)mod + os9_word(mod->_mpdev);
