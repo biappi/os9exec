@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/09/03 20:55:00  bfo
+ *     STIM_ORDERED 0x0020 added
+ *
  *    Revision 1.7  2006/07/21 07:09:14  bfo
  *    os9_to_xxx <name> parameter eliminated
  *
@@ -91,6 +94,8 @@ extern  ulong glob_callticks;
 #define STIM_FCALLS    0x0001
 #define STIM_ICALLS    0x0002
 #define STIM_OS9       0x0004
+#define STIM_S       ( STIM_ICALLS | STIM_FCALLS | STIM_OS9 ) /* combined for option -s */
+
 #define STIM_TICKAVAIL 0x0008
 #define STIM_PERCENT   0x0010
 #define STIM_ORDERED   0x0020
@@ -124,7 +129,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean intUtil );
 
 void   init_L2(void);
 void   init_syscalltimers(void);
-ulong  show_timing( ushort mode,int ticksLim );
+ulong  show_timing( ushort mode,int ticksLim, Boolean doDisable );
 os9err int_systime( ushort pid, int argc, char **argv );
 
 /* eof */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2006/11/13 14:54:49  bfo
+ *    (char*) type casting for GCC
+ *
  *    Revision 1.39  2006/11/12 13:18:06  bfo
  *    Problem with changed <currentpid> (internal commands) fixed
  *
@@ -564,23 +567,6 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
   Boolean   msk= cp->masklevel  >0;
   Boolean   hdl= cp->pd._sigvec!=0;
   Boolean   strt;
-//int       ii;
-
-//if (cp->oerr) {
-//  if (strcmp( fdeP->name,"F$Time" )==0) {
-//    printf( "brunz %d\n", pid );
-//  } // if
-//} // if
-  /*
-  if (cp->pd.FPUsave) upe_printf( "FPUsave\n" );
-  for (ii= 0; ii<7; ii++) {
-    if (cp->pd.FPExcpt[ ii ]) upe_printf( "FPExcpt\n" );
-    if (cp->pd.FPExStk[ ii ]) upe_printf( "FPExStk\n" );
-  }
-  if (cp->os9regs.fpcr)  upe_printf( "fpcr\n" );
-  if (cp->os9regs.fpsr)  upe_printf( "fpsr\n" );
-  if (cp->os9regs.fpiar) upe_printf( "fpiar\n" );
-  */
   
   if (!Dbg_SysCall( pid,crp )) return;
   
@@ -915,7 +901,8 @@ static void show_line( Boolean show, ushort mode,
     if (n==-1) strcpy ( nnnn,"" );
     else       sprintf( nnnn,"%d", n );
     if (f<Lim) strcpy ( perc,"-" );
-    else       sprintf( perc,"%c%1.1f%%", ustrcmp( "TOTAL idle",name )==0 ? '+':' ', f );
+  //else       sprintf( perc,"%c%1.1f%%", ustrcmp( "TOTAL idle",name )==0 ? '+':' ', f );
+    else       sprintf( perc,"%1.1f%%", f );
         
     upo_printf("  %c%-19s  %10ld  %10s %7s %12s\n", c,name, t,nnnn, perc, time_disp(t) );
 } /* show_line */
@@ -1045,20 +1032,20 @@ static void show_os9timers( ushort mode, ulong active, ulong *call, ulong *num, 
 
 
 /* show timing summary */
-ulong show_timing( ushort mode, int ticksLim )
+ulong show_timing( ushort mode, int ticksLim, Boolean doDisable )
 {
-    ulong  tfcall, ticall, oscall;
-    ulong  tfnum,  tinum,  osnum;
-    ulong  t_call, active;
-    ulong  realtime;
-    time_t now;
-
+    ulong   tfcall, ticall, oscall;
+    ulong   tfnum,  tinum,  osnum;
+    ulong   t_call, active;
+    ulong   realtime;
+    time_t  now;
+    Boolean sOpt= mode & STIM_S;
 
     time(&now);
     upho_printf( "%s timing (in 1/%d sec)\n", OS9exec_Name(),TICKS_PER_SEC );
-    upho_printf( "%s\n", hw_name );
+  //upho_printf( "%s\n", hw_name );
     
-    if (!logtiming) {
+    if (!logtiming && !doDisable) {
         upo_printf("**** WARNING: timing log is currently DISABLED!\n");
     }
 
@@ -1082,20 +1069,28 @@ ulong show_timing( ushort mode, int ticksLim )
     if (realtime<active) realtime= active;       /* avoid negative lost ticks */
 
 
-    show_title( true,"Description" );
-    show_sline( "TOTAL F$xxx",      tfcall,         tfnum, active );
-    show_sline( "TOTAL I$xxx",      ticall,         tinum, active );
-    show_sline( "TOTAL SysCall",    t_call,   tfnum+tinum, active );
-    show_sline( "TOTAL OS-9",       oscall,         osnum, active );
-    show_sline( "TOTAL arbitration",arbticks,      arbnum, active );
-    show_sline( "TOTAL idle sleep", sum_slp_idleticks, -1, active );
-    show_sline( "TOTAL idle (R/W)", sum_rw__idleticks, -1, active );
-    show_sline( "TOTAL active",     active,         osnum, active );
-    show_sline( "TOTAL realtime",   realtime,          -1,      0 );
-
-    if (realtime>active) {
-        show_sline( "lost  ticks",  realtime-active,   -1,      0 );
+    show_title  ( true,  hw_name );
+    show_sline  ( "TOTAL F$xxx",      tfcall,         tfnum, active );
+    show_sline  ( "TOTAL I$xxx",      ticall,         tinum, active );
+    show_sline  ( "TOTAL SysCall",    t_call,   tfnum+tinum, active );
+    show_sline  ( "TOTAL OS-9",       oscall,         osnum, active );
+    show_sline  ( "TOTAL arbitration",arbticks,      arbnum, active );
+    
+    if (sOpt) {
+      show_sline( "TOTAL idle sleep", sum_slp_idleticks, -1, active );
+      show_sline( "TOTAL idle (R/W)", sum_rw__idleticks, -1, active );
     }
+    else {
+      show_sline( "TOTAL idle",       sum_slp_idleticks
+                                    + sum_rw__idleticks, -1, active );
+    } // if
+    
+    show_sline  ( "TOTAL active",     active,         osnum, active );
+
+    if (sOpt && realtime>active) {
+      show_sline( "TOTAL realtime",   realtime,          -1,      0 );
+      show_sline( "lost  ticks",      realtime-active,   -1,      0 );
+    } // if
     
     return ticall+tfcall;
 } /* show_timing */
@@ -1124,11 +1119,12 @@ static void usage( char *name, _pid_ )
 
 os9err int_systime(ushort pid, int argc, char **argv)
 {
-    ushort mode= STIM_NONE; /* set default options */
-    char   *p;              /* command line scanning */
-    char   opt;
-    ushort h;
-    int    ticksLim;
+    ushort  mode= STIM_NONE; /* set default options */
+    char    *p;              /* command line scanning */
+    char    opt;
+    ushort  h;
+    int     ticksLim;
+    Boolean doDisable= false;
     
     /* get arguments and options, multiple options allowed (bfo) */
     for ( h=1; h<argc; h++ ) {
@@ -1144,7 +1140,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
                     
                     case 'r': init_syscalltimers();
      						  upho_printf("Activated and resetted timing measurement\n"); break;
-                    case 'd': logtiming= false;
+                    case 'd': logtiming= false; doDisable= true;
                               upho_printf("Disabled timing measurement\n");   break;
                     case 'e': logtiming=  true;
                               upho_printf("Re-enabled timing measurement\n"); break;
@@ -1156,10 +1152,10 @@ os9err int_systime(ushort pid, int argc, char **argv)
                               } // switch
                               break;
                               
-                    case 'f': mode |= STIM_FCALLS;                            break;
-                    case 'i': mode |= STIM_ICALLS;                            break;
-                    case 'o': mode |= STIM_OS9;                               break;
-                    case 's': mode  = STIM_ICALLS | STIM_FCALLS | STIM_OS9;   break;
+                    case 'f': mode |= STIM_FCALLS; break;
+                    case 'i': mode |= STIM_ICALLS; break;
+                    case 'o': mode |= STIM_OS9;    break;
+                    case 's': mode |= STIM_S;      break;
 
                     case 't': mode |= STIM_TICKAVAIL; /* >=1 ticks */
                     
@@ -1170,8 +1166,8 @@ os9err int_systime(ushort pid, int argc, char **argv)
                               } // switch
                               break;
                     
-                    case 'p': mode |= STIM_PERCENT;   /* >=1 percent */       break;
-                    case 'h': mode |= STIM_ORDERED;   /* highest cnt 1st */   break;
+                    case 'p': mode |= STIM_PERCENT; break; /* >=1 percent */       
+                    case 'h': mode |= STIM_ORDERED; break; /* highest cnt 1st */   
                     
                     default : upe_printf("Error: unknown option '%c'!\n",*p); 
                               usage(argv[0],pid); return 1;
@@ -1185,7 +1181,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
         }
     } // for
        
-    if (mode!=STIM_NONE) show_timing( mode,ticksLim );
+    if (mode!=STIM_NONE) show_timing( mode, ticksLim, doDisable );
     return 0;
 } // int_systime
 

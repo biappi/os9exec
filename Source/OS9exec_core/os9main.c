@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2006/11/12 21:08:18  bfo
+ *    "-v" description added
+ *
  *    Revision 1.24  2006/11/12 13:32:59  bfo
  *    "-?" text updated / <userOpt> adaption for MacOSX/Linux
  *
@@ -348,7 +351,6 @@ void eSpinCursor (short incr)
         fflush(stdout);
         count=0;
       }
-
     #else
       #if defined __MACH__
         // sleep(1);
@@ -779,7 +781,7 @@ void os9_main( int argc, char **argv, char **envp )
     /* don't print before setup */
  // debugprintf(dbgStartup,dbgNorm,("# Starting OS9exec/nt with debug[]=$%04X,$%04X,$%04X, stop=$%04X, command='%s', spininterval=%ld\n",debug[dbgNorm],debug[dbgDetail],debug[dbgDeep],debughalt,argv[kX],spininterval));
     err= os9exec_nt( toolname,argc-kX-1,argv+kX+1,envp, memplus,iniprior );
-    if (logtiming_disp) show_timing( STIM_NONE,1 );
+    if (logtiming_disp) show_timing( STIM_NONE, 1,false );
             
     currentpid= 0; /* no longer an active process */
     
