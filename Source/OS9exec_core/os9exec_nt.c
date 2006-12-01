@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.88  2006/11/18 09:48:49  bfo
+ *    <mnt_sctSize> and <mnt_cluSize> added
+ *
  *    Revision 1.87  2006/11/12 13:22:30  bfo
  *    <catch_ctrlC> flag and support added /
  *    Boot search order description  added /
@@ -535,6 +538,7 @@ char*   mnt_name     =  "";
 int     mnt_ramSize  =   0;
 int     mnt_sctSize  =   0;
 int     mnt_cluSize  =   1;
+char*   mnt_devCopy  =  "";
 int     mnt_scsiID   = NO_SCSI;
 short   mnt_scsiAdapt=  -1; // use default adaptor
 short   mnt_scsiBus  =  -1; // use default bus

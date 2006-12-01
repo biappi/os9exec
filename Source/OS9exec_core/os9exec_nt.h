@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.65  2006/11/18 09:48:49  bfo
+ *    <mnt_sctSize> and <mnt_cluSize> added
+ *
  *    Revision 1.64  2006/11/12 13:20:21  bfo
  *    <catch_ctrlC> flag added
  *
@@ -1307,6 +1310,7 @@ extern  char*   mnt_name;
 extern  int     mnt_ramSize;
 extern  int     mnt_sctSize;
 extern  int     mnt_cluSize;
+extern  char*   mnt_devCopy;
 
 #define NO_SCSI -1
 extern  int     mnt_scsiID;
