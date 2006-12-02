@@ -1566,9 +1566,13 @@
           06-12-01  Bfo     filestuff   /
                             file_rbf    /
                             utilstuff   : "MountDev" with <devCopy> support ( -d )
-                         
-          
-    3.34  06-??-??  Bfo
+          06-12-02  Bfo     os9exec_nt  /
+                            fcalls      /
+                            utilstuff   : global  <lastsyscall> eliminated
+          06-12-02  Bfo     funcdispatch: make cp->lastsyscall visible for internal commands as well
+                       
+                       
+    3.34  06-12-??  Bfo
     -------------------  
 */
 
@@ -1583,7 +1587,6 @@
     -   Linux/MacOSX telnet close still quits emulator (recognition of end cond not correctly)
     -   "inetd" superdaemon is not yet running correctly.
     -   A$AtDate restricted to 248 days / will not adjust when system time changes
-    -   Deadlocking MGR when too small DEFAULTPTYSZ 
 
    (+)  Take tty00/pty00 first (problems with arbitration)
    (+)  setime_Y2K version with param passing --> 1900

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/12/01 20:00:23  bfo
+ *    Enhanced (and shorter) "systime" display
+ *
  *    Revision 1.40  2006/11/13 14:54:49  bfo
  *    (char*) type casting for GCC
  *
@@ -639,12 +642,13 @@ ushort pthread_pid()
 os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUtil )
 {
   os9err  err;
-  process_typ* cp= &procs[pid];
+  process_typ* cp= &procs[ pid ];
   procid* pd= &cp->pd;
   const   funcdispatch_entry* fdeP= getfuncentry(func);
   char*   fName= fdeP->name; /* allows much easier debugging, because function name is visible */
   char*   fSS  = "";
-//short   sv_pid;
+  
+  cp->lastsyscall= func; // remember for error tracking (for process)
   
   #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
@@ -702,8 +706,6 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   } // if
   
   if (withinIntUtil) {
-  //sv_pid= pid;
-
     if (arbitrate) { 
       os9exec_loop( 0, true );
       arbitrate= false;
@@ -712,8 +714,6 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
     else {
       debug_return( pid, rp, false );
     } // if
-    
-  //pid= sv_pid; // make sure it is not changed
   } // if
   
   #ifdef THREAD_SUPPORT
