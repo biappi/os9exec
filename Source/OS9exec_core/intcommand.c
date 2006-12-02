@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2006/11/18 09:59:13  bfo
+ *    comment line removed
+ *
  *    Revision 1.40  2006/11/04 23:37:29  bfo
  *    <procName> => <intProcName> / comment for -j=<pid> added
  *
@@ -997,8 +1000,9 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     
     if (index<0) return os9error(E_PNNF);
 
-    // save it 
-    set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
+    // save it
+    if         (pid!=parentid) // avoid F$Chain blocking
+      set_os9_state( parentid, pWaiting, "IntCmd (in)" ); // make it waiting, for PtoC arbitration
     
     /* There is a problem: during internal commands, multitasking can't
      * be active. If intcommands are used via telnet, the tty/pty connection
@@ -1055,7 +1059,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
     if (logtiming && !cp->isPtoC) os9_to_xxx( pid );
 
-    set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
+    if         (pid!=parentid) // F$Chain adaption
+      set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
     return err;
 } /* callcommand */
 

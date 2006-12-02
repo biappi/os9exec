@@ -1570,7 +1570,7 @@
                             fcalls      /
                             utilstuff   : global  <lastsyscall> eliminated
           06-12-02  Bfo     funcdispatch: make cp->lastsyscall visible for internal commands as well
-                       
+          06-12-02  Bfo     intcommand  : F$Chain supported for int commands
                        
     3.34  06-12-??  Bfo
     -------------------  
