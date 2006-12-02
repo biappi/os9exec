@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.89  2006/12/01 19:51:28  bfo
+ *    <mnt_devCopy> added
+ *
  *    Revision 1.88  2006/11/18 09:48:49  bfo
  *    <mnt_sctSize> and <mnt_cluSize> added
  *
@@ -499,7 +502,7 @@ int       syCorr= 0;
 
 /* error traceback */
 ushort errpid;			/* PID of process that generated that error */
-ushort lastsyscall;		/* last system call */
+//ushort lastsyscall;   /* last system call */
 char*  lastpathparsed;	/* last pathstring parsed (NULL if none) */
 
 /* the software's version and revision */
@@ -1459,8 +1462,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         arbitrate= false; // disallow arbitration by default
         debug_comein( cpid,crp );
         
-        cp->lastsyscall=  lastsyscall= cp->func; // remember for error tracking (globally and for process)
-        cp->oerr       = exec_syscall( cp->func, cpid,crp, false );
+        cp->oerr= exec_syscall( cp->func, cpid,crp, false );
           
         // analyze result
         if (debugcheck(dbgSysCall,dbgDeep)) {
@@ -2023,7 +2025,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
    /* init error tracking vars */
   totalMem= max_mem(); /* get startup memory */
   lastpathparsed=NULL;
-  lastsyscall=0;
+  //lastsyscall=0;
 	
 	/* set-up MPW signal handling */
   #ifdef MPW

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.66  2006/12/01 19:51:28  bfo
+ *    <mnt_devCopy> added
+ *
  *    Revision 1.65  2006/11/18 09:48:49  bfo
  *    <mnt_sctSize> and <mnt_cluSize> added
  *
@@ -1242,7 +1245,6 @@ extern Boolean catch_ctrlC;
 extern Boolean ptocActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
-//extern Boolean ptocMask;
 extern Boolean withTitle;
 
 extern Boolean logtiming;
@@ -1268,7 +1270,7 @@ extern int        syCorr;
 
 /* error traceback */
 extern ushort  errpid;          /* PID of process that generated that error */
-extern ushort  lastsyscall;     /* last system call */
+//extern ushort  lastsyscall;   /* last system call */
 extern char*   lastpathparsed;  /* last pathstring parsed (NULL if none) */
 
 /* the software's version and revision */

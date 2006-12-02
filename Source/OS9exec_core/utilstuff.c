@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2006/12/01 20:05:44  bfo
+ *    "MountDev" with <devCopy> support ( -d )
+ *
  *    Revision 1.50  2006/10/12 19:50:23  bfo
  *    Extended for ".DS_Store" support
  *
@@ -340,11 +343,11 @@ os9err os9error(os9err err)
         get_error_strings(err, &name,NULL);
         debugprintf(dbgErrors,dbg,("# ** Error #%03d:%03d (%s), lastsyscall=%s, currentpid=%d\n",
                                           err>>8, err & 0xFF,name, 
-                                          get_syscall_name(lastsyscall),errpid));
+                                          get_syscall_name(cp->lastsyscall), errpid ));
         if (lastpathparsed!=NULL) {
             debugprintf(dbgErrors,dbgDetail,("#    last path parsed=%s\n",lastpathparsed));
-        }
-    } /* if */
+        } // if
+    } // if
 
     return err;
 } /* os9error */

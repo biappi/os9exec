@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2006/11/12 13:28:58  bfo
+ *    "load_module" <linkstyle> parameter eliminated
+ *
  *    Revision 1.47  2006/10/22 17:24:53  bfo
  *    sleep_x==1 special treatment reactivated
  *
@@ -1956,17 +1959,16 @@ os9err OS9_F_SPrior( regs_type *rp, _pid_ )
 
 
 
-
-
 /* --------------------------------------------------------- */
 os9err OS9_F_Dummy( _rp_, ushort cpid )
 /* F$Dummy:
  * Returns no error, but a debug warning
  */
 {
-    debugprintf(dbgAnomaly,dbgNorm,( "# dummy implementation of %s called by pid=%d\n",
-                                        get_syscall_name(lastsyscall), cpid ));
-    return 0;
+  process_typ* cp= &procs[ cpid ];
+  debugprintf(dbgAnomaly,dbgNorm,( "# dummy implementation of %s called by pid=%d\n",
+                                      get_syscall_name(cp->lastsyscall), cpid ));
+  return 0;
 } /* OS9_F_Dummy */
 
 
@@ -1976,9 +1978,10 @@ os9err OS9_F_SDummy( _rp_, ushort cpid )
  * Silent dummy, does not warn except when dbgPartial is on
  */
 {
-    debugprintf(dbgPartial,dbgNorm,( "# (silent) dummy implementation of %s called by pid=%d\n",
-                                        get_syscall_name(lastsyscall), cpid ));
-    return 0;
+  process_typ* cp= &procs[ cpid ];
+  debugprintf(dbgPartial,dbgNorm,( "# (silent) dummy implementation of %s called by pid=%d\n",
+                                      get_syscall_name(cp->lastsyscall), cpid ));
+  return 0;
 } /* OS9_F_SDummy */
 
 
@@ -1988,9 +1991,10 @@ os9err OS9_F_UnImp( _rp_, ushort cpid )
  * Unimplemented system call, returns E_UNKSVC and a debug message
  */
 {
-    debugprintf(dbgAnomaly,dbgNorm,( "# unimplemented %s called by pid=%d\n",
-                                        get_syscall_name(lastsyscall),cpid ));
-    return E_UNKSVC;
+  process_typ* cp= &procs[ cpid ];
+  debugprintf(dbgAnomaly,dbgNorm,( "# unimplemented %s called by pid=%d\n",
+                                      get_syscall_name(cp->lastsyscall), cpid ));
+  return E_UNKSVC;
 } /* OS9_F_Unimp */
 
 
@@ -2000,9 +2004,10 @@ os9err OS9_F_SUnImp( _rp_, ushort cpid )
  * Silent Unimplemented system call, returns E_UNKSVC
  */
 {
-    debugprintf(dbgPartial,dbgNorm,( "# (silent) unimplemented %s called by pid=%d\n",
-                                      get_syscall_name(lastsyscall),cpid ));
-    return E_UNKSVC;
+  process_typ* cp= &procs[ cpid ];
+  debugprintf(dbgPartial,dbgNorm,( "# (silent) unimplemented %s called by pid=%d\n",
+                                      get_syscall_name(cp->lastsyscall), cpid ));
+  return E_UNKSVC;
 } /* OS9_F_SUnImp */
 
 
