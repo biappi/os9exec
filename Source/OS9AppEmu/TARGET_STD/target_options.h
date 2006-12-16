@@ -53,7 +53,7 @@
   #endif
 
   #ifdef __MACH__
-    #ifdef __GNUC__          // XCode
+    #ifdef __GNUC__          // XCode (universal binaries)
     //
     #else                    // CW Mach
     //

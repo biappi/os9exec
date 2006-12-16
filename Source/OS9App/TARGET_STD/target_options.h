@@ -18,6 +18,9 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
+// Platforms: Mac Classic only
+// ---------------------------
+
 // Target options
 #define REUSE_MEM          // do not deallocate memory after use
 
