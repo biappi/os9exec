@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2006/12/01 20:07:05  bfo
+ *    <consoleSleep> param for "HandleOneEvent" (reduce MacClassic load)
+ *
  *    Revision 1.50  2006/11/04 23:35:40  bfo
  *    <procName> => <intProcName>
  *
@@ -477,16 +480,25 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
 
 static void AssignNewChild( ushort parentid, ushort pid )
 {
-    ushort*  idp= &procs[parentid].pd._cid;
-    while  (*idp!=0) {
-        if (os9_word(*idp)==pid) {            
-            *idp= procs[pid].pd._sid;
-            debugprintf( dbgProcess,dbgNorm,( "# Assign new child: pid=%d\n",os9_word(*idp) ) );
-            return;
-        }
+  ushort  idp_sv;
+  ushort* idp= &procs[parentid].pd._cid;
+  int     n= 0;
+  
+  while (true) {
+        idp_sv= os9_word( *idp );
+    if (idp_sv==0) break;
+      
+    if (idp_sv==pid) {            
+      *idp= procs[ pid ].pd._sid;
+      debugprintf( dbgProcess,dbgNorm,( "# Assign new child: pid=%d\n",os9_word(*idp) ) );
+      return;
+    } // if
         
-        idp= &procs[os9_word(*idp)].pd._sid;
-    } /* while */
+    idp= &procs[ idp_sv ].pd._sid;
+    if ( os9_word( *idp )==idp_sv ) break; // no change
+    n++;
+    if (n>MAXPROCESSES) break;
+  } // loop
 } /* AssignNewChild */
 
 
