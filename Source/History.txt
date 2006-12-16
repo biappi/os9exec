@@ -1571,6 +1571,11 @@
                             utilstuff   : global  <lastsyscall> eliminated
           06-12-02  Bfo     funcdispatch: make cp->lastsyscall visible for internal commands as well
           06-12-02  Bfo     intcommand  : F$Chain supported for int commands
+          
+          06-12-16  Bfo     target_options OS9App/OS9AppEmu: platform comments added
+          06-12-16  Bfo     funcdispatch/
+                            os9exec_nt  : cp->oerr assigned correctly for internal commands
+          06-12-16  Bfo     procstiff   : loop breaker for internal commands
                        
     3.34  06-12-??  Bfo
     -------------------  
