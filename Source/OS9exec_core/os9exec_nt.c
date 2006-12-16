@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.90  2006/12/02 12:07:43  bfo
+ *    global <lastsyscall> eliminated
+ *
  *    Revision 1.89  2006/12/01 19:51:28  bfo
  *    <mnt_devCopy> added
  *
@@ -1379,8 +1382,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       arbitrate= true; // allow arbitration by default after sysTask execution
       
       // --- execute system task function
-          cp->oerr= (cp->systask)(cpid,cp->systaskdataP,crp);
-      if (cp->oerr!=0) set_os9_state( cpid, pActive, "" ); // on error, continue with task execution anyway
+          cp->oerr= (cp->systask)( cpid,cp->systaskdataP, crp );
+      if (cp->oerr) set_os9_state( cpid, pActive, "" ); // on error, continue with task execution anyway
       if (cp->state==pActive) {
         // process gets active again, report errors to OS9 programm
         if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
@@ -1462,7 +1465,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
         arbitrate= false; // disallow arbitration by default
         debug_comein( cpid,crp );
         
-        cp->oerr= exec_syscall( cp->func, cpid,crp, false );
+        exec_syscall( cp->func, cpid,crp, false );
           
         // analyze result
         if (debugcheck(dbgSysCall,dbgDeep)) {

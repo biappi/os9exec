@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2006/12/02 12:12:13  bfo
+ *    make cp->lastsyscall visible for internal commands as well
+ *
  *    Revision 1.41  2006/12/01 20:00:23  bfo
  *    Enhanced (and shorter) "systime" display
  *
@@ -641,7 +644,7 @@ ushort pthread_pid()
 /* perform system call */
 os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUtil )
 {
-  os9err  err;
+//os9err  err;
   process_typ* cp= &procs[ pid ];
   procid* pd= &cp->pd;
   const   funcdispatch_entry* fdeP= getfuncentry(func);
@@ -677,7 +680,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
     debug_comein( pid,rp );
   } // if
   
-  err= (fdeP->func)( rp,pid );
+  cp->oerr= (fdeP->func)( rp,pid );
   
   if (withinIntUtil) {
     // make the debug logging prep for systemcalls within int commands here
@@ -690,7 +693,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
         if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
       #endif
       
-      return err;
+      return cp->oerr;
     } // if
   } // if
 
@@ -721,8 +724,8 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     } // if
   #endif
-    
-  return err;
+  
+  return cp->oerr;
 } /* exec_syscall */
 
 
