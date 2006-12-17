@@ -1576,6 +1576,9 @@
           06-12-16  Bfo     funcdispatch/
                             os9exec_nt  : cp->oerr assigned correctly for internal commands
           06-12-16  Bfo     procstiff   : loop breaker for internal commands
+          
+          06-12-17  Bfo     filestuff   : "MountDev" argument ordering corrected
+          06-12-17  Bfo     file_rbf    : devCopy raw device opening / copy length is OS9PATHLEN  
                        
     3.34  06-12-??  Bfo
     -------------------  
