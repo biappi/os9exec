@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2006/12/01 20:03:19  bfo
+ *    "MountDev" with <devCopy> support ( -d )
+ *
  *    Revision 1.51  2006/11/18 10:07:12  bfo
  *    PrepareRAM adapted:
  *    - Offset to sector 1 is now dev->sctSize, no longer A_Base 0x100
@@ -973,7 +976,8 @@ static os9err PrepareRAM( ushort pid, rbfdev_typ* dev, char* cmp )
     ptype_typ type;
     ushort    sp;
     
-    if (strcmp( mnt_devCopy,"" )!=0) {
+    if (strcmp( mnt_devCopy,""  )!=0) {
+      strcat  ( mnt_devCopy,"@" );
     //upe_printf( "devCopy='%s'\n", mnt_devCopy );
       type= IO_Type        ( pid,            mnt_devCopy, poDir );   
       err = syspath_open   ( pid, &sp, type, mnt_devCopy, poDir ); if (err) return err;
@@ -1663,7 +1667,7 @@ os9err int_mount( ushort pid, int argc, char** argv )
                              p= argv[k];
                            } // if
                            
-                           strncpy( devCopy, p, OS9NAMELEN );
+                           strncpy( devCopy, p, OS9PATHLEN );
                            break;
                            
                 default  : upe_printf("Error: unknown option '%c'!\n",*p); 
