@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.33  2006/12/17 00:45:54  bfo
+ *    "MountDev" argument ordering corrected
+ *
  *    Revision 1.32  2006/12/01 20:03:19  bfo
  *    "MountDev" with <devCopy> support ( -d )
  *
@@ -1357,6 +1360,7 @@ os9err syspath_open( ushort pid, ushort *sp, ptype_typ type, const char* pathnam
     switch (type) {
       case fNIL : *sp= sysStdnil; break;
       case fVMod: *sp= sysVMod;   break;
+      default   : ; /* do nothing */
     } // switch
       
     spP= &syspaths[ *sp ];
@@ -1599,7 +1603,7 @@ void main_printf( const char* format, ... )
 /* copyright notice */
 void copyright(void)
 {
-    upe_printf( "(c) 1993-2006 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
+    upe_printf( "(c) 1993-2007 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
 } /* copyright */
 
 

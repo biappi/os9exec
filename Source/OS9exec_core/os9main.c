@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/12/01 20:04:34  bfo
+ *    Enhanced (and shorter) "systime" display
+ *
  *    Revision 1.25  2006/11/12 21:08:18  bfo
  *    "-v" description added
  *
@@ -443,7 +446,7 @@ static void os9_usage(char *name)
     upho_printf("\n");
 
     upho_printf("%s\n", OS9exec_Name() );
-    upho_printf("1993-2006 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
+    upho_printf("1993-2007 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
      upo_printf("\n");
 } /* os9_usage */
 
