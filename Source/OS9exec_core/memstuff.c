@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.23  2006/08/06 22:42:43  bfo
+ *    empty string causes <convErr>
+ *
  *    Revision 1.22  2006/08/04 18:41:40  bfo
  *    MEM_SHIELD test environment added
  *
@@ -671,7 +674,7 @@ void* get_mem( ulong memsz )
                 LockMemRange( pp, memsz ); /* keep always paged in !! */ 
                
                 debugprintf(dbgMemory,dbgNorm,("# get_mem:    allocate block     at $%08X (size=%5u) %8d\n",
-                                                  (ulong) pp,memsz, totalMem ));
+                                                  (ulong)pp, memsz, totalMem ));
                 return pp;
             } /* if */
         } /* for */
@@ -697,11 +700,11 @@ void* os9malloc( ushort pid, ulong memsz )
         /* memory block list is full */
         release_mem( pp ); pp= NULL;
         upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
-        exit(1);
+        exit( 1 );
     }
    
     debugprintf(dbgMemory,dbgNorm,("# os9malloc:  allocate block #%-2d at $%08X (size=%5u) %8d pid=%d\n",
-                                      k,(ulong) pp,memsz, totalMem, pid ));
+                                      k, (ulong)pp, memsz, totalMem, pid ));
     return pp;
 } /* os9malloc */
 
@@ -709,30 +712,44 @@ void* os9malloc( ushort pid, ulong memsz )
 /* memory deallocation for OS-9 */
 os9err os9free( ushort pid, void* membase, ulong memsz )
 {
-    memblock_typ *m;
-    int k;
+  os9err err;
+  memblock_typ* m;
+  int k;
 
-    debugprintf(dbgMemory,dbgDetail,("# os9free:      free request   at $%08lX (size=%lu) pid=%d\n",
-                                      (ulong) membase,memsz, pid ));
-    if (membase==NULL) return os9error(E_BPADDR); /* no memory was allocated here */
-
+  debugprintf(dbgMemory,dbgDetail, ( "# os9free:      free request   at $%08lX (size=%lu) pid=%d\n",
+                                        (ulong)membase, memsz, pid ) );
+  if (membase!=NULL) {
     for (k=0; k<MAXMEMBLOCKS; k++) {
-                m= &procs[pid].os9memblocks[k];
-        if     (m->base==membase) {
-            if (m->size==memsz  ) release_memblock( pid,k );
-            else {
-                debugprintf(dbgMemory,dbgNorm,("# os9free:     release block #%-2d at $%08lX, but wrong size=%lu (specified=%4u) %8d\n",
-                                                  k, membase,m->size, memsz, totalMem ));
-                return os9error(E_BPADDR);
-            }
-            
+            m= &procs[ pid ].os9memblocks[ k ];
+      if   (m->base==membase) {
+        if (m->size==memsz  ) {
+          release_memblock( pid, k );
+          return 0; /* freed ok */
+        } // if
+        
+        // try to free it in smaller pieces ...
+        // NOTE: e.g. OS-9 "dir" is doing it this way !
+        if (memsz > m->size) { // recursive call
+               err= os9free( pid, (void*)( (ulong)membase + m->size ), memsz - m->size );
+          if (!err) {
+            release_memblock( pid, k ); // only release it, if all of them are fitting
             return 0; /* freed ok */
-        }
+          } // if
+          
+          debugprintf(dbgMemory,dbgNorm, ( "# os9free:     release block #%-2d at $%08lX, but wrong size=%lu (specified=%4u) %8d\n",
+                                              k, membase, m->size, memsz, totalMem ) );
+          break;
+        } // if
+            
+        return 0; /* freed ok */
+      } // if
     } /* for */
-    
-    debugprintf(dbgMemory+dbgAnomaly,dbgNorm,("# os9free: Block at $%08lX (size=%lu) not found in pid=%d's memory list\n",
-                                                     membase,memsz, pid));
-    return os9error(E_BPADDR); /* no memory was allocated here */
+  } // if
+  
+//upe_printf( "bad block %08X size=%d\n", membase, memsz ); 
+  debugprintf(dbgMemory+dbgAnomaly,dbgNorm, ("# os9free: Block at $%08lX (size=%lu) not found in pid=%d's memory list\n",
+                                                membase, memsz, pid ) );
+  return os9error(E_BPADDR); /* no memory was allocated here */
 } /* os9free */
 
 
