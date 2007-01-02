@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/08/29 22:10:38  bfo
+ *    isintcommand with additional <isPtoc> parameter
+ *
  *    Revision 1.8  2006/08/26 23:46:49  bfo
  *    "Is_PtoC" no longer visible, "isintcommand" with const char*
  *
@@ -76,6 +79,9 @@ os9err int_help  ( ushort pid, int argc, char **argv );
 #ifdef windows32
 os9err int_wincmd( ushort pid, int argc, char **argv );
 #endif
+
+/* PtoC include/exclude */
+void ChangeElement( char* s, Boolean addIt );
 
 
 /* utility */
