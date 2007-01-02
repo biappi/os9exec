@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2006/12/02 12:08:57  bfo
+ *    global <lastsyscall> eliminated
+ *
  *    Revision 1.48  2006/11/12 13:28:58  bfo
  *    "load_module" <linkstyle> parameter eliminated
  *
@@ -1065,8 +1068,9 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         
         break;
         
-      case D_IPID    : v= 42; /* allow programs to identify os9exec/nt as environment (Beat Forsters's sources) */
-                       if ( cp->isIntUtil) v+= 0x0100;                   /* special mode for internal utilities */
+      case D_IPID    : v= 42;          /* allow programs to identify as os9exec/nt environment */
+                       if (cp->isIntUtil) v+= 0x0100;   /* special mode for internal utilities */
+                       if (ptocActive)    v+= 0x0200;   /*    "      "   "     "         "     */
                        break;
       
       case D_ScreenW : v= GetScreen( 'w' ); break; /* not according to OS-9 */
