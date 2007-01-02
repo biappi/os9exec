@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.91  2006/12/16 22:18:25  bfo
+ *    cp->oerr assigned correctly for internal commands
+ *
  *    Revision 1.90  2006/12/02 12:07:43  bfo
  *    global <lastsyscall> eliminated
  *
@@ -374,8 +377,12 @@ alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#if defined windows32 || defined macintosh || defined linux
-  char*     dirtable[MAXDIRS];
+char*       dirtable   [MAXDIRS];
+
+#ifdef PTOC_SUPPORT
+/* the include/exclude list for internal commands */
+  char*     includeList[MAXLIST];
+  char*     excludeList[MAXLIST];
 #endif
 
 /* I/O device table */
@@ -475,7 +482,12 @@ Boolean quitFlag	  = false;
 Boolean userOpt		  = false;
 Boolean catch_ctrlC   = true;
 
-Boolean ptocActive    = true;
+#ifdef PTOC_SUPPORT
+  Boolean ptocActive  = true;
+#else
+  Boolean ptocActive  = false;
+#endif
+
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
 Boolean withTitle     = true; 
@@ -1838,180 +1850,158 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   interactivepid= 0; // send aborts to first process by default
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
-  #if defined windows32 || defined macintosh
-    for (ii=0;ii<MAXDIRS-1;ii++) dirtable[ii]= NULL; /* no dir table at the beginning */
-	#endif
-	
-	debug_prep();
-	debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
+  /* no table entries at the beginning */
+  for   (ii=0; ii<MAXDIRS; ii++) dirtable   [ ii ]= NULL;
+
+  #ifdef PTOC_SUPPORT
+    for (ii=0; ii<MAXLIST; ii++) includeList[ ii ]= NULL;
+    for (ii=0; ii<MAXLIST; ii++) excludeList[ ii ]= NULL;
     
-	#ifdef MACOS9
-	  GetStartPath( callPath );
-
-	  applVolID= 0;
-	  applDirID= 0;
-	  strcpy( applName,"" );
-
-	  /* must be synchronized to OpenDocument Apple Event */
-	  #ifdef MACTERMINAL
-	    #ifndef USE_CARBON
-  		  memcpy( &gFS,  &fs, sizeof(FSSpec) );
-	      while (!gDocDone) HandleEvent();
-	      
-		  memcpy(    &fs, &gFS, sizeof(FSSpec) );
-		#endif
-		
-		/* If file has correct type and creator,
-		/* it can be executed directly */
-		err= getCipb( &cipb, &fs );
-		if (argc==0 &&
-		    cipb.hFileInfo.ioFlFndrInfo.fdCreator=='os9a' &&
-		    cipb.hFileInfo.ioFlFndrInfo.fdType   =='PROG') {
-
-	  		applVolID= fs.vRefNum;
-	  		applDirID= fs.parID; /* get default dir */
-	  		
-    		memcpy( applName,fs.name, 32 );
-    		p2cstr( applName );
-		    my_toolname= "shell"; /* currently one shell is used */
-
-    		argc= 1;
-    		argv_startup[0]= applName;
-    		argv_startup[1]= NULL;
-    		argv= (char**)&argv_startup;
-		}
- 	  #endif
-	#endif
-
-	/* include 'startup' as default parameter */
-	/* will be eliminated again later, if no 'startup' file is available */
-    if (argc==0 && ustrcmp( my_toolname,"" )==0) {
-    	argc= 1;
-    	my_toolname    = "shell";
-    	argv_startup[0]= "startup";
-    	argv_startup[1]=  NULL;
-    	argv= (char**)&argv_startup;
-    } /* if */
-
-    withTitle= ustrcmp( my_toolname,"shell" )==0 ||
-               ustrcmp( my_toolname,"sh"    )==0;
+    ChangeElement( "systime", false ); // "systime" will be switch off by default
+  #endif
+  
+  debug_prep();
+  debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
     
-    /* Sign-on message */
-    if (withTitle) {
-       upo_printf( "\n" );
-      upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
-      upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
-      upho_printf( "This program is distributed under the terms of\n" ); 
-      upho_printf( "       the GNU General Public License         \n" );
-      upho_printf( "\n" );
-    } // if
-    
-   	/* prepare low-level magic, to allow using llm_xxx() routines */
-	    oserr=lowlevel_prepare();
-	if (oserr) {
-		uphe_printf("FATAL ERROR: can't initialize low-level, OSErr=%d\n",oserr);
-		my_toolname= ""; /* no tool to be used */
-        err=3;           /* MPW system/missing resource error */
-		goto mainabort;
-	}
-	debugprintf(dbgStartup,dbgNorm,("# main startup: low level prepared\n"));
+  #ifdef MACOS9
+    GetStartPath( callPath );
 
-    /* show environment */
-	debugprintf(dbgStartup,dbgNorm,("# main startup: FPU=%d, Virtual Mem=%d, Cache=%d, Runs in User mode=%d\n",
-	                                   llm_fpu_present(),llm_vm_enabled(),llm_has_cache(),llm_runs_in_usermode()));
+    applVolID= 0;
+    applDirID= 0;
+    strcpy( applName,"" );
 
-	GetStartPath    ( startPath );
-	strcpy( strtUPath,startPath );
-	PathUp( strtUPath );
-//	upo_printf( "'%s' '%s'\n", startPath, strtUPath ); 
-	
-	#ifdef MACOS9	
-	  /* save current default directory */
-	  startVolID= fs.vRefNum;
-	  startDirID= fs.parID; /* get default dir */
+    /* must be synchronized to OpenDocument Apple Event */
+    #ifdef MACTERMINAL
+      #ifndef USE_CARBON
+  	    memcpy( &gFS,  &fs, sizeof(FSSpec) );
+        while (!gDocDone) HandleEvent();
 
-	  get_dirid( &startVolID,&startDirID, startPath );
-	  debugprintf(dbgStartup,dbgNorm,("# main startup: (start) startVolID=%d, startDirID=%ld\n",
-							             startVolID,startDirID));
-	#endif
-
-    /* get default SCSI setting */
-    #ifdef RBF_SUPPORT
-      #ifdef windows32
-        if (defSCSIAdaptNo<0) {
-    	    debugprintf(dbgStartup,dbgNorm,("# main startup: scanning for SCSI adapters/buses/devices\n"));
-    	    scsi_finddefaults();
-        }
-	    debugprintf(dbgStartup,dbgNorm,("# main startup: Default SCSI adapter=%d, bus=%d\n",defSCSIAdaptNo,defSCSIBusNo));
+        memcpy(    &fs, &gFS, sizeof(FSSpec) );
       #endif
+
+      /* If file has correct type and creator,
+      /* it can be executed directly */
+      err= getCipb( &cipb, &fs );
+      if (argc==0 &&
+        cipb.hFileInfo.ioFlFndrInfo.fdCreator=='os9a' &&
+        cipb.hFileInfo.ioFlFndrInfo.fdType   =='PROG') {
+
+        applVolID= fs.vRefNum;
+        applDirID= fs.parID; /* get default dir */
+	  		
+        memcpy( applName,fs.name, 32 );
+        p2cstr( applName );
+        my_toolname= "shell"; /* currently one shell is used */
+
+        argc= 1;
+        argv_startup[0]= applName;
+        argv_startup[1]= NULL;
+        argv= (char**)&argv_startup;
+      }
+ 	#endif
+  #endif
+
+  /* include 'startup' as default parameter */
+  /* will be eliminated again later, if no 'startup' file is available */
+  if (argc==0 && ustrcmp( my_toolname,"" )==0) {
+    argc= 1;
+    my_toolname    = "shell";
+    argv_startup[0]= "startup";
+    argv_startup[1]=  NULL;
+    argv= (char**)&argv_startup;
+  } /* if */
+
+  withTitle= ustrcmp( my_toolname,"shell" )==0 ||
+             ustrcmp( my_toolname,"sh"    )==0;
+    
+  /* Sign-on message */
+  if (withTitle) {
+     upo_printf( "\n" );
+    upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
+    upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
+    upho_printf( "This program is distributed under the terms of\n" ); 
+    upho_printf( "       the GNU General Public License         \n" );
+    upho_printf( "\n" );
+  } // if
+    
+  /* prepare low-level magic, to allow using llm_xxx() routines */
+      oserr=lowlevel_prepare();
+  if (oserr) {
+    uphe_printf("FATAL ERROR: can't initialize low-level, OSErr=%d\n",oserr);
+    my_toolname= ""; /* no tool to be used */
+    err=3;           /* MPW system/missing resource error */
+    goto mainabort;
+  }
+  debugprintf(dbgStartup,dbgNorm,("# main startup: low level prepared\n"));
+
+  /* show environment */
+  debugprintf(dbgStartup,dbgNorm,("# main startup: FPU=%d, Virtual Mem=%d, Cache=%d, Runs in User mode=%d\n",
+                                     llm_fpu_present(),llm_vm_enabled(),llm_has_cache(),llm_runs_in_usermode()));
+
+  GetStartPath    ( startPath );
+  strcpy( strtUPath,startPath );
+  PathUp( strtUPath );
+//upo_printf( "'%s' '%s'\n", startPath, strtUPath ); 
+	
+  #ifdef MACOS9	
+    /* save current default directory */
+    startVolID= fs.vRefNum;
+    startDirID= fs.parID; /* get default dir */
+
+    get_dirid( &startVolID,&startDirID, startPath );
+    debugprintf(dbgStartup,dbgNorm,("# main startup: (start) startVolID=%d, startDirID=%ld\n",
+	  					               startVolID,startDirID));
+  #endif
+
+  /* get default SCSI setting */
+  #ifdef RBF_SUPPORT
+    #ifdef windows32
+      if (defSCSIAdaptNo<0) {
+          debugprintf(dbgStartup,dbgNorm,("# main startup: scanning for SCSI adapters/buses/devices\n"));
+         scsi_finddefaults();
+      }
+      debugprintf(dbgStartup,dbgNorm,("# main startup: Default SCSI adapter=%d, bus=%d\n",defSCSIAdaptNo,defSCSIBusNo));
     #endif
+  #endif
     		
-	drP      = &cp->d;
-	drP->type= fDir; /* set to default */
-	drP->dev = 0;
-	drP->lsn = 0;
+  drP      = &cp->d;
+  drP->type= fDir; /* set to default */
+  drP->dev = 0;
+  drP->lsn = 0;
 
-	#ifdef MACOS9
-	  drP->volID= 0;
-	  drP->dirID= 0;
-	#endif
+  #ifdef MACOS9
+	drP->volID= 0;
+	drP->dirID= 0;
+  #endif
 	
-	GetCurPaths( "OS9DISK", 0x80, &cp->d, true );
-	memcpy              ( &cp->x, &cp->d, sizeof(dir_type) ); /* at least this should be ok */
-	GetCurPaths( "OS9CMDS", 0x84, &cp->x, true );
+  GetCurPaths( "OS9DISK", 0x80, &cp->d, true );
+  memcpy              ( &cp->x, &cp->d, sizeof(dir_type) ); /* at least this should be ok */
+  GetCurPaths( "OS9CMDS", 0x84, &cp->x, true );
 
+  drP      = &mdir;
+  drP->type= fDir; /* set to default */
+  drP->dev = 0;
+  drP->lsn = 0;
 
-	drP      = &mdir;
-	drP->type= fDir; /* set to default */
-	drP->dev = 0;
-	drP->lsn = 0;
-
-	#ifdef MACOS9
-	  drP->volID= 0;
-	  drP->dirID= 0;
-	#endif
+  #ifdef MACOS9
+    drP->volID= 0;
+    drP->dirID= 0;
+  #endif
 	
-	GetCurPaths( "OS9MDIR", 0x80, &mdir, true );
+  GetCurPaths( "OS9MDIR", 0x80, &mdir, true );
 	
-	#ifdef MACOS9
-	  debugprintf(dbgStartup,dbgNorm,("# main startup: (mdir) mdir.volID=%d, mdir.dirID=%ld\n",
-									     mdir.volID,mdir.dirID));
-	#endif
-
+  #ifdef MACOS9
+    debugprintf(dbgStartup,dbgNorm,("# main startup: (mdir) mdir.volID=%d, mdir.dirID=%ld\n",
+                                       mdir.volID,mdir.dirID));
+  #endif
 	
-	#if defined win_unix
-	  /* establish the virtual mdir (dir used to load modules from by default) */
-	      p= egetenv("OS9MDIR");    /* get path for default module loading dir */
-	      strcpy( mdirPath,p );
+  #if defined win_unix
+    /* establish the virtual mdir (dir used to load modules from by default) */
+	p= egetenv("OS9MDIR");    /* get path for default module loading dir */
+	strcpy( mdirPath,p );
 	      
-//	  if (p!=NULL) {
-//		  if (*p!=PATHDELIM) {
-//			   // relative
-//			   strncpy( mdirPath,startPath,    MAX_PATH );
-//			   strncat( mdirPath,PATHDELIM_STR,MAX_PATH );
-//			   strncat( mdirPath,p,            MAX_PATH-strlen(mdirPath) );
-//		  }
-//		  else strncpy( mdirPath,p,            MAX_PATH );
-//	  }
-//	  else {
-//		  /* use default */
-//	      strncpy( mdirPath, startPath,     MAX_PATH );
-//	   	  strncat( mdirPath, PATHDELIM_STR, MAX_PATH );
-//	      strncat( mdirPath,"OS9MDIR",      MAX_PATH );
-//
-//	  	  if    (stat( mdirPath, &info )!=0) {
-//	      	  strncpy( mdirPath, startPath, MAX_PATH );
-//
-//			  q= mdirPath+strlen(mdirPath)-1;
-//			  while (*q!=PATHDELIM) q--;
-//			  *(++q)= NUL; /* cut the string after delimiter */
-//		
-//			  strncat( mdirPath,"OS9MDIR",  MAX_PATH );
-//		  }
-//	  }
-	  debugprintf(dbgStartup,dbgNorm,( "# main startup: mdir='%s'\n",mdirPath ));
-	#endif
-
+	debugprintf(dbgStartup,dbgNorm,( "# main startup: mdir='%s'\n",mdirPath ));
+  #endif
 	
   /* install asynchronous handlers */
   atexit(&cleanup);
@@ -2059,21 +2049,21 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
                     cp->oerr>>8,cp->oerr &0xFF,errnam,errdesc);
     }
     else err= cp->oerr;  
-  }
+  } // if
   goto cleanup;
 
 mainabort:
-	get_error_strings( cp->oerr, &errnam,&errdesc );
-	upho_printf( "Emulation could not start due to OS-9 error #%03d:%03d (%s): '%s'\n#   %s\n",
-                  cp->oerr>>8,cp->oerr &0xFF,errnam, my_toolname, errdesc );
-	err=3; /* MPW system/missing resource error */
+  get_error_strings( cp->oerr, &errnam,&errdesc );
+  upho_printf( "Emulation could not start due to OS-9 error #%03d:%03d (%s): '%s'\n#   %s\n",
+                cp->oerr>>8,cp->oerr &0xFF,errnam, my_toolname, errdesc );
+  err=3; /* MPW system/missing resource error */
 	
 cleanup:
-   /* cleanup is also done automatically when exit() is called */
-	debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: cleaning up now\n"));
-	cleanup();
-	debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: returning to caller with err=%d\n",err));
-   return err;
+  /* cleanup is also done automatically when exit() is called */
+  debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: cleaning up now\n"));
+  cleanup();
+  debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: returning to caller with err=%d\n",err));
+  return err;
 } /* os9exec_nt */
 
 
