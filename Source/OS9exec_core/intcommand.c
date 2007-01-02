@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2006/12/02 17:52:09  bfo
+ *    F$Chain supported for int commands
+ *
  *    Revision 1.41  2006/11/18 09:59:13  bfo
  *    comment line removed
  *
@@ -205,6 +208,27 @@ static os9err int_stop( ushort pid, _argc_, _argv_ )
 
 
 
+static void idbg_usage( char* name )
+{
+  upe_printf( "Usage: %s [options]\n", name );
+  upe_printf( "Function: enter internal debug mode\n" );
+  upe_printf( "Options:\n" );
+  upe_printf( "    -d[n] msk    set debugging info mask [of level n, x=all, default=0]\n" );
+  upe_printf( "    -s    msk    set debugging stop mask (default=0)\n" );
+  upe_printf( "    -dh          show debug/stop mask help\n" );
+  upe_printf( "    -m           only show current debug/stop masks\n");
+  upe_printf( "    -n=[<name>]  set name to trigger/disable trigger (causes debug stop)\n" );
+  upe_printf( "    -q           quit emulator\n" );
+  upe_printf( "    -o=<syspath> redirect debug output to <syspath>\n" );
+  upe_printf( "    -j=<pid>     generate debug output only   for <pid>\n" );
+  upe_printf( "    -w=<pid>     do not generate debug output for <pid>\n" );
+  upe_printf( "    -x=<width>   define MGR screen width\n" );
+  upe_printf( "    -y=<height>  define MGR screen height\n" );
+  upe_printf( "    -z           define MGR fullscreen mode\n" );
+} // idbg_usage
+
+
+
 static os9err int_debughalt( ushort pid, int argc, char** argv )
 /* OS9exec debug halt */
 {
@@ -225,23 +249,8 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
         if (*p=='-') {
             switch (tolower(*++p)) {
                 case '?' :
-                case 'h' :  upe_printf("Usage: %s [options]\n",argv[0]);
-                            upe_printf("Function: enter internal debug mode\n");
-                            upe_printf("Options:\n" );
-                            upe_printf("    -d[n] msk    set debugging info mask [of level n, x=all, default=0]\n");
-                            upe_printf("    -s    msk    set debugging stop mask (default=0)\n");
-                            upe_printf("    -dh          show debug/stop mask help\n");
-                            upe_printf("    -m           only show current debug/stop masks\n");
-                            upe_printf("    -n=[<name>]  set name to trigger/disable trigger (causes debug stop)\n");
-                            upe_printf("    -q           quit emulator\n");
-                            upe_printf("    -o=<syspath> redirect debug output to <syspath>\n");
-                            upe_printf("    -j=<pid>     generate debug output only   for <pid>\n");
-                            upe_printf("    -w=<pid>     do not generate debug output for <pid>\n");
-    						upe_printf("    -x=<width>   define MGR screen width\n" );
-    						upe_printf("    -y=<height>  define MGR screen height\n" );
-    						upe_printf("    -z           define MGR fullscreen mode\n" );
-                            return 0;
-                            
+                case 'h' :  idbg_usage( argv[ 0 ] ); return 0;
+                        
                 case 'm' :  break;
                 case 's' :  usp= &debughalt; goto getmask;
                 case 'd' :  level=0; /* default to level 0 */
@@ -342,7 +351,9 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                             if (sscanf( p,"%d", &screenH )<1) screenH= 0;
                             break; 
 
-                default  :  printf("# Error: unknown option '%c'!\n",*p); return 1;
+                default  :  idbg_usage( argv[ 0 ] );
+                            printf("# Error: unknown option '%c'\n",*p);
+                            return 1;
             }
             opt=true;
         }
@@ -365,8 +376,8 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
 
 
 /* show procs */
-static os9err int_procs( _pid_, _argc_, _argv_ )
-{   show_processes(); return 0;
+static os9err int_procs( _pid_, _argc_, _argv_ ) { 
+  show_processes(); return 0;
 } /* int_procs */
 
 
@@ -374,145 +385,152 @@ static os9err int_procs( _pid_, _argc_, _argv_ )
 /* show modules */
 static os9err int_mdir( _pid_, int argc, char **argv )
 {
-    char*         cmp= NULL;
-    if (argc>1)   cmp= argv[1];
-    show_modules( cmp ); return 0;
+  char*         cmp= NULL;
+  if (argc>1)   cmp= argv[ 1 ];
+  show_modules( cmp ); return 0;
 } /* int_mdir */
 
 
 
-static void ipaths_usage( char* name, _pid_ )
+static void ipaths_usage( char* name )
 {
-    upe_printf( "Syntax:   %s [<pid>]\n", name );
-    upe_printf( "Function: Print OS9exec system paths\n" );
-    upe_printf( "Options:  None.\n" );
+  upe_printf( "Syntax:   %s [<pid>]\n", name );
+  upe_printf( "Function: Print OS9exec system paths\n" );
+  upe_printf( "Options:  None.\n" );
 } /* ipaths_usage */
 
 
 
 /* OS9exec internal path list */
-static os9err int_paths( ushort pid, int argc, char **argv )
+static os9err int_paths( _pid_, int argc, char **argv )
 {
-	#define IPATHS_MAXARGS 1
-    int     nargc=0, h;
-    char*   p;
-    int     k= MAXPROCESSES;
+  #define IPATHS_MAXARGS 1
+  int     nargc=0, h;
+  char*   p;
+  int     k= MAXPROCESSES;
 
-    for (h=1; h<argc; h++) {
-             p= argv[h];    
-        if (*p=='-') { 
-            p++;
-            switch (tolower(*p)) {
-                case '?' :  ipaths_usage( argv[0], pid ); return 0;
-                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            ipaths_usage( argv[0], pid ); return 1;
-            }   
-        }
-        else {
-            if (nargc>=IPATHS_MAXARGS) { 
-                upe_printf("Error: Only 1 argument allowed\n"); return 1;
-            }
+  for (h=1; h<argc; h++) {
+    p=        argv[ h ]; 
+           
+    if (*p=='-') { 
+         p++;
+      switch (tolower(*p)) {
+        case '?' :
+        case 'h' : ipaths_usage( argv[ 0 ] ); return 0;
+        default  : ipaths_usage( argv[ 0 ] );
+                   upe_printf( "Error: unknown option '%c'\n", *p ); 
+                   return 1;
+      } // switch
+    }
+    else {
+      if (nargc>=IPATHS_MAXARGS) { 
+        upe_printf("Error: Only 1 argument allowed\n"); return 1;
+      }
 
-			k= atoi(p);
-			nargc++;
-        }
-    } /* for */
+	  k= atoi(p);
+      nargc++;
+    } // if
+  } // for
     
-    show_files( k ); return 0;
+  show_files( k );
+  return 0;
 } /* int_paths */
 
 
 
-static void imem_usage( char* name, _pid_ )
+static void imem_usage( char* name )
 {
-    upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Print OS9exec memory segments\n" );
-    upe_printf( "Options:\n" );
-    upe_printf( "    -i=<pid> show memory of <pid>\n" );
-    upe_printf( "    -u       show unused memory\n" );
-} /* imem_usage */
+  upe_printf( "Syntax:   %s [<opts>]\n", name );
+  upe_printf( "Function: Print OS9exec memory segments\n" );
+  upe_printf( "Options:\n" );
+  upe_printf( "    -i=<pid> show memory of <pid>\n" );
+  upe_printf( "    -u       show unused memory\n" );
+} // imem_usage
 
 
 
-static os9err int_mem( ushort pid, int argc, char** argv )
+static os9err int_mem( _pid_, int argc, char** argv )
 /* "imem": OS9exec internal allocated memory */
 {
-    #define IMEM_MAXARGS 0
-    int     nargc=0, h;
-    char*   p;
-	Boolean mem_unused  = false;
-	Boolean mem_fulldisp= false;
-	int     my_pid= MAXPROCESSES;
+  #define IMEM_MAXARGS 0
+  int     nargc=0, h;
+  char*   p;
+  Boolean mem_unused  = false;
+  Boolean mem_fulldisp= false;
+  int     my_pid= MAXPROCESSES;
 
-    for (h=1; h<argc; h++) {
-        p=      argv[ h ];
+  for (h=1; h<argc; h++) {
+    p=        argv[ h ];
             
-        if (*p=='-') { 
-            p++;
-            switch (tolower(*p)) {
-                case '?' :  imem_usage( argv[0],pid ); return 0;
+    if (*p=='-') { 
+         p++;
+      switch (tolower(*p)) {
+        case '?' :
+        case 'h' : imem_usage( argv[ 0 ] ); return 0;
                 
-                case 'i' :  if (*(p+1)=='=') p+=2;
-                            else {  h++; /* next arg */
-                                if (h>=argc) { my_pid= MAXPROCESSES; break; }
-                                p= argv[h];
-                            }
+        case 'i' : if (*(p+1)=='=') p+=2;
+                   else {  h++; /* next arg */
+                     if (h>=argc) { my_pid= MAXPROCESSES; break; }
+                     p= argv[h];
+                   } // if
 
-                            if (sscanf( p,"%d", &my_pid )<1) my_pid= MAXPROCESSES;
-                            break;
+                   if (sscanf( p,"%d", &my_pid )<1) my_pid= MAXPROCESSES;
+                   break;
                             
-                case 'u' :  mem_unused  = true; break;
-                case 'f' :  mem_fulldisp= true; break;
-                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            imem_usage( argv[0],pid ); return 1;
-            }   
-        }
-        else {
-            if (nargc>=IMEM_MAXARGS) { 
-                upe_printf("Error: no arguments allowed\n"); return 1;
-            }
-            nargc++;
-        }
-    } /* for */
-
+        case 'u' : mem_unused  = true; break;
+        case 'f' : mem_fulldisp= true; break;
+        
+        default  : imem_usage( argv[ 0 ] );
+                   upe_printf( "Error: unknown option '%c'\n", *p ); 
+                   return 1;
+      } // switch   
+    }
+    else {
+      if (nargc>=IMEM_MAXARGS) { 
+        upe_printf("Error: no arguments allowed\n"); return 1;
+      }
+      
+      nargc++;
+    } // if
+  } // for
+  
     show_mem( my_pid,mem_unused,mem_fulldisp ); return 0;
 } /* int_mem */
 
 
 
 static os9err int_unused( _pid_, _argc_, _argv_ )
-/* "imem": OS9exec internal allocated memory */
-{   show_unused(); return 0;
+/* Show unused memory */
+{  show_unused(); return 0;
 } /* int_unused */
 
 
 
-static void idevs_usage( char* name, _pid_ )
+static void idevs_usage( char* name )
 {
-    upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Print OS9exec device table\n" );
-    upe_printf( "Options:\n" );
-    upe_printf( "    -r    show RBF devices only\n" );
-    upe_printf( "    -s    show statistic values\n" );
+  upe_printf( "Syntax:   %s [<opts>]\n", name );
+  upe_printf( "Function: Print OS9exec device table\n" );
+  upe_printf( "Options:\n" );
+  upe_printf( "    -r    show RBF devices only\n" );
+  upe_printf( "    -s    show statistic values\n" );
 } /* idevs_usage */
-
 
 
 
 static void devs_printf( syspath_typ* spP, char* driv, char* fmgr )
 {
-    char    s[OS9NAMELEN];
-    char    d[OS9NAMELEN];
-    strcpy( s,spP->name );
-    strcpy( d,driv );
+  char    s[OS9NAMELEN];
+  char    d[OS9NAMELEN];
+  strcpy( s,spP->name );
+  strcpy( d,driv );
     
-    upo_printf( "%-10s %-8s %-7s %2d\n", 
-                 StrBlk_Pt( s,Mx ), StrBlk_Pt( d,8 ), fmgr, spP->nr );
+  upo_printf( "%-10s %-8s %-7s %2d\n", 
+               StrBlk_Pt( s,Mx ), StrBlk_Pt( d,8 ), fmgr, spP->nr );
 } /* devs_printf */
 
 
 
-static os9err int_devs( ushort pid, int argc, char** argv )
+static os9err int_devs( _pid_, int argc, char** argv )
 /* idevs": OS9exec internal devices */
 {
     #define IDEVS_MAXARGS 0
@@ -532,11 +550,15 @@ static os9err int_devs( ushort pid, int argc, char** argv )
         if (*p=='-') { 
             p++;
             switch (tolower(*p)) {
-                case '?' :  idevs_usage( argv[0],pid ); return 0;
-                case 'r' :  rbf_devs = true; break;
-                case 's' :  statistic= true; break;
-                default  :  upe_printf("Error: unknown option '%c'!\n",*p); 
-                            idevs_usage( argv[0],pid ); return 1;
+                case '?' :
+                case 'h' : idevs_usage( argv[ 0 ] ); return 0;
+                
+                case 'r' : rbf_devs = true; break;
+                case 's' : statistic= true; break;
+                
+                default  : idevs_usage( argv[ 0 ] ); 
+                           upe_printf( "Error: unknown option '%c'\n", *p );
+                           return 1;
             }   
         }
         else {
@@ -544,8 +566,8 @@ static os9err int_devs( ushort pid, int argc, char** argv )
                 upe_printf("Error: no arguments allowed\n"); return 1;
             }
             nargc++;
-        }
-    } /* for */
+        } // if
+    } // for
             
     upo_printf( "%s  %s\n", hw_name,sw_name );
     upo_printf( "\n" );
@@ -592,32 +614,346 @@ static os9err int_devs( ushort pid, int argc, char** argv )
 } /* int_devs */
 
 
+
+// ---------------------------------------------------------------------------------
 #ifdef PTOC_SUPPORT
-  static os9err int_on      ( _pid_, _argc_, _argv_ ) { ptocActive= true;  return 0; }
-  static os9err int_off     ( _pid_, _argc_, _argv_ ) { ptocActive= false; return 0; }
+  static void ion_usage( char* name )
+  {
+    upe_printf( "Syntax:   %s [<opts>]\n", name );
+    upe_printf( "Function: Switch on internal commands\n" );
+    upe_printf( "Options:\n" );
+    upe_printf( "    -d         display include list\n" );
+    upe_printf( "    -i            \"       \"      \" \n" );
+    upe_printf( "    -x            \"    exclude   \" \n" );
+    upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
+  } // ion_usage
+
+
+  static void ioff_usage( char* name )
+  {
+    upe_printf( "Syntax:   %s [<opts>]\n", name );
+    upe_printf( "Function: Switch off internal commands\n" );
+    upe_printf( "Options:\n" );
+    upe_printf( "    -d         display exclude list\n" );
+    upe_printf( "    -x            \"       \"      \" \n" );
+    upe_printf( "    -i            \"    include   \" \n" );
+    upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
+  } // ioff_usage
+
+
+  static char** MyElem( int i, Boolean addIt )
+  // Get an element, dependent on <addIt>
+  {
+    if (addIt) return &includeList[ i ];
+    else       return &excludeList[ i ];
+  } // MyElem
+ 
+ 
+  static void display_list( Boolean addIt )
+  {
+    int     i;
+    char**  q; 
+    Boolean done= false;
+    
+    if (addIt) upe_printf( "Include list:\n" );
+    else       upe_printf( "Exclude list:\n" );
+    
+    for (i=0; i<MAXLIST; i++) {
+           q= MyElem( i, addIt );
+      if (*q==NULL) break;
+      
+      upe_printf( " %s\n", *q );
+      done= true;
+    } // for
+    
+    if (!done) upe_printf( "<none>\n" );
+  } // display_list
+
+
+  static void ShiftDown( int i, Boolean addIt )
+  // Close the gap of a removed element
+  {
+    int    j;
+    char** q;
+    char** r;
+    
+    q= MyElem( i, addIt );
+    
+    for (j= i+1; j<MAXLIST; j++) {
+      r= MyElem( j, addIt );
+          
+      *q= *r; if (*r==NULL) break;
+       q=  r;
+    } // for
+  } // ShiftDown
+ 
+ 
+  static void RemoveElement( char* s, Boolean addIt, Boolean* already )
+  {
+    int    i;
+    char** q;
+    
+    *already= false;
+    for (i= 0; i<MAXLIST; i++) {
+      // Extract, if already in the other list
+           q= MyElem( i, !addIt );
+      if (*q!=NULL && ustrcmp( *q, s )==0) {
+        release_mem( *q );
+                     *q= NULL;
+        ShiftDown( i, !addIt );
+      } // if
+      
+      // --------------------------------      
+           q= MyElem( i, addIt );
+      if (*q!=NULL && ustrcmp( *q, s )==0) {
+        if (*already) {
+          // Extract if more than once
+          release_mem( *q );
+                       *q= NULL;
+          ShiftDown( i, addIt );
+        } // if
+        
+        *already= true; // it's there already
+      } // if
+    } // for
+  } // RemoveElement
+  
+  
+  void ChangeElement( char* s, Boolean addIt )
+  {
+    int     i;
+    char**  q;
+    Boolean already;
+    
+    RemoveElement( s, addIt, &already );
+    if (already) return;
+    
+    /*
+    for (i= 0; i<MAXLIST; i++) {
+      // Extract, if already in the other list
+           q= MyElem( i, !addIt );
+      if (*q!=NULL && ustrcmp( *q, s )==0) {
+        release_mem( *q );
+                     *q= NULL;
+        ShiftDown( i, !addIt );
+      } // if
+      
+      // --------------------------------      
+           q= MyElem( i, addIt );
+      if (*q!=NULL && ustrcmp( *q, s )==0) {
+        if (done) {
+          // Extract if more than once
+          release_mem( *q );
+                       *q= NULL;
+          ShiftDown( i, addIt );
+        } // if
+        
+        done= true; // it's there already
+      } // if
+    } // for
+    if (done) return;
+    */
+    
+    // Insert new element  
+    for (i= 0; i<MAXLIST-1; i++) { // last element will not be used
+           q= MyElem( i, addIt );
+      if (*q==NULL) {
+          *q= get_mem( strlen( s ) );
+        strcpy( *q, s );
+        return;
+      } // if
+    } // for
+  } // ChangeElement
+  
+
+  static os9err int_xx( int argc, char** argv, Boolean isOn )
+  /* Common part for "ion" and "ioff" command */
+  { 
+    int   h;
+    char* p;
+    Boolean dispIn  = false;
+    Boolean dispEx  = false;
+    Boolean removeIt= false;
+    Boolean already;
+
+    for (h=1; h<argc; h++) {
+      p=        argv[ h ];
+            
+      if (*p=='-') { 
+           p++;
+        switch (tolower(*p)) {
+          case '?' :
+          case 'h' : if (isOn) ioff_usage( argv[ 0 ] ); 
+                     else      ion_usage ( argv[ 0 ] ); 
+                     return 0;
+                     
+          case 'd' : if (isOn) dispIn= true;
+                     else      dispEx= true;
+          
+          case 'i' : dispIn  = true; break;
+          case 'x' : dispEx  = true; break;
+          case 'n' : removeIt= true; break;
+                            
+          default  : if (isOn) ioff_usage( argv[ 0 ] ); 
+                     else      ion_usage ( argv[ 0 ] ); 
+                     upe_printf( "Error: unknown option '%c'\n", *p ); 
+                     return 1;
+        } // switch
+      }
+      else {
+        if (removeIt) {
+          RemoveElement( p, true,  &already );
+          RemoveElement( p, false, &already );
+        }
+        else {
+          if (!dispIn && !dispEx) ChangeElement( p, isOn );
+        } // if
+      } // if
+    } // for
+
+    if   (dispIn || dispEx) {
+      if (dispIn) display_list(  true );
+      if (dispEx) display_list( false );
+      return 0;
+    } // if
+
+    if (argc==1) { // no additional arguments
+      ptocActive= isOn;
+    } // if
+    
+    return 0;
+  } // int_xx
+
+
+  static os9err int_on ( _pid_, int argc, char** argv ) 
+  {      return int_xx (            argc,        argv,  true ); }
+  static os9err int_off( _pid_, int argc, char** argv ) 
+  {      return int_xx (            argc,        argv, false ); }
+  
+
+  /*
+  static os9err int_on( _pid_, int argc, char** argv )
+  { 
+    int   h;
+    char* p;
+    Boolean dispIn  = false;
+    Boolean dispEx  = false;
+    Boolean removeIt= false;
+
+    for (h=1; h<argc; h++) {
+      p=        argv[ h ];
+            
+      if (*p=='-') { 
+           p++;
+        switch (tolower(*p)) {
+          case '?' :
+          case 'h' : ion_usage( argv[ 0 ] ); return 0;
+          case 'd' :
+          case 'i' : dispIn  = true; break;
+          case 'x' : dispEx  = true; break;
+          case 'n' : removeIt= true; break;
+                            
+          default  : ion_usage( argv[ 0 ] ); 
+                     upe_printf( "Error: unknown option '%c'\n", *p );
+                     return 1;
+        } // switch
+      }
+      else {
+        if (!dispIn && !dispEx) ChangeList( p, true );
+      }
+    } // for
+    
+    if   (dispIn || dispEx) {
+      if (dispIn) display_list(  true );
+      if (dispEx) display_list( false );
+      return 0;
+    } // if
+
+    if (argc==1) {  // no additional arguments
+      ptocActive= true;
+    //upe_printf( "int ON\n" );
+    } // if
+    
+    return 0;
+  } // int_on
+  
+  
+  static os9err int_off( _pid_, int argc, char** argv )
+  { 
+    int   h;
+    char* p;
+    Boolean dispIn  = false;
+    Boolean dispEx  = false;
+    Boolean removeIt= false;
+
+    for (h=1; h<argc; h++) {
+      p=        argv[ h ];
+            
+      if (*p=='-') { 
+           p++;
+        switch (tolower(*p)) {
+          case '?' :
+          case 'h' : ioff_usage( argv[ 0 ] ); return 0;
+          case 'd' :
+          case 'x' : dispEx  = true; break;
+          case 'i' : dispIn  = true; break;
+          case 'n' : removeIt= true; break;
+                            
+          default  : ioff_usage( argv[ 0 ] );
+                     upe_printf( "Error: unknown option '%c'\n", *p ); 
+                     return 1;
+        } // switch
+      }
+      else {
+        if (removeIt)
+          RemoveElement( p, true  );
+          RemoveElement( p, false );
+        else {
+          if (!dispIn && !dispEx) ChangeElement( p, false );
+        }
+      }
+    } // for
+
+    if   (dispIn || dispEx) {
+      if (dispIn) display_list(  true );
+      if (dispEx) display_list( false );
+      return 0;
+    } // if
+
+    if (argc==1) { // no additional arguments
+      ptocActive= false;
+    //upe_printf( "int OFF\n" );
+    } // if
+    
+    return 0;
+  } // int_off
+  */
+  
+
+  // ---------------------------------------------------------------------------------
   static os9err int_thread  ( _pid_, _argc_, _argv_ ) { ptocThread= true;  return 0; }
   static os9err int_nothread( _pid_, _argc_, _argv_ ) { ptocThread= false; return 0; }
   static os9err int_arb     ( _pid_, _argc_, _argv_ ) { fullArb   = true;  return 0; }
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
 
 
+  // ---------------------------------------------------------------------------------
   static os9err ptoc_calls( ushort pid, _argc_, char** argv )
   {
     char* name= argv[ 0 ];
  
-    process_typ*   cp= &procs[pid];
-    ushort parent= cp->pd._pid;
-    Boolean isInt= procs[parent].isIntUtil;
+    process_typ* cp= &procs[ pid ];
+  //ushort                parent= cp->pd._pid;
+  //Boolean isInt= procs[ parent ].isIntUtil;
     
     #ifdef THREAD_SUPPORT
       // mutex lock for systemcalls
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
-      currentpid= pid;
+      currentpid=  pid;
     #endif
 
     OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
                                  procs[ pid ].my_args );
-                              /* (void*)&cp->os9regs */
      
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
@@ -781,7 +1117,26 @@ int isintcommand( const char* name, Boolean *isPtoc )
   int index;  
   
   #ifdef PTOC_SUPPORT
-    *isPtoc= ptocActive && Is_PtoC( name );
+    int         i;
+    char**      q;
+    Boolean     ok= ptocActive;
+    const char* cut= name + strlen( name ) - 1;
+  
+    // get the pure file name from eventual abs path name
+    while (cut>name) {
+      if (*cut=='/') { cut++; break; }
+           cut--;
+    } // while
+ 
+    for (i= 0; i<MAXLIST; i++) {
+           q= MyElem( i, !ptocActive );
+      if (*q==NULL) break;
+      
+      // Consider include/exclude list  
+      if (ustrcmp( *q,cut )==0) { ok= !ok; break; }
+    } // for
+    
+    *isPtoc= ok && Is_PtoC( name );
   #else
     *isPtoc= false;
   #endif
