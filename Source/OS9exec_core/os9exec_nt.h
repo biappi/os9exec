@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.67  2006/12/02 12:07:43  bfo
+ *    global <lastsyscall> eliminated
+ *
  *    Revision 1.66  2006/12/01 19:51:28  bfo
  *    <mnt_devCopy> added
  *
@@ -350,6 +353,9 @@
 #elif defined windows32 || defined linux
   #define MAXDIRS     50000
 #endif
+
+/* number of include/exclude list elements */
+#define MAXLIST         500
 
 /* number of statistics entries */
 #define MAX_OS9PROGS   1000
@@ -1140,12 +1146,16 @@ extern  alarm_typ   alarms     [MAXALARMS];
 extern  alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-#if defined(windows32) || defined macintosh || defined linux
-extern  char*       dirtable[MAXDIRS];
+extern  char*       dirtable   [MAXDIRS];
+
+#ifdef PTOC_SUPPORT
+  /* the include/exclude list for internal commands */
+  extern char*      includeList[MAXLIST];
+  extern char*      excludeList[MAXLIST];
 #endif
 
 /* the OS-9 statistics table */
-extern  st_typ     statistics[MAX_OS9PROGS];
+extern  st_typ      statistics[MAX_OS9PROGS];
 
 /* the mem alloc table */
 extern memblock_typ memtable[MAX_MEMALLOC];
