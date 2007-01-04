@@ -271,7 +271,7 @@ void init_m68k (void)
     read_table68k ();
     do_merges ();
 
-    if (withTitle) write_log ("# %d CPU functions\n", nr_cpuop_funcs);
+    if (withTitle) write_log ("# %8d CPU functions\n", nr_cpuop_funcs);
 
     build_cpufunctbl ();
 }
