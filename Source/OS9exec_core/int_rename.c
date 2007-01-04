@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2006/02/19 15:43:15  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.12  2005/06/30 11:42:08  bfo
  *    Mach-O support
  *
@@ -94,9 +97,10 @@ static void usage( char* name, _pid_ )
 os9err int_rename(ushort cpid, int argc, char **argv)
 {
     #ifdef MACOS9
-    /* special mac includes */
-    #include <Finder.h>
-    FSSpec     theFSSpec;
+      /* special mac includes */
+      #include <Finder.h>
+      OSErr  oserr= 0;
+      FSSpec theFSSpec;
     #endif
 
     char *p, *sv;
@@ -105,7 +109,6 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     char *nargv[MAXARGS];
     
     os9err     err;
-    OSErr      oserr = 0;
     int        exedir= 0;
     ushort     path;
     ptype_typ  type;
@@ -122,8 +125,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
       char     newPath [OS9PATHLEN]; 
       char     adaptOld[OS9PATHLEN];
       char     adaptNew[OS9PATHLEN];
-    #endif
-    
+    #endif   
     
     debugprintf(dbgUtils,dbgNorm,( "# rename\n" ));
     
