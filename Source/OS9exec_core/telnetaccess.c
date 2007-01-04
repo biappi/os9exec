@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/12/01 19:56:44  bfo
+ *    "HandleEvent": no more separate MACH implementation
+ *
  *    Revision 1.10  2006/06/11 22:07:13  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -218,29 +221,30 @@ long ReadCharsFromPTY(char *buffer, long n, int consoleID)
 
 void WindowTitle( char* title, Boolean vmod )
 {
-    char* p;
+  const char* p;
     
-    #ifdef TERMINAL_CONSOLE
-      char cons[20];
-    #endif
+  #ifdef TERMINAL_CONSOLE
+    char cons[ 40 ];
+  #endif
     
-    #ifdef USE_UAEMU
-      p= " (UAE)" ;
-    #else
-      p="";
-    #endif
+  #ifdef USE_UAEMU
+    p= " (UAE)" ;
+  #else
+    p="";
+  #endif
     
-    sprintf( title,"%s%s", OS9exec_Name(),p );
+  sprintf( title, "%s%s", OS9exec_Name(), p );
     
-    #ifdef TERMINAL_CONSOLE
+  #ifdef TERMINAL_CONSOLE
     if (vmod) sprintf( title, "%s  /vmod - display for  \"%s\"", 
                        title, gTitle );
     else {    
-              Console_Name( gConsoleID, (char*)&cons );        
-              sprintf( title, "%s  /%s - terminal window", 
-                       title, cons );
-    }
-    #endif
+      #ifndef windows32
+        Console_Name( gConsoleID, (char*)&cons );
+        sprintf( title, "%s  /%s - terminal window", title, cons );
+      #endif
+    } // if
+  #endif
 } /* WindowTitle */
 
 
