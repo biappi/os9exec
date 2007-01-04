@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2006/12/16 22:17:03  bfo
+ *    loop breaker for internal commands
+ *
  *    Revision 1.51  2006/12/01 20:07:05  bfo
  *    <consoleSleep> param for "HandleOneEvent" (reduce MacClassic load)
  *
@@ -974,10 +977,12 @@ void do_arbitrate( ushort allowedIntUtil )
                 HandleEvent();
                 slp_idleticks+= GetSystemTick()-ticks;
                 
-              #elif defined macintosh
+              #elif defined MACOS9
                 ulong ticks= GetSystemTick();
 
-                HandleOneEvent( nil, 10 );
+                #ifndef MPW // is not available there
+                  HandleOneEvent( nil, 10 );
+                #endif
                 slp_idleticks+= GetSystemTick()-ticks;
               #endif
            

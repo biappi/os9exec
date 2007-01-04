@@ -1611,6 +1611,7 @@
           07-01-04  Bfo     fileaccess  : 'touchfile' only used for MACFILES
           07-01-04  Bfo     os9_uae     : Title comment unified
           07-01-04  Bfo     newcpu      : Write 'CPU' in line
+          07-01-04  Bfo     procstuff   : 'HandleOneEvent' MPW problem fixed
                                                                                                      
     3.34  07-01-??  Bfo
     -------------------  
