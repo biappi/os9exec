@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for MacOS, Windows and Linux       */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.92  2007/01/02 11:12:43  bfo
+ *    <includeList>/<excludeList> for PtoC added
+ *    "systime" is part of the <excludeList> by default
+ *    <ptocActive> default value false w/o PtoC support
+ *    some formatting adaptions
+ *
  *    Revision 1.91  2006/12/16 22:18:25  bfo
  *    cp->oerr assigned correctly for internal commands
  *
@@ -345,6 +351,10 @@
 #include <signal.h>
 #include "os9exec_incl.h"
 
+#ifdef UNIX
+  #include <dlfcn.h> // the MacOSX and Linux DLL functionality
+#endif
+
 				
 /* global variables */
 /* ================ */
@@ -379,10 +389,11 @@ alarm_typ*  alarm_queue[MAXALARMS];
 /* the dir table */
 char*       dirtable   [MAXDIRS];
 
+/* the include/exclude/dll list for internal commands */
 #ifdef PTOC_SUPPORT
-/* the include/exclude list for internal commands */
   char*     includeList[MAXLIST];
   char*     excludeList[MAXLIST];
+  char*         dllList[MAXLIST];
 #endif
 
 /* I/O device table */
@@ -420,13 +431,12 @@ ulong		newEventId= 0xffffffff; /* initial value */
 
 
 /* the currently executing process, MAXPROCESSES if none */
-ushort currentpid;        // id of current process
-ushort currentpid_intCmd; // same for int command
-//ulong  current_a5;      // register <a5> at process start
+ushort   currentpid;        // id of current process
+ushort   currentpid_intCmd; // same for int command
 
-short    arbitrate;       /* set if arbitrate() should switch away from one running process to next */
-ushort   interactivepid;  /* process that will get keyboard abort signals */
-dir_type mdir;	          /* current module dir */
+short    arbitrate;         // set if arbitrate() should switch away from one running process to next
+ushort   interactivepid;    // process that will get keyboard abort signals
+dir_type mdir;	            // current module dir
 
 
 char     startPath[OS9PATHLEN];   /* start path */
@@ -791,8 +801,8 @@ static void cleanup(void)
 #endif
 
 
-void getversions()
 /* obtain tool and package (os9exec) version */
+void getversions()
 {
 	#ifdef MACOS9
 	Handle versH;
@@ -828,9 +838,9 @@ void getversions()
 } /* getversions */
 
 
-void get_hw()
 /* must be done before linking "init" module */
 /* and this will be done earlier now */
+void get_hw()
 {
   #ifdef macintosh
     hw_site= "Mac";
@@ -884,36 +894,33 @@ void get_hw()
 } /* get_hw */
 
 
-
 #ifdef UNIX
-void StartDir( char* pathname )
-{
-  char    acc   [OS9PATHLEN];
-  char    sv    [OS9PATHLEN];
-  char    result[OS9PATHLEN];
-  struct  stat info;
-
-//strcpy( pathname, "/home/forsterb/OS9EXEC/Output" ); return;
+  // Get the start directory
+  void StartDir( char* pathname )
+  {
+    char    acc   [OS9PATHLEN];
+    char    sv    [OS9PATHLEN];
+    char    result[OS9PATHLEN];
+    struct  stat info;
 	
-  strcpy( pathname,"" ); /* start with an empty string */
-  strcpy( acc,    "." ); /* and take current dir for start */
-  strcpy( result,  "" );
+    strcpy( pathname,"" ); // start with an empty string
+    strcpy( acc,    "." ); // and take current dir for start
+    strcpy( result,  "" );
 
-  while (true) {
-    stat_  ( acc, &info );
-    strcat ( acc,"/.." );
-    DirName( acc,  info.st_ino, (char*)&result, true );
-    if (strcmp( result,".")==0) {
-	    strcpy( result,"" ); break;
-    } // if
+    while (true) {
+      stat_  ( acc, &info );
+      strcat ( acc,"/.." );
+      DirName( acc,  info.st_ino, (char*)&result, true );
+      if (strcmp( result,".")==0) {
+	      strcpy( result,"" ); break;
+      } // if
 
-    strcpy( sv, pathname );
-    strcpy( pathname,PATHDELIM_STR );
-    strcat( pathname,result );
-    strcat( pathname,    sv );
-  //upo_printf( "result='%s'\n", pathname );
-  } /* while */
-}  
+      strcpy( sv, pathname );
+      strcpy( pathname,PATHDELIM_STR );
+      strcat( pathname,result );
+      strcat( pathname,    sv );
+    } // while
+  } // StartDir  
 #endif
 
 
@@ -957,13 +964,13 @@ static os9err GetStartPath( char* pathname )
 } /* GetStartPath */
 
 
-
+// Search one path up ( .. )
 static void PathUp( char* p )
 {
   char*  q= p+strlen(p)-2;
   while (q>p) {
     if (*q==PATHDELIM) {
-      #ifdef macintosh
+      #ifdef MACOS9
         q++;
       #endif
 			   
@@ -1037,8 +1044,167 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 } /* GetCurPaths */
 
 
+#ifdef PTOC_SUPPORT
+  // Get the DLL suffix of my operating system
+  static const char* DLL_Suffix()
+  {
+    const char* suff;
+    
+    #ifdef windows32
+      suff= ".dll";
+    #elif defined __MACH__
+      suff= ".dylib";
+    #elif defined linux
+      suff= ".so";
+    #else
+      suff= "";
+    #endif
+    
+    return suff;
+  } // DLL_Suffix
+  
+  
+  // Returns true, if the DLL suffix is correct
+  static Boolean IsDLL( const char* name, const char* p )
+  {
+    int sLen, pLen;
+    
+    sLen= strlen( name );
+    pLen= strlen( p );
+    
+    if    (sLen<pLen) return false;
+    name+= sLen-pLen; // compare the ends only
+    
+    return ustrcmp( name,p )==0;
+  } // IsDLL
+  
+  
+  // Search for all DLLs at the "PLUGINS" subdirectory
+  static os9err SearchDLLs( ushort pid )
+  {
+    os9err          err, cErr;
+    ushort          path;
+    ulong           size;
+    process_typ*    cp= &procs[ pid ];
+    char            pathName[ OS9PATHLEN ];
+    os9direntry_typ dEnt;
+    int             i= 0;
+    char**          m;
+    
+    const char* suff= DLL_Suffix();
+    if (strcmp( suff,"" )==0) return 0; // no error, if not supported
+    
+    strcpy( pathName,  strtUPath );
+    strcat( pathName, "/PLUGINS" ); // sub directory where "dd" has been found
 
-static void BootLoader( int cpid )
+        err= usrpath_open( pid, &path, fDir, pathName, 0x81 ); 
+    if (err) return err;
+  
+    while (true) {                    size= sizeof( dEnt );
+      err= usrpath_read( pid,  path, &size, &dEnt,      false ); if (err) break;
+      LastCh_Bit7                          ( dEnt.name, false );
+
+      if (IsDLL( dEnt.name, suff )) {
+         m= &dllList[ i ];
+        *m= get_mem( strlen( dEnt.name )+1 );
+        strcpy         ( *m, dEnt.name );
+        i++;
+      } // if
+    } // while
+    if (err==E_EOF) err= 0; // just end of file
+    
+    cErr= usrpath_close( pid,  path ); if (!err) err= cErr;
+    
+    return err;
+  } // SearchDLLs
+  
+  
+  // Connect to all available DLLs
+  static os9err ConnectDLL( const char* name )
+  {
+    void* aDLL = NULL;
+    void* aFunc= NULL;
+    
+    const char* aFuncName= "Module_Version";
+    typedef long (*VersionProc)( long mContext );
+    VersionProc v;
+    
+    char    fullName[ OS9PATHLEN ];
+    strcpy( fullName,  strtUPath     );
+    strcat( fullName,  PATHDELIM_STR );
+    strcat( fullName, "PLUGINS"      );
+    strcat( fullName,  PATHDELIM_STR );
+    strcat( fullName,  name          );
+  //upe_printf( "DLL='%s'\n", fullName );
+    
+    #ifdef windows32
+      aDLL= LoadLibrary( fullName );
+    #endif
+    
+    #ifdef UNIX
+      #ifdef __MACH__
+        #define mode RTLD_NOW + RTLD_GLOBAL
+      #elif defined linux
+        #define mode RTLD_LAZY
+      #endif
+    
+      aDLL= dlopen( fullName, mode );
+    #endif
+    
+    if (!aDLL) return E_PNNF;
+
+    #ifdef windows32
+      aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
+    #endif
+    
+    #ifdef UNIX
+      aFunc= dlsym( aDLL, aFuncName );
+    #endif
+
+    if (!aFunc) {
+      #ifdef windows32
+        FreeLibrary( aDLL );
+      #endif
+      
+      #ifdef UNIX
+        dlclose( aDLL );
+      #endif
+      
+      return E_NES;
+    } // if
+    
+    v= (VersionProc)aFunc;
+    upe_printf( "vv=%08x\n", v( NULL ) );
+    return 0;
+  } // ConnectDLL
+
+
+  // Main routine for connecting plugin DLLs
+  static void PluginLoader( ushort cpid )
+  {
+    os9err err;
+    int    i;
+    char*  p;
+  
+    debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
+    err= SearchDLLs( cpid ); if (err) return;
+  
+    for (i=0; i<MAXLIST; i++) {
+      p= dllList[ i ];
+      if (p==NULL) break;
+    
+      err= ConnectDLL( p );
+      upe_printf( "%s '%s' (err=%d)\n", i==0 ? "# Connecting plugin module:"
+                                             : "#                          ", p, err );
+    } // for
+  
+    debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader done\n" ) );
+  } // PluginLoader
+#endif PTOC_SUPPORT
+
+
+
+static void BootLoader( ushort cpid )
 /* Search order:
  *
  * 1)  "OS9exec" built-in version
@@ -1052,38 +1218,37 @@ static void BootLoader( int cpid )
  *
  */
 {
-	os9err       err;
-	char*        p;
-	ushort       mid;
-    process_typ* cp= &procs[ cpid ];
+  char*        BLTxt= "# Boot Loader: '%s' err=%d\n";
+  os9err       err;
+  char*        p;
+  ushort       mid;
+  process_typ* cp= &procs[ cpid ];
 
-	p= "OS9exec";
-        err= link_module( cpid, p, &mid ); /* do not abort on error */
-		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
+                              p= "OS9exec";
+  err=     link_module( cpid, p, &mid );        // do not abort on error
+  debugprintf  ( dbgStartup,dbgNorm,( BLTxt, p,err ) );
 
-	p= "init";
-        err= load_module( cpid, p, &mid, false );
-   		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err )); 
+                              p= "init";
+  err=     load_module( cpid, p, &mid, false ); // do not abort on error
+  debugprintf  ( dbgStartup,dbgNorm,( BLTxt, p,err ) ); 
    	
-   	if (cp->d.type==fRBF) {
-   	  err= load_OS9Boot( cpid );
-   	} // if
+  if (cp->d.type==fRBF) {
+   	err=  load_OS9Boot( cpid );
+  } // if
    	
-    p= "OS9Boot";
-   	if (err) {
-	    err= load_module( cpid, p, &mid, false );
-		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
-	} // if
+  if (err) {                  p= "OS9Boot";
+      err= load_module( cpid, p, &mid, false );
+    debugprintf( dbgStartup,dbgNorm,( BLTxt, p,err ) );
+  } // if
 
-	p= "init";
-    if (err) {
-        err= link_module( cpid, p, &mid );
-		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err ));
-	} // if
-	
-	p= "socket";
-        err= link_module( cpid, p, &mid );
-   		debugprintf(dbgStartup,dbgNorm,( "# Bootloader: '%s' err=%d\n", p,err )); 
+  if (err) {                  p= "init";
+      err= link_module( cpid, p, &mid );
+    debugprintf( dbgStartup,dbgNorm,( BLTxt, p,err ) );
+  } // if
+
+                              p= "socket";
+  err=     link_module( cpid, p, &mid );
+  debugprintf  ( dbgStartup,dbgNorm,( BLTxt, p,err ) ); 
 } /* Bootloader */
 
 
@@ -1149,11 +1314,11 @@ static void titles( void )
    #ifdef TERMINAL_CONSOLE
      #ifdef macintosh
        #if defined USE_CLASSIC && !defined SERIAL_INTERFACE
-         upho_printf("- CTB Console Version, 'Termconsole'      (c) 1996 by Joseph J. Strout\n");
+         upho_printf("- CTB Console Version, 'Termconsole' (c) 1996 by Joseph J. Strout\n");
        #endif
        
        #ifdef MACOS9
-         upho_printf("- Mac Serial Interface Version            (c) 2000 by B. Forster\n");
+         upho_printf("- Mac Serial Interface Version       (c) 2000 by B. Forster\n");
        #endif
        
      #elif defined windows32
@@ -1186,7 +1351,7 @@ static void titles( void )
        upho_printf("- With CarbonLib Interface\n");
    #endif
    
-   upo_printf( "\n" );   
+ //upo_printf( "\n" );   
    fflush(stderr);
    fflush(stdout);
 } /* titles */
@@ -1679,7 +1844,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     static void  segv_handler( int   sig )
   #endif
   {
-    int          sv= sig;
+  //int          sv= sig;
     process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
     regs_type*   crp= &cp->os9regs;       // pointer to process' registers
   
@@ -1687,9 +1852,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     
     #ifdef UNIX
       switch (sig) {
-      //case SIGSEGV : cp->exiterr= E_BUSERR; break;
-      //case SIGBUS  : cp->exiterr= E_BUSERR; break;
-        case SIGFPE  : cp->exiterr= E_ZERDIV; break;
+        case SIGFPE : cp->exiterr= E_ZERDIV; break;
       } // switch
     #endif
   
@@ -1851,13 +2014,14 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
   /* no table entries at the beginning */
-  for   (ii=0; ii<MAXDIRS; ii++) dirtable   [ ii ]= NULL;
+  for   (ii=0; ii<MAXDIRS; ii++)    dirtable[ ii ]= NULL;
 
   #ifdef PTOC_SUPPORT
     for (ii=0; ii<MAXLIST; ii++) includeList[ ii ]= NULL;
     for (ii=0; ii<MAXLIST; ii++) excludeList[ ii ]= NULL;
+    for (ii=0; ii<MAXLIST; ii++)     dllList[ ii ]= NULL;
     
-    ChangeElement( "systime", false ); // "systime" will be switch off by default
+    ChangeElement( "systime", false ); // "systime" switched off by default => use std int util
   #endif
   
   debug_prep();
@@ -1879,8 +2043,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
         memcpy(    &fs, &gFS, sizeof(FSSpec) );
       #endif
 
-      /* If file has correct type and creator,
-      /* it can be executed directly */
+      // If file has correct type and creator
+      // it can be executed directly */
       err= getCipb( &cipb, &fs );
       if (argc==0 &&
         cipb.hFileInfo.ioFlFndrInfo.fdCreator=='os9a' &&
@@ -1898,7 +2062,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
         argv_startup[1]= NULL;
         argv= (char**)&argv_startup;
       }
- 	#endif
+ 	  #endif
   #endif
 
   /* include 'startup' as default parameter */
@@ -1918,10 +2082,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   if (withTitle) {
      upo_printf( "\n" );
     upho_printf( "%s:     OS-9  User Runtime Emulator\n", OS9exec_Name() );
-    upho_printf( "Copyright (C) 2006 Lukas Zeller / Beat Forster\n" );
+    upho_printf( "Copyright (C) 2007 Lukas Zeller / Beat Forster\n" );
     upho_printf( "This program is distributed under the terms of\n" ); 
     upho_printf( "       the GNU General Public License         \n" );
     upho_printf( "\n" );
+    titles();
   } // if
     
   /* prepare low-level magic, to allow using llm_xxx() routines */
@@ -2004,16 +2169,19 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   #endif
 	
   /* install asynchronous handlers */
-  atexit(&cleanup);
+  atexit( &cleanup );
 
-  /* obtain package (os9exec) version */
-  BootLoader  ( cpid );
-  CheckStartup( cpid, my_toolname, &argc, argv );
+  #ifdef PTOC_SUPPORT
+    PluginLoader( cpid );
+  #endif
+  BootLoader    ( cpid );
+  CheckStartup  ( cpid, my_toolname, &argc, argv );
 
   /* initialize spinning cursor */ 
   eSpinCursor(0); /* reset cursor spinning */	
 
-  if (withTitle) titles();
+//if (withTitle) titles();
+//if (withTitle) upo_printf( "\n" );   
   
    /* init error tracking vars */
   totalMem= max_mem(); /* get startup memory */
