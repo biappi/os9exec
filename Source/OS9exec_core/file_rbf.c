@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2006/12/17 00:47:23  bfo
+ *    devCopy raw device opening / copy length is OS9PATHLEN
+ *
  *    Revision 1.52  2006/12/01 20:03:19  bfo
  *    "MountDev" with <devCopy> support ( -d )
  *
@@ -143,7 +146,8 @@
 #include "os9exec_incl.h"
 #include "filescsi.h"
 
-#define  SegSize 5 // number of bytes per segment
+#define  FD_Header_Size 16 // size of FD header
+#define  SegSize         5 // number of bytes per segment
 
 
 /* the RBF device entry itself */			
@@ -307,7 +311,7 @@ void init_RBF_devs()
 
 // -----------------------------------------------------------------------
 
-static IsSCSI( rbfdev_typ* dev )
+static Boolean IsSCSI( rbfdev_typ* dev )
 {   return dev->scsi.ID!=NO_SCSI;
 } /* IsSCSI */
 
@@ -558,53 +562,50 @@ static os9err CutOS9Path( char** p, char* cmp_entry )
 
 static void GetBuffers( _rbf_, syspath_typ* spP )
 {
-    Boolean pp= spP->fd_sct==NULL || spP->rw_sct==NULL;
+//Boolean pp= spP->fd_sct==NULL || spP->rw_sct==NULL;
     
-//  if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
-//                       spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
-    /* allocate them only once, assume sctSize will not change */
-//  if (spP->fd_sct==NULL) spP->fd_sct= get_mem( dev->sctSize, false );
-//  if (spP->rw_sct==NULL) spP->rw_sct= get_mem( dev->sctSize, false );
+//if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
+//                     spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
 
-    /* %%% there is currently an allocation bug, use always 2048 bytes */
-    if (spP->fd_sct==NULL) spP->fd_sct= get_mem( 2048 );
-    if (spP->rw_sct==NULL) spP->rw_sct= get_mem( 2048 );
+  /* allocate them only once, assume sctSize will not change */
+//if (spP->fd_sct==NULL) spP->fd_sct= get_mem( dev->sctSize, false );
+//if (spP->rw_sct==NULL) spP->rw_sct= get_mem( dev->sctSize, false );
 
-//  if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
-//                       spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
+  /* %%% there is currently an allocation bug, use always 2048 bytes */
+  if (spP->fd_sct==NULL) spP->fd_sct= get_mem( 2048 );
+  if (spP->rw_sct==NULL) spP->rw_sct= get_mem( 2048 );
+
+//if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n", 
+//                     spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
 } /* GetBuffers */
 
 
 
 static void ReleaseBuffers( syspath_typ* spP )
 {
-//  upe_printf( "Relbuffers %d %08X %08X\n", spP->nr, spP->fd_sct,spP->rw_sct);
-    if (spP->fd_sct!=NULL) release_mem( spP->fd_sct ); spP->fd_sct= NULL;
-    if (spP->rw_sct!=NULL) release_mem( spP->rw_sct ); spP->rw_sct= NULL;
+//upe_printf( "Relbuffers %d %08X %08X\n", spP->nr, spP->fd_sct,spP->rw_sct);
+
+  if (spP->fd_sct!=NULL) release_mem( spP->fd_sct ); spP->fd_sct= NULL;
+  if (spP->rw_sct!=NULL) release_mem( spP->rw_sct ); spP->rw_sct= NULL;
 } /* ReleaseBuffers */
 
 
 
 static os9err ReleaseIt( ushort pid, rbfdev_typ* dev )
 {
-    os9err   err     = 0;
-    Boolean isRAMDisk= false;
+  os9err err= 0;
+  Boolean isRAMDisk= dev->isRAM;
+  if     (isRAMDisk) release_mem( dev->ramBase );
     
- // #ifdef RAM_SUPPORT
-          isRAMDisk= dev->isRAM;
-      if (isRAMDisk) release_mem( dev->ramBase );
- // #endif
+  if (!isRAMDisk &&  
+      !IsSCSI( dev )) err= syspath_close( pid, dev->sp_img );
     
-    if  (!isRAMDisk) {    
-        if (!IsSCSI(dev)) err= syspath_close( pid, dev->sp_img );
-    }
+  if (!err) {    dev->installed= false;
+    release_mem( dev->tmp_sct );
+                 dev->tmp_sct= NULL;
+  } // if
     
-    if (!err) {       dev->installed= false;
-         release_mem( dev->tmp_sct );
-                      dev->tmp_sct= NULL;
-    }
-    
-    return err;
+  return err;
 } /* ReleaseIt */
 
 
@@ -1976,50 +1977,49 @@ static void Set_FDAtt( syspath_typ* spP, byte att )
 
 static void Set_FDLnk( syspath_typ* spP, byte lnk )
 /* set the link count */
-{   spP->fd_sct[8]= lnk;    
+{ spP->fd_sct[8]= lnk;    
 } /* Set_FDLnk */
-
-
 
 
 static os9err FD_Segment( syspath_typ* spP, byte *attr, ulong *size, ulong *totsize, 
                                            ulong *sect, ulong *slim, ulong *pref )
 {
-    rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    ulong       *lp, v, scs, blk, add, pos;
-    ushort      *sp;
-    int         ii;
-    Boolean     done= false;
+  rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
+  ulong       *lp, v, scs, blk, add, pos;
+  ushort      *sp;
+  int         ii;
+  Boolean     done= false;
 
-    *attr= FDAtt ( spP );
-    *size= FDSize( spP );   
-    *pref= 0; /* preferred sector to allocate: none */
+  *attr= FDAtt ( spP );
+  *size= FDSize( spP );   
+  *pref= 0; // preferred sector to allocate: none
     
-    v= 0;  ii= 16;
-    while (ii+SegSize <= dev->sctSize) {
-        lp = (ulong *)&spP->fd_sct[ii  ]; pos= os9_long(*lp)>>BpB;
-        sp = (ushort*)&spP->fd_sct[ii+3]; scs= os9_word(*sp);
-        blk=                              scs* dev->sctSize;
+  v= 0;  ii= FD_Header_Size;
+  while (ii+SegSize <= dev->sctSize) {
+    lp = (ulong *)&spP->fd_sct[ ii   ]; pos= os9_long( *lp )>>BpB;
+    sp = (ushort*)&spP->fd_sct[ ii+3 ]; scs= os9_word( *sp );
+    blk=                                scs * dev->sctSize;
         
-        if (!done && v+blk>spP->u.rbf.currPos) {
-            add  =        (spP->u.rbf.currPos-v)/dev->sctSize;
-            *sect= pos+add;
-            *slim= pos+scs;
-            done = true;
-        }
+    if (!done && v+blk > spP->u.rbf.currPos) {
+      add  =           ( spP->u.rbf.currPos-v ) / dev->sctSize;
+      *sect= pos + add;
+      *slim= pos + scs;
+      done = true;
+    } // if
         
-        if (scs>0) *pref= pos+scs;
-            
-        v += blk;
-        ii+= SegSize; /* goto next entry */
-    } /* while */
+  //if (scs>0) *pref= pos + scs;
+    if (scs==0) break;
+    *pref= pos + scs;
+           
+    v += blk;
+    ii+= SegSize; // goto next entry
+  } // while
     
-    *totsize= v;
-    debugprintf(dbgFiles,dbgDetail,("# FD_Segment size/totsize/sect: %d %d $%x\n",
-                                       *size,*totsize,*sect ));
-    return 0;
+  *totsize= v;
+  debugprintf(dbgFiles,dbgDetail,("# FD_Segment size/totsize/sect: %d %d $%x\n",
+                                     *size, *totsize, *sect ));
+  return 0;
 } /* FD_Segment */
-
 
 
 static os9err GetThem( rbfdev_typ* dev, ulong pos, ulong scs, Boolean get_them )
@@ -2207,45 +2207,49 @@ static os9err DeallocateBlocks( syspath_typ* spP )
 
 static os9err ReleaseBlocks( syspath_typ* spP, ulong lastPos )
 {
-    os9err      err;
-    int         ii;
-    rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    ulong       fd =         spP->u.rbf.fd_nr;
-    ulong       cmp= lastPos/dev->sctSize + 1; /* including fd sector for cluster allocation */
-    ulong       tps= 0;
-    ulong       *lp, pos, diff;
-    ushort      *sp, scs;
-    Boolean     broken= false;
+  os9err      err;
+  int         ii;
+  rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
+//ulong       fd =         spP->u.rbf.fd_nr;
+  ulong       cmp= lastPos/dev->sctSize + 1; /* including fd sector for cluster allocation */
+  ulong       tps= 0;
+  ulong       *lp, pos, diff;
+  ushort      *sp, scs;
+  Boolean     broken= false;
 
-    /* go through the fs segment list */
-    for (ii=16; ii+SegSize <= dev->sctSize; ii+=SegSize) { 
-        lp= (ulong *)&spP->fd_sct[ii  ]; pos= os9_long(*lp)>>BpB;
-        sp= (ushort*)&spP->fd_sct[ii+3]; scs= os9_word(*sp);
+  // go through the fs segment list
+  for (ii=16; ii+SegSize <= dev->sctSize; ii+=SegSize) { 
+    lp= (ulong *)&spP->fd_sct[ ii   ]; pos= os9_long( *lp )>>BpB;
+    sp= (ushort*)&spP->fd_sct[ ii+3 ]; scs= os9_word( *sp );
         
-        if (scs==0) broken= true;
-        if (broken) {
-            *lp= 0;
-            *sp= 0;
-            if (scs>0) GetThem( dev, pos, scs, false );
+    if (scs==0) broken= true;
+    if (broken) {
+      *lp= 0;
+      *sp= 0;
+      if (scs>0) GetThem( dev, pos, scs, false );
+    }
+    else { 
+          tps+= scs;
+      if (tps>cmp) {
+            diff= tps-cmp; /* keep track of granularity */
+            diff= diff/dev->clusterSize*dev->clusterSize;
+        if (diff>=scs) {
+            diff= scs;
+          *lp = 0;
+          *sp = 0;
         }
-        else {  tps+= scs;
-            if (tps>cmp) {
-                    diff= tps-cmp; /* keep track of granularity */
-                    diff= diff/dev->clusterSize*dev->clusterSize;
-                if  (diff>=scs) {
-                    diff= scs;
-                    *lp = 0;
-                    *sp = 0;
-                }
-                else *sp = os9_word(scs-diff);
-                
-                broken= true;
-                GetThem( dev, (pos+scs)-diff, diff, false );
-            }
-        } /* if (scs>0) */
-    } /* for */
+        else {
+          *sp = os9_word( scs-diff );
+        } // if
+              
+        broken= true;
+        GetThem( dev, (pos+scs)-diff, diff, false );
+      } // if
+    } // if
+  } // for
     
-    err= WriteFD( spP ); return err;
+  err= WriteFD( spP );
+  return err;
 } /* ReleaseBlocks */
 
 
@@ -2308,8 +2312,8 @@ static os9err AdaptAlloc_FD( syspath_typ* spP, ulong pos, ulong scs )
 
 
 
-static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer, 
-                 Boolean lnmode, Boolean wMode )
+static os9err DoAccess( syspath_typ* spP, ulong   *lenP, char* buffer, 
+                          Boolean lnmode, Boolean wMode )
 /* this is the main read routine for the RBF emulator */
 /* it is working for read and readln */
 {
@@ -2322,13 +2326,13 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer,
     ulong*      mw    = &spP->mustW;
     ulong       ma    = Max( dev->sas,dev->clusterSize );
     ushort*     w;
-    ulong       sect, slim, offs, size, totsize, maxc, pos, scs, *rs, pref, coff, sv;
+    ulong       sect, slim, offs, size, totsize, maxc, pos, scs, *rs, pref, coff, sv, req;
     byte*       bb;
     byte        attr;
     byte        *bp;
     int         ii;
-    Boolean     done= false;               /* break condition for readln  */
-    Boolean     rOK = (remain==0);         /* is true, if nothing to read */
+    Boolean     done= false;               // break condition for readln 
+    Boolean     rOK = (remain==0);         // is true, if nothing to read
     Boolean     first= true;
     Boolean     mlt, mltFirst;
     ulong       n, n0, d;
@@ -2337,30 +2341,40 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer,
     debugprintf( dbgFiles,dbgDetail,("# >DoAccess (%s): n=%d\n", wMode ? "write":"read", *lenP ));
     sv= rbf->currPos;
     
-    do {           /* do this loop for every sector to be read into buffer */
+    do {           // do this loop for every sector to be read into buffer
         if (spP->rawMode) {
-          sect= rbf->currPos / dev->sctSize;          /* get raw sector nr */
+          sect= rbf->currPos / dev->sctSize;          // get raw sector nr
           slim= -1;  
-          size= -1; rs= &size;                           /* no upper limit */
+          size= -1; rs= &size;                           // no upper limit
         }
-        else {                            /* get sector nr of segment info */
+        else {                            // get sector nr of segment info
           FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
-                                      rs= &totsize;   /* the relevant size */
+                                      rs= &totsize;   // the relevant size
           if (!wMode && size<totsize) rs= &size;
             
           if (totsize<=rbf->lastPos)      rbf->lastPos= totsize;
           if (*rs    <=rbf->lastPos) *rs= rbf->lastPos;
 
-          if (!wMode) { /* reduce to currect ammount */
-            if     (*rs<rbf->currPos+remain) 
-            remain= *rs-rbf->currPos;
+          if (!wMode) { // reduce to currect ammount
+            if     (*rs < rbf->currPos+remain) 
+            remain= *rs - rbf->currPos;
           } // if
             
-          if (rbf->currPos>=*rs) {
+          if (rbf->currPos >= *rs) {
             if (wMode) {
-              err= AllocateBlocks( spP,ma, &pos,&scs, pref ); if (err) break;
-              err= AdaptAlloc_FD ( spP,     pos, scs       ); if (err) break;
-                    
+                  req= rbf->currPos - *rs;
+              if (req>0) req= ( req-1 ) / dev->sctSize + 1; // at least requested
+              
+              while (true) {
+                scs= Max( ma, req ); // alloc size might be larger
+                err= AllocateBlocks( spP,scs, &pos,&scs, pref ); if (err) break;
+                err= AdaptAlloc_FD ( spP,      pos, scs       ); if (err) break;
+                
+                if   (scs>=req) break;
+                req-= scs; // still asking for some more sectors
+              } // loop
+              if (err) break;
+                 
               FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref );
                                              rs= &totsize;
               if (rbf->currPos>=*rs) {
@@ -2375,12 +2389,7 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer,
             } // if
           } // if
         } // if
- 
-      //if (spP->rawMode && sect>=60 && sect<=90) {
-      //  upo_printf( "DoAccess sect=%d w=%d len=%d\n", sect, wMode, *lenP );
-      //} // if
-    
-    
+     
         offs= rbf->currPos % dev->sctSize; /* get offset within this sector */
 
             mlt= (dev->multiSct && sect!=0 && offs==0 && remain>=2*dev->sctSize);
@@ -2481,47 +2490,11 @@ static os9err DoAccess( syspath_typ* spP, ulong *lenP, char* buffer,
               spP->rw_nr= sect + n0;
               *mw= 0; /* already written */
             } // if
-
-           /*
-           // if sector in raw mode
-            if (spP->rawMode) {
-                    if (sect==0) {
-                        w= (ushort*)&spP->rw_sct[14]; // get the new disk ID
-                        dev->last_diskID = *w;        // must be done
-                        rbf->diskID=       *w;
-                    }
-
-                    if (sect==1) dev->last_alloc= 0; // reset after "format"
-                    
-                    if (mlt) {
-                        err= WriteSector( dev, sect,n, b ); if (err) break;
-                                spP->rw_nr= sect + n0;
-                    //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); // update rw_sct
-                    }
-                    else {
-                        err= WriteSector( dev, sect,1, spP->rw_sct ); if (err) break;
-                        spP->rw_nr= sect;
-                    }
-            }
-            else {
-                if (*mw!=0 && *mw!=sect) { // if sector nr has changed
-                    err= WriteSector( dev,  *mw,1, spP->rw_sct ); if (err) break;
-                    spP->rw_nr= *mw;
-                }
-                
-                *mw= sect;
-                if (mlt) {
-                    err= WriteSector( dev, sect,n, b ); if (err) break;
-                            spP->rw_nr= sect + n0;
-                //  memcpy( spP->rw_sct,   b + n0*dev->sctSize, dev->sctSize ); // update rw_sct
-                    *mw= 0; // already written
-                }
-            }
-            */
         }
-        else if (!mlt) memcpy( buffer+boffs, spP->rw_sct+offs, maxc );
-
-                      
+        else {
+          if (!mlt) memcpy( buffer+boffs, spP->rw_sct+offs, maxc );
+        } // if
+                    
         rbf->currPos+= maxc; /* calculate the new position */
     
         bp   = (byte *) rbf->currPos - bstart;
@@ -2783,7 +2756,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     Boolean         isExec= IsExec(*modeP);
     Boolean         isFile=       (*modeP & 0x80)==0;
     Boolean         cre   = IsCrea(*modeP);
-    byte            mode  =       (*modeP & 0x47); /* attributes to be used */
+  //byte            mode  =       (*modeP & 0x47); /* attributes to be used */
     char*           co    = cre    ? "create":"open";
     char*           fo    = isFile ? "file"  :"dir";
     char*           curpath;
@@ -3015,11 +2988,15 @@ os9err pRwriteln( _pid_, syspath_typ* spP, ulong *lenP, char* buffer )
 os9err pRseek( _pid_, syspath_typ* spP, ulong *posP )
 /* seek to new file position <posP> */
 {   
-    rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
-    debugprintf(dbgFiles,dbgNorm,("# RBF seek: dev='%s' file='%s' pos: %x\n", 
+  rbfdev_typ* dev= &rbfdev[spP->u.rbf.devnr];
+  debugprintf(dbgFiles,dbgNorm,("# RBF seek: dev='%s' file='%s' pos: %x\n", 
                                      dev->name, spP->name, *posP));
-    spP->u.rbf.currPos= *posP;
-    return 0;
+  spP->u.rbf.currPos= *posP;
+    
+//if (*posP==0x2a26) // debugging special alloc problem
+//  upe_printf( "hallo\n" );
+      
+  return 0;
 } /* pRseek */
 
 
