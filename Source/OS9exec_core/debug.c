@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2006/11/18 09:58:16  bfo
+ *    me!=NULL test added for <modsync> check
+ *
  *    Revision 1.25  2006/11/12 13:15:56  bfo
  *    Some outdated comments eliminated
  *
@@ -441,7 +444,7 @@ void debug_procdump(process_typ *cp, int cpid)
    }
 
    /* Static memory */
-   upo_printf("       Memory: Static    -     %08X - %08X  %6ld bytes\n",
+   upo_printf("       Memory: Static    -     %08X - %08X %7ld bytes\n",
           cp->memstart,
           cp->memtop,
           (cp->memtop - cp->memstart));
@@ -451,7 +454,7 @@ void debug_procdump(process_typ *cp, int cpid)
    for (i = 0; i < MAXMEMBLOCKS; i++) {
       mb = &cp->os9memblocks[i];
       if (mb->base != 0) {
-         upo_printf("              %12s %03d %08X - %08X  %6ld bytes\n",
+         upo_printf("              %12s %03d %08X - %08X %7ld bytes\n",
                     prefix,
                     i,
                     mb->base,
