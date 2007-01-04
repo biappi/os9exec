@@ -18,13 +18,17 @@
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
 //
 
-/*******************************************/
-/*             OS9exec/nt                  */
-/*    OS-9 emulator for Apple Macintosh    */
-/*   (c) 1996 by ZEP electroncics          */
-/*            Lukas Zeller                 */
-/*             luz@zep.ch                  */
-/*******************************************/
+/**********************************************/
+/*             O S 9 E x e c / NT             */
+/*  Cooperative-Multiprocess OS-9 emulation   */
+/*         for Apple Macintosh and PC         */
+/*                                            */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
+/*                  Beat Forster, CH-Maur     */
+/*                                            */
+/* email: luz@synthesis.ch                    */
+/*        bfo@synthesis.ch                    */
+/**********************************************/
 
 #define  _in_uae_c
 #include "os9exec_incl.h"
@@ -66,13 +70,13 @@ void handle_os9exec_exception(int nr, uaecptr oldpc)
         // Trap0 : OS9 system call: Don't stack anything, just exit emulator
         //         for execution of system call
         m68_os9go_result=next_iword(); // get OS9 function word
-     /* consprintf( ">%2d %3d<", nr-32, m68_os9go_result ); */
+     // consprintf( ">%2d %3d<", nr-32, m68_os9go_result );
 
         os9_running=0; // force exit from emulator loop
     } else if (nr>32 && nr<48) {
         uae_u16 func=next_iword();  // get TCALL function word
         traphandler_typ *th;
-     /* consprintf( ">%2d %3d<", nr-32, func ); /* JustInCase (bfo) */
+     // consprintf( ">%2d %3d<", nr-32, func ); /* JustInCase (bfo) */
       
         // Prepare OS9_go result in case no traphandler is installed
         m68_os9go_result=(nr << 16) + func;
