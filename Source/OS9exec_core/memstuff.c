@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2007/01/02 11:29:38  bfo
+ *    Allow to release combined memory blocks (e.g. for "dir")
+ *
  *    Revision 1.23  2006/08/06 22:42:43  bfo
  *    empty string causes <convErr>
  *
@@ -753,7 +756,7 @@ os9err os9free( ushort pid, void* membase, ulong memsz )
 } /* os9free */
 
 
-static IsZeroR( const char* s )
+static Boolean IsZeroR( const char* s )
 {
   if    (*s==NUL) return false;
   while (*s!=NUL) {
@@ -766,7 +769,7 @@ static IsZeroR( const char* s )
 } // IsZeroR
 
 
-static IsZeroI( const char* s )
+static Boolean IsZeroI( const char* s )
 {
   if    (*s==NUL) return false;
   while (*s!=NUL) {
