@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2006/11/13 14:55:12  bfo
+ *    type adaptions for GCC
+ *
  *    Revision 1.26  2006/11/12 13:25:31  bfo
  *    "load_OS9Boot" implemented /
  *    "load_module_local" extended for the OS9Boot requirements
@@ -890,8 +893,7 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
           return os9error( linkstyle ? E_MNF:E_PNNF );
       }
     #endif
-    
-            
+               
     /* check for pathlist and default to file-load if one is found */
     mode= exedir ? 0x05 : 0x01;
     type= IO_Type( pid,name, mode );    
@@ -1163,7 +1165,10 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     /* module found, insert it into module directory */
     
     
-modulefound:
+    #ifdef MACOS9
+      modulefound:
+    #endif
+    
     mid0= mid;     /* take the first one if using module groups */
     while (true) {
         os9modules[mid].modulebase= theModuleP; /* enter pointer in free table entry */   
