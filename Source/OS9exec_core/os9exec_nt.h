@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.68  2007/01/02 11:11:54  bfo
+ *    <includeList>/<excludeList> for PtoC added
+ *
  *    Revision 1.67  2006/12/02 12:07:43  bfo
  *    global <lastsyscall> eliminated
  *
@@ -355,7 +358,9 @@
 #endif
 
 /* number of include/exclude list elements */
-#define MAXLIST         500
+#ifdef PTOC_SUPPORT
+  #define MAXLIST       500
+#endif
 
 /* number of statistics entries */
 #define MAX_OS9PROGS   1000
@@ -1152,6 +1157,7 @@ extern  char*       dirtable   [MAXDIRS];
   /* the include/exclude list for internal commands */
   extern char*      includeList[MAXLIST];
   extern char*      excludeList[MAXLIST];
+  extern char*          dllList[MAXLIST];
 #endif
 
 /* the OS-9 statistics table */
