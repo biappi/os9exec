@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2007/01/02 11:19:35  bfo
+ *    "ChangeElement" visible from outside
+ *     usage functions more consistent
+ *    int_on/int_off with much more functionality
+ *    "isintcommand" considers <includeList>/<excludeList>
+ *
  *    Revision 1.42  2006/12/02 17:52:09  bfo
  *    F$Chain supported for int commands
  *
@@ -1339,7 +1345,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     syspath_typ* spP;
     syspath_typ* spC;
     process_typ* cp= &procs[      pid ];
-    process_typ* pa= &procs[ parentid ];
+  //process_typ* pa= &procs[ parentid ];
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
