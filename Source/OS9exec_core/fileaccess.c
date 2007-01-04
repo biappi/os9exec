@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2006/10/12 20:00:54  bfo
+ *    Several adaptions for Windows directory reading:
+ *    - handling EOF correctly
+ *    - pDsetatt with additional E_EOF support
+ *    - rmdir with /S /Q parameters
+ *    - dir flag adaption
+ *
  *    Revision 1.34  2006/06/18 14:36:05  bfo
  *    Use 'SITD' instead of 'SIT!' for Mac file type now
  *
@@ -715,29 +722,27 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 #endif
 
 
-
-static os9err touchfile( ushort pid, syspath_typ* spP )
-{
-    struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
-    byte      fdbeg[16]; /* buffer for preparing FD */
-    ulong     maxbyte = 16;
+#ifdef MACFILES
+  static os9err touchfile( ushort pid, syspath_typ* spP )
+  {
+    struct tm tim;       // Important Note: internal use of <tm> as done in OS-9
+    byte      fdbeg[16]; // buffer for preparing FD
+//  ulong     maxbyte = 16;
     int       k;
     
-    for (k=0; k<16; k++) fdbeg[ k]= 0; /* initialize it */
+    for (k=0; k<16; k++) fdbeg[ k]= 0; // initialize it
     
-    GetTim ( &tim );
-    fdbeg[3]= tim.tm_year;
-    fdbeg[4]= tim.tm_mon+1; /* somewhat different month notation */
-    fdbeg[5]= tim.tm_mday;
-    fdbeg[6]= tim.tm_hour;
-    fdbeg[7]= tim.tm_min;
+    GetTim   ( &tim );
+    fdbeg[ 3 ]= tim.tm_year;
+    fdbeg[ 4 ]= tim.tm_mon+1; // somewhat different month notation
+    fdbeg[ 5 ]= tim.tm_mday;
+    fdbeg[ 6 ]= tim.tm_hour;
+    fdbeg[ 7 ]= tim.tm_min;
     
     return pHsetFD( pid,spP, fdbeg );
-} /* touchfile */
+  } /* touchfile */
 
 
-
-#ifdef MACFILES
   typedef struct {
       char*   p;
       OSType* creator;
@@ -1381,10 +1386,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     byte*     att     = (byte*) &fdbeg[0]; /* the position of the attr field */
     ulong*    sizeP   = (ulong*)&fdbeg[9]; /* the position of the size field */
     Boolean   isFolder= false;
-    Boolean   uDir    = false;
     ulong     u       = 0;
     struct tm tim;
-        
+    
     #if defined MACOS9
       CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
 
@@ -1400,7 +1404,9 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         // This was the bad thing: declared pointer instead of data structure !
         // LPWIN32_FIND_DATA data;
         WIN32_FIND_DATA data;
-        FILETIME cr, lastA, lastW, lastL;        
+        FILETIME cr, lastA, lastW, lastL;
+        Boolean uDir= false;
+              
           mode_t v;
       #elif defined __MACH__
           mode_t v;
@@ -2038,8 +2044,8 @@ static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long d
         
         sprintf    ( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
         FD_ID( NULL, hashV, dEnt, &objid, false,false );
-        debugprintf( dbgAnomaly,dbgNorm,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
-                                           objid, -IDSIGN,IDSIGN-1, deP->name ));
+        debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
+                                             objid, -IDSIGN,IDSIGN-1, deP->name ));
                       
         deP->fdsect= objid; /* assign the new value */
     } /* if */
@@ -2499,72 +2505,75 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
 
 os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 {
-    os9err       err;
-    OSErr        oserr= 0;
-    char*        pastpath;
-    char         p[OS9PATHLEN]; 
-    Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
-    process_typ* cp= &procs[pid];
+  os9err       err;
+  OSErr        oserr= 0;
+  char*        pastpath;
+  char         p[ OS9PATHLEN ]; 
+  Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
+//process_typ* cp= &procs[pid];
 
-    #if defined MACOS9
-      FSSpec     localFSSpec;
-      defdir_typ defdir;
-      long       newdirid;
-    #elif defined UNIX
-      char adapted[OS9PATHLEN];
-    #endif
+  #if defined MACOS9
+    FSSpec     localFSSpec;
+    defdir_typ defdir;
+    long       newdirid;
+  #elif defined UNIX
+    char adapted[ OS9PATHLEN ];
+  #endif
 
-    pastpath= pathname;
-    err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
-    pathname= p;
+  pastpath= pathname;
+  err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
+  pathname= p;
     
-    #if defined MACOS9
-      debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Mac path=%s\n",pathname));
+  #if defined MACOS9
+    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Mac path=%s\n",pathname));
 
-      /* --- create FSSpec, use default volume/dir */
-                                     defdir= exedir ? _exe:_data;
-      err= getFSSpec( pid, pathname, defdir, &localFSSpec );
+    // --- create FSSpec, use default volume/dir
+                                   defdir= exedir ? _exe:_data;
+    err= getFSSpec( pid, pathname, defdir, &localFSSpec );
     
-      if (!err || err==E_PNNF) {
-          debugprintf(dbgFiles,dbgDetail,("# I$MakDir: FSSpec for new dir: OSErr=%d, vRefNum=%d, dirID=%ld\n",
-                                             err, localFSSpec.vRefNum,localFSSpec.parID));
-          /* --- create the directory */
-          oserr = FSpDirCreate(&localFSSpec, smSystemScript, &newdirid);
-          debugprintf(dbgFiles,dbgNorm,  ("# I$MakDir: oserr=%d, Id of new dir is %ld\n",
-                                             oserr,newdirid));
-      }
+    if (!err || err==E_PNNF) {
+      debugprintf(dbgFiles,dbgDetail,("# I$MakDir: FSSpec for new dir: OSErr=%d, vRefNum=%d, dirID=%ld\n",
+                                         err, localFSSpec.vRefNum,localFSSpec.parID));
+      // --- create the directory
+      oserr = FSpDirCreate(&localFSSpec, smSystemScript, &newdirid);
+      debugprintf(dbgFiles,dbgNorm,  ("# I$MakDir: oserr=%d, Id of new dir is %ld\n",
+                                         oserr,newdirid));
+    } // if
 
-    #elif defined windows32
-      debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Win path=%s\n",pathname));
-      if (!CreateDirectory( pathname,NULL )) oserr=GetLastError();
+  #elif defined windows32
+    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Win path=%s\n",pathname));
+    if (!CreateDirectory( pathname,NULL )) oserr=GetLastError();
 
-    #elif defined UNIX
-          err= AdjustPath( pathname,adapted, true );
-      if (err) return err;
-      debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
-      if (PathFound(adapted) || 
-          FileFound(adapted)) return E_CEF;
+  #elif defined UNIX
+        err= AdjustPath( pathname,adapted, true );
+    if (err) return err;
+    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
+    if (PathFound( adapted ) || 
+        FileFound( adapted )) return E_CEF;
           
-      if (mkdir( adapted,0x01c0 )==0) return 0; /* rwx------ */
-      return E_BPNAM;
+    if (mkdir( adapted,0x01c0 )==0) return 0; /* rwx------ */
+    return E_BPNAM;
 
-    #else
-      /* other OS */
-      #error I_Makdir not yet implemented
-    #endif
+  #else
+    /* other OS */
+    #error I_Makdir not yet implemented
+  #endif
 
-    return host2os9err(oserr,E_WRITE);
+  return host2os9err( oserr, E_WRITE );
 } /* pDmakdir */
 
 
 
 os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 {
-    os9err err  = 0;
-    OSErr  oserr= 0;
+    os9err err= 0;
     ushort mode;
+
+    #if defined MACOS9 || defined linux
+      OSErr  oserr= 0;
+    #endif
       
-    #if defined MACOS9
+    #ifdef MACOS9
       int    k;
       char*  pp= spP->name;
       char*  sv;
@@ -2631,7 +2640,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       sprintf( cmd, "rmdir /S /Q %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
-    #elif defined UNIX
+    #elif defined linux
       oserr= remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
     #endif
       
