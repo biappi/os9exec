@@ -1591,7 +1591,27 @@
           07-01-02  Bfo     filestuff   /
                             os9main     : 2007 text adaption
           07-01-02  Bfo     fcalls      : Show <ptocActive> as D_IPID bit 9
-                       
+          
+          07-01-04  Bfo     fcalls      - Some unused vars eliminated
+                                        - text formatting
+          07-01-04  Bfo     memstuff    : Boolean return type added for 'IsZeroR' and 'IsZeroI'                           
+          07-01-04  Bfo     intcommand  : <pa> is not used => eliminate
+          07-01-04  Bfo     file_rbf    - Some unused vars eliminated
+                                        - Boolean return type for 'IsSCSI'
+                                        - FD_Segment: break loop 'if (scs==0) break;'
+                                        - DoAccess: Loop until enough sectors allocated ('scsi.r' problem)
+          07-01-04  Bfo     int_rename  : Rearranged (unused) vars
+          07-01-04  Bfo     modstuff    : Partly unused label 'modulefound' hidden
+          07-01-04  Bfo     os9exec_nt  - <dllList> introduced
+                                        - DLL connection for plugins added (Plugin Loader)
+                                        - BootLoader beautified
+                                        - titles() rearranged
+          07-01-04  Bfo     telnetaccess: Shorter window title for Windows version
+          07-01-04  Bfo     debug       : Display memory size with 7 instead 6 digits
+          07-01-04  Bfo     fileaccess  : 'touchfile' only used for MACFILES
+          07-01-04  Bfo     os9_uae     : Title comment unified
+          07-01-04  Bfo     newcpu      : Write 'CPU' in line
+                                                                                                     
     3.34  07-01-??  Bfo
     -------------------  
 */
