@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2007/01/04 20:52:59  bfo
+ *    Shorter window title for Windows version
+ *
  *    Revision 1.11  2006/12/01 19:56:44  bfo
  *    "HandleEvent": no more separate MACH implementation
  *
@@ -223,7 +226,7 @@ void WindowTitle( char* title, Boolean vmod )
 {
   const char* p;
     
-  #ifdef TERMINAL_CONSOLE
+  #if defined TERMINAL_CONSOLE && !defined windows32
     char cons[ 40 ];
   #endif
     
