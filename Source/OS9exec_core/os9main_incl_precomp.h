@@ -19,15 +19,11 @@
 //
 
 /**********************************************/
-/*           os9main_incl_precomp.h           */
-/*                                            */
-/*                                            */
 /*             O S 9 E x e c / NT             */
 /*  Cooperative-Multiprocess OS-9 emulation   */
-/*    main include file for all versions      */
+/*         for Apple Macintosh and PC         */
 /*                                            */
-/*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -45,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.24  2006/06/26 22:08:24  bfo
+ *    <setjmp.h> included
+ *
  *    Revision 1.23  2006/06/12 10:52:09  bfo
  *    MAX_PATH added
  *
@@ -114,13 +113,13 @@
 #ifndef OS9MAIN_INCL_PRECOMP_H
 #define OS9MAIN_INCL_PRECOMP_H
 
-
 // This is OS9exec !!
 #define OS9EXEC 1 
 
 
 /* XCode is MACH, but does not know about macintosh */
 #if !defined macintosh && defined __MACH__
+  #define MACOSX
   #define macintosh
   
   // Support Intel Macs
@@ -144,7 +143,7 @@
 #endif 
 
 /* the UNIX systems */
-#if defined linux || defined __MACH__
+#if defined linux || defined MACOSX
   #define UNIX
 #endif
 
@@ -166,13 +165,13 @@
   #define macintosh
 #endif
 
-#if !defined powerc && defined __MACH__ && !defined __INTEL__
+#if !defined powerc && defined MACOSX && !defined __INTEL__
   #define powerc
 #endif
 
 /* define a special label for 68k/MacOS9/Carbon software */
 /* which is not compiled for the MACH kernel */
-#if defined macintosh && !defined __MACH__
+#if defined macintosh && !defined MACOSX
   #define MACOS9
   
   #ifndef USE_CARBON
@@ -321,7 +320,7 @@ typedef struct dirent dirent_typ;
   #endif
 #endif
 
-#if !defined linux && !defined __MACH__
+#ifndef UNIX
   /* C library include files */
   #include <CType.h>
   
@@ -356,7 +355,7 @@ typedef struct dirent dirent_typ;
 #endif
 
 #ifdef TERMINAL_CONSOLE
-  #ifndef __MACH__
+  #ifndef MACOSX
     #include <unistd.h>
   #endif
 #endif
