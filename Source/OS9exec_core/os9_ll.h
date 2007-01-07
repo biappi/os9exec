@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -71,17 +71,17 @@
   #ifdef _in_uae_c
     #define extern
   #endif
+#else
+  /* include file for empty interface */
+   #include <time.h>
 #endif
 
-//#else
-  #ifdef linux
-    /* include file for empty interface */
-    #include <sys/types.h>   /* according to Martin Gregorie's proposal */
-    #include <stdio.h>
-    #include <stdarg.h>
-    #include <time.h>
-  #endif
-//#endif
+#ifdef linux
+  #include <sys/types.h>   /* according to Martin Gregorie's proposal */
+  #include <stdio.h>
+  #include <stdarg.h>
+  #include <time.h>
+#endif
 
 
 #define CARRY      0x0001
