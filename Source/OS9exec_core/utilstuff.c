@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2006/12/02 12:13:33  bfo
+ *    global <lastsyscall> eliminated
+ *
  *    Revision 1.51  2006/12/01 20:05:44  bfo
  *    "MountDev" with <devCopy> support ( -d )
  *
@@ -193,7 +196,6 @@
 #include <utime.h>
 
                 
-
 
 char* nullterm( char* s1, const char* s2, ushort max )
 /* create null terminated version of s2. All chars<=SPACE will terminate s2
@@ -351,6 +353,7 @@ os9err os9error(os9err err)
 
     return err;
 } /* os9error */
+
 
 
 /* translates mac OS error into OS-9 error codes */
@@ -585,6 +588,7 @@ void TConv( time_t u, struct tm* tim )
 } /* TConv */
 
 
+
 time_t UConv( struct tm* tim )
 /* time conversion, seems to be buggy under CW7 -> 70 year correction */
 {
@@ -602,7 +606,6 @@ time_t UConv( struct tm* tim )
 	
 	return u;
 } /* UConv */
-
 
 
 
@@ -705,7 +708,6 @@ void Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
 
 
 
-
 ulong GetScreen( char mode )
 /* Get screen dimensions: 'w'=width, 'h'=height */
 {
@@ -730,7 +732,6 @@ ulong GetScreen( char mode )
     
     return (ulong)r;
 } /* GetScreen */
-
 
 
 
@@ -764,6 +765,7 @@ ulong GetScreen( char mode )
       return s;
   } /* c2pstr */
 #endif
+
 
 
 ulong Min( ulong a, ulong b )
@@ -941,7 +943,6 @@ Boolean KeyToBuffer( ttydev_typ* mco, char key )
 
 
 
-
 void LastCh_Bit7( char* name, Boolean setIt )
 /* adapt the dir entry's last char to normal/dir style depending on <setIt> */
 {
@@ -953,7 +954,6 @@ void LastCh_Bit7( char* name, Boolean setIt )
     if (setIt) *c= *c | 0x80;
     else       *c= *c & 0x7f;
 } /* LastCh_Bit7 */
-
 
 
 
@@ -1056,10 +1056,10 @@ Boolean IsRaw( const char* pathname )
 /* Test if <pathname> is a raw path */
 {   return IsWhat( pathname,false );
 } /* IsRaw */
+
+
+
 /* --------------------------------------------------------------- */
-
-
-
 Boolean VolInfo( const char* pathname, char* volname )
 {
     Boolean ok= true;
@@ -1170,7 +1170,6 @@ Boolean FileFound( const char* pathname )
                                       ok ?" (ok)":"(err)", pathname ));
     return ok;
 } /* FileFound */
-
 
 
 
@@ -1950,15 +1949,6 @@ Boolean SCSI_Device( const char* os9path,
 #endif
 
 
-/*
-#ifdef __MACH__
-  os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
-  {
-    return E_UNKSVC;
-  }
-#endif
-*/
-
 
 #ifdef win_unix
   void GetEntry( dirent_typ* dEnt, char* name, Boolean do_2e_conv )
@@ -1982,6 +1972,7 @@ Boolean SCSI_Device( const char* os9path,
       } /* loop */
   } /* GetEntry */
 #endif
+
 
 
 Boolean RBF_ImgSize( long size )
@@ -2049,7 +2040,6 @@ Boolean RBF_ImgSize( long size )
       
       return err;
   } /* GetRBFName */
-
 
 #elif defined win_unix
   os9err GetRBFName( char* os9path, ushort mode,

@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2006/06/11 22:01:49  bfo
+ *    set_os9_state with 3rd param <callingProc>
+ *
  *    Revision 1.26  2006/05/16 13:11:20  bfo
  *    Linux full path name adaption
  *
@@ -202,12 +205,11 @@ Boolean SCSI_Device  ( const char* os9path,
 Boolean RBF_ImgSize( long size );
 /* Returns true, if it is a valid RBF Image size */
 
-#if defined macintosh && !defined __MACH__
+#ifdef MACOS9
   os9err RBF_Rsc   ( FSSpec  *fs );
   os9err GetRBFName( char* os9path, ushort mode, Boolean *isFolder, 
                      FSSpec  *fs, FSSpec *afs );
-#endif
-#ifdef UNIX
+#elif defined UNIX
   os9err GetRBFName( char* os9path, ushort mdoe, Boolean *isFolder, 
                      char* rbfname );
 #endif
