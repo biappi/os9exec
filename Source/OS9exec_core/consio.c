@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh, PC, Linux     */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.22  2006/10/29 18:47:49  bfo
+ *    "ConsGetC" for MacOS9 repaired (again) /
+ *    Some commented old things removed
+ *
  *    Revision 1.21  2006/09/03 20:48:20  bfo
  *    Some more small <devReady> adaption for MacOS9/Windows
  *
@@ -332,20 +336,16 @@ Boolean ConsGetc( char* c )
       n= ReadCharsFromTerminal( c,1, &main_mco );
       return (n>0) && devIsReady;
     
-    /* as a UNIX-function, EOLN is delivered as 0x0A */
-//      *c= getchar();
-//  if (*c==0x00 || !devIsReady) return false;
-
-    #elif defined __MACH__
+    #elif defined MACOS9
+          n= fread( c,1,1, stdin );
+      if (n!=1 || !devIsReady) return false;
+    
+    #elif defined MACOSX
       n= getchar(); // problems with fread
            devIsReady= (n!=-1);
       if (!devIsReady) return false;
       *c= n;
       
-    #elif defined MACOS9
-          n= fread( c,1,1, stdin );
-      if (n!=1 || !devIsReady) return false;
-    
     #else
       #ifdef linux
         n= read( 0, c, 1 );
