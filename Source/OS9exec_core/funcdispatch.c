@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2006/12/16 22:14:57  bfo
+ *    cp->oerr assigned correctly for internal commands
+ *
  *    Revision 1.42  2006/12/02 12:12:13  bfo
  *    make cp->lastsyscall visible for internal commands as well
  *
@@ -165,7 +168,7 @@
   #include <time.h>
 #endif
 
-#ifdef __MACH__
+#ifdef MACOSX
   #include <unistd.h>
 #endif
 
@@ -729,6 +732,18 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
 } /* exec_syscall */
 
 
+// Callback entry for plugin trap0 calls
+os9err trap0_call( ushort code, void* rp )
+{
+  if (code==I_Write ||
+      code==I_WritLn) {
+    arbitrate= true;
+  } // if
+
+  return exec_syscall( code, currentpid, rp, true );
+} // trap0_call
+
+
 
 void init_L2(void)
 /* support for the /L2 led blinking */
@@ -795,9 +810,6 @@ ulong GetSystemTick(void)
       t=         tv.tv_sec - sec0;
       t= 100*t + tv.tv_usec/10000;
 
-  //#elif defined __MACH__
-  //  t= 0;
-      
     #else
       #error Not yet implemented GetSystemTick()
     #endif

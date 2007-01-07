@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/12/01 20:00:23  bfo
+ *    Enhanced (and shorter) "systime" display
+ *
  *    Revision 1.8  2006/09/03 20:55:00  bfo
  *     STIM_ORDERED 0x0020 added
  *
@@ -120,7 +123,8 @@ void    debug_return( ushort pid, regs_type* rp, Boolean cwti );
 #endif
 
 ushort pthread_pid();
-os9err exec_syscall( ushort func, ushort pid, regs_type *rp, Boolean intUtil );
+os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean intUtil );
+os9err trap0_call               ( ushort pid,      void* rp );
 
 #if defined __cplusplus
   } // end extern "C"
