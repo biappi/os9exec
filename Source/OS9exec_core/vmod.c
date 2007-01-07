@@ -64,7 +64,8 @@
 
 #include "os9exec_incl.h"
 
-#if defined macintosh && !defined MPW && !defined USE_CARBON && !defined MACOSX
+
+#if defined USE_CLASSIC && !defined MPW
   #include "TermWindow.h"
   
   /* /VMod access  */
@@ -87,7 +88,7 @@ os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {
-    #if defined macintosh && !defined MPW && !defined USE_CARBON && !defined MACOSX
+    #if defined USE_CLASSIC && !defined MPW
       ushort       func;
       newwin_type* nw;
       GrafPtr      my_port;
