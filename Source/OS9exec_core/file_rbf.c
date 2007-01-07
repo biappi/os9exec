@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2007/01/04 20:37:22  bfo
+ *    Some unused vars eliminated
+ *    Boolean return type for 'IsSCSI'
+ *    FD_Segment: break loop 'if (scs==0) break;'
+ *    DoAccess: Loop until enough sectors allocated ('scsi.r' problem)
+ *
  *    Revision 1.53  2006/12/17 00:47:23  bfo
  *    devCopy raw device opening / copy length is OS9PATHLEN
  *
@@ -1117,10 +1123,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     ptype_typ    type;
     int          ii, n;
     Boolean      abs, isSCSI, isRAMDisk= false, wProtect;
-    
-  //#ifndef __MACH__
-      Boolean    isFolder;
-  //#endif
+    Boolean      isFolder;
     
     process_typ* cp    = &procs[pid];
     
