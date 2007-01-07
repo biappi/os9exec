@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2007/01/04 20:41:26  bfo
+ *    Partly unused label 'modulefound' hidden
+ *
  *    Revision 1.27  2006/11/13 14:55:12  bfo
  *    type adaptions for GCC
  *
@@ -356,27 +359,27 @@ void MoveBlk( byte* dst, byte* src, ulong size )
 } // MoveBlk
 */
 
-
+/*
 void MoveBlk( void* dst, void* src, ulong size )
-/* copy the block with <size> form <src> to <dst */
-/* forward and backward mode supported (in case of overlapping structures */
+// copy the block with <size> form <src> to <dst
+// forward and backward mode supported (in case of overlapping structures
 {
-    ulong n;
-    byte *s;
-    byte *d;
+  ulong n;
+  byte* s;
+  byte* d;
     
-    if (src>=dst) { /* condition for forward/backward copy */
-        s= (byte*)src; /* normal forward copy */
-        d= (byte*)dst;
-        for ( n=0; n<size; n++ ) { *d= *s; s++; d++; }
-    }
-    else {             /* reverse ordered copy */  
-        s= (byte*)( (ulong)src + size-1 );
-        d= (byte*)( (ulong)dst + size-1 );
-        for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
-    } // if
-} /* MoveBlk */
-
+  if (src>=dst) {    // condition for forward/backward copy
+    s= (byte*)src;   // normal forward copy
+    d= (byte*)dst;
+    for ( n=0; n<size; n++ ) { *d= *s; s++; d++; }
+  }
+  else {             // reverse ordered copy 
+    s= (byte*)( (ulong)src + size-1 );
+    d= (byte*)( (ulong)dst + size-1 );
+    for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
+  } // if
+} // MoveBlk
+*/
 
 
 Boolean SameBlk( byte *a, byte *b, ulong size )
