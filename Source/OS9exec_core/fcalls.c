@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2007/01/04 20:17:58  bfo
+ *    Some unused vars eliminated
+ *    text formatting
+ *
  *    Revision 1.50  2007/01/02 11:33:32  bfo
  *    Show <ptocActive> as D_IPID bit 9
  *
@@ -852,65 +856,62 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
  * Restrictions: Some of the fields are not implemented
  */
 {
-    procid pd; /* this is a local construction buffer for the Process descriptor */
-    int k;
-    ulong memsz;
-    ushort           id= (ushort)loword( rp->d[0] );
-    process_typ*     cp= &procs[id];
-    traphandler_typ* tp;
-    errortrap_typ*   ep;
+  procid           pd; // this is a local construction buffer for the Process descriptor
+  int              k;
+  ulong            memsz;
+  ushort           id= (ushort)loword( rp->d[ 0 ] );
+  process_typ*     cp= &procs[ id ];
+  pmem_typ*        cm= &pmem [ id ];
+  traphandler_typ* tp;
+  errortrap_typ*   ep;
 
-    if (cp->state==pUnused) return E_IPRCID; /* this is not a valid process */
+  if (cp->state==pUnused) return E_IPRCID; // this is not a valid process
 
-
-    memcpy( &pd,&cp->pd, sizeof(procid) );
+  memcpy( &pd,&cp->pd, sizeof(procid) );
     
-    pd._usp= (byte*) os9_long( rp->a[7] );
+  pd._usp= (byte*) os9_long( rp->a[ 7 ] );
     
-    /* <_state> and <queueid> will be assigned directly */
-    if (id==cpid) pd._queueid = '*';
+  // <_state> and <queueid> will be assigned directly
+  if (id==cpid) pd._queueid = '*';
     
-    pd._scall =            os9_byte(cp->lastsyscall);
-//  pd._signal=            os9_word(cp->lastsignal );
-//  pd._sigvec=     (char*)os9_long(cp->icptroutine);
-    pd._pmodul= (mod_exec*)os9_long((ulong)os9mod(cp->mid));
+  pd._scall =            os9_byte( cp->lastsyscall );
+  pd._pmodul= (mod_exec*)os9_long( (ulong)os9mod(cp->mid) );
 
-    /* get the list of the currently connected trap handlers (bfo) */ 
-    for (k=0; k<NUMTRAPHANDLERS; k++) {
-        tp = &cp->TrapHandlers[k];
-        pd._traps [k]= (byte*)os9_long((ulong)tp->trapmodule);
-        pd._trpmem[k]= (byte*)os9_long((ulong)tp->trapmem);
-        pd._trpsiz[k]= 0;
-    } // for
+  // get the list of the currently connected trap handlers (bfo)
+  for (k=0; k<NUMTRAPHANDLERS; k++) {
+    tp = &cp->TrapHandlers[ k ];
+    pd._traps [ k ]= (byte*)os9_long( (ulong)tp->trapmodule );
+    pd._trpmem[ k ]= (byte*)os9_long( (ulong)tp->trapmem    );
+    pd._trpsiz[ k ]= 0;
+  } // for
 
-    /* get the list of the currently installed error trap handlers (LuZ) */ 
-    for (k=0; k<NUMEXCEPTIONS; k++) {
-        ep= &cp->ErrorTraps[k];
+  // get the list of the currently installed error trap handlers (LuZ)
+  for (k=0; k<NUMEXCEPTIONS; k++) {
+    ep= &cp->ErrorTraps[ k ];
         
-        pd.except[k]= (byte*)os9_long( (ulong)ep->handleraddr );        
-        pd._exstk[k]= (byte*)os9_long( (ulong)ep->handlerstack);
-    } // for
+    pd.except[ k ]= (byte*)os9_long( (ulong)ep->handleraddr );        
+    pd._exstk[ k ]= (byte*)os9_long( (ulong)ep->handlerstack);
+  } // for
 
-    /* get the list of the currently opened paths */ 
-    for (k=0; k<MAXUSRPATHS; k++) {
-        pd._path[k] = os9_word(cp->usrpaths[k]);
-    }
+  // get the list of the currently opened paths
+  for (k=0; k<MAXUSRPATHS; k++) {
+        pd._path[ k ] = os9_word( cp->usrpaths[ k ] );
+  } // for
      
-    /* ... and get the total size from the first segment */
-    memsz=0;
+  // ... and get the total size from the first segment
+  memsz= 0;
     
-    for (k=0; k<MAXMEMBLOCKS; k++) {
-        if                (cp->os9memblocks[k].base!=NULL) {
-            pd._memimg[0] = (unsigned char *) os9_long((ulong)cp->os9memblocks[k].base);
-            memsz+= cp->os9memblocks[k].size;
-        }
-    } // for
-    pd._blksiz[0]= os9_long(memsz);
-    
-        
-    memcpy( (byte*)rp->a[0], &pd, loword(rp->d[1]) );
-    return 0;
-} /* OS9_F_GPrDsc */
+  for (k=0; k<MAXMEMBLOCKS; k++) {
+    if (cm->m[ k ].base!=NULL) {
+      pd._memimg[ 0 ]= (unsigned char *) os9_long( (ulong)cm->m[ k ].base );
+      memsz+= cm->m[ k ].size;
+    } // if
+  } // for
+  pd._blksiz[ 0 ]= os9_long( memsz );
+          
+  memcpy( (byte*)rp->a[ 0 ], &pd, loword( rp->d[ 1 ] ) );
+  return 0;
+} // OS9_F_GPrDsc
 
 
 
@@ -1003,7 +1004,7 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
       case D_TckSec  : v=             TICKS_PER_SEC; break;
     
       case D_68881   : 
-        #if defined powerc && !defined __MACH__
+        #if defined powerc && !defined MACOSX
         /* Gestalt( gestaltFPUType,         &v ); not all defs visible for MPW ... */
            Gestalt( FOUR_CHAR_CODE('fpu '), &v );
            if ( v==3 ) v= 1;           /* this value is handled differently on Mac */
@@ -1013,10 +1014,6 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         
         #ifdef USE_UAEMU /* 68881 FPU available with emulator */
           v= 1;  /* still some problems ? */
-           
-        //#ifdef __MACH__
-        //   v= 0;
-        //#endif
         #endif
         break;
          
@@ -1043,7 +1040,7 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
       case D_DevTbl  : v=  (ulong)            &devs; break; /* I/O device table ptr */
       
       case D_MPUTyp  : 
-        #if defined powerc && !defined __MACH__
+        #if defined powerc && !defined MACOSX
         /* Gestalt( gestaltNativeCPUtype,   &v ); not all defs visible for MPW ... */
            Gestalt( FOUR_CHAR_CODE('cput'), &v );
         #else
@@ -1069,9 +1066,11 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         
         break;
         
-      case D_IPID    : v= 42;          /* allow programs to identify as os9exec/nt environment */
-                       if (cp->isIntUtil) v+= 0x0100;   /* special mode for internal utilities */
-                       if (ptocActive)    v+= 0x0200;   /*    "      "   "     "         "     */
+      case D_IPID    : v= 42; // allow programs to identify as os9exec/nt environment
+                       if (cp->isIntUtil) v+= 0x0100; // special modes for internal utilities
+                       if (nativeActive ) v+= 0x0200;
+                       if (cp->isPlugin ) v+= 0x0400;
+                       if (pluginActive ) v+= 0x0800;
                        break;
       
       case D_ScreenW : v= GetScreen( 'w' ); break; /* not according to OS-9 */
