@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2007/01/04 20:54:17  bfo
+ *    Display memory size with 7 instead 6 digits
+ *
  *    Revision 1.26  2006/11/18 09:58:16  bfo
  *    me!=NULL test added for <modsync> check
  *
@@ -156,41 +159,38 @@ Boolean debugcheck( ushort mask, ushort level )
 #endif
 
 
-Boolean out_of_mem( ushort pid,ulong addr )
-/* check if address is outside process' allocated memory */
+// check if address is outside process' allocated memory
+Boolean out_of_mem( ushort pid, ulong addr )
 {
-    ushort k;
-    ulong base;
-    process_typ* cp= &procs[pid];
+  ulong     base;
+  pmem_typ* cm= &pmem[ pid ];
     
-    for(k=0;k<MAXMEMBLOCKS;k++) {
-        if (cp->os9memblocks[k].base!=NULL) {
-            if (addr >= (base=(ulong)cp->os9memblocks[k].base)
-             && addr <   base       +cp->os9memblocks[k].size) {
-                /* ok, pointer points within range */
-                return false;  /* not out of range */
-            }    
-        }
-    }
-    return true; /* out of range */
-} /* out_of_mem */
+  ushort k;
+  for  ( k=0; k<MAXMEMBLOCKS; k++ ) {
+    if (cm->m[ k ].base &&
+        addr   >= (base= (ulong)cm->m[ k ].base) &&
+        addr   <   base       + cm->m[ k ].size) return false; // ok, pointer points within range
+  } // for
+  
+  return true; // out of range
+} // out_of_mem
 
 
-/* check if address is outside any OS9 module */
+// check if address is outside any OS9 module
 Boolean out_of_mods( ulong addr )
 {
-    ushort    k;
-    mod_exec* mp;
+  ushort    k;
+  mod_exec* mp;
     
-    for (k=0; k<MAXMODULES; k++) {
-            mp= os9mod( k );
-        if (mp!=NULL &&
-            addr >= (ulong)mp &&                         /* ok, pointer points within range */
-            addr <  (ulong)mp + os9_long(mp->_mh._msize)) return false; /* not out of range */
-    } /* for */
+  for (k=0; k<MAXMODULES; k++) {
+        mp= os9mod( k );
+    if (mp &&
+        addr >= (ulong)mp &&                           // ok, pointer points within range
+        addr <  (ulong)mp + os9_long( mp->_mh._msize )) return false; // not out of range
+  } // for
 
-    return true; /* out of range */
-} /* out_of_mem */
+  return true; // out of range
+} // out_of_mods
 
 
 /* check for passing of bad register arguments */
@@ -288,12 +288,12 @@ void debug_prep()
 
 
 /* Dump the process descriptor */
-void debug_procdump(process_typ *cp, int cpid)
+void debug_procdump( process_typ* cp, int cpid )
 {
    char                       *code    = NULL;
    char                       *desc    = NULL;
-   mod_exec                   *me      = get_module_ptr(cp->mid);
-   ushort                     sync_id  = os9_word(0x4afc);
+   mod_exec                   *me      = get_module_ptr( cp->mid );
+   ushort                     sync_id  = os9_word( 0x4afc );
    ushort                     modsync  = 0;
    Boolean                    sync_ok  = false;
    static int                 depth    = 0;
@@ -308,11 +308,12 @@ void debug_procdump(process_typ *cp, int cpid)
    char                       devname[OS9NAMELEN];
    char                       modelist[9];
    const funcdispatch_entry*  fdeP = getfuncentry(cp->lastsyscall);
-   regs_type                  *rp;
-   memblock_typ               *mb;
-   errortrap_typ              *et;
-   traphandler_typ            *th;
-   mod_exec                   *tme;
+   regs_type*                 rp;
+   memblock_typ*              mb;
+   errortrap_typ*             et;
+   traphandler_typ*           th;
+   mod_exec*                  tme;
+   pmem_typ*                  cm= &pmem[ cpid ];
 
    #ifdef USE_UAEMU
       uaecptr aa;
@@ -452,7 +453,8 @@ void debug_procdump(process_typ *cp, int cpid)
    /* List allocated memory segments */
    prefix = "Allocated -";
    for (i = 0; i < MAXMEMBLOCKS; i++) {
-      mb = &cp->os9memblocks[i];
+       // mb= &cp->os9memblocks[i];
+          mb= &cm->m[ i ];
       if (mb->base != 0) {
          upo_printf("              %12s %03d %08X - %08X %7ld bytes\n",
                     prefix,
