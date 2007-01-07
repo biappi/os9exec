@@ -19,15 +19,11 @@
 //
 
 /**********************************************/
-/*               os9exec_incl.h               */
-/*                                            */
-/*                                            */
 /*             O S 9 E x e c / NT             */
 /*  Cooperative-Multiprocess OS-9 emulation   */
-/*    main include file for all versions      */
+/*         for Apple Macintosh and PC         */
 /*                                            */
-/*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -45,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.19  2006/06/07 16:11:55  bfo
+ *    Partly beautified
+ *
  *    Revision 1.18  2006/05/26 14:28:32  bfo
  *    Use always "procid_adapted.h"
  *
@@ -226,6 +225,7 @@
 #include "os9funcs.h"
 
 /* OS9 emulator core */
+#include "c_access.h"
 #include "os9exec_nt.h"
 #include "alarms.h"
 #include "consio.h"
