@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2007/01/04 21:08:08  bfo
+ *    Avoid unused var (cons)
+ *
  *    Revision 1.12  2007/01/04 20:52:59  bfo
  *    Shorter window title for Windows version
  *
@@ -325,7 +328,7 @@ Boolean DevReady( long *count )
       *count= 1; return true; /* %%% not yet as it should be */
     #endif
 
-    #ifdef __MACH__
+    #ifdef MACOSX
       *count= 1; return true; /* %%% not yet as it should be */
     #endif
 

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.27  2007/01/02 11:31:31  bfo
+ *    2007 text adaption
+ *
  *    Revision 1.26  2006/12/01 20:04:34  bfo
  *    Enhanced (and shorter) "systime" display
  *
@@ -355,7 +358,7 @@ void eSpinCursor (short incr)
         count=0;
       }
     #else
-      #if defined __MACH__
+      #if defined MACOSX
         // sleep(1);
          
       #elif defined macintosh

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2007/01/04 20:56:31  bfo
+ *    'touchfile' only used for MACFILES
+ *
  *    Revision 1.35  2006/10/12 20:00:54  bfo
  *    Several adaptions for Windows directory reading:
  *    - handling EOF correctly
@@ -270,7 +273,7 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     #ifdef MACFILES
       long  effpos;
       OSErr oserr;
-    #elif defined windows32 || defined __MACH__
+    #elif defined windows32 || defined MACOSX
       fpos_t tmp_pos;
     #endif
     
@@ -303,7 +306,7 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
           cnt= fread( (void*)buffer, 1,*n, spP->stream );
       if (cnt==0 && feof(spP->stream)) return os9error(E_EOF);
 
-      #if defined windows32 || defined __MACH__
+      #if defined windows32 || defined MACOSX
         /* fflush doesn't work here: it synchronises read/write but jumps to end of file */
         fgetpos( spP->stream, &tmp_pos );   /* save current position */
         fsetpos( spP->stream, &tmp_pos );   /* restore position */
@@ -343,7 +346,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       #endif
     #endif
       
-    #if defined windows32 || defined __MACH__
+    #if defined windows32 || defined MACOSX
       fpos_t tmp_pos;
     #endif
 
@@ -439,7 +442,7 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
             if (c==CR) break; /* abort on CR */
         }
     
-        #if defined windows32 || defined __MACH__
+        #if defined windows32 || defined MACOSX
           /* fflush doesn't work here: it synchronises read/write but jumps to end of file */
           fgetpos( spP->stream,  &tmp_pos );   /* save current position */
           fsetpos( spP->stream,  &tmp_pos );   /* restore position */
@@ -634,7 +637,7 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       
     //strcpy( volname,spP->fullName ); /* none for Linux, top directory structure is different */
       
-    #elif defined __MACH__
+    #elif defined MACOSX
       /* MacOSX has a very special structure */
       #define VV "/Volumes/"
       char* w= &spP->fullName;
@@ -1249,7 +1252,7 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
     #elif defined win_linux
           err= fstat( fd,&info );
       if (err) return E_SEEK;
-      *sizeP= info.st_size; // for __MACH__, <st_size> is unfortunately 0
+      *sizeP= info.st_size; // for MACOSX <st_size> is unfortunately 0
       
     #else
       fpos_t tmp_pos;
@@ -1408,7 +1411,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         Boolean uDir= false;
               
           mode_t v;
-      #elif defined __MACH__
+      #elif defined MACOSX
           mode_t v;
       #else
         __mode_t v;
@@ -2583,8 +2586,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     #elif defined win_unix
       char*  pp= spP->fullName;
       
-      #if defined windows32 || defined __MACH__
-//      dirent_typ* dEnt;
+      #if defined windows32 || defined MACOSX
         char cmd[OS9PATHLEN];
       #endif
     
@@ -2620,7 +2622,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
         HandleEvent();
       }
 
-    #elif defined windows32 || defined __MACH__
+    #elif defined windows32 || defined MACOSX
 //    spP->dDsc= opendir( spP->fullName );
 //    while (true) {
 //        dEnt= readdir( spP->dDsc ); if (dEnt==NULL) break;
