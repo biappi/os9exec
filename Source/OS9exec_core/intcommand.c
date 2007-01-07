@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2007/01/04 20:27:36  bfo
+ *    <pa> is not used => eliminate
+ *
  *    Revision 1.43  2007/01/02 11:19:35  bfo
  *    "ChangeElement" visible from outside
  *     usage functions more consistent
@@ -182,7 +185,41 @@ char *icmname; /* current internal command's name = argv[0] */
 #define Mx 10
 
 
+// ---- Callback routines for "cclib" ----------------------------------
+// missing "atof"    operations for "cclib", placed here
+Boolean StrToFloat ( float*  f, const char* s );
+Boolean StrToDouble( double* d, const char* s );
 
+
+static Boolean IsZeroR( const char* s )
+{
+  if    (*s==NUL) return false;
+  while (*s!=NUL) {
+    if  (*s <'0' && *s >'9' && *s!='.' && 
+         *s!='E' && *s!='-' && *s!='+') return false;
+    s++;
+  } // while
+  
+  return true;
+} // IsZeroR
+
+
+Boolean StrToFloat( float* f, const char* s )
+{
+  *f= atof( s );
+  return *f==0 && !IsZeroR( s );
+} // StrToFlat
+
+
+Boolean StrToDouble( double* d, const char* s )
+{
+  *d= atof( s );
+  return *d==0 && !IsZeroR( s );
+} // StrToDouble
+
+
+
+// ---------------------------------------------------------------------
 #ifdef MACOS9
   static os9err int_debugger( _pid_, _argc_, _argv_ )
   /* internal debugger command */
@@ -657,7 +694,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
  
   static void display_list( Boolean addIt )
   {
-    int     i;
+    int     i, n= 0;
     char**  q; 
     Boolean done= false;
     
@@ -668,11 +705,14 @@ static os9err int_devs( _pid_, int argc, char** argv )
            q= MyElem( i, addIt );
       if (*q==NULL) break;
       
-      upe_printf( " %s\n", *q );
+      if (n>0 && ( n % 5 )==0) upe_printf( "\n" );
+      n++;
+      upe_printf( " %-15s", *q );
       done= true;
     } // for
     
-    if (!done) upe_printf( "<none>\n" );
+    if (!done) upe_printf( "<none>" );
+               upe_printf( "\n" );
   } // display_list
 
 
@@ -725,41 +765,15 @@ static os9err int_devs( _pid_, int argc, char** argv )
   } // RemoveElement
   
   
-  void ChangeElement( char* s, Boolean addIt )
+  static void ChangeElement( char* s, Boolean addIt )
   {
     int     i;
     char**  q;
     Boolean already;
     
     RemoveElement( s, addIt, &already );
-    if (already) return;
-    
-    /*
-    for (i= 0; i<MAXLIST; i++) {
-      // Extract, if already in the other list
-           q= MyElem( i, !addIt );
-      if (*q!=NULL && ustrcmp( *q, s )==0) {
-        release_mem( *q );
-                     *q= NULL;
-        ShiftDown( i, !addIt );
-      } // if
-      
-      // --------------------------------      
-           q= MyElem( i, addIt );
-      if (*q!=NULL && ustrcmp( *q, s )==0) {
-        if (done) {
-          // Extract if more than once
-          release_mem( *q );
-                       *q= NULL;
-          ShiftDown( i, addIt );
-        } // if
+    if (already || !Is_PtoC( s )) return;
         
-        done= true; // it's there already
-      } // if
-    } // for
-    if (done) return;
-    */
-    
     // Insert new element  
     for (i= 0; i<MAXLIST-1; i++) { // last element will not be used
            q= MyElem( i, addIt );
@@ -824,7 +838,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
     } // if
 
     if (argc==1) { // no additional arguments
-      ptocActive= isOn;
+      nativeActive= isOn;
     } // if
     
     return 0;
@@ -835,16 +849,23 @@ static os9err int_devs( _pid_, int argc, char** argv )
   {      return int_xx (            argc,        argv,  true ); }
   static os9err int_off( _pid_, int argc, char** argv ) 
   {      return int_xx (            argc,        argv, false ); }
-  
 
-  /*
-  static os9err int_on( _pid_, int argc, char** argv )
+
+  static void plugin_usage( char* name )
+  {
+    upe_printf( "Syntax:   %s [<opts>]\n", name );
+    upe_printf( "Function: Switch on/off plugin DLLs\n" );
+    upe_printf( "Options:\n" );
+    upe_printf( "    -e  enable plugin DLLs\n" );
+    upe_printf( "    -d disable plugin DLLs\n" );
+  } // plugin_usage
+
+
+  static os9err int_plugin( _pid_, int argc, char** argv )
+  // Switch on/off plugin DLLs
   { 
     int   h;
     char* p;
-    Boolean dispIn  = false;
-    Boolean dispEx  = false;
-    Boolean removeIt= false;
 
     for (h=1; h<argc; h++) {
       p=        argv[ h ];
@@ -853,88 +874,21 @@ static os9err int_devs( _pid_, int argc, char** argv )
            p++;
         switch (tolower(*p)) {
           case '?' :
-          case 'h' : ion_usage( argv[ 0 ] ); return 0;
-          case 'd' :
-          case 'i' : dispIn  = true; break;
-          case 'x' : dispEx  = true; break;
-          case 'n' : removeIt= true; break;
+          case 'h' : plugin_usage( argv[ 0 ] ); 
+                     return 0;
+                     
+          case 'd' : pluginActive= false;                      break;
+          case 'e' : pluginActive= pluginList[ 0 ].name!=NULL; break;
                             
-          default  : ion_usage( argv[ 0 ] ); 
-                     upe_printf( "Error: unknown option '%c'\n", *p );
-                     return 1;
-        } // switch
-      }
-      else {
-        if (!dispIn && !dispEx) ChangeList( p, true );
-      }
-    } // for
-    
-    if   (dispIn || dispEx) {
-      if (dispIn) display_list(  true );
-      if (dispEx) display_list( false );
-      return 0;
-    } // if
-
-    if (argc==1) {  // no additional arguments
-      ptocActive= true;
-    //upe_printf( "int ON\n" );
-    } // if
-    
-    return 0;
-  } // int_on
-  
-  
-  static os9err int_off( _pid_, int argc, char** argv )
-  { 
-    int   h;
-    char* p;
-    Boolean dispIn  = false;
-    Boolean dispEx  = false;
-    Boolean removeIt= false;
-
-    for (h=1; h<argc; h++) {
-      p=        argv[ h ];
-            
-      if (*p=='-') { 
-           p++;
-        switch (tolower(*p)) {
-          case '?' :
-          case 'h' : ioff_usage( argv[ 0 ] ); return 0;
-          case 'd' :
-          case 'x' : dispEx  = true; break;
-          case 'i' : dispIn  = true; break;
-          case 'n' : removeIt= true; break;
-                            
-          default  : ioff_usage( argv[ 0 ] );
+          default  : plugin_usage( argv[ 0 ] ); 
                      upe_printf( "Error: unknown option '%c'\n", *p ); 
                      return 1;
         } // switch
-      }
-      else {
-        if (removeIt)
-          RemoveElement( p, true  );
-          RemoveElement( p, false );
-        else {
-          if (!dispIn && !dispEx) ChangeElement( p, false );
-        }
-      }
+      } // if
     } // for
-
-    if   (dispIn || dispEx) {
-      if (dispIn) display_list(  true );
-      if (dispEx) display_list( false );
-      return 0;
-    } // if
-
-    if (argc==1) { // no additional arguments
-      ptocActive= false;
-    //upe_printf( "int OFF\n" );
-    } // if
     
     return 0;
-  } // int_off
-  */
-  
+  } // int_xx
 
   // ---------------------------------------------------------------------------------
   static os9err int_thread  ( _pid_, _argc_, _argv_ ) { ptocThread= true;  return 0; }
@@ -946,11 +900,10 @@ static os9err int_devs( _pid_, int argc, char** argv )
   // ---------------------------------------------------------------------------------
   static os9err ptoc_calls( ushort pid, _argc_, char** argv )
   {
-    char* name= argv[ 0 ];
- 
-    process_typ* cp= &procs[ pid ];
-  //ushort                parent= cp->pd._pid;
-  //Boolean isInt= procs[ parent ].isIntUtil;
+    os9err       err;
+    char*        name= argv[ 0 ];
+    process_typ* cp  = &procs[ pid ];
+    plug_typ*    p   = &pluginList[ 0 ];
     
     #ifdef THREAD_SUPPORT
       // mutex lock for systemcalls
@@ -958,15 +911,26 @@ static os9err int_devs( _pid_, int argc, char** argv )
       currentpid=  pid;
     #endif
 
-    OS9exec_Globs( pid, os9modules[ cp->mid ].modulebase, 
-                                 procs[ pid ].my_args );
+    if (pluginActive) cp->isPlugin= true;
+    g_cb.trap0      = trap0_call; // once would be sufficient
+    g_cb.strToFloat = StrToFloat;
+    g_cb.strToDouble= StrToDouble;
+    
+    if (pluginActive) p->prp_IProg( &currentpid, os9modules[ cp->mid ].modulebase, 
+                                               (void*)procs[ pid ].my_args, &g_cb );
+    else                 Prp_IProg( &currentpid, os9modules[ cp->mid ].modulebase, 
+                                               (void*)procs[ pid ].my_args, &g_cb );
      
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     #endif
 
-    return Run_PtoC( name );
+    if (pluginActive) err= p->run_IProg( name );
+    else              err=    Run_IProg( name );
+    
+    cp->isPlugin= false;
+    return err;
   } // ptoc_calls
 #endif
 
@@ -1047,6 +1011,7 @@ cmdtable_typ commandtable[] =
   #ifdef PTOC_SUPPORT
   { "ion",           int_on,         "Switch on   built-in PtoC utilities (default)" },
   { "ioff",          int_off,        "Switch off  built-in PtoC utilities" },
+  { "plugin",        int_plugin,     "Switch on/off plugin DLLs" },
   { "ithread",       int_thread,     "Threading   built-in PtoC utilities" },
   { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
   { "iarb",          int_arb,        "Full        arbitration" },
@@ -1068,8 +1033,8 @@ os9err int_help( ushort pid, _argc_, _argv_ )
   upho_printf("(case sensitive, so use uppercase to use external versions)\n");
   upho_printf("\n");
   for (k=0 ;; k++) {
-    nm= commandtable[ k ].name; if (nm==NULL) break;
-    if  (!ptocActive  &&  strcmp( nm,"" )==0) break;
+    nm= commandtable[ k ].name; if (nm==NULL)   break;
+    if  (!nativeActive  &&  strcmp( nm,"" )==0) break;
     
     upho_printf("  %-14s: %s\n", nm, commandtable[k].helptext) ;
   } // for
@@ -1125,7 +1090,7 @@ int isintcommand( const char* name, Boolean *isPtoc )
   #ifdef PTOC_SUPPORT
     int         i;
     char**      q;
-    Boolean     ok= ptocActive;
+    Boolean     ok= nativeActive;
     const char* cut= name + strlen( name ) - 1;
   
     // get the pure file name from eventual abs path name
@@ -1135,7 +1100,7 @@ int isintcommand( const char* name, Boolean *isPtoc )
     } // while
  
     for (i= 0; i<MAXLIST; i++) {
-           q= MyElem( i, !ptocActive );
+           q= MyElem( i, !nativeActive );
       if (*q==NULL) break;
       
       // Consider include/exclude list  
@@ -1151,6 +1116,33 @@ int isintcommand( const char* name, Boolean *isPtoc )
   index= IntCmdIndex( name );
   return index;
 } // isintcommand
+
+
+#ifdef PTOC_SUPPORT
+  void Init_IProg()
+  {
+    char iName[ OS9NAMELEN ];
+    char iOpt [ OS9NAMELEN ];
+    int  i;
+    
+    nativeActive= true; // Native programs are possible
+   
+    for (i= 0; i<MAXLIST; i++) includeList[ i ]     = NULL;
+    for (i= 0; i<MAXLIST; i++) excludeList[ i ]     = NULL;
+    for (i= 0; i<MAXLIST; i++)  pluginList[ i ].name= NULL;
+    
+                        i= 0;
+    while (Next_IInit( &i, &iName, &iOpt )) {
+      if (strcmp( iOpt,"+" )==0) ChangeElement( iName, true  ); 
+      if (strcmp( iOpt,"-" )==0) ChangeElement( iName, false ); 
+    } // while
+                        i= 0;
+    while (Next_IMain( &i, &iName, &iOpt )) {
+      if (strcmp( iOpt,"+" )==0) ChangeElement( iName, true  ); 
+      if (strcmp( iOpt,"-" )==0) ChangeElement( iName, false ); 
+    } // while
+  } // Init_IProg
+#endif
 
 
 /* print error message in OS-9 format */
@@ -1481,7 +1473,7 @@ os9err call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv )
       
       return host2os9err( GetLastError(),E_IFORKP );
     
-    #elif defined __MACH__
+    #elif defined MACOSX
       os9err err;
       
       #pragma unused(pid,moreargs,argv)

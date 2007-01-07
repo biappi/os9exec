@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2007/01/04 20:27:19  bfo
+ *    Up to date
+ *
  *    Revision 1.10  2007/01/02 11:19:01  bfo
  *    "ChangeElement" visible from outside
  *
@@ -84,7 +87,8 @@ os9err int_wincmd( ushort pid, int argc, char **argv );
 #endif
 
 /* PtoC include/exclude */
-void ChangeElement( char* s, Boolean addIt );
+void Init_IProg();
+// void ChangeElement( char* s, Boolean addIt );
 
 
 /* utility */
