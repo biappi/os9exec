@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.9  2006/02/19 15:21:52  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.8  2005/06/30 11:43:38  bfo
  *    Mach-O support
  *
@@ -61,7 +64,7 @@
 
 #include "os9exec_incl.h"
 
-#if defined macintosh && !defined MPW && !defined USE_CARBON && !defined __MACH__
+#if defined macintosh && !defined MPW && !defined USE_CARBON && !defined MACOSX
   #include "TermWindow.h"
   
   /* /VMod access  */
@@ -84,7 +87,7 @@ os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {
-    #if defined macintosh && !defined MPW && !defined USE_CARBON && !defined __MACH__
+    #if defined macintosh && !defined MPW && !defined USE_CARBON && !defined MACOSX
       ushort       func;
       newwin_type* nw;
       GrafPtr      my_port;
@@ -133,7 +136,7 @@ os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
           default    : ; /* do nothing */
       }
 
-    #elif defined windows32 || defined __MACH__
+    #elif defined windows32 || defined MACOSX
       #pragma unused(pid,d1,d2)
     #endif
     
