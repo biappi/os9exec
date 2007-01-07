@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2006 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2006/10/13 10:24:45  bfo
+ *    "debug_procdump" (bus error reporting) added (by Martin Gregorie)
+ *
  *    Revision 1.7  2006/02/19 15:37:20  bfo
  *    Header changed to 2006
  *
@@ -111,22 +114,22 @@ Boolean out_of_mods(ulong addr);
 Boolean out_of_mem(ushort pid,ulong addr);
 
 
-#ifndef NODEBUG
-/* real debug routines */
-Boolean debugcheck ( ushort mask, ushort level );
-Boolean debugprintf( ushort mask, ushort level, char *format, ... );
-#define debugprintf(a,b,c) if (debugcheck(a,b)) _debugprintf c;
-
-ushort  debug_halt( ushort haltmask );
-void    regcheck  ( ushort pid, char *nam,ulong reg,ushort mode );
-void    trigcheck ( char  *msg, char *name );
+#if defined NODEBUG
+  /* avoid code generation (and argument preparation) at all */
+  #define debugcheck(a,b) (false)
+  #define debugprintf(a,b,c) 
+  #define debug_halt(a) (false)
+  #define regcheck(r,s,p,m)
+  #define trigcheck(m,s)
 #else
-/* avoid code generation (and argument preparation) at all */
-#define debugcheck(a,b) (false)
-#define debugprintf(a,b,c) 
-#define debug_halt(a) (false)
-#define regcheck(r,s,p,m)
-#define trigcheck(m,s)
+  /* real debug routines */
+  Boolean debugcheck ( ushort mask, ushort level );
+  Boolean debugprintf( ushort mask, ushort level, char *format, ... );
+  #define debugprintf( a,b,c ) if (debugcheck(a,b)) _debugprintf c;
+
+  ushort  debug_halt ( ushort haltmask );
+  void    regcheck   ( ushort pid, char *nam,ulong reg,ushort mode );
+  void    trigcheck  ( char  *msg, char *name );
 #endif
 
 void  _debugprintf( char *format, ... );
