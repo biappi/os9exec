@@ -11,6 +11,8 @@
 		4700A4270A337FEB00A75463 /* cpustbl.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45A90A31C24F001898B3 /* cpustbl.c */; };
 		4700A4290A33801700A75463 /* newcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45AE0A31C24F001898B3 /* newcpu.c */; };
 		4700A42A0A33802100A75463 /* support.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45B30A31C24F001898B3 /* support.c */; };
+		470C5C880B4EBABD00F14E80 /* c_access.h in Headers */ = {isa = PBXBuildFile; fileRef = 470C5C860B4EBABD00F14E80 /* c_access.h */; };
+		470C5C890B4EBABD00F14E80 /* c_access.c in Sources */ = {isa = PBXBuildFile; fileRef = 470C5C870B4EBABD00F14E80 /* c_access.c */; };
 		477F46210A31C24F001898B3 /* newcpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 477F45AF0A31C24F001898B3 /* newcpu.h */; };
 		477F46220A31C24F001898B3 /* readcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 477F45B10A31C24F001898B3 /* readcpu.c */; };
 		477F46230A31C24F001898B3 /* readcpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 477F45B20A31C24F001898B3 /* readcpu.h */; };
@@ -116,7 +118,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		477F459C0A31C24F001898B3 /* os9App_univ */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = os9App_univ; sourceTree = BUILT_PRODUCTS_DIR; };
+		470C5C860B4EBABD00F14E80 /* c_access.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = c_access.h; path = ../OS9exec_core/c_access.h; sourceTree = SOURCE_ROOT; };
+		470C5C870B4EBABD00F14E80 /* c_access.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = c_access.c; path = ../OS9exec_core/c_access.c; sourceTree = SOURCE_ROOT; };
+		477F459C0A31C24F001898B3 /* os9App_univ */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = os9App_univ; sourceTree = BUILT_PRODUCTS_DIR; };
 		477F45A80A31C24F001898B3 /* cpuemu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpuemu.c; path = UAE68emulator/cpuemu.c; sourceTree = SOURCE_ROOT; };
 		477F45A90A31C24F001898B3 /* cpustbl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpustbl.c; path = UAE68emulator/cpustbl.c; sourceTree = SOURCE_ROOT; };
 		477F45AA0A31C24F001898B3 /* cpudefs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cpudefs.c; path = UAE68emulator/cpudefs.c; sourceTree = SOURCE_ROOT; };
@@ -381,6 +385,8 @@
 			children = (
 				477F45D30A31C24F001898B3 /* alarms.h */,
 				477F45D40A31C24F001898B3 /* alarms.c */,
+				470C5C860B4EBABD00F14E80 /* c_access.h */,
+				470C5C870B4EBABD00F14E80 /* c_access.c */,
 				477F45D50A31C24F001898B3 /* consio.h */,
 				477F45D60A31C24F001898B3 /* consio.c */,
 				477F45D70A31C24F001898B3 /* debug.h */,
@@ -589,6 +595,7 @@
 				477F46900A31C252001898B3 /* TermWindow.h in Headers */,
 				477F46920A31C252001898B3 /* target.h in Headers */,
 				477F46940A31C252001898B3 /* maccess.h in Headers */,
+				470C5C880B4EBABD00F14E80 /* c_access.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,6 +701,7 @@
 				4700A4270A337FEB00A75463 /* cpustbl.c in Sources */,
 				4700A4290A33801700A75463 /* newcpu.c in Sources */,
 				4700A42A0A33802100A75463 /* support.c in Sources */,
+				470C5C890B4EBABD00F14E80 /* c_access.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
