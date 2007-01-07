@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2007/01/04 21:27:23  bfo
+ *    'HandleOneEvent' MPW problem fixed
+ *
  *    Revision 1.52  2006/12/16 22:17:03  bfo
  *    loop breaker for internal commands
  *
@@ -292,6 +295,7 @@ void init_processes()
         
         set_os9_state( k, pUnused, "init_process" );   /* invalidate this process  */
         procs[k].isIntUtil= false;
+        procs[k].isPlugin = false;
         prDBT[k]= 0;                   /* and also the table entry */
     } /* for */
     
