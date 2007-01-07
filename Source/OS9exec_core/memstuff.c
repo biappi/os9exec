@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2007/01/04 20:20:41  bfo
+ *    Boolean return type added for 'IsZeroR' and 'IsZeroI'
+ *
  *    Revision 1.24  2007/01/02 11:29:38  bfo
  *    Allow to release combined memory blocks (e.g. for "dir")
  *
@@ -106,18 +109,19 @@
  */
 
 #include "os9exec_incl.h"
-#define MAXINTEGER 32767
-
 
 /* Memory management for OS9 processes */
 /* =================================== */
 
-// Add some memory below and above
-#if !defined USE_CLASSIC && !defined windows32
-//#define MEM_SHIELD 1
-#endif
 
-#define SHIELD_SIZE 20*1024
+// the mem alloc table
+memblock_typ memtable[ MAX_MEMALLOC ];
+pmem_typ     pmem    [ MAXPROCESSES ];
+
+#ifdef REUSE_MEM
+  // the free info
+  free_typ freeinfo;
+#endif
 
 
 /* prepare the memory handling for use */
@@ -262,7 +266,8 @@ void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
         if (procs[pid].state!=pUnused) {
             if (npid==MAXPROCESSES || npid==pid) {
                 for (k=0; k<MAXMEMBLOCKS; k++) {
-                        m= &procs[pid].os9memblocks[k];
+                    //  m= &procs[pid].os9memblocks[k];
+                        m= &pmem[ pid ].m[ k ];
                     if (m->base!=NULL) {
                         upo_printf("%2d%c  %5d  $%08lX  $%08lX  $%08lX\n",
                                     pid,
@@ -281,106 +286,44 @@ void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
 
 void show_unused(void)
 {
-    #ifdef REUSE_MEM
-      int   k, n= 0;
-      memblock_typ* f;
-      char s[10];
+  #ifdef REUSE_MEM
+    int   k, n= 0;
+    memblock_typ* f;
+    char s[10];
     
-      upo_printf("Block   Start      Size          Size\n");
-      upo_printf("-----  ---------  --------- ---------\n");
+    upo_printf("Block   Start      Size          Size\n");
+    upo_printf("-----  ---------  --------- ---------\n");
     
-      for (k=0;k<MAX_MEMALLOC;k++) {
-              f= &freeinfo.f[k];      
-          if (f->base!=NULL)    { upo_printf("%5d  $%08lX  $%08lX  %8d\n",
+    for (k=0;k<MAX_MEMALLOC;k++) {
+          f= &freeinfo.f[ k ];      
+      if (f->base!=NULL)    { upo_printf("%5d  $%08lX  $%08lX  %8d\n",
                                               k, f->base, f->size, f->size ); n++;
-          }
-          else {
-//          if (n<freeinfo.freeN) upo_printf("%5d   %8s   %8s  %8s\n",
-//                                            k, "-",     "-",     "" );
-          }
-      } /* for */
+      }
+    } // for
  
-      sprintf( s, "(%d)", freeinfo.freeN );
-      upo_printf("\nTOTAL %6s      $%08lX  %8d\n", s, freeinfo.freeMem,freeinfo.freeMem );
-    #endif
-} /* show_unused */
+    sprintf( s, "(%d)", freeinfo.freeN );
+    upo_printf("\nTOTAL %6s      $%08lX  %8d\n", s, freeinfo.freeMem,freeinfo.freeMem );
+  #endif
+} // show_unused
 
 
 
 /* initialize process' memory block list */
 void init_mem(ushort pid)
 {
-   int  k;
-   for (k=0; k<MAXMEMBLOCKS; k++) procs[pid].os9memblocks[k].base=NULL; /* no memory yet */
+  int  k;
+  for (k=0; k<MAXMEMBLOCKS; k++) pmem[ pid ].m[ k ].base=NULL; // no memory yet
 } /* init_mem */
 
 
-/* install a memory area as memory block */
-ushort install_memblock(ushort pid, void *base, ulong size)
-{
-    memblock_typ *m;
-    int  k;
-    for (k=0;k<MAXMEMBLOCKS;k++) {
-            m= &procs[pid].os9memblocks[k];
-        if (m->base==NULL) {
-            m->base= base;             /* save pointer */
-            m->size= size;             /* save block size */
-            LockMemRange( base,size ); /* keep always paged in !! */ 
-            return k;
-        }
-    }
-   
-    return MAXMEMBLOCKS;
-} /* install_memblock */
-
-
-#ifdef MEM_SHIELD
-static void MemCheck( void* membase, ulong memsz, Boolean doit )
-{
-  int           k;
-  memblock_typ* f;
-  byte*        pp;
-  int           i;
-  
-  pp= (byte*)membase - SHIELD_SIZE;
-  for (i= 0; i<SHIELD_SIZE; i++) {
-    if (*pp!=0xff) {
-      printf( "bad %08X: %d\n", pp, *pp );
-      break;
-    } // if
-    
-    pp++;
-  } // for
-
-  pp= (byte*)membase + memsz;
-  for (i= 0; i<SHIELD_SIZE; i++) {
-    if (*pp!=0xff) {
-      printf( "bad %08X: %d\n", pp, *pp );
-      break;
-    } // if
-    
-    pp++;
-  } // for
-  
-  return;
-  
-  if (!doit) return;
-  for (k=0;k<MAX_MEMALLOC;k++) {
-        f= &freeinfo.f[k];
-    if (f->base!=NULL) 
-      MemCheck( f->base, f->size, false );
-  } // for
-}
-#endif
-
 
 #ifdef REUSE_MEM
-static Boolean release_ok( void* membase, ulong memsz )
-{
+  static Boolean release_ok( void* membase, ulong memsz )
+  {
 	int           k;
     memblock_typ* f;
 
-    #ifndef MEM_SHIELD
+  //#ifndef MEM_SHIELD
 	void* qq;
     ulong svsize;
 	
@@ -423,17 +366,13 @@ static Boolean release_ok( void* membase, ulong memsz )
             break;
         } /* if */
     } /* for */
-    #endif
+  //#endif
     
 	for (k=0;k<MAX_MEMALLOC;k++) { /* do not really release the memory */
             f= &freeinfo.f[k];
     	if (f->base==NULL || f->size<memsz) {
         	MoveBlk( &freeinfo.f[k+1],f, (freeinfo.freeN-k)*sizeof(memblock_typ) );
         	
-        	#ifdef MEM_SHIELD
-        	  MemCheck( membase, memsz, true );
-        	#endif
-
         	f->base= membase;
         	f->size= memsz;
               
@@ -448,8 +387,55 @@ static Boolean release_ok( void* membase, ulong memsz )
 	} /* for */
 	
 	return false;
-} /* release_ok */
+  } /* release_ok */
 #endif
+
+
+ulong max_mem()
+/* the currently max available memory */
+{
+    ulong memsz;
+    
+    #if defined MACOS9
+      memsz= MaxBlock();
+      
+    #elif defined win_unix
+      memsz= 0;
+      
+    #else
+      #error MaxBlock size must be defined here
+    #endif
+    
+    #ifdef REUSE_MEM
+      memsz+= freeinfo.freeMem;
+    #endif
+    
+    return memsz;
+} /* max_mem */
+
+
+
+// --------------------------------------------------------------------------------------
+// install a memory area as memory block
+static ushort install_memblock(ushort pid, void *base, ulong size)
+{
+  pmem_typ*     cm= &pmem[ pid ];
+  memblock_typ* m;
+  
+  int  k;
+  for (k=0;k<MAXMEMBLOCKS;k++) {
+        m= &cm->m[ k ];
+    if (m->base==NULL) {
+        m->base= base;             // save pointer
+        m->size= size;             // save block size
+        LockMemRange( base,size ); // keep always paged in !!
+        return k;
+    } // if
+  } // for
+   
+  return MAXMEMBLOCKS;
+} /* install_memblock */
+
 
 
 void release_mem( void* membase )
@@ -507,26 +493,25 @@ void release_mem( void* membase )
 
 
 /* free an allocated memory block */
-void release_memblock( ushort pid, ushort memblocknum )
+static void release_memblock( ushort pid, ushort memblocknum )
 {
-    memblock_typ *m;
+  pmem_typ*         cm= &pmem[ pid ];
+  memblock_typ* m= &cm->m[ memblocknum ];
     
-        m= &procs[pid].os9memblocks[memblocknum];
-    if (m->base==NULL) return;
+  if (m->base==NULL) return;
     
-    debugprintf(dbgMemory,dbgNorm,("# release_memblock:    block #%-2d at $%08lX (size=%5u) %8d pid=%d\n",
-                                      memblocknum, m->base, m->size, totalMem, pid ));
+  debugprintf(dbgMemory,dbgNorm,("# release_memblock:    block #%-2d at $%08lX (size=%5u) %8d pid=%d\n",
+                                    memblocknum, m->base, m->size, totalMem, pid ));
     
-    #ifndef MACMEM     
-      UnlockMemRange( m->base, m->size );
-    #endif
+  #ifndef MACMEM     
+    UnlockMemRange( m->base, m->size );
+  #endif
 
-    release_mem( m->base );
+  release_mem( m->base );
     
-    m->base=NULL; /* free block */
-    m->size=   0;
-} /* release_memblock */
-
+  m->base= NULL; // free block
+  m->size= 0;
+} // release_memblock
 
 
 
@@ -536,30 +521,6 @@ void free_mem(ushort pid)
    int  k;
    for (k=0; k<MAXMEMBLOCKS; k++) release_memblock( pid,k );   
 } /* free_mem */
-
-
-
-ulong max_mem()
-/* the currently max available memory */
-{
-    ulong memsz;
-    
-    #if defined MACOS9
-      memsz= MaxBlock();
-      
-    #elif defined win_unix
-      memsz= 0;
-      
-    #else
-      #error MaxBlock size must be defined here
-    #endif
-    
-    #ifdef REUSE_MEM
-      memsz+= freeinfo.freeMem;
-    #endif
-    
-    return memsz;
-} /* max_mem */
 
 
 
@@ -579,22 +540,16 @@ void* get_mem( ulong memsz )
       ulong           sv_size;
       Boolean         cond;
     #endif
-    
-    
+      
     memsz= (memsz+MBlk-1) & 0xFFFFFFC0; /* round up to next boundary */
     
     #ifdef REUSE_MEM
       for (k= MAX_MEMALLOC-1; k>=0; k--) { /* try to get it from the free list */
             f= &freeinfo.f[ k ];      
         if (f->base!=NULL) {
-          #ifdef MEM_SHIELD
-            cond= f->size==  memsz;
-          #else
-            cond= f->size==  memsz ||
-                  f->size>=2*memsz ||
-                  f->size>=  memsz+8*MBlk;
-          #endif
-              
+              cond= f->size==  memsz ||
+                    f->size>=2*memsz ||
+                    f->size>=  memsz+8*MBlk;
           if (cond) {     
                     pp= f->base;
             memset( pp, 0, memsz ); /* some programs need a clean block !!! */
@@ -625,10 +580,6 @@ void* get_mem( ulong memsz )
     #endif
         
     sz= memsz;
-    #ifdef MEM_SHIELD
-      sz+= 2*SHIELD_SIZE;
-    #endif
-    
     if (pp==NULL) { /* not yet found */
       #ifdef MACMEM
       	#ifdef REUSE_MEM
@@ -648,24 +599,11 @@ void* get_mem( ulong memsz )
                                          "NewPtrClear", MemError()));
         }
       #else
-        pp= calloc( (size_t)sz, (size_t)1 ); /* get memory block, cleared to 0 */
-      #endif
- 
-      #ifdef MEM_SHIELD
-        if (pp!=NULL) {
-          memset( (char*)pp,         0xff, SHIELD_SIZE );
-          pp=     (char*)pp + SHIELD_SIZE; // -----XXXX:::::XXXX------
-          memset( (char*)pp + memsz, 0xff, SHIELD_SIZE ); /* some programs need a clean block !!! */
-          
-                  	
-          #ifdef MEM_SHIELD
-        	MemCheck( pp, memsz, true );
-          #endif
-        } // if
+        pp= (void*)calloc( (size_t)sz, (size_t)1 ); /* get memory block, cleared to 0 */
       #endif
     } // if
-    
-    if   (pp!=NULL) {
+ 
+    if (pp!=NULL) {
         for (k=0;k<MAX_MEMALLOC;k++) {
             if (memtable[k].base==NULL) { /* search for a free segment */
                 #ifdef win_linux
@@ -683,10 +621,12 @@ void* get_mem( ulong memsz )
         } /* for */
     } /* if */
     
-    upe_printf( "No more memory !!!\n" );
+    #ifndef PLUGIN_DLL
+      upe_printf( "No more memory !!!\n" );
+    #endif
+    
     return NULL;
 } /* get_mem */
-
 
 
 /* memory allocation for OS-9 */
@@ -698,13 +638,15 @@ void* os9malloc( ushort pid, ulong memsz )
         pp= get_mem( memsz );
     if (pp==NULL) return NULL; /* no memory */
      
-        k= install_memblock( pid,pp,memsz );
+        k= install_memblock( pid, pp, memsz );
     if (k>=MAXMEMBLOCKS) {
         /* memory block list is full */
         release_mem( pp ); pp= NULL;
-        upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
-        exit( 1 );
-    }
+        
+        #ifndef PLUGIN_DLL
+          upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
+        #endif
+    } // if
    
     debugprintf(dbgMemory,dbgNorm,("# os9malloc:  allocate block #%-2d at $%08X (size=%5u) %8d pid=%d\n",
                                       k, (ulong)pp, memsz, totalMem, pid ));
@@ -715,15 +657,16 @@ void* os9malloc( ushort pid, ulong memsz )
 /* memory deallocation for OS-9 */
 os9err os9free( ushort pid, void* membase, ulong memsz )
 {
-  os9err err;
+  os9err        err;
+  pmem_typ*     cm= &pmem[ pid ];
   memblock_typ* m;
-  int k;
+  int           k;
 
   debugprintf(dbgMemory,dbgDetail, ( "# os9free:      free request   at $%08lX (size=%lu) pid=%d\n",
                                         (ulong)membase, memsz, pid ) );
   if (membase!=NULL) {
     for (k=0; k<MAXMEMBLOCKS; k++) {
-            m= &procs[ pid ].os9memblocks[ k ];
+            m= &cm->m[ k ];
       if   (m->base==membase) {
         if (m->size==memsz  ) {
           release_memblock( pid, k );
@@ -754,139 +697,6 @@ os9err os9free( ushort pid, void* membase, ulong memsz )
                                                 membase, memsz, pid ) );
   return os9error(E_BPADDR); /* no memory was allocated here */
 } /* os9free */
-
-
-static Boolean IsZeroR( const char* s )
-{
-  if    (*s==NUL) return false;
-  while (*s!=NUL) {
-    if  (*s <'0' && *s >'9' && *s!='.' && 
-         *s!='E' && *s!='-' && *s!='+') return false;
-    s++;
-  } // while
-  
-  return true;
-} // IsZeroR
-
-
-static Boolean IsZeroI( const char* s )
-{
-  if    (*s==NUL) return false;
-  while (*s!=NUL) {
-    if  (*s <'0' && *s >'9' &&
-         *s!='-' && *s!='+') return false;
-    s++;
-  } // while
-  
-  return true;
-} // IsZeroI
-
-
-Boolean StrToReal( float* f, const char* s )
-{
-  *f= atof( s );
-  return *f==0 && !IsZeroR( s );
-} // StrToReal
-
-
-Boolean StrToLongReal( double* d, const char* s )
-{
-  *d= atof( s );
-  return *d==0 && !IsZeroR( s );
-} // StrToLongReal
-
-
-Boolean StrToInt( int* i, const char* s )
-{
-  *i= atoi( s );
-  return *i==0 && !IsZeroI( s );
-} // StrToInt
-
-
-Boolean StrToShort( short* i, const char* s )
-{
-  *i= atoi( s );
-  return *i==0 && !IsZeroI( s );
-} // StrToShort
-
-
-// missing "sprintf" operations for "cclib", temporary placed here
-void IntToStr( char* s, int i ) {
-  sprintf( s, "%d", i );
-} // IntToStr
-
-
-void IntToStrN( char* s, int i, int n )
-{
-  char form[ 20 ]; // format string
-  
-  if (n==MAXINTEGER) { IntToStr( s, i ); return; }
-
-  sprintf   ( form, "%s%dd", "%", n );
-  sprintf( s, form, i );
-} // IntToStrN
-
-
-void UIntToStr( char* s, unsigned int i ) {
-  sprintf( s, "%X", i );
-} // UIntToStr
-
-
-void UIntToStrN( char* s, unsigned int i, int n )
-{
-  char form[ 20 ]; // format string
-  int  r= 0;
-  
-  if (n==MAXINTEGER) { UIntToStr( s, i ); return; }
-  
-  if (n>8) { r= n-8; n= 8; } // keep spaces for the remaining part of > 8 
-  sprintf   ( form, "%s%ds%s0%dX", "%", r, "%", n );
-  sprintf( s, form, "", i );
-} // UIntToStrN
-
-
-void BoolToStr ( char* s, Boolean bo ) {
-  sprintf( s, "%s", bo ? "TRUE":"FALSE" );
-} // BoolToStr
-
-
-void BoolToStrN( char* s, Boolean bo, int n )
-{
-  char form[ 20 ]; // format string
-  
-  if (n==MAXINTEGER) { BoolToStr( s, bo ); return; }
-
-  sprintf   ( form, "%s%ds", "%", n );
-  sprintf( s, form, bo ? "TRUE":"FALSE" );
-} // BoolToStrN
-
-
-void RealToStr( char* s, double d, int res )
-{
-  char form[ 20 ]; // format string
-  
-  switch (res) {
-    case MAXINTEGER: sprintf( form, "%sE",    "%" ); break;
-    case 0         : sprintf( form, "%s.0f.", "%" ); break;
-    default        : sprintf( form, "%s.%df", "%", res );
-  } // switch
-  
-  sprintf( s, form, d );
-} // RealToStr
-
-
-void RealToStrN( char* s, double d, int n, int res )
-{
-  char form[ 20 ]; // format string
-  
-  switch (res) {
-    case MAXINTEGER: sprintf( form, "%s%dE",    "%", n ); break;
-    case 0         : sprintf( form, "%s%d.0f.", "%", n ); break;
-    default        : sprintf( form, "%s%d.%df", "%", n, res );
-  } // switch
-  
-  sprintf( s, form, d );
-} // RealToStr
 
 
 
