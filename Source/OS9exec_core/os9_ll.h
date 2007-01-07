@@ -30,7 +30,19 @@
 /*        bfo@synthesis.ch                    */
 /**********************************************/
 
-
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ */
 
 #ifndef _os9_ll_h
 #define _os9_ll_h
