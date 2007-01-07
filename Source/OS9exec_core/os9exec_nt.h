@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.69  2007/01/04 20:47:48  bfo
+ *    <dllList> added
+ *
  *    Revision 1.68  2007/01/02 11:11:54  bfo
  *    <includeList>/<excludeList> for PtoC added
  *
@@ -309,9 +312,7 @@
   #define MAX_PATH     1024
 #endif
 
-/* maximum number of modules that can be linked (minus one for the main module itself */
-#define MAXMODULES     1024
-
+// -------------------------------------------------------------------
 /* number of "processes" OS9exec can handle. 
  * In the first versions of OS9exec "processes" are only chaining
  * each other, and no multitasking is possible.
@@ -319,8 +320,11 @@
  * (which are heavily used in standard OS9 builds).
  * In the meantime multitasking is possible.
  */
-#define MAXPROCESSES    129
+#define MAXPROCESSES   129
 /* this allows processes with id 1..128 / id=0 is not used */
+
+/* maximum number of modules that can be linked (minus one for the main module itself */
+#define MAXMODULES     1024
 
 /* number of active events */
 #define MAXEVENTS       512
@@ -368,19 +372,33 @@
 /* number of mem alloc entries */
 #define MAX_MEMALLOC  10000
 
-
-/* "per-process" constants */
-/* ----------------------- */
-/* (that is, once for each "process") */
-
-
 /* number of memory blocks than can be allocated per "process"
  * through F$SRqMem. For standard OS-9, this is limited to 32, but OS9 joins 
  * adjacent memory blocks if possible, while OS9exec does not. 
  * Therefore, the MAXMEMBLOCKS constant must be much larger than
  * 32 to avoid that F$SRqMem fails with E_NORAM after 32 calls.
  */
-#define MAXMEMBLOCKS 512 
+#define MAXMEMBLOCKS   512 
+
+// total number of mem alloc entries
+#define MAX_MEMALLOC 10000
+
+// definition of an allocated memory block
+typedef struct {
+  void* base;
+  ulong size;
+} memblock_typ;
+
+// per process memory blocks
+typedef struct {
+  memblock_typ m[ MAXMEMBLOCKS ]; // the process' allocated memory blocks
+} pmem_typ;
+
+
+/* "per-process" constants */
+/* ----------------------- */
+/* (that is, once for each "process") */
+
 
 /* maximum number of open paths per "process" */
 #define MAXUSRPATHS   32
@@ -480,8 +498,8 @@
 /* global types */
 /* ============ */
 
-/* OS9 error code */
-typedef ushort os9err;
+// OS9 error code */
+// typedef ushort os9err;
 
 /* an (internal) module directory entry */
 typedef struct {
@@ -507,7 +525,8 @@ typedef struct {
          } errortrap_typ;
 
 
-/* an allocated memory block */
+/*
+// an allocated memory block
 typedef struct {
             void* base;
             ulong size;
@@ -516,11 +535,11 @@ typedef struct {
 #ifdef REUSE_MEM
   typedef struct {
             memblock_typ f[MAX_MEMALLOC];
-            int          freeN;   /* number of free segments */
-            ulong        freeMem; /* total free memory */
+            int          freeN;   // number of free segments
+            ulong        freeMem; // total free memory
         } free_typ;
 #endif
-
+*/
 
 /* OS9 simulated directory file constants */
 #define IDMASK      0x001FFFFF /* one bit more because of problems ... (bfo) */
@@ -1040,6 +1059,7 @@ typedef struct {
                 /* general state */
                 pstate_typ        state;    /* process' state */
                 Boolean       isIntUtil;    /* Internal utility flag */
+                Boolean        isPlugin;    /* Acting within a plugin */
                 Boolean          isPtoC;    /* PtoC command */
                 ushort              mid;    /* the process' primary module ID */
                 
@@ -1059,7 +1079,7 @@ typedef struct {
                 /* memory */
                 ulong memstart;             /* the process' static storage start addr (unbiased) */ 
                 ulong memtop;               /* the process' static storage top pointer (unbiased) */
-                memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated memory blocks */
+             // memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated memory blocks */
                 byte sigdat[SIG_SCRATCH];
                 
                 /* exceptions */
@@ -1121,6 +1141,10 @@ typedef struct {
         } st_typ;
 
 
+// ---- global vars ---------------------------------------------
+// id of current process
+extern  ushort currentpid; 
+
 /* the "module directory" */
 extern  module_typ  os9modules[MAXMODULES];
 extern  mod_exec*   init_module;
@@ -1153,22 +1177,37 @@ extern  alarm_typ*  alarm_queue[MAXALARMS];
 /* the dir table */
 extern  char*       dirtable   [MAXDIRS];
 
+
 #ifdef PTOC_SUPPORT
+  typedef void   (*Prp_IProg_Typ)( ushort* p_curidP, void* p_modBase, 
+                                   void*   p_args,   void* p_cbP );
+  typedef ushort (*Run_IProg_Typ)( const char* progName );
+  
+  // The plugin element
+  typedef struct {
+    char*         name;
+    Prp_IProg_Typ prp_IProg;
+    Run_IProg_Typ run_IProg;
+  } plug_typ;
+  
+  
   /* the include/exclude list for internal commands */
-  extern char*      includeList[MAXLIST];
-  extern char*      excludeList[MAXLIST];
-  extern char*          dllList[MAXLIST];
+  extern char*    includeList[MAXLIST];
+  extern char*    excludeList[MAXLIST];
+  extern plug_typ  pluginList[MAXLIST];
+  
+  extern callback_typ g_cb;
 #endif
 
 /* the OS-9 statistics table */
 extern  st_typ      statistics[MAX_OS9PROGS];
 
-/* the mem alloc table */
-extern memblock_typ memtable[MAX_MEMALLOC];
+// the mem alloc table
+//extern memblock_typ memtable[MAX_MEMALLOC];
 
-#ifdef REUSE_MEM
-  extern free_typ   freeinfo;
-#endif
+//#ifdef REUSE_MEM
+//  extern free_typ   freeinfo;
+//#endif
 
 
 /* I/O device table */
@@ -1198,8 +1237,8 @@ extern  ulong  newEventId;
   extern "C" {
 #endif
 
-extern  ushort currentpid; // id of current process
-extern  short  arbitrate;  // set if arbitrate() should switch away from one running process to next
+//extern ushort currentpid; // id of current process
+extern   short  arbitrate;  // set if arbitrate() should switch away from one running process to next
 
 #if defined __cplusplus
   } // end extern "C"
@@ -1258,7 +1297,8 @@ extern Boolean quitFlag;
 extern Boolean userOpt;
 extern Boolean catch_ctrlC;
 
-extern Boolean ptocActive;
+extern Boolean nativeActive;
+extern Boolean pluginActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
 extern Boolean withTitle;

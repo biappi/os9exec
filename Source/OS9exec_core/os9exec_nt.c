@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.93  2007/01/04 20:50:58  bfo
+ *    <dllList> introduced
+ *    DLL connection for plugins added (Plugin Loader)
+ *    BootLoader beautified
+ *    titles() rearranged
+ *
  *    Revision 1.92  2007/01/02 11:12:43  bfo
  *    <includeList>/<excludeList> for PtoC added
  *    "systime" is part of the <excludeList> by default
@@ -393,24 +399,17 @@ char*       dirtable   [MAXDIRS];
 #ifdef PTOC_SUPPORT
   char*     includeList[MAXLIST];
   char*     excludeList[MAXLIST];
-  char*         dllList[MAXLIST];
+  plug_typ   pluginList[MAXLIST];
+  
+  callback_typ g_cb;
 #endif
 
 /* I/O device table */
-/* not really used, avid "devs" from crashing */
+/* not really used, avoid "devs" from crashing */
 byte		devs[0x0900];		
 
 /* the OS-9 statistics table */
 st_typ		statistics[MAX_OS9PROGS];
-
-
-/* the mem alloc table */
-memblock_typ memtable[MAX_MEMALLOC];
-
-#ifdef REUSE_MEM
-  free_typ   freeinfo;
-#endif
-
 
 /* the file file mgrs routine table */
 fmgr_typ    fmgr_none,
@@ -428,11 +427,6 @@ fmgr_typ    fmgr_none,
 /* the events */
 event_typ   events  [MAXEVENTS];
 ulong		newEventId= 0xffffffff; /* initial value */
-
-
-/* the currently executing process, MAXPROCESSES if none */
-ushort   currentpid;        // id of current process
-ushort   currentpid_intCmd; // same for int command
 
 short    arbitrate;         // set if arbitrate() should switch away from one running process to next
 ushort   interactivepid;    // process that will get keyboard abort signals
@@ -477,11 +471,14 @@ char     strtUPath[OS9PATHLEN];   /* next higher than start path */
   int  mpwsignal; /* the MPW signal flag */
 #endif
 
+// the currently executing process, MAXPROCESSES if none
+ushort  currentpid    = MAXPROCESSES; // id of current process
+
 /* flag which allows empty read functionality for multiple terminal support */
-Boolean devIsReady   = true; /* true if char has been read (multiple terminal) */
+Boolean devIsReady    = true; /* true if char has been read (multiple terminal) */
 
 /* this avoids recursion problems */
-Boolean in_recursion = false;
+Boolean in_recursion  = false;
 
 /* global settings */
 int     dbgOut        = -1;
@@ -492,11 +489,8 @@ Boolean quitFlag	  = false;
 Boolean userOpt		  = false;
 Boolean catch_ctrlC   = true;
 
-#ifdef PTOC_SUPPORT
-  Boolean ptocActive  = true;
-#else
-  Boolean ptocActive  = false;
-#endif
+Boolean nativeActive  = false;
+Boolean pluginActive  = false;
 
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
@@ -865,7 +859,7 @@ void get_hw()
         #elif defined USE_CARBON
           hw_name= "PowerMac Carbon";
           
-        #elif defined __MACH__
+        #elif defined MACOSX
           #ifdef __GNUC__ 
             hw_name= "PowerMac XCode";
           #else
@@ -1052,7 +1046,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     
     #ifdef windows32
       suff= ".dll";
-    #elif defined __MACH__
+    #elif defined MACOSX
       suff= ".dylib";
     #elif defined linux
       suff= ".so";
@@ -1105,7 +1099,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       LastCh_Bit7                          ( dEnt.name, false );
 
       if (IsDLL( dEnt.name, suff )) {
-         m= &dllList[ i ];
+         m= &pluginList[ i ].name;
         *m= get_mem( strlen( dEnt.name )+1 );
         strcpy         ( *m, dEnt.name );
         i++;
@@ -1119,30 +1113,49 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   } // SearchDLLs
   
   
-  // Connect to all available DLLs
-  static os9err ConnectDLL( const char* name )
+  // Get <aFunc> of <aFuncName>
+  os9err DLL_Function( void* aDLL, const char* aFuncName, void** aFunc )
   {
-    void* aDLL = NULL;
-    void* aFunc= NULL;
+    #if   defined windows32
+      *aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
+    #elif defined UNIX
+      *aFunc= dlsym( aDLL, aFuncName );
+    #else
+      *aFunc= NULL;
+    #endif
     
-    const char* aFuncName= "Module_Version";
+    if (*aFunc==NULL) return E_NES;
+                      return 0;
+  } // DLL_Function
+
+  
+  // Connect to all available DLLs
+  static os9err ConnectDLL( plug_typ* p )
+  {
+    os9err err;
+    void*  aDLL= NULL;
+    
+    const char* aFuncName1= "Module_Version";
+    void*       aFunc1    =  NULL;
     typedef long (*VersionProc)( long mContext );
-    VersionProc v;
+    VersionProc vp;
+
+    const char* aFuncName2= "Prp_IProg";
+    const char* aFuncName3= "Run_IProg";
     
     char    fullName[ OS9PATHLEN ];
     strcpy( fullName,  strtUPath     );
     strcat( fullName,  PATHDELIM_STR );
     strcat( fullName, "PLUGINS"      );
     strcat( fullName,  PATHDELIM_STR );
-    strcat( fullName,  name          );
-  //upe_printf( "DLL='%s'\n", fullName );
+    strcat( fullName,  p->name       );
     
     #ifdef windows32
       aDLL= LoadLibrary( fullName );
     #endif
     
     #ifdef UNIX
-      #ifdef __MACH__
+      #if   defined MACOSX
         #define mode RTLD_NOW + RTLD_GLOBAL
       #elif defined linux
         #define mode RTLD_LAZY
@@ -1153,15 +1166,10 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     
     if (!aDLL) return E_PNNF;
 
-    #ifdef windows32
-      aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
-    #endif
-    
-    #ifdef UNIX
-      aFunc= dlsym( aDLL, aFuncName );
-    #endif
-
-    if (!aFunc) {
+              err= DLL_Function( aDLL, aFuncName1, &aFunc1       );
+    if (!err) err= DLL_Function( aDLL, aFuncName2, &p->prp_IProg );
+    if (!err) err= DLL_Function( aDLL, aFuncName3, &p->run_IProg );
+    if  (err) {
       #ifdef windows32
         FreeLibrary( aDLL );
       #endif
@@ -1170,11 +1178,11 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
         dlclose( aDLL );
       #endif
       
-      return E_NES;
+      return err;
     } // if
     
-    v= (VersionProc)aFunc;
-    upe_printf( "vv=%08x\n", v( NULL ) );
+    vp= (VersionProc)aFunc1;
+  //upe_printf( "vp=%08x\n", vp( 1 ) );
     return 0;
   } // ConnectDLL
 
@@ -1184,20 +1192,22 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   {
     os9err err;
     int    i;
-    char*  p;
+    plug_typ* p;
   
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
     err= SearchDLLs( cpid ); if (err) return;
-  
+    
     for (i=0; i<MAXLIST; i++) {
-      p= dllList[ i ];
-      if (p==NULL) break;
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
     
       err= ConnectDLL( p );
       upe_printf( "%s '%s' (err=%d)\n", i==0 ? "# Connecting plugin module:"
-                                             : "#                          ", p, err );
+                                             : "#                          ", p->name, err );
+      if (err) { release_mem( p->name ); p-> name= NULL; }
     } // for
   
+    pluginActive= pluginList[ 0 ].name!=NULL;
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader done\n" ) );
   } // PluginLoader
 #endif PTOC_SUPPORT
@@ -2014,14 +2024,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
   /* no table entries at the beginning */
-  for   (ii=0; ii<MAXDIRS; ii++)    dirtable[ ii ]= NULL;
+  for (ii= 0; ii<MAXDIRS; ii++) dirtable[ ii ]= NULL;
 
   #ifdef PTOC_SUPPORT
-    for (ii=0; ii<MAXLIST; ii++) includeList[ ii ]= NULL;
-    for (ii=0; ii<MAXLIST; ii++) excludeList[ ii ]= NULL;
-    for (ii=0; ii<MAXLIST; ii++)     dllList[ ii ]= NULL;
-    
-    ChangeElement( "systime", false ); // "systime" switched off by default => use std int util
+    Init_IProg();
   #endif
   
   debug_prep();
