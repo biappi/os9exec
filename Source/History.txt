@@ -1612,6 +1612,40 @@
           07-01-04  Bfo     os9_uae     : Title comment unified
           07-01-04  Bfo     newcpu      : Write 'CPU' in line
           07-01-04  Bfo     procstuff   : 'HandleOneEvent' MPW problem fixed
+          
+          07-01-06  Bfo     Resource files: 2007 adaption
+          07-01-06  Bfo     os9main_inc_precompile : "MACOSX" defined as equivalent of __MACH__
+          
+          07-01-07  Bfo     os9main     /
+                            network     /
+                            fileaccess  /
+                            telnetaccess: Using MACOSX instead of __MACH__
+          07-01-07  Bfo     os9_ll      : Include "time.h" for empty interface / edition history added
+          07-01-07  Bfo     consio      : Some old (commented out) stuff removed / __MACH__ => MACOSX
+          07-01-07  Bfo     debug       : ifdef NODEBUG ordering changed (... DLL is not using it anymore)
+                                          Adapted for the new memblock <pmem> structure
+          07-01-07  Bfo     utilstuff   : Use MACOS9 define
+          07-01-07  Bfo     vmod        : if defined USE_CLASSIC && !defined MPW
+          07-01-07  Bfo     funcdispatch: "trap0_call" introduced (for PLUGIN_DLL callback)
+          07-01-07  Bfo     c_access    : *** NEW MODULE ADDED ***
+          07-01-07  Bfo     os9exec_incl: New module "c_access.h" imported
+          07-01-07  Bfo     fcalls      - <pmem> adaptions
+          07-01-07  Bfo                 - F$SetSys D_IPID: Bit 10..11 additional info for plugins added
+          07-01-07  Bfo     procstuff   : New variable <isPlugin> initialized
+          07-01-07  Bfo     os9exec_nt  - New <pmem> structure added
+                                        - Callback definitions for plugin DLLs added
+                                        - native/plugin additions
+                                        - prp_IProg/run_IProg DLL connection added
+                                        - call "Init_IProg"
+          07-01-07  Bfo     intcommand  - "Init_IProg" added
+                                        - Callback for "StrToFload"/"StrToDouble" placed locally
+                                        - Internal command "plugin" ( -d/-e ) added
+                                        - DLL jump implemented here (in a first working version)
+          07-01-07  Bfo     modstuff    - "MoveBlk" is now defined at "c_access.c"
+          07-01-07  Bfo     memstuff    - Fully rearranged
+                                        - No longer used as import file for PtoC system
+                                        - Parts moved to "c_access"
+                                        - New <pmem> structure introduced
                                                                                                      
     3.34  07-01-??  Bfo
     -------------------  
