@@ -1646,8 +1646,9 @@
                                         - No longer used as import file for PtoC system
                                         - Parts moved to "c_access"
                                         - New <pmem> structure introduced
-                                                                                                     
-    3.34  07-01-??  Bfo
+          07-01-08  Bfo     os9linux.mk : "c_access" added for Linux makefile
+          07-01-08  Bfo     makefile    : "c_access" added for MPW   makefile
+    3.34  07-01-08  Bfo     V3.34 released
     -------------------  
 */
 
