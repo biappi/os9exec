@@ -52,6 +52,7 @@ PROJHEADERS = ¶
         "{platforms}macfiles.h" ¶
         "{os9exec}os9main_incl.h" ¶
         "{os9exec}os9_llm.h" ¶
+        "{os9exec}c_access.h" ¶
         "{os9exec}os9funcs.h" ¶
         "{os9exec}os9exec_nt.h" ¶
         "{os9exec}os9main.h" ¶
@@ -128,6 +129,7 @@ CodeRes¥68k  = ¶
         "{ObjDir¥68k}os9_llm_ppc.a.o"
 
 Objects¥PPC  = ¶
+        "{ObjDir¥PPC}c_access.c.x" ¶
         "{ObjDir¥PPC}consio.c.x" ¶
         "{ObjDir¥PPC}debug.c.x" ¶
         "{ObjDir¥PPC}fcalls.c.x" ¶
@@ -160,6 +162,7 @@ Objects¥PPC  = ¶
         "{ObjDir¥PPC}os9.c.x"
 
 Objects¥68K  = ¶
+        "{ObjDir¥68K}c_access.c.o" ¶
         "{ObjDir¥68K}consio.c.o" ¶
         "{ObjDir¥68K}debug.c.o" ¶
         "{ObjDir¥68K}fcalls.c.o" ¶
@@ -293,6 +296,9 @@ doAddRes = ¶
 # C files
 
 # PPC
+"{ObjDir¥PPC}c_access.c.x" Ä {¥MondoBuild¥} "{os9exec}c_access.c"
+    {PPCC} "{os9exec}c_access.c" -o {Targ} {PPCCOptions}
+
 "{ObjDir¥PPC}consio.c.x" Ä {¥MondoBuild¥} "{os9exec}consio.c"
     {PPCC} "{os9exec}consio.c" -o {Targ} {PPCCOptions}
 
@@ -387,6 +393,9 @@ doAddRes = ¶
 
 
 # 68k
+"{ObjDir¥68K}c_access.c.o" Ä {¥MondoBuild¥} "{os9exec}c_access.c"
+    {C} "{os9exec}c_access.c" -o {Targ} {COptions}
+
 "{ObjDir¥68K}consio.c.o" Ä {¥MondoBuild¥} "{os9exec}consio.c"
     {C} "{os9exec}consio.c" -o {Targ} {COptions}
 
