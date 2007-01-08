@@ -11,6 +11,7 @@ clean: clean_OS9Linux
 ##############################
 TOP_OS9Linux=..
 WD_OS9Linux=$(shell cd ${TOP_OS9Linux};echo `pwd`)
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/c_access.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/consio.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/debug.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/fcalls.c
