@@ -1676,6 +1676,7 @@
           07-01-28  Bfo     intcommand  - Native program handling, <modBaseP> param added
                                         - int command 'native' added
           07-01-28  Bfo     *.mcp       : Up to date
+          07-01-29  Bfo     hello_world : NATIVE directory (with "hello_world" added to project)
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
