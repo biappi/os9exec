@@ -41,37 +41,68 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2007/01/07 13:25:33  bfo
+ *    *** NEW MODULE ADDED ***
+ *
  *
  */
 
 
-// ----- C access from PtoC/Plugin side and OS9exec internal use -----
-/* OS9 error code */
-typedef ushort os9err;
+// ----- C access from Plugin side and OS9exec internal use -----
+#include "target_options.h"
 
-#if defined __cplusplus && defined __GNUC__
-  typedef short Boolean;
-  #define true  1
-  #define false 0
-#endif
+#ifndef  __GLOBDEF
+#define  __GLOBDEF
+  typedef unsigned char  byte;
+  typedef unsigned short os9err;
+
+  #if defined __INTEL__ || defined __MACH__
+    typedef char Boolean;
+    #define true  1
+    #define false 0
+  #endif
+
+  #if  defined __MACH__ || defined __GNUC__
+    typedef unsigned long  ulong;
+  #endif
+
+  #if !defined __MACH__ || defined __GNUC__
+    typedef unsigned short ushort;
+  #endif
+
+  #define VHPCNT
+#endif //__GLOBDEF
+
+#ifndef VHPCNT
+  typedef unsigned short ushort;
+#endif 
 
 
 #if defined __cplusplus
   extern "C" {
 #endif
 
-// current process id reference
-extern  ushort* curidP;
+
+// 68k registers
+typedef struct {
+  ulong d[ 8 ];
+  ulong a[ 8 ];
+} Regs_68k;
 
 
 // The callback function for system calls 
-typedef os9err  (*Trap0_Call_Typ )( ushort code, void* rp );
-typedef Boolean (*StrToFloat_Typ )( float*  f, const char* s );
-typedef Boolean (*StrToDouble_Typ)( double* f, const char* s );
+typedef os9err (*Trap0_Call_Typ )( ushort code, Regs_68k* regs );
+
+typedef int    (*StrToShort_Typ )( short*  i, const char* str );
+typedef int    (*StrToFloat_Typ )( float*  f, const char* str );
+typedef int   (*StrToDouble_Typ )( double* d, const char* str );
+
 
 // The callback structure
 typedef struct {
-  Trap0_Call_Typ  trap0;
+  Trap0_Call_Typ  trap0; // OS-9 system calls
+
+  StrToShort_Typ  strToShort;
   StrToFloat_Typ  strToFloat; 
   StrToDouble_Typ strToDouble;  
 } callback_typ;
@@ -80,16 +111,31 @@ typedef struct {
 extern callback_typ* cbP;
 
 
+typedef struct {
+  ushort*       pid;
+  void*         modBase;
+  void*         os9_args;
+  callback_typ* cbP;
+} nativeinfo_typ;
+
+
+
+// Get the OS9exec version
+void getversion( ushort *ver,
+                 ushort *rev );
+long lVersion  ( void );
+
+
+
 // -------------------------------------------------------------------
 // Memory block copy
-void MoveBlk( void* dst, void* src, ulong size  );
+void MoveBlk( void* dst, void* src, ulong size );
+
+// case insensitive version of strcmp
+int ustrcmp( const char *s1, const char *s2 );
 
 
 // -------------------------------------------------------------------
-// missing "atoi"    operations for "cclib", temporary placed here
-Boolean StrToShort( short*  i, const char* s );
-
-
 // missing "sprintf" operations for "cclib", temporary placed here
 void IntToStr  ( char* s, int    i );
 void IntToStrN ( char* s, int    i, int n );
@@ -97,16 +143,16 @@ void IntToStrN ( char* s, int    i, int n );
 void UIntToStr ( char* s, unsigned int h );
 void UIntToStrN( char* s, unsigned int h, int n );
 
-void BoolToStr ( char* s, Boolean bo );
-void BoolToStrN( char* s, Boolean bo, int n );
+void BoolToStr ( char* s, int bo );
+void BoolToStrN( char* s, int bo, int n );
 
 void RealToStr ( char* s, double d,        int res );
 void RealToStrN( char* s, double d, int n, int res );
 
-
 #if defined __cplusplus
   } // end extern "C"
 #endif
+
 
 /* eof */
 
