@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2007/01/07 14:02:58  bfo
+ *    Using MACOSX instead of __MACH__
+ *
  *    Revision 1.27  2007/01/02 11:31:31  bfo
  *    2007 text adaption
  *
@@ -421,7 +424,8 @@ static void os9_usage(char *name)
     upho_printf("               Note that devices in use by Windows cannot be used by OS9exec\n");
     #endif
     upho_printf("   -c          comment output to MPW window (preceede lines with #)\n");
-    upho_printf("   -i          disable internal commands\n");      
+    upho_printf("   -i          disable internal commands\n");
+    upho_printf("   -k          use '*_dbg' plugin dlls\n");      
     upho_printf("   -ih         show internal command help\n");
     upho_printf("   -o          disable output filtering (error message conversion)\n");        
     upho_printf("   -oh         show available output filters\n");      
@@ -542,265 +546,257 @@ void restore_term()
 } // restore_term
 
 
-/* main program */
+
+// main program
 void os9_main( int argc, char **argv, char **envp )
 {
-    int     k, kX;
-    char*   p;
-    ulong*  ulp;
-    ushort* usp;
-    char    modifier;
-    char*   toolname;
-    ushort  level;
-    ushort  err;
-    Boolean no_app    = true;
-    Boolean fullScreen= false;
+  int     k, kX;
+  char*   p;
+  ulong*  ulp;
+  ushort* usp;
+  char    modifier;
+  char*   toolname;
+  ushort  level;
+  ushort  err;
+  Boolean no_app    = true;
+  Boolean fullScreen= false;
 
-    /* set default options */
-    /* - debug options */
-    debug[dbgNorm  ]= 1; /* normal debug flags */
-    debug[dbgDetail]= 0;
-    debug[dbgDeep  ]= 0;
-    debughalt       = 0;
+  // set default options
+  // - debug options
+  debug[dbgNorm  ]= 1; // normal debug flags
+  debug[dbgDetail]= 0;
+  debug[dbgDeep  ]= 0;
+  debughalt       = 0;
     
-    /* - other options */
-    commentoutput   = 0;
-    disablefilters  = 0;
-    memplus         = 0;
-    dummyfork       = 0;
-    fetchnames      = 0;
-    iniprior        = MYPRIORITY;
+  // - other options
+  commentoutput   = 0;
+  disablefilters  = 0;
+  memplus         = 0;
+  dummyfork       = 0;
+  fetchnames      = 0;
+  iniprior        = MYPRIORITY;
 
-    get_hw(); /* make this very very early in program */
-    getversions();
+  get_hw(); // make this very very early in program
+  getversion( &exec_version, &exec_revision );
     
-    #ifdef USE_UAEMU
-      sw_name= "OS-9/68k Emu UAE";
-    #else
-      sw_name= "OS-9/68k Emulator";
+  #ifdef USE_UAEMU
+    sw_name= "OS-9/68k Emu UAE";
+  #else
+    sw_name= "OS-9/68k Emulator";
+  #endif
+    
+  #ifdef UNIX
+    sec0= 0;
+  #endif
+    
+  // set up global init stuff, so user path output will work
+  os9exec_globinit();
+  GetStartTick();
+    
+  // start the logging system
+  init_syscalltimers(); 
+
+  // get arguments and options
+  for (k=1; k<argc; k++) {
+    p= argv[k];
+
+    #ifdef windows32
+      if (*p=='-' || *p=='/')
+    #else       
+      if (*p=='-')
     #endif
-    
-    #ifdef UNIX
-      sec0= 0;
-    #endif
+      {
+        switch (tolower(*++p)) {
+          case '?' :
+          case 'h' :  if (*(p+1)=='h') { show_wish(); exit( 0 ); }
+                      os9_usage( argv[0] );           exit( 0 );
 
-    
-    // set up global init stuff, so user path output will work
-    os9exec_globinit();
-    GetStartTick();
-    
-    /* start the logging system */
-    init_syscalltimers();
-    
+          case 'f' :  if (*(p+1)=='e') { fetchnames=true; break; }
+                      if (*(p+1)=='o') dummyfork= 2;
+                      else             dummyfork= 1;
+                      break;
 
-    /* get arguments and options */
-    for (k=1; k<argc; k++) {
-        p= argv[k];
-
-        #ifdef windows32
-          if (*p=='-' || *p=='/')
-        #else       
-          if (*p=='-')
-        #endif
-        {
-            switch (tolower(*++p)) {
-            	case '?' :
-                case 'h' :  if (*(p+1)=='h') { show_wish(); exit(0); }
-                            os9_usage(argv[0]);             exit(0);
-
-                case 'f' :  if (*(p+1)=='e') { fetchnames=true; break; }
-                            if (*(p+1)=='o') dummyfork= 2;
-                            else             dummyfork= 1;
-                            break;
-
-                case 'i' :  if (*(p+1)=='h') { 
-                                #ifdef INT_CMD
-                                  int_help( 0,0,NULL );
-                                #endif 
-                                exit(0); 
-                            }
+          case 'i' :  if (*(p+1)=='h') { 
+                        #ifdef INT_CMD
+                          int_help( 0,0, NULL );
+                        #endif 
+                        exit( 0 ); 
+                      } // if
                               
-                            with_intcmds  = false; break;
-
-                case 'c' :  commentoutput = true;  break;
+                      with_intcmds  = false; break;
+          case 'k' :  with_dbgDLLs  = true;  break;
+          case 'c' :  commentoutput = true;  break;
                 
-                case 'o' :  if (*(p+1)=='h') { printfilters(); exit(0); }
-                            disablefilters= true;  break;
+          case 'o' :  if (*(p+1)=='h') { printfilters(); exit( 0 ); }
+                      disablefilters= true;  break;
 
-                case 't' :  logtiming_disp= true;  break;
+          case 't' :  logtiming_disp= true;  break;
 
-                case 'n' :  k++; /* next arg */
-                            if (k>=argc) {triggername[0]=0; break; }
-                            strncpy(triggername,argv[k],TRIGNAMELEN);
-                            break;
+          case 'n' :  k++; /* next arg */
+                      if (k>=argc) {triggername[0]=0; break; }
+                      strncpy(triggername,argv[k],TRIGNAMELEN);
+                      break;
 
-                case 's' :  usp=&debughalt; goto getmask;
+          case 's' :  usp=&debughalt; goto getmask;
 
-				#if defined(RBF_SUPPORT) && defined(windows32)
-                case 'a' :  defSCSIAdaptNo = -1; // default to none
-                            if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
-                            k++; /* next arg */
-                            if (k>=argc) { printf("# Error: missing SCSI Adapter Number for '%c' option!\n",*p); exit(1); }
-                            p=argv[k];
-                            if (sscanf(p,"%hd", &defSCSIAdaptNo)!=1) {
-                                printf("# Error in SCSI Adapter number '%s'\n",p);
-                                exit(1);
-                            }
-                            break;
-                case 'b' :  defSCSIBusNo = 0; // default to first bus
-                            if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
-                            k++; /* next arg */
-                            if (k>=argc) { printf("# Error: missing SCSI Bus Number for '%c' option!\n",*p); exit(1); }
-                            p=argv[k];
-                            if (sscanf(p,"%hd", &defSCSIBusNo)!=1) {
-                                printf("# Error in SCSI Bus number '%s'\n",p);
-                                exit(1);
-                            }
-                            break;
-                #endif
+          #if defined RBF_SUPPORT && defined windows32
+            case 'a' :  defSCSIAdaptNo = -1; // default to none
+                        if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
+                        k++; /* next arg */
+                        if (k>=argc) { printf("# Error: missing SCSI Adapter Number for '%c' option!\n",*p); exit(1); }
+                        p=argv[k];
+                        if (sscanf(p,"%hd", &defSCSIAdaptNo)!=1) {
+                          printf("# Error in SCSI Adapter number '%s'\n",p);
+                          exit( 1 );
+                        }
+                        break;
+                        
+            case 'b' :  defSCSIBusNo = 0; // default to first bus
+                        if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
+                        k++; /* next arg */
+                        if (k>=argc) { printf("# Error: missing SCSI Bus Number for '%c' option!\n",*p); exit(1); }
+                        p=argv[k];
+                        if (sscanf(p,"%hd", &defSCSIBusNo)!=1) {
+                          printf("# Error in SCSI Bus number '%s'\n",p);
+                          exit( 1 );
+                        } // if
+                        break;
+          #endif
                 
-                case 'd' :  level=0; /* default to level 0 */
-                            if (*(p+1)=='h') { debug_help( 0,0,NULL ); exit(0); }
-                            if (isdigit(*(p+1))) {
-                                level=*(p+1)-0x30;
-                                if (level>DEBUGLEVELS) level=0; /* default to 0 if level invalid */
-                            }
-                            usp=&debug[level]; goto getmask;
+          case 'd' :  level=0; /* default to level 0 */
+                      if (*(p+1)=='h') { debug_help( 0,0,NULL ); exit(0); }
+                      if (isdigit(*(p+1))) {
+                        level=*(p+1)-0x30;
+                        if (level>DEBUGLEVELS) level=0; /* default to 0 if level invalid */
+                      } // if
+                      usp=&debug[level]; goto getmask;
 
-                            getmask:
-                            k++; /* next arg */
-                            if (k>=argc) { printf("# Error: missing mask(hex) for '%c' option!\n",*p); exit(1); }
-                            p=argv[k];
-                            if (sscanf(p,"%hx", usp)!=1) {
-                                printf("# Error in hex mask '%s'\n",p);
-                                exit(1);
-                            }
-                            break;
+                      getmask:
+                      k++; /* next arg */
+                      if (k>=argc) { printf("# Error: missing mask(hex) for '%c' option!\n",*p); exit(1); }
+                      p=argv[k];
+                      if (sscanf(p,"%hx", usp)!=1) {
+                        printf("# Error in hex mask '%s'\n",p);
+                        exit( 1 );
+                      } // if
+                      break;
 
-				case 'u' :  userOpt    =  true; break; // set user option
-				case 'v' :  catch_ctrlC= false; break; // don not install a ctrl C handler
-				case 'z' :  fullScreen =  true; break; // full screen mode
+          case 'u' :  userOpt    =  true; break; // set user option
+          case 'v' :  catch_ctrlC= false; break; // don not install a ctrl C handler
+          case 'z' :  fullScreen =  true; break; // full screen mode
  
-                case 'g' :  if (g_ipAddr==NULL) {
-                              k++; /* next arg */
-                              if (k>=argc) {
-                                printf("# Error: missing argument for '%s' option!\n",p);
-                                exit(1); 
-                              } // if
-                              
-                              p= argv[ k ];
-                                      g_ipAddr= malloc( strlen( p )+1 );
-                              strcpy( g_ipAddr, p );
-                            } // if
-                            break;
-
-                case 'x' :  ulp=&screenW;      goto getlnum;
-                case 'y' :  ulp=&screenH;      goto getlnum;
-                case 'w' :  ulp=&spininterval; goto getlnum;
-                case 'p' :  ulp=&iniprior;     goto getlnum;
-                case 'm' :  if (*(p+1)=='m') { ulp=&memplusall; goto getlnum; }
-                            ulp=&memplus;      goto getlnum;
-                            
-                            getlnum:
+          case 'g' :  if (g_ipAddr==NULL) {
                             k++; /* next arg */
-                            if (k>=argc) {
-                                printf("# Error: missing argument for '%s' option!\n",p);
-                                exit(1); 
-                            }
+                        if (k>=argc) {
+                          printf("# Error: missing argument for '%s' option!\n",p);
+                          exit( 1 ); 
+                        } // if
+                              
+                        p= argv[ k ];
+                                g_ipAddr= malloc( strlen( p )+1 );
+                        strcpy( g_ipAddr, p );
+                      } // if
+                      break;
 
-                            p= argv[ k ];
-                            modifier=0;
-                            if (*p=='$') {
-                                if (sscanf(++p,"%lx%c", ulp, &modifier)<1) {
-                                    printf("# Error in hex number '$%s'\n",p);
-                                    exit(1);
-                                }
-                            }
-                            else {
-                                if (sscanf(p,"%ld%c", ulp, &modifier)<1) {
-                                    printf("# Error in decimal number '%s'\n",p);
-                                    exit(1);
-                                }
-                            }
+          case 'x' :  ulp=&screenW;      goto getlnum;
+          case 'y' :  ulp=&screenH;      goto getlnum;
+          case 'w' :  ulp=&spininterval; goto getlnum;
+          case 'p' :  ulp=&iniprior;     goto getlnum;
+          case 'm' :  if (*(p+1)=='m') { ulp=&memplusall; goto getlnum; }
+                      ulp=&memplus;      goto getlnum;
                             
-                            switch (tolower(modifier)) {
-                                case 'm' : *ulp *=1024; /* fall into Kbytes */
-                                case 'k' : *ulp *=1024;
-                                case 0   : break;
-                                default  : printf("# Error in modifier: '%c', must be 'k', 'M' or none\n");
-                                           exit(1);
-                            }                                                
-                            break;
+                      getlnum:
+                          k++; /* next arg */
+                      if (k>=argc) {
+                        printf("# Error: missing argument for '%s' option!\n",p);
+                        exit( 1 ); 
+                      } // if
 
-                default  :  printf("# Error: unknown option '%c'!\n",*p); 
-                            os9_usage( argv[0] ); exit(1);
-            } /* switch */
-        } 
+                      p= argv[ k ];
+                      modifier=0;
+                      if (*p=='$') {
+                        if (sscanf(++p,"%lx%c", ulp, &modifier)<1) {
+                          printf("# Error in hex number '$%s'\n",p);
+                          exit( 1 );
+                        } // if
+                      }
+                      else {
+                        if (sscanf(p,"%ld%c", ulp, &modifier)<1) {
+                          printf("# Error in decimal number '%s'\n",p);
+                          exit( 1 );
+                        } // if
+                      } // if
+                            
+                      switch (tolower(modifier)) {
+                        case 'm' : *ulp *=1024; /* fall into Kbytes */
+                        case 'k' : *ulp *=1024;
+                        case  0  : break;
+                        default  : printf("# Error in modifier: '%c', must be 'k', 'M' or none\n");
+                                   exit( 1 );
+                      } // switch                                                
+                      break;
 
-        else {
-            no_app= false;
-            kX= k;
-            break;
-        }
-    } /* for */
+          default  :  printf("# Error: unknown option '%c'!\n",*p); 
+                    os9_usage( argv[0] ); exit( 1 );
+        } // switch
+      } 
+      else {
+        no_app= false;
+        kX= k;
+        break;
+      } // if
+  } // for
     
-    /* not enough arguments */
-    if (no_app) {
-        #ifdef KEINEAPP
-          printf("# Not enough arguments. Type \"%s -h\"to get help\n",argv[0]);
-          printf("# Usage:    %s [options] <os9program> [<os9parameters>,...]\n",argv[0]);
-          exit(1);
-        #endif
-
-        kX= argc-1;
-        toolname= ""; /* will be replaced by "shell" later */
-    }
-    else {
-        toolname= argv[kX];
-    } // if
-
-	if (fullScreen) {
-	  screenW= 0; /* full screen mode */
-	  screenH= 0;
-	} // if
-
-  //#if defined linux || defined USE_CARBON
-	#ifdef USE_CARBON
-	      userOpt= true; /* currently misused for Spectrapot software, as long as BusyRead is not working */
-	#else
-      if (userOpt) catch_ctrlC= false;
-    #endif
-    
-    /* Set the terminal modes and hook mode restoration to the exit function.
-       If setting then fails, the error will already have been reported
-       for suitably detailed fault analysis but the function exits so
-       os9_main() can handle the cleanup: at present this is just to exit.
-    */
-    #ifdef UNIX
-      if (setup_term())
-        atexit(restore_term);
+  // not enough arguments
+  if (no_app) {
+    #ifdef KEINEAPP
+      printf("# Not enough arguments. Type \"%s -h\"to get help\n",           argv[ 0 ] );
+      printf("# Usage:    %s [options] <os9program> [<os9parameters>,...]\n", argv[ 0 ] );
+      exit( 1 );
     #endif
 
-    /* now here starts the os9 command line: go execute it */
-    debug_prep(); /* make sure debug info is adjusted */
+    kX= argc-1;
+    toolname= ""; // will be replaced by "shell" later
+  }
+  else {
+    toolname= argv[ kX ];
+  } // if
+
+  if (fullScreen) {
+    screenW= 0; // full screen mode
+    screenH= 0;
+  } // if
+
+  #ifdef USE_CARBON
+    userOpt= true; // currently misused for Spectrapot software, as long as BusyRead is not working
+  #else
+    if (userOpt) catch_ctrlC= false;
+  #endif
+    
+  #ifdef UNIX
+    // Set the terminal modes and hook mode restoration to the exit function.
+    // If setting then fails, the error will already have been reported
+    // for suitably detailed fault analysis but the function exits so
+    // os9_main() can handle the cleanup: at present this is just to exit.
+    if (setup_term())
+    atexit( restore_term );
+  #endif
+
+  // now here starts the os9 command line: go execute
+  debug_prep(); // make sure debug info is adjusted
             
-    /* don't print before setup */
- // debugprintf(dbgStartup,dbgNorm,("# Starting OS9exec/nt with debug[]=$%04X,$%04X,$%04X, stop=$%04X, command='%s', spininterval=%ld\n",debug[dbgNorm],debug[dbgDetail],debug[dbgDeep],debughalt,argv[kX],spininterval));
-    err= os9exec_nt( toolname,argc-kX-1,argv+kX+1,envp, memplus,iniprior );
-    if (logtiming_disp) show_timing( STIM_NONE, 1,false );
-            
-    currentpid= 0; /* no longer an active process */
+  // don't print before setup
+  err= os9exec_nt( toolname,argc-kX-1,argv+kX+1,envp, memplus,iniprior );
+  if (logtiming_disp) show_timing( STIM_NONE, 1,false );
+  
+  // always one new line              
+  upo_printf( "\n" );
     
-    upo_printf("\n");
-    fflush(stdout);
-    
-    /* end message, if <withTitle> = calling shell/sh */
-    if (withTitle) {
-      upho_printf("OS9 emulation ends here.\n");
-      fflush(stdout);
-    } // if
-    
-    exit(err);
-} /* os9_main */
+  // end message, if <withTitle> = calling shell/sh
+  if (withTitle) upho_printf( "OS-9 emulation ends here.\n" );
+  
+  fflush( stdout );
+  exit  ( err );
+} // os9_main
 /* eof */
 
