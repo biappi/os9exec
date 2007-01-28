@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2007/01/07 13:17:07  bfo
+ *    Use MACOS9 define
+ *
  *    Revision 1.27  2006/06/11 22:01:49  bfo
  *    set_os9_state with 3rd param <callingProc>
  *
@@ -101,7 +104,7 @@
 
 /* General Utility routines */
 char* nullterm     ( char* s1,const char* s2, ushort max );
-int   ustrcmp( const char* s1,const char* s2 );
+//int ustrcmp( const char* s1,const char* s2 );
 int  pustrcmp( const char* s1,const char* s2 );
 int  ustrncmp( const char* s1,const char* s2, ushort n );
 
