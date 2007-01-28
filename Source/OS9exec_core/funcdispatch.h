@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2007/01/07 13:23:25  bfo
+ *    "trap0_call" introduced (for PLUGIN_DLL callback)
+ *
  *    Revision 1.9  2006/12/01 20:00:23  bfo
  *    Enhanced (and shorter) "systime" display
  *
@@ -124,7 +127,7 @@ void    debug_return( ushort pid, regs_type* rp, Boolean cwti );
 
 ushort pthread_pid();
 os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean intUtil );
-os9err trap0_call               ( ushort pid,      void* rp );
+os9err trap0_call               ( ushort pid, Regs_68k*  regs );
 
 #if defined __cplusplus
   } // end extern "C"

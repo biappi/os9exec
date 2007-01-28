@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2007/01/07 13:23:21  bfo
+ *    "trap0_call" introduced (for PLUGIN_DLL callback)
+ *
  *    Revision 1.43  2006/12/16 22:14:57  bfo
  *    cp->oerr assigned correctly for internal commands
  *
@@ -609,7 +612,7 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
         strcat( item,"\"" );
         
         if (cp->isIntUtil)
-          strcat( item, " (built-in)" );
+          strcat( item, " (native)" );
       } // if
 
       uphe_printf("<<<%cPid=%02d: OS9 %s %s",msk ? '*':' ',
@@ -692,6 +695,8 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
     memcpy( (void*)&cp->os9regs.a, (void*)&rp->a, 6*sizeof(ulong) );
     
     if (func==F_Exit) { // for internal utilities, F$Exit returns until here !!
+      rp->d[ 1 ]= cp->exiterr;
+      
       #ifdef THREAD_SUPPORT
         if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
       #endif
@@ -733,14 +738,23 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
 
 
 // Callback entry for plugin trap0 calls
-os9err trap0_call( ushort code, void* rp )
+os9err trap0_call( ushort code, Regs_68k* regs )
 {
+  const int RegsSize= 16*sizeof( ulong );
+   
+  os9err    err;
+  regs_type rp;
+  
   if (code==I_Write ||
       code==I_WritLn) {
     arbitrate= true;
   } // if
 
-  return exec_syscall( code, currentpid, rp, true );
+  MoveBlk( (void*)&rp.d[ 0 ], (void*)regs, RegsSize ); // copy forth ...
+  err= exec_syscall( code, currentpid, &rp, true );
+  MoveBlk( (void*)regs, (void*)&rp.d[ 0 ], RegsSize ); // ... and back
+  
+  return err;
 } // trap0_call
 
 
