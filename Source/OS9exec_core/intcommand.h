@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2007/01/07 13:48:17  bfo
+ *    "Init_IProg" added
+ *    Callback for "StrToFload"/"StrToDouble" placed locally
+ *    Internal command "plugin" ( -d/-e ) added
+ *    DLL jump implemented here (in a first working version)
+ *
  *    Revision 1.11  2007/01/04 20:27:19  bfo
  *    Up to date
  *
@@ -48,7 +54,7 @@
  *    "ChangeElement" visible from outside
  *
  *    Revision 1.9  2006/08/29 22:10:38  bfo
- *    isintcommand with additional <isPtoc> parameter
+ *    isintcommand with additional <isPtoC> parameter
  *
  *    Revision 1.8  2006/08/26 23:46:49  bfo
  *    "Is_PtoC" no longer visible, "isintcommand" with const char*
@@ -86,15 +92,19 @@ os9err int_help  ( ushort pid, int argc, char **argv );
 os9err int_wincmd( ushort pid, int argc, char **argv );
 #endif
 
-/* PtoC include/exclude */
-void Init_IProg();
-// void ChangeElement( char* s, Boolean addIt );
+/* Native program handling */
+Boolean Native_Possible( void );
+Boolean Plugin_Possible( void );
+
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+  void  ChangeElement  ( char* s, Boolean addIt );
+#endif
 
 
 /* utility */
 os9err  _errmsg( os9err err, char* format, ...);
 
-int     isintcommand( const char* name, Boolean *isPtoc );
+int     isintcommand( const char* name, Boolean *isNative, void** modBaseP );
 
 os9err  prepArgs    ( char* arglist, ushort *argcP, char*** argP);
 os9err  callcommand ( char* name,    ushort pid, ushort parentid,

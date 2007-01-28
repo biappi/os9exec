@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2007/01/07 13:48:17  bfo
+ *    "Init_IProg" added
+ *    Callback for "StrToFload"/"StrToDouble" placed locally
+ *    Internal command "plugin" ( -d/-e ) added
+ *    DLL jump implemented here (in a first working version)
+ *
  *    Revision 1.44  2007/01/04 20:27:36  bfo
  *    <pa> is not used => eliminate
  *
@@ -67,7 +73,7 @@
  *
  *    Revision 1.37  2006/10/01 15:17:47  bfo
  *    "ipmask" / "inopmask" internal commands eliminated;
- *    <isPtoC> replaced by <cp->isPtoc>
+ *    <isPtoC> replaced by <cp->isPtoC>
  *
  *    Revision 1.36  2006/09/08 21:59:16  bfo
  *    enhanced "-o <fileName>" (recommended by Martin Gregorie)
@@ -167,12 +173,12 @@
 /* global includes */
 #include "os9exec_incl.h"
 
-#ifdef PTOC_SUPPORT
-  #include "int_ptoc.h"
-#endif
-
 #ifdef THREAD_SUPPORT
   #include <types.h>
+#endif
+
+#ifdef PTOC_SUPPORT
+  #include "native_interface.h"
 #endif
 
 
@@ -183,40 +189,6 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 #define Mx 10
-
-
-// ---- Callback routines for "cclib" ----------------------------------
-// missing "atof"    operations for "cclib", placed here
-Boolean StrToFloat ( float*  f, const char* s );
-Boolean StrToDouble( double* d, const char* s );
-
-
-static Boolean IsZeroR( const char* s )
-{
-  if    (*s==NUL) return false;
-  while (*s!=NUL) {
-    if  (*s <'0' && *s >'9' && *s!='.' && 
-         *s!='E' && *s!='-' && *s!='+') return false;
-    s++;
-  } // while
-  
-  return true;
-} // IsZeroR
-
-
-Boolean StrToFloat( float* f, const char* s )
-{
-  *f= atof( s );
-  return *f==0 && !IsZeroR( s );
-} // StrToFlat
-
-
-Boolean StrToDouble( double* d, const char* s )
-{
-  *d= atof( s );
-  return *d==0 && !IsZeroR( s );
-} // StrToDouble
-
 
 
 // ---------------------------------------------------------------------
@@ -237,11 +209,11 @@ static os9err int_stop( ushort pid, _argc_, _argv_ )
 {
     char *envstop;
 
-    envstop = getenv("OS9STOP");
+    envstop= getenv( "OS9STOP" );
     if (is_super(pid) || envstop) {
         quitFlag= true;       /* only the super user can stop os9exec */
         upo_printf ("\n");
-        upho_printf( "OS9 emulation stopped\n");
+        upho_printf( "OS-9 emulation stopped\n");
         fflush(stdout);
         exit(0);
     } // if
@@ -659,7 +631,43 @@ static os9err int_devs( _pid_, int argc, char** argv )
 
 
 // ---------------------------------------------------------------------------------
-#ifdef PTOC_SUPPORT
+// Returns true, if at least one native program can be used
+Boolean Native_Possible( void )
+{
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+    Boolean   isBuiltIn;
+    plug_typ* p;
+    
+    int  i;
+    for (i= 0; i<MAXLIST; i++) {
+                 p= &pluginList[ i ];
+      if        (p->name     ==NULL) break;
+      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+      
+      if (pluginActive || isBuiltIn) return true;
+    } // for
+  #endif
+  
+  return false;
+} // Native_Possible
+  
+
+
+// Returns true, if at least one plugin is connected
+Boolean Plugin_Possible( void )
+{
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+    plug_typ* p= &pluginList[ 0 ];
+    return    p->name!=NULL &&   // any native program at all
+              p->name[ 0 ]!=NUL; // a plugin (with a name)
+  #endif
+  
+  return false;
+} // Plugin_Possible
+
+
+
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   static void ion_usage( char* name )
   {
     upe_printf( "Syntax:   %s [<opts>]\n", name );
@@ -670,6 +678,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
     upe_printf( "    -x            \"    exclude   \" \n" );
     upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
   } // ion_usage
+
 
 
   static void ioff_usage( char* name )
@@ -684,12 +693,14 @@ static os9err int_devs( _pid_, int argc, char** argv )
   } // ioff_usage
 
 
+
   static char** MyElem( int i, Boolean addIt )
   // Get an element, dependent on <addIt>
   {
     if (addIt) return &includeList[ i ];
     else       return &excludeList[ i ];
   } // MyElem
+
  
  
   static void display_list( Boolean addIt )
@@ -716,6 +727,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
   } // display_list
 
 
+
   static void ShiftDown( int i, Boolean addIt )
   // Close the gap of a removed element
   {
@@ -732,6 +744,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
        q=  r;
     } // for
   } // ShiftDown
+ 
  
  
   static void RemoveElement( char* s, Boolean addIt, Boolean* already )
@@ -763,16 +776,27 @@ static os9err int_devs( _pid_, int argc, char** argv )
       } // if
     } // for
   } // RemoveElement
+ 
   
   
-  static void ChangeElement( char* s, Boolean addIt )
+  void ChangeElement( char* s, Boolean addIt )
   {
-    int     i;
-    char**  q;
+    int       i;
+    char**    q;
+    plug_typ* p;
     Boolean already;
+    Boolean found= false;
+    void*   modBase;
     
     RemoveElement( s, addIt, &already );
-    if (already || !Is_PtoC( s )) return;
+    if                       (already) return;
+    
+    for (i= 0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break; // it must be at least once available as native prog
+      if (p->is_NativeProg( s, &modBase )) { found= true; break; }
+    } // for
+    if (!found) return;
         
     // Insert new element  
     for (i= 0; i<MAXLIST-1; i++) { // last element will not be used
@@ -784,6 +808,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
       } // if
     } // for
   } // ChangeElement
+
   
 
   static os9err int_xx( int argc, char** argv, Boolean isOn )
@@ -807,8 +832,8 @@ static os9err int_devs( _pid_, int argc, char** argv )
                      else      ion_usage ( argv[ 0 ] ); 
                      return 0;
                      
-          case 'd' : if (isOn) dispIn= true;
-                     else      dispEx= true;
+       // case 'd' : if (isOn) dispIn= true;
+       //            else      dispEx= true;
           
           case 'i' : dispIn  = true; break;
           case 'x' : dispEx  = true; break;
@@ -851,6 +876,83 @@ static os9err int_devs( _pid_, int argc, char** argv )
   {      return int_xx (            argc,        argv, false ); }
 
 
+
+  // ---------------------------------------------------------------------------------
+  static void native_usage( char* name )
+  {
+    upe_printf( "Syntax:   %s [<opts>]\n", name );
+    upe_printf( "Function: Switch on/off plugin DLLs\n" );
+    upe_printf( "Options:\n" );
+    upe_printf( "    -e  enable native utilities\n" );
+    upe_printf( "    -d disable native utilities\n" );
+  } // native_usage
+
+
+
+  static os9err int_native( _pid_, int argc, char** argv )
+  // Switch on/off plugin DLLs
+  { 
+    int   h;
+    char* p;
+    Boolean dispIn  = false;
+    Boolean dispEx  = false;
+    Boolean removeIt= false;
+    Boolean isOn    = false;
+    Boolean isOff   = false;
+    Boolean specific= false;
+    Boolean already;
+
+    for (h=1; h<argc; h++) {
+      p=        argv[ h ];
+            
+      if (*p=='-') { 
+           p++;
+        removeIt= false;
+        
+        switch (tolower(*p)) {
+          case '?' :
+          case 'h' : native_usage( argv[ 0 ] ); 
+                     return 0;
+                     
+          case 'd' : isOff   = true; if (specific) isOn = false; break;
+          case 'e' : isOn    = true; if (specific) isOff= false; break;
+          
+          case 'i' : dispIn  = true; break;
+          case 'x' : dispEx  = true; break;
+          case 'n' : removeIt= true; break;
+                            
+          default  : native_usage( argv[ 0 ] ); 
+                     upe_printf( "Error: unknown option '%c'\n", *p ); 
+                     return 1;
+        } // switch
+      }
+      else {
+        if (removeIt) {
+          RemoveElement( p, true,  &already );
+          RemoveElement( p, false, &already );
+        }
+        else {
+          if (!dispIn && !dispEx && isOn!=isOff) {
+            ChangeElement( p, isOn ); 
+            specific= true;
+          } // if
+        } // if
+      } // if
+    } // for
+
+    if (dispIn) { display_list(  true ); return 0; }
+    if (dispEx) { display_list( false ); return 0; }
+
+    if (!specific && isOn!=isOff) { // no additional arguments
+      nativeActive=  isOn;
+    } // if
+    
+    return 0;
+  } // int_native
+
+
+
+  // ---------------------------------------------------------------------------------
   static void plugin_usage( char* name )
   {
     upe_printf( "Syntax:   %s [<opts>]\n", name );
@@ -859,6 +961,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
     upe_printf( "    -e  enable plugin DLLs\n" );
     upe_printf( "    -d disable plugin DLLs\n" );
   } // plugin_usage
+
 
 
   static os9err int_plugin( _pid_, int argc, char** argv )
@@ -877,8 +980,8 @@ static os9err int_devs( _pid_, int argc, char** argv )
           case 'h' : plugin_usage( argv[ 0 ] ); 
                      return 0;
                      
-          case 'd' : pluginActive= false;                      break;
-          case 'e' : pluginActive= pluginList[ 0 ].name!=NULL; break;
+          case 'd' : pluginActive= false;             break;
+          case 'e' : pluginActive= Plugin_Possible(); break;
                             
           default  : plugin_usage( argv[ 0 ] ); 
                      upe_printf( "Error: unknown option '%c'\n", *p ); 
@@ -888,7 +991,9 @@ static os9err int_devs( _pid_, int argc, char** argv )
     } // for
     
     return 0;
-  } // int_xx
+  } // int_plugin
+
+
 
   // ---------------------------------------------------------------------------------
   static os9err int_thread  ( _pid_, _argc_, _argv_ ) { ptocThread= true;  return 0; }
@@ -897,42 +1002,57 @@ static os9err int_devs( _pid_, int argc, char** argv )
   static os9err int_noarb   ( _pid_, _argc_, _argv_ ) { fullArb   = false; return 0; }
 
 
+
   // ---------------------------------------------------------------------------------
-  static os9err ptoc_calls( ushort pid, _argc_, char** argv )
+  static os9err native_calls( ushort pid, _argc_, char** argv )
   {
-    os9err       err;
-    char*        name= argv[ 0 ];
-    process_typ* cp  = &procs[ pid ];
-    plug_typ*    p   = &pluginList[ 0 ];
+    os9err         err;
+    char*          name= argv[ 0 ];
+    process_typ*   cp  = &procs[ pid ];
+    plug_typ*      p;
+    int            i;
+    Boolean        isBuiltIn;
+    void*          modBase;
+    nativeinfo_typ ni;
     
     #ifdef THREAD_SUPPORT
       // mutex lock for systemcalls
       if (ptocThread) pthread_mutex_lock( &sysCallMutex );
-      currentpid=  pid;
+      currentpid= pid;
     #endif
 
-    if (pluginActive) cp->isPlugin= true;
-    g_cb.trap0      = trap0_call; // once would be sufficient
-    g_cb.strToFloat = StrToFloat;
-    g_cb.strToDouble= StrToDouble;
+    for (i= 0; i<MAXLIST; i++) {
+                 p= &pluginList[ i ];
+      if        (p->name     ==NULL) break;
+      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+      
+      if (pluginActive || isBuiltIn) {
+        if (p->is_NativeProg( name, &modBase )) {
+          cp->isPlugin=  !isBuiltIn; break;
+        } // if
+      } // if
+    } // for
     
-    if (pluginActive) p->prp_IProg( &currentpid, os9modules[ cp->mid ].modulebase, 
-                                               (void*)procs[ pid ].my_args, &g_cb );
-    else                 Prp_IProg( &currentpid, os9modules[ cp->mid ].modulebase, 
-                                               (void*)procs[ pid ].my_args, &g_cb );
-     
     #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
       if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
     #endif
 
-    if (pluginActive) err= p->run_IProg( name );
-    else              err=    Run_IProg( name );
-    
+    err= E_MNF; // default, if not found
+    if (p->name) {
+      ni.pid     = &currentpid;
+      ni.modBase = os9modules[ cp->mid ].modulebase;
+      ni.os9_args= (void*)cp->my_args;
+      ni.cbP     = &g_cb;
+      
+      err= p->start_NativeProg( name, &ni );
+    } // if
+        
     cp->isPlugin= false;
     return err;
-  } // ptoc_calls
+  } // native_calls
 #endif
+
 
 
 static os9err int_crash( _pid_, _argc_, _argv_ )
@@ -947,14 +1067,17 @@ static os9err int_crash( _pid_, _argc_, _argv_ )
 } /* int_crash */
 
 
+
 static os9err int_quit( _pid_, _argc_, _argv_ )
 {   quitFlag= true; return 0;
 } /* int_quit */
 
 
+
 static os9err int_ignored( _pid_, _argc_, _argv_ )
 {   return 0; /* do nothing */
 } /* int_ignored */
+
 
 
 /* Command table */
@@ -963,9 +1086,9 @@ static os9err int_ignored( _pid_, _argc_, _argv_ )
 typedef os9err (*intcmdfunc)(ushort pid, int argc, char **argv);
 
 typedef struct {
-          char*      name;
-          intcmdfunc routine;
-          char*      helptext;
+          char*      iName;
+          intcmdfunc iRoutine;
+          char*      iHelpText;
         } cmdtable_typ;
 
 
@@ -1008,15 +1131,16 @@ cmdtable_typ commandtable[] =
   { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
   #endif
 
-  #ifdef PTOC_SUPPORT
-  { "ion",           int_on,         "Switch on   built-in PtoC utilities (default)" },
-  { "ioff",          int_off,        "Switch off  built-in PtoC utilities" },
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+  { "ion",           int_on,         "Switch on     native utilities (default)" },
+  { "ioff",          int_off,        "Switch off    native utilities" },
+  { "native",        int_native,     "Switch on/off native utilities" },
   { "plugin",        int_plugin,     "Switch on/off plugin DLLs" },
-  { "ithread",       int_thread,     "Threading   built-in PtoC utilities" },
-  { "inothread",     int_nothread,   "Direct call built-in PtoC utilities (default)" },
-  { "iarb",          int_arb,        "Full        arbitration" },
-  { "inoarb",        int_noarb,      "Std         arbitration             (default)" },
-  { "ptoc_calls",    ptoc_calls,     "PtoC calls" },
+  { "ithread",       int_thread,     "Threading     native utilities" },
+  { "inothread",     int_nothread,   "Direct call   native utilities (default)" },
+  { "iarb",          int_arb,        "Full          arbitration" },
+  { "inoarb",        int_noarb,      "Std           arbitration      (default)" },
+  { "native_calls",  native_calls,   "Native calls" },
   #endif
 
   { NULL, NULL, NULL } /* terminator */
@@ -1033,10 +1157,10 @@ os9err int_help( ushort pid, _argc_, _argv_ )
   upho_printf("(case sensitive, so use uppercase to use external versions)\n");
   upho_printf("\n");
   for (k=0 ;; k++) {
-    nm= commandtable[ k ].name; if (nm==NULL)   break;
-    if  (!nativeActive  &&  strcmp( nm,"" )==0) break;
+    nm= commandtable[ k ].iName; if (nm==NULL)   break;
+    if     (!nativeActive && strcmp( nm,"" )==0) break;
     
-    upho_printf("  %-14s: %s\n", nm, commandtable[k].helptext) ;
+    upho_printf("  %-14s: %s\n", nm, commandtable[k].iHelpText) ;
   } // for
 
   if (pid==0) upo_printf("\n");
@@ -1058,7 +1182,7 @@ static int IntCmdIndex( const char* name )
 
   while (true) {
            cp= &commandtable[ index ];
-        p= cp->name; 
+        p= cp->iName; 
     if (p==NULL) return -1; // not found
 
     // search for eventual sub strings
@@ -1079,18 +1203,21 @@ static int IntCmdIndex( const char* name )
 } // IntCmdIndex
 
 
+
 // checks if command is internal
 // -1 if not,
 // command index otherwise
 //
-int isintcommand( const char* name, Boolean *isPtoc )
+int isintcommand( const char* name, Boolean *isNative, void** modBaseP )
 {
   int index;  
   
-  #ifdef PTOC_SUPPORT
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
     int         i;
     char**      q;
+    plug_typ*   p;
     Boolean     ok= nativeActive;
+    Boolean     isBuiltIn;
     const char* cut= name + strlen( name ) - 1;
   
     // get the pure file name from eventual abs path name
@@ -1107,42 +1234,31 @@ int isintcommand( const char* name, Boolean *isPtoc )
       if (ustrcmp( *q,cut )==0) { ok= !ok; break; }
     } // for
     
-    *isPtoc= ok && Is_PtoC( name );
+    if (ok) {
+        ok= false; // start again testing
+ 
+      for (i= 0; i<MAXLIST; i++) {
+                   p= &pluginList[ i ];
+        if        (p->name     ==NULL) break;
+        isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+      
+        if (pluginActive || isBuiltIn) {
+          if (p->is_NativeProg( name, modBaseP )) { ok= true; break; }
+        } // if
+      } // for
+    } // if
+    
+    *isNative= ok;
   #else
-    *isPtoc= false;
+    *isNative= false;
+    *modBaseP= NULL;
   #endif
   
-  if (*isPtoc)        name= "ptoc_calls"; // one entry point for all
+  if (*isNative)      name= "native_calls"; // one entry point for all
   index= IntCmdIndex( name );
   return index;
 } // isintcommand
 
-
-#ifdef PTOC_SUPPORT
-  void Init_IProg()
-  {
-    char iName[ OS9NAMELEN ];
-    char iOpt [ OS9NAMELEN ];
-    int  i;
-    
-    nativeActive= true; // Native programs are possible
-   
-    for (i= 0; i<MAXLIST; i++) includeList[ i ]     = NULL;
-    for (i= 0; i<MAXLIST; i++) excludeList[ i ]     = NULL;
-    for (i= 0; i<MAXLIST; i++)  pluginList[ i ].name= NULL;
-    
-                        i= 0;
-    while (Next_IInit( &i, &iName, &iOpt )) {
-      if (strcmp( iOpt,"+" )==0) ChangeElement( iName, true  ); 
-      if (strcmp( iOpt,"-" )==0) ChangeElement( iName, false ); 
-    } // while
-                        i= 0;
-    while (Next_IMain( &i, &iName, &iOpt )) {
-      if (strcmp( iOpt,"+" )==0) ChangeElement( iName, true  ); 
-      if (strcmp( iOpt,"-" )==0) ChangeElement( iName, false ); 
-    } // while
-  } // Init_IProg
-#endif
 
 
 /* print error message in OS-9 format */
@@ -1274,7 +1390,7 @@ static void large_pipe_connect( ushort pid, syspath_typ* spC )
     process_typ* pp;      
     cp->tid= pthread_self();
     
-    err= (commandtable[t->index].routine)( t->pid,t->argc,t->argv );
+    err= (commandtable[t->index].iRoutine)( t->pid,t->argc,t->argv );
 
     // mutex lock for systemcalls
     pthread_mutex_lock( &sysCallMutex );
@@ -1338,6 +1454,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     syspath_typ* spC;
     process_typ* cp= &procs[      pid ];
   //process_typ* pa= &procs[ parentid ];
+    void*        modBase= NULL;
     
     #ifdef THREAD_SUPPORT
       ulong       rslt;
@@ -1348,8 +1465,8 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     icmpid = pid;  /* save as global for ported utilities and _errmsg */
     icmname= name; /* dito */
     
-    index    = isintcommand( name, &cp->isPtoC );
-    *asThread= ptocThread &&        cp->isPtoC;
+    index    = isintcommand( name, &cp->isNative, &modBase );
+    *asThread= ptocThread &&        cp->isNative;
     
     if (index<0) return os9error(E_PNNF);
 
@@ -1386,14 +1503,14 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
       if (spP->type==fTTY ) spC= get_syspathd( pid, spP->u.pipe.pchP->sp_lock );
       if (spP->type==fPipe) spC= spP; /* no crossover */
     
-      if (spC!=NULL && !cp->isPtoC) large_pipe_connect( pid,spC );
+      if (spC!=NULL && !cp->isNative) large_pipe_connect( pid,spC );
     } // if
 
     if (logtiming) { xxx_to_arb( F_Fork, pid );
                      arb_to_os9( false ); }
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
-    if (cp->isPtoC) 
+    if (cp->isNative) 
       debug_return( pid, &cp->os9regs, false );
     
     #ifdef THREAD_SUPPORT
@@ -1406,11 +1523,11 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     
     if (!*asThread) {
       currentpid= pid;
-      err= (commandtable[index].routine)( pid,argc,argv );
+      err= (commandtable[index].iRoutine)( pid,argc,argv );
     } // if
     
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (after)  pid=%d\n", name,pid ));
-    if (logtiming && !cp->isPtoC) os9_to_xxx( pid );
+    if (logtiming && !cp->isNative) os9_to_xxx( pid );
 
     if         (pid!=parentid) // F$Chain adaption
       set_os9_state( parentid, pActive, "IntCmd (out)" ); // make it active again
