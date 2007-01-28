@@ -1494,7 +1494,7 @@
           06-10-25  Bfo     os9main     : <dbgAnomaly> flag will be switched on by default
           06-10-25  Bfo     os9exec_nt  : error dump ONLY with dbgAnomaly (which is on by default)
           06-10-25  Bfo     debug/
-                            0s9exec_nt  : div 0 will be masked with TRAP 5 instead of error 105
+                            os9exec_nt  : div 0 will be masked with TRAP 5 instead of error 105
           06-10-29  Bfo     consio      : "ConsGetC" for MacOS9 repaired (again) /
                                           Some commented old things removed
           06-10-29  Bfo     debug       : Adapted texts for "-dh" output
@@ -1650,6 +1650,35 @@
           07-01-08  Bfo     makefile    : "c_access" added for MPW   makefile
     3.34  07-01-08  Bfo     V3.34 released
     -------------------  
+        
+          07-01-09  Bfo     Version changed to V3.35
+          07-01-09  Bfo     fcalls      : 'Native_Possible()' added as condition for <nativeActive>
+          07-01-14  Bfo     target_options.h (OS9AppEmu): NATIVE_SUPPORT added
+          07-01-14  Bfo     filestuff   : err=1: let the path open, this is not an error
+          07-01-14  Bfo     os9main     : -k: use '*_dbg' plugin dlls / closing the last path correctly
+          07-01-14  Bfo     debug       /
+                            procstuff   : <isPtoC> renamed to <isNative>
+          07-01-14  Bfo     funcdispatch: 'Regs_68k' introduced, 'built-in' renamed to 'native'
+          07-01-14  Bfo     utilstuff   : 'ustrcmp' made invisible / DirEntry dbgNorm -> dbgDetail
+          07-01-15  Bfo     newcpu.c    : Boolean => int
+          07-01-15  Bfo     os9Linux.mk : sorted / libltdl.so added
+          07-01-20  Bfo     os9main_incl_precomp.h : __GLOBDEF definitions added
+          07-01-21  Bfo     c_access    - __GLOBDEF added / Boolean => int / 
+                                        - 'nativeinfo_typ' added
+                                        - getversion/lVersion implemented here now
+                                        - 'ustrcmp' implemented here now
+          07-01-27  Bfo     os9exec_nt  - NATIVE_SUPPORT added
+                                        - native interface definitions added
+                                        - <with_dbgDLLs> added
+                                        - 'init_plugins' and the full plugin support added
+                                        - Callback routines for 'cclib' implemented here now
+          07-01-27  Bfo     modstuff    : Support for linking the native resource files
+          07-01-28  Bfo     intcommand  - Native program handling, <modBaseP> param added
+                                        - int command 'native' added
+          07-01-28  Bfo     *.mcp       : Up to date
+                                                
+    3.35  07-??-??  Bfo
+    ------------------- 
 */
 
 
