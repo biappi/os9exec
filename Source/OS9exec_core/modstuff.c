@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2007/01/07 13:56:32  bfo
+ *    "MoveBlk" is now defined at "c_access.c"
+ *
  *    Revision 1.28  2007/01/04 20:41:26  bfo
  *    Partly unused label 'modulefound' hidden
  *
@@ -626,13 +629,13 @@ int NextFreeModuleId( char* name )
     int k;
 
     /* special handling for "OS9exec" module */
-    if (name==NULL || ustrcmp(name,OS9exec_name)==0) {
+    if (name==NULL || ustrcmp( name, OS9exec_name )==0) {
         name= "<OS9exec>";
         k= 0;
     }
     else {                             /* this one is still empty => ok */
-        for (k=1; k<MAXMODULES; k++) { if (os9mod(k)==NULL) break; }
-    }
+        for (k=1; k<MAXMODULES; k++) { if (os9mod( k )==NULL) break; }
+    } // if
     
     debugprintf(dbgModules,dbgNorm,( "# NextFreeModuleId: %3d '%s'\n", k,name ));
     return k;
@@ -827,6 +830,7 @@ static void adapt_L2( mod_exec* mh )
 
 static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean exedir, 
                                                                        Boolean linkstyle,
+                                                                       void*   modBase,
                                                                        ushort  path,
                                                                        ulong   bootPos,
                                                                        ulong   bootSiz )
@@ -869,9 +873,9 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     #define MODNLEN 33
     char realmodname[MODNLEN];
     
-    ulong modSize;    /* OS-9 module size */
-    ushort mode, sync;
-    ptype_typ type; /* distinguish which file manager to be used */
+    ulong     modSize;    /* OS-9 module size */
+    ushort    mode, sync;
+    ptype_typ type;       /* distinguish which file manager to be used */
     
     /* first, find an empty module dir entry */
     isPath=false;
@@ -1034,6 +1038,12 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
             #endif
         }
 
+        if (linkstyle && modBase!=NULL) {
+          theModuleP= modBase;
+          dsize     = os9_long( theModuleP->_mh._msize );
+          isBuiltIn = true;
+          break; /* found */
+        } // if
 
         /* no more trials for linking */
         if (linkstyle) return E_MNF;
@@ -1280,21 +1290,33 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
 } // load_module_local
 
 
-os9err load_module( ushort pid, char* name, ushort* midP, Boolean exedir ) {
-  return load_module_local( pid, name, midP, exedir, false, 0,0,0 );
+
+os9err load_module( ushort pid, char* name, ushort* midP, Boolean exedir )
+{
+  Boolean isNative= false;
+  void*   modBase = NULL;
+  
+  #ifdef INT_CMD
+    isintcommand( name, &isNative, &modBase );
+  #endif
+  
+  return load_module_local( pid, name, midP, exedir, false, modBase, 0,0,0 );
 } // load_module
 
 
-os9err link_module( ushort pid, const char *name, ushort *mid )
+
+os9err link_module( ushort pid, const char* name, ushort* midP )
 {   
   os9err  err;
-  Boolean isInt= false;
-  Boolean isPtoc;
+  Boolean isInt   = false;
+  Boolean isNative= false;
+  void*   modBase = NULL;
+  
   char    lName[OS9PATHLEN];
   strcpy( lName, name );
 	
   #ifdef INT_CMD
-        isInt= isintcommand( lName, &isPtoc )>=0 && !isPtoc;
+        isInt= isintcommand( lName, &isNative, &modBase )>=0 && !isNative;
     if (isInt) {
       debugprintf(dbgModules,dbgNorm,
                  ( "# link_module: internal cmd '%s' => try 'OS9exec' instead\n", lName ));
@@ -1302,19 +1324,27 @@ os9err link_module( ushort pid, const char *name, ushort *mid )
     } // if
   #endif
     
-      err= load_module_local( pid, lName, mid, true,true, 0,0,0 );
-  if (err && isInt) {
-    *mid= 0; /* simulate load by using main module as result (it can't be unlinked!!!) */
-    err = 0;
+      err= load_module_local( pid, lName, midP, true,true, modBase, 0,0,0 );
+  if (err &&  isInt) {
+//if (err && (isInt || (isNative && ( strcmp( lName,"hello_world" )==0) ||
+//                                    strcmp( lName,"show"        )==0))) {
+    *midP= 0; /* simulate load by using main module as result (it can't be unlinked!!!) */
+    err  = 0;
     debugprintf(dbgModules,dbgNorm,
                ( "# link_module: 'OS9exec' not found, returned ptr to main module\n" ));
   } // if
+  
+//if (err && isNative) {
+//  *midP= NextFreeModuleId( lName );
+//} // if
 
+//if    (err==E_MNF && isNative && strcmp( lName,"hello_world" )==0)
+//       err= 0; // native programs can work without an os9 primary module 
   return err;
 } /* link_module */
 
 
-os9err link_load( ushort pid, char *name, ushort *midP )
+os9err link_load( ushort pid, char *name, ushort* midP )
 /* try to link first, then try to load */
 {
     os9err   err= link_module( pid, name, midP );
@@ -1370,7 +1400,7 @@ os9err load_OS9Boot( ushort pid )
       err= usrpath_seek( pid, path, pos*scs ); if (err) break;
     } // if
       
-    err= load_module_local( pid, name, &mid, false,false, path, pos,siz );
+    err= load_module_local( pid, name, &mid, false,false,NULL, path, pos,siz );
   } while (false); // if
   
   cErr= usrpath_close( pid,  path ); if (!err) err= cErr;
