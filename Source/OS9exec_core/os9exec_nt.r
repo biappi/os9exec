@@ -35,10 +35,10 @@
 
 resource 'vers' (2, purgeable) {
     0x3,
-    0x34,
+    0x35,
     final,
     0x1,
     verGrSwiss,
-    "3.34",
-    "OS9exec V3.34   © by luz/bfo"
+    "3.35",
+    "OS9exec V3.35   © by luz/bfo"
 };
