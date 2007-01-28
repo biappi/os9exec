@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2007/01/07 13:34:12  bfo
+ *    New variable <isPlugin> initialized
+ *
  *    Revision 1.53  2007/01/04 21:27:23  bfo
  *    'HandleOneEvent' MPW problem fixed
  *
@@ -71,7 +74,7 @@
  *    still a problem for "clock2"
  *
  *    Revision 1.44  2006/10/01 15:36:49  bfo
- *    <cp->isPtoc> introduced; MAX_SLEEP support;
+ *    <cp->isPtoC> introduced; MAX_SLEEP support;
  *    debugging the missing signal problem
  *
  *    Revision 1.43  2006/09/03 20:50:08  bfo
@@ -522,7 +525,6 @@ os9err kill_process( ushort pid )
     ushort       parentid,k;
     
   //upe_printf( "kill id=%d %d\n", pid, cp->state );
-  //cp->pBlocked = true; // no more changes allowed
     cp->masklevel= 0;
     
     if (cp->state==pUnused) return os9error(E_IPRCID); /* process does not exist */
@@ -1246,8 +1248,8 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     process_typ* pp= &procs[os9_word(cp->pd._pid)];  
     regs_type*   rp= &cp->os9regs;
     Boolean      asThread;
-  //Boolean      isPtoC;
-
+    void*        modBase;
+    
     #ifdef INT_CMD
       ushort     argc;
       char**     arguments;
@@ -1280,13 +1282,12 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
     for (cnt=0; cnt<paramsiz; cnt++) *(p2++)= *(p++);
     
     cp->isIntUtil= false; /* no internal command by default */
-  //cp->pBlocked = false; /* now the status can be changed  */
     
     #ifdef INT_CMD
-          cp->isIntUtil= isintcommand( mpath, &cp->isPtoC )>=0;
+          cp->isIntUtil= isintcommand( mpath, &cp->isNative, &modBase )>=0;
       if (cp->isIntUtil) {
         set_os9_state( newpid, pActive, "prepFork" );
-        if (!cp->isPtoC) cp->mid= 0; // assign "OS9exec" module, for non-PtoC modules
+        if (!cp->isNative) cp->mid= 0; // assign "OS9exec" module, for non-PtoC modules
 
         /* prepare args */
         prepArgs( (char*)paramptr, &argc,&arguments );
