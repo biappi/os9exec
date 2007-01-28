@@ -19,10 +19,7 @@
 //
 
 // Target options
-
 #define USE_UAEMU            // use UAE-68k emulator
-
-
 
                              // Support for:
                              // ============
@@ -30,29 +27,35 @@
 //#define PTOC_SUPPORT       // PtoC internal commands
 
 #define RBF_SUPPORT          // RBF access
+#define RAM_SUPPORT          // RAM disk (RBF)
 #define TFS_SUPPORT          // transparent file system
+
 #define CON_SUPPORT          // console and TTYs
 #define PIP_SUPPORT          // pipes   and PTYs
 #define NET_SUPPORT          // TCP/IP sockets
+#define TERMINAL_CONSOLE     // can do single char I/O
 
 
-// 4 different Mac versions
+// Mac (4 different versions)
 #ifdef macintosh
   #define REUSE_MEM          // do not deallocate memory after use
-
-  #define TERMINAL_CONSOLE   // can do single char I/O
-  #define RAM_SUPPORT        // RAM disk
 //#define PRINTER_SUPPORT    // LPT printers
 
-  #ifdef USE_CLASSIC         // MacOS9
-  //
-  #endif
+  #ifdef MACOS9
+    //
+    
+    #ifdef USE_CLASSIC       // MacOS9
+    //
+    #endif
 
-  #ifdef USE_CARBON          // Carbon
-  //
+    #ifdef USE_CARBON        // Carbon
+    //
+    #endif
   #endif
-
-  #ifdef __MACH__
+  
+  #ifdef MACOSX
+    #define NATIVE_SUPPORT   // allows native DLLs
+    
     #ifdef __GNUC__          // XCode (universal binaries)
     //
     #else                    // CW Mach
@@ -61,18 +64,14 @@
   #endif
 #endif
 
-
 // Windows
 #ifdef windows32
-  #define TERMINAL_CONSOLE   // can do single char I/O
-  #define RAM_SUPPORT        // RAM disk
   #define PRINTER_SUPPORT    // LPT printers
+  #define NATIVE_SUPPORT     // allows native DLLs
 #endif
-
 
 // Linux
 #ifdef linux
-  #define TERMINAL_CONSOLE   // can do single char I/O
-  #define RAM_SUPPORT        // RAM disk
 //#define PRINTER_SUPPORT    // LPT printers
+  #define NATIVE_SUPPORT     // allows native DLLs
 #endif
