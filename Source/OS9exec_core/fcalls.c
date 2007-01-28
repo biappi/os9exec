@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2007/01/07 13:32:22  bfo
+ *    <pmem> adaptions
+ *    F$SetSys D_IPID: Bit 10..11 additional info for plugins added
+ *
  *    Revision 1.51  2007/01/04 20:17:58  bfo
  *    Some unused vars eliminated
  *    text formatting
@@ -195,43 +199,25 @@
 
 
 
-os9err OS9_F_Exit( regs_type *rp, ushort cpid )
+os9err OS9_F_Exit( regs_type* rp, ushort cpid )
 /* F$Exit
  * Input:   d1.w=exit status
  * Output:  none, process does not continue
  *
  */ 
 {
-    /* -- save exit code */
-    process_typ*        cp= &procs[cpid];
-    unsigned short exiterr= loword( rp->d[1] );
-  //cp->pBlocked = true;
-  //cp->masklevel= 0;
-    
-    /* internal utilities will be killed on a higher level now */
-    /* because XCode will not allow to throw exception thru C context */
-    /*
-    #ifdef PTOC_SUPPORT
-      // -- kill internal command by exception
-      if (cp->isIntUtil) {
-        // don't forget to open the mutex for this special case
-        #ifdef THREAD_SUPPORT
-           if (ptocThread) pthread_mutex_unlock( &sysCallMutex );
-        #endif
-        
-        throw_exception( exiterr ); // this is the only way to leave the program
-      }
-    #endif
-    */
+  // -- save exit code
+  process_typ*        cp= &procs[ cpid ];
+  unsigned short exiterr= loword( rp->d[1] );
   
-    /* -- kill the process */
-    cp->exiterr= exiterr;
-    sig_mask    ( cpid, 0 ); /* activate queued intercepts */
-    kill_process( cpid    );
+  // -- kill the process
+  cp->exiterr= exiterr;
+  sig_mask    ( cpid, 0 ); // activate queued intercepts
+  kill_process( cpid    );
     
-    debugprintf(dbgProcess,dbgNorm,("# pid=%d (%s) exited thru F$Exit, exit-code=%d\n",
-                                       cpid,PStateStr(cp),cp->exiterr));
-    return 0;
+  debugprintf(dbgProcess,dbgNorm,("# pid=%d (%s) exited thru F$Exit, exit-code=%d\n",
+                                     cpid, PStateStr( cp ), cp->exiterr ));
+  return 0;
 } /* OS9_F_Exit */
 
 
@@ -1067,18 +1053,18 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         break;
         
       case D_IPID    : v= 42; // allow programs to identify as os9exec/nt environment
-                       if (cp->isIntUtil) v+= 0x0100; // special modes for internal utilities
-                       if (nativeActive ) v+= 0x0200;
-                       if (cp->isPlugin ) v+= 0x0400;
-                       if (pluginActive ) v+= 0x0800;
+                       if (cp->isIntUtil)                      v+= 0x0100; // special modes for internal utilities
+                       if (nativeActive && Native_Possible() ) v+= 0x0200;
+                       if (cp->isPlugin )                      v+= 0x0400;
+                       if (pluginActive )                      v+= 0x0800;
                        break;
       
-      case D_ScreenW : v= GetScreen( 'w' ); break; /* not according to OS-9 */
+      case D_ScreenW : v= GetScreen( 'w' ); break; // not according to OS-9
       case D_ScreenH : v= GetScreen( 'h' ); break;
-      case D_ScreenW1: v= screenW;          break; /* -x option of OS9exec  */
-      case D_ScreenH1: v= screenH;          break; /* -y option of OS9exec  */
-      case D_UserOpt : v= userOpt;          break; /* -u option of OS9exec  */
-      case D_IPAddr  : v= (ulong)g_ipAddr;  break; /* -g option of OS9exec, no os9_long needed here */
+      case D_ScreenW1: v= screenW;          break; // -x option of OS9exec
+      case D_ScreenH1: v= screenH;          break; // -y option of OS9exec
+      case D_UserOpt : v= userOpt;          break; // -u option of OS9exec
+      case D_IPAddr  : v= (ulong)g_ipAddr;  break; // -g option of OS9exec, no os9_long needed here
       
       default        : v= 0; if (debug[dbgNorm] & dbgAnomaly) upe_printf( "F$SetSys: unimplemented %04X (size=%X)\n", offs,size );
     } // switch
