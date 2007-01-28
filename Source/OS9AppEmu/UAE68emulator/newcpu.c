@@ -32,7 +32,7 @@
   #define false 0
 #endif
 
-extern Boolean withTitle;
+extern int withTitle;
 
 /* debug_out handling (Bfo) */
 typedef void (*dbg_func)(void);
