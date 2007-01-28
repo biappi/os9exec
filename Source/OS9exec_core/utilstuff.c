@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2007/01/07 13:17:25  bfo
+ *    Use MACOS9 define
+ *
  *    Revision 1.52  2006/12/02 12:13:33  bfo
  *    global <lastsyscall> eliminated
  *
@@ -217,12 +220,12 @@ char* nullterm( char* s1, const char* s2, ushort max )
 } /* nullterm */
 
 
-
+/*
 int ustrcmp( const char *s1,const char *s2 )
-/* case insensitive version of strcmp
- *  Input  : *s1,*s2 = strings to be compared
- *  Result : -1:s1<s2, 0:s1=s2, 1:s1>s2
- */
+// case insensitive version of strcmp
+//  Input  : *s1,*s2 = strings to be compared
+//  Result : -1:s1<s2, 0:s1=s2, 1:s1>s2
+//
 {
     int  diff;
     char c;
@@ -232,9 +235,9 @@ int ustrcmp( const char *s1,const char *s2 )
                  -toupper(  *(s2++)))!=0) return diff>0 ?1:-1;
     } while (c!=NUL);
 
-    return 0; /* equal */
-} /* ustrcmp */
-
+    return 0; // equal
+} // ustrcmp
+*/
 
 
 int pustrcmp( const char *s1,const char *s2 )
@@ -305,13 +308,6 @@ void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc )
     debugprintf(dbgTaskSwitch,dbgDetail,("#    state %d -> %d '%s'\n", 
                                            cp->state, state, callingProc ));
                                            
-  //if (cp->pBlocked && state!=pDead &&
-  //                    state!=pUnused) { // new status dead is always allowed
-  //  if (cp->state==pWaiting &&
-  //          state==pActive) return;
-  //  printf( "Krise %d: %d => %d\n", cpid, cp->state, state );
-  //} // if
-    
             cp->state= state;
     switch (cp->state) {
         case pUnused   : pd->_state = 0;                pd->_queueid = '-'; break;
@@ -1393,17 +1389,16 @@ os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
   int         m= n;
   int         i= 0;
     
-  debugprintf(dbgFiles,dbgNorm,("# DirEntry: ---\n" )); 
+  debugprintf(dbgFiles,dbgDetail,("# DirEntry: ---\n" )); 
   seekD0( spP );
   while (m>0) {
         *dEnt= ReadTDir( spP->dDsc ); 
     if (*dEnt==NULL) break;
-    debugprintf(dbgFiles,dbgNorm,("# DirEntry: '%s'\n", (*dEnt)->d_name )); 
+    debugprintf(dbgFiles,dbgDetail,("# DirEntry: '%s'\n", (*dEnt)->d_name )); 
     m--;
   } // while
-  debugprintf(dbgFiles,dbgNorm,("# DirEntry: ---\n" )); 
-  
-  
+  debugprintf(dbgFiles,dbgDetail,("# DirEntry: ---\n" )); 
+    
   seekD0( spP );  // start at the beginning
   do {
   //printf( "nn=%d\n", n );
