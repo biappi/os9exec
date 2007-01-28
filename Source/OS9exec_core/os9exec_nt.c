@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.94  2007/01/07 13:40:59  bfo
+ *    New <pmem> structure added
+ *    Callback definitions for plugin DLLs added
+ *    native/plugin additions
+ *    prp_IProg/run_IProg DLL connection added
+ *    call "Init_IProg"
+ *
  *    Revision 1.93  2007/01/04 20:50:58  bfo
  *    <dllList> introduced
  *    DLL connection for plugins added (Plugin Loader)
@@ -358,7 +365,11 @@
 #include "os9exec_incl.h"
 
 #ifdef UNIX
-  #include <dlfcn.h> // the MacOSX and Linux DLL functionality
+  #include <dlfcn.h> // MacOSX and Linux DLL functionality
+#endif
+
+#ifdef PTOC_SUPPORT
+  #include "native_interface.h"
 #endif
 
 				
@@ -396,7 +407,7 @@ alarm_typ*  alarm_queue[MAXALARMS];
 char*       dirtable   [MAXDIRS];
 
 /* the include/exclude/dll list for internal commands */
-#ifdef PTOC_SUPPORT
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   char*     includeList[MAXLIST];
   char*     excludeList[MAXLIST];
   plug_typ   pluginList[MAXLIST];
@@ -494,7 +505,7 @@ Boolean pluginActive  = false;
 
 Boolean ptocThread    = false;
 Boolean fullArb       = false;
-Boolean withTitle     = true; 
+int     withTitle     = true; 
 
 Boolean logtiming     = true; /* syscall loging, used by int cmd "systime" */
 Boolean logtiming_disp= false;
@@ -525,10 +536,11 @@ ushort errpid;			/* PID of process that generated that error */
 char*  lastpathparsed;	/* last pathstring parsed (NULL if none) */
 
 /* the software's version and revision */
-ushort appl_version;
-ushort appl_revision;
+//ushort appl_version;
+//ushort appl_revision;
 ushort exec_version;
 ushort exec_revision;
+
 char*  hw_site;
 char*  hw_name;
 char*  sw_name;
@@ -550,7 +562,8 @@ int dummyfork= 0;				/* if set, forks are done as in os9exec 1.14 (only command 
 int fetchnames; /* if set, OS9-filenames beginning with '.' will be translated to begin with '/' on the mac */
 
 /* internal commands */
-Boolean with_intcmds  = true;   /* by default, internal commands will be used */
+Boolean with_intcmds = true;   // by default, internal commands will be used
+Boolean with_dbgDLLs = false;  // by default, '*_dbg' DLLs are not preferred
 
 /* cursor spinning interval in 1/60 seconds */
 ulong   spininterval= DEFAULTSPININTERVAL;
@@ -795,7 +808,8 @@ static void cleanup(void)
 #endif
 
 
-/* obtain tool and package (os9exec) version */
+/*
+// obtain os9exec version
 void getversions()
 {
 	#ifdef MACOS9
@@ -808,14 +822,14 @@ void getversions()
 	exec_revision= 0;
 	
 	#ifdef MACOS9
-	/* obtain tool's version */
+	// obtain tool's version
 	if ((versH=GetResource('vers',1))!=NULL) {
 		appl_version = *((byte*)*versH+0);
 		appl_revision= *((byte*)*versH+1);
 		ReleaseResource(versH);
 	}
 	
-	/* obtain os9exec version */
+	// obtain os9exec version
 	if ((versH=GetResource('vers',2))!=NULL) {
 		exec_version = *((byte*)*versH+0);
 		exec_revision= *((byte*)*versH+1);
@@ -823,13 +837,15 @@ void getversions()
 	}
 	
 	#else
-	/* %%% simply hardwired for now */
+	// simply hardwired for now
 	appl_version =    1; 
 	appl_revision= 0x01;	
 	exec_version =    3;
-	exec_revision= 0x34;
+	exec_revision= 0x35;
 	#endif
-} /* getversions */
+} // getversions
+*/
+
 
 
 /* must be done before linking "init" module */
@@ -1038,7 +1054,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 } /* GetCurPaths */
 
 
-#ifdef PTOC_SUPPORT
+
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   // Get the DLL suffix of my operating system
   static const char* DLL_Suffix()
   {
@@ -1056,25 +1073,78 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     
     return suff;
   } // DLL_Suffix
+
   
   
-  // Returns true, if the DLL suffix is correct
-  static Boolean IsDLL( const char* name, const char* p )
+  // Test, if upshifted string <str> begins with <cmp>
+  static Boolean SameBegin( const char* str, const char* cmp )
   {
-    int sLen, pLen;
+    int sLen= strlen( str );
+    int cLen= strlen( cmp );
+    if (sLen<cLen) return false; // too short ?
+
+    return ustrncmp( str,cmp, cLen )==0;
+  } // SameBegin
+
+
+
+  // Test, if upshifted string <str> ends with <cmp>
+  static Boolean SameEnd( const char* str, const char* cmp )
+  {
+    int sLen= strlen( str );
+    int cLen= strlen( cmp );
+    if (sLen<cLen) return false; // too short ?
     
-    sLen= strlen( name );
-    pLen= strlen( p );
+    str+= sLen-cLen; // compare the ends only
+    return ustrncmp( str,cmp, cLen )==0;
+  } // SameEnd
+
+
+
+  // Test, if upshifted string <str> ends with "_dbg"<suff>
+  static Boolean DbgSuff( const char* str, const char* suff )
+  {
+    char    dbEnd[ OS9PATHLEN ];
+    strcpy( dbEnd, "_dbg" );
+    strcat( dbEnd,  suff  );
     
-    if    (sLen<pLen) return false;
-    name+= sLen-pLen; // compare the ends only
+    return SameEnd( str, dbEnd );
+  } // SameEnd
+
+
+
+  Boolean OtherThere( const char* str, const char* suff )
+  {
+    char      nm[ OS9PATHLEN ];
+    int       len= strlen( str )-strlen( suff );
+    int       i;
+    plug_typ* p;
     
-    return ustrcmp( name,p )==0;
-  } // IsDLL
+    Boolean cond= DbgSuff( str, suff );
+    if     (cond) len-= strlen( "_dbg" );
+    
+               strncpy( nm, str, len );
+                        nm[ len ]= NUL;
+    if (!cond) strcat ( nm, "_dbg" );
+               strcat ( nm, suff   );
+    
+  //upe_printf( "nm='%s' %d %d\n", nm, len, cond );
+    
+    for (i= 0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
+    
+      if (ustrcmp( p->name, nm )==0) return true;
+    } // for
+
+    
+    return false;
+  } // OtherThere
   
+
   
   // Search for all DLLs at the "PLUGINS" subdirectory
-  static os9err SearchDLLs( ushort pid )
+  static os9err SearchDLLs( ushort pid, int *i, Boolean withDLLs, Boolean avoidDup )
   {
     os9err          err, cErr;
     ushort          path;
@@ -1082,12 +1152,12 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     process_typ*    cp= &procs[ pid ];
     char            pathName[ OS9PATHLEN ];
     os9direntry_typ dEnt;
-    int             i= 0;
     char**          m;
+    Boolean         cond;
     
     const char* suff= DLL_Suffix();
     if (strcmp( suff,"" )==0) return 0; // no error, if not supported
-    
+
     strcpy( pathName,  strtUPath );
     strcat( pathName, "/PLUGINS" ); // sub directory where "dd" has been found
 
@@ -1098,11 +1168,18 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       err= usrpath_read( pid,  path, &size, &dEnt,      false ); if (err) break;
       LastCh_Bit7                          ( dEnt.name, false );
 
-      if (IsDLL( dEnt.name, suff )) {
-         m= &pluginList[ i ].name;
+                     cond= DbgSuff( dEnt.name, suff );
+      if (!withDLLs) cond= !cond;
+      
+      if (cond                          &&
+         !SameBegin( dEnt.name,  "._" ) && // begins with "._" ?
+          SameEnd  ( dEnt.name,  suff )) {
+         if (avoidDup && OtherThere( dEnt.name, suff )) continue;
+         
+         m= &pluginList[ *i ].name;
         *m= get_mem( strlen( dEnt.name )+1 );
         strcpy         ( *m, dEnt.name );
-        i++;
+        (*i)++;
       } // if
     } // while
     if (err==E_EOF) err= 0; // just end of file
@@ -1111,6 +1188,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     
     return err;
   } // SearchDLLs
+  
   
   
   // Get <aFunc> of <aFuncName>
@@ -1129,26 +1207,23 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   } // DLL_Function
 
   
+  
   // Connect to all available DLLs
   static os9err ConnectDLL( plug_typ* p )
   {
     os9err err;
     void*  aDLL= NULL;
     
-    const char* aFuncName1= "Module_Version";
-    void*       aFunc1    =  NULL;
-    typedef long (*VersionProc)( long mContext );
-    VersionProc vp;
+    typedef long (*VersionProc)( void );
+                   VersionProc aModVersion;
 
-    const char* aFuncName2= "Prp_IProg";
-    const char* aFuncName3= "Run_IProg";
-    
+    // Get the full path where to search for plugins
     char    fullName[ OS9PATHLEN ];
-    strcpy( fullName,  strtUPath     );
-    strcat( fullName,  PATHDELIM_STR );
-    strcat( fullName, "PLUGINS"      );
-    strcat( fullName,  PATHDELIM_STR );
-    strcat( fullName,  p->name       );
+    strcpy( fullName, strtUPath     );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName,"PLUGINS"      );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName, p->name       );
     
     #ifdef windows32
       aDLL= LoadLibrary( fullName );
@@ -1159,6 +1234,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
         #define mode RTLD_NOW + RTLD_GLOBAL
       #elif defined linux
         #define mode RTLD_LAZY
+      #else
+        #define mode 0
       #endif
     
       aDLL= dlopen( fullName, mode );
@@ -1166,9 +1243,11 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     
     if (!aDLL) return E_PNNF;
 
-              err= DLL_Function( aDLL, aFuncName1, &aFunc1       );
-    if (!err) err= DLL_Function( aDLL, aFuncName2, &p->prp_IProg );
-    if (!err) err= DLL_Function( aDLL, aFuncName3, &p->run_IProg );
+    // These are the rquired plugin functions:
+              err= DLL_Function( aDLL,   "Module_Version", (void**)        &aModVersion );
+    if (!err) err= DLL_Function( aDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
+    if (!err) err= DLL_Function( aDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
+    if (!err) err= DLL_Function( aDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
     if  (err) {
       #ifdef windows32
         FreeLibrary( aDLL );
@@ -1181,36 +1260,247 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       return err;
     } // if
     
-    vp= (VersionProc)aFunc1;
-  //upe_printf( "vp=%08x\n", vp( 1 ) );
+    p->pVersion= aModVersion();
     return 0;
   } // ConnectDLL
+
+
+
+  // Initialize include/exclude list
+  static void Init_NativeProgs( plug_typ* p )
+  {
+    char iName[ OS9NAMELEN ];
+    char iOpt [ OS9NAMELEN ];
+    
+    int                         i= 0;
+    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) {
+      if (strcmp( iOpt, "+" )==0 ||
+          strcmp( iOpt,"I+" )==0) ChangeElement( iName, true  ); 
+      if (strcmp( iOpt, "-" )==0 ||
+          strcmp( iOpt,"I-" )==0) ChangeElement( iName, false ); 
+    } // while
+  } // Init_NativeProgs
+
+
+
+  // Get the number of internal programs for <p>
+  static int NumberOfNativeProgs( plug_typ* p )
+  {
+    char iName[ OS9NAMELEN ];
+    char iOpt [ OS9NAMELEN ];
+    
+    int                         i= 0;
+    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) { } // while
+    return                      i;
+  } // NumberOfNativeProgs
+  
+  
+  
+  static void DispList( int last ) 
+  {
+    int       i;
+    plug_typ* p;
+    
+    upe_printf( "last=%d\n", last );
+    for (i= 0; i<=last; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) continue;
+
+      upe_printf( "%d '%s' (n=%d)\n", i, p->name, p->nNativeProgs );
+    } // for
+  } // DispList 
+
+
+
+  static void SwapElements( int i, int j )
+  {
+    plug_typ tmp;
+    
+    if (j<=i) return;
+    
+    MoveBlk( &tmp, &pluginList[ j ], sizeof( plug_typ ) );
+    
+    while (j>i) {
+      MoveBlk( &pluginList[ j ], &pluginList[ j-1 ], sizeof( plug_typ ) );
+      j--;
+    } // while
+    
+    MoveBlk( &pluginList[ j ], &tmp, sizeof( plug_typ ) );
+  } // SwapElements
+
+
+
+  static int PLast( void )
+  {
+    plug_typ* p;
+
+    int    last= MAXLIST-1;
+    while (last>=0) {
+          p= &pluginList[ last ];
+      if (p->name!=NULL) break;
+      last--;
+    } // while
+    
+    return last;
+  } // PLast;
+
+
+
+  static void SortedPluginList( void )
+  {
+    // close potential gap first
+    plug_typ* p;
+    plug_typ* q;
+    int       last, i, j;
+    
+    last= PLast();
+  //DispList( last );
+    
+    for (i= 0; i<=last; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) {
+        for (j= i+1; j<=last; j++) {
+              q= &pluginList[ j ];
+          if (q->name!=NULL) {
+            MoveBlk( p, q, sizeof( plug_typ ) );
+            q->name= NULL;
+            break;
+          } // if
+        } // for
+      } // if
+    } // for
+    
+    last= PLast();
+  //DispList( last );
+    
+           i= 0;
+    while (i<=last) {
+          p= &pluginList[ i ];
+      if (p->nNativeProgs>1) break;
+      i++;
+    } // while
+    
+           j= i+1;
+    while (j<=last) {
+          p= &pluginList[ j ];
+      if (p->nNativeProgs==1) {
+      //upe_printf( "swap %d <=> %d\n", i, j );
+        SwapElements( i, j );
+        
+               i++;
+        while (i<=last) {
+              p= &pluginList[ i ];
+          if (p->nNativeProgs>1) break;
+          i++;
+        } // for
+        
+        j= i;
+      } // if
+      
+      j++;
+    } // while
+    
+  //DispList( last );
+  } // SortedPluginList
+  
 
 
   // Main routine for connecting plugin DLLs
   static void PluginLoader( ushort cpid )
   {
-    os9err err;
-    int    i;
-    plug_typ* p;
+    os9err      err;
+    plug_typ*   p;
+    int         i, maxN, len;
+    const char* bb= " [built-in]";
+    Boolean     withBuiltIn= false;
+    
+    char        nm  [ OS9PATHLEN ];
+    char        form[ 40 ];
+    long        ver;
+    ushort      rev;
   
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
-    err= SearchDLLs( cpid ); if (err) return;
+    
+                            i= 0;
+    err= SearchDLLs( cpid, &i,  with_dbgDLLs, false ); if (err) return;
+    err= SearchDLLs( cpid, &i, !with_dbgDLLs, true  ); if (err) return;
+    
+    for (i= 0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
+    
+           err= ConnectDLL( p );
+      if (!err) {
+            p->nNativeProgs= NumberOfNativeProgs( p );
+        if (p->nNativeProgs>0) continue; // at least one native prog must be there
+      } // if
+      
+      release_mem( p->name ); 
+      p->name= NULL;
+    } // for
+
+    SortedPluginList();
+
+    // for built-in only
+    #ifdef PTOC_SUPPORT
+             i= 0;
+      while (i<MAXLIST) {
+            p= &pluginList[ i ];      // connect the built-in module as the last
+        if (p->name==NULL) {
+            p->name= "";
+            p->pVersion        = lVersion();
+            p-> next_NativeProg=  Next_NativeProg; // do this before counting
+            p->nNativeProgs    = NumberOfNativeProgs( p );
+            p->   is_NativeProg=    Is_NativeProg;
+            p->start_NativeProg= Start_NativeProg;
+            withBuiltIn        = true;
+            break;
+        } // if
+      
+        i++;
+      } // while
+    #endif    
+                     maxN= 0;
+    if (withBuiltIn) maxN= strlen( bb )-2; // minimum length
     
     for (i=0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
       if (p->name==NULL) break;
-    
-      err= ConnectDLL( p );
-      upe_printf( "%s '%s' (err=%d)\n", i==0 ? "# Connecting plugin module:"
-                                             : "#                          ", p->name, err );
-      if (err) { release_mem( p->name ); p-> name= NULL; }
+      
+               len= strlen( p->name );
+      if (maxN<len) maxN= len;
+      
+      Init_NativeProgs( p );
     } // for
-  
-    pluginActive= pluginList[ 0 ].name!=NULL;
+    maxN+= 2; // apo addition
+
+    if (withTitle) {
+      for (i=0; i<MAXLIST; i++) {
+            p= &pluginList[ i ];
+        if (p->name     ==NULL) break;
+        if (p->name[ 0 ]==NUL) strcpy( nm,  bb       ); 
+        else                 { strcpy( nm, "'"       );
+                               strcat( nm,  p->name  );
+                               strcat( nm,       "'" ); }
+      
+        // convert into version and revision
+        ver= p->pVersion   / (256*256);
+        rev= (ushort)( ver %  256 );
+        ver=           ver /  256;
+      
+        sprintf   ( form, "# %s %s%ds %s %s\n", "%s", "%",-maxN, "V%d.%02x", 
+                             p->nNativeProgs==1 ? "" : "(n=%d)" );
+      
+        upe_printf( form, i==0 ? "Connecting plugin module:"
+                               : "                         ", 
+                             nm, ver,rev, p->nNativeProgs );
+      } // for
+    } // if
+    
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader done\n" ) );
+    pluginActive= Plugin_Possible(); // built-in will not be taken in account
   } // PluginLoader
-#endif PTOC_SUPPORT
+#endif
 
 
 
@@ -1286,6 +1576,7 @@ static void CheckStartup( int cpid, char* toolname, int *argc, char **argv )
 } /* CheckStartup */
 
 
+
 #ifdef windows32
   /* catch the Ctrl C */
   static BOOL CtrlC_Handler( DWORD ctrlType )
@@ -1316,6 +1607,7 @@ static void CheckStartup( int cpid, char* toolname, int *argc, char **argv )
 #endif
 
 
+
 static void titles( void )
 {
    /* - Apperance (CTB-terminal, Win32 or Linux Console or MPW tool) */
@@ -1337,7 +1629,6 @@ static void titles( void )
        upho_printf("- Linux XTerm Version\n");
      #else
        upho_printf("- Unknown System\n"); /* unknown */
-
      #endif
      
    #else
@@ -1361,10 +1652,10 @@ static void titles( void )
        upho_printf("- With CarbonLib Interface\n");
    #endif
    
- //upo_printf( "\n" );   
-   fflush(stderr);
-   fflush(stdout);
+   fflush( stderr );
+   fflush( stdout );
 } /* titles */
+
 
 
 static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid )
@@ -1415,7 +1706,6 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 			if (cp->isIntUtil) { // in case of built-in command, the parent must be activated again
 			  parentid= os9_word( cp->pd._pid );
 		      debugprintf( dbgTrapHandler,dbgNorm,("# main loop: [pid=%d] intUtil parent=%d reactivated\n", cpid, parentid ));
-            //procs[ parentid ].pBlocked= false; // changes allowed again
 			  set_os9_state( parentid, pActive, "IntCmd (excp)" ); // make it active again
             } // if
 			
@@ -1489,17 +1779,96 @@ static void debug_retsystask( process_typ* cp, regs_type* crp, ushort cpid )
 } /* debug_retsystask */
 
 
-void os9exec_globinit(void)
+
+// ---- Callback routines for "cclib" ----------------------------------
+// missing "atoi"/"atof" operations for "cclib", placed here
+int StrToShort ( short*  i, const char* str );
+int StrToFloat ( float*  f, const char* str );
+int StrToDouble( double* d, const char* str );
+
+
+static Boolean IsZeroI( const char* s )
+{
+  if    (*s==NUL) return false;
+  while (*s!=NUL) {
+    if  (*s <'0' && *s >'9' &&
+         *s!='-' && *s!='+') return false;
+    s++;
+  } // while
+  
+  return true;
+} // IsZeroI
+
+
+static Boolean IsZeroR( const char* s )
+{
+  if    (*s==NUL) return false;
+  while (*s!=NUL) {
+    if  (*s <'0' && *s >'9' && *s!='.' && 
+         *s!='E' && *s!='-' && *s!='+') return false;
+    s++;
+  } // while
+  
+  return true;
+} // IsZeroR
+
+
+
+int StrToShort (  short* i, const char* str )
+{
+         *i= atoi( str );
+  return *i==0 && !IsZeroI( str );
+} // StrToShort
+
+
+int StrToFloat (  float* f, const char* str )
+{
+         *f= atof( str );
+  return *f==0 && !IsZeroR( str );
+} // StrToFlat
+
+
+int StrToDouble( double* d, const char* str )
+{
+         *d= atof( str );
+  return *d==0 && !IsZeroR( str );
+} // StrToDouble
+
+
+
+// ---------------------------------------------------------------------
+static void init_plugins( void )
+{
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+    int  i;
+    for (i= 0; i<MAXLIST; i++)  includeList[ i ]     = NULL;
+    for (i= 0; i<MAXLIST; i++)  excludeList[ i ]     = NULL;
+    for (i= 0; i<MAXLIST; i++) { pluginList[ i ].name= NULL;
+                                 pluginList[ i ].nNativeProgs= 0; }
+                                 
+    nativeActive= true; // Native programs are possible
+
+    g_cb.trap0      = trap0_call; // once would be sufficient
+    g_cb.strToShort = StrToShort;
+    g_cb.strToFloat = StrToFloat;
+    g_cb.strToDouble= StrToDouble;
+  #endif
+} // init_plugins
+
+
+
+void os9exec_globinit( void )
 {
   /* --- global environment initialisation --- */
-  init_all_mem  ();      /* initialize memory handling */
-  init_fmgrs    ();      /* initialize all the file manager objects */
-  init_processes();      /* no processes yet */
-  init_modules  ();      /* clear module handle list */
-  init_events   ();	     /* init OS-9 events */
-  init_alarms   ();		 /* init OS-9 alarms */
-  init_syspaths ();      /* prepare system paths, ready for usrpath print now */
-  init_L2       ();		 /* prepare the /L2 stuff */
+  init_all_mem  ();      // initialize memory handling
+  init_fmgrs    ();      // initialize all the file manager objects
+  init_processes();      // no processes yet
+  init_modules  ();      // clear module handle list
+  init_events   ();	     // init OS-9 events
+  init_alarms   ();		 // init OS-9 alarms
+  init_syspaths ();      // prepare system paths, ready for usrpath print now
+  init_L2       ();		 // prepare the /L2 stuff
+  init_plugins  ();      // prepare plugin DLL stuff
 } /* os9exec_globinit */
 
 
@@ -2026,10 +2395,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* no table entries at the beginning */
   for (ii= 0; ii<MAXDIRS; ii++) dirtable[ ii ]= NULL;
 
-  #ifdef PTOC_SUPPORT
-    Init_IProg();
-  #endif
-  
   debug_prep();
   debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
     
@@ -2177,19 +2542,18 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* install asynchronous handlers */
   atexit( &cleanup );
 
-  #ifdef PTOC_SUPPORT
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
     PluginLoader( cpid );
   #endif
+  
+  if (withTitle) upo_printf( "\n" );
   BootLoader    ( cpid );
   CheckStartup  ( cpid, my_toolname, &argc, argv );
 
   /* initialize spinning cursor */ 
   eSpinCursor(0); /* reset cursor spinning */	
 
-//if (withTitle) titles();
-//if (withTitle) upo_printf( "\n" );   
-  
-   /* init error tracking vars */
+  /* init error tracking vars */
   totalMem= max_mem(); /* get startup memory */
   lastpathparsed=NULL;
   //lastsyscall=0;
@@ -2211,11 +2575,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 	
   debugprintf(dbgStartup,dbgDeep,("# os9exec_nt: exited main loop\n"));
   /* --- exit status of MPW tool comes from exit status of first process */
-  cp=      &procs[0];
-  cp->oerr= procs[0].exiterr;
+  cp=      &procs[ 0 ];
+  cp->oerr= procs[ 0 ].exiterr;
   err= 0; /* assume no MPW error */
    
-  if 	 (cp->oerr) {
+  if   (cp->oerr) {
     if (cp->oerr!=1) { 
 		get_error_strings(cp->oerr, &errnam,&errdesc);
        err= 2; /* MPW: some error in processing */ 
@@ -2230,7 +2594,7 @@ mainabort:
   get_error_strings( cp->oerr, &errnam,&errdesc );
   upho_printf( "Emulation could not start due to OS-9 error #%03d:%03d (%s): '%s'\n#   %s\n",
                 cp->oerr>>8,cp->oerr &0xFF,errnam, my_toolname, errdesc );
-  err=3; /* MPW system/missing resource error */
+  err= 3; /* MPW system/missing resource error */
 	
 cleanup:
   /* cleanup is also done automatically when exit() is called */
@@ -2242,7 +2606,7 @@ cleanup:
 
 
 /* Entry for old os9exec V1.14 style tools */
-ushort os9exec(int argc,char **argv,char **envp)
+ushort os9exec(int argc, char** argv, char** envp )
 {
   /* execute default module (OS9C ID=0) with no extra memory */
   return os9exec_nt( NULL, argc,argv,envp, 0, MYPRIORITY );

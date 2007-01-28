@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.70  2007/01/07 13:41:00  bfo
+ *    New <pmem> structure added
+ *    Callback definitions for plugin DLLs added
+ *    native/plugin additions
+ *    prp_IProg/run_IProg DLL connection added
+ *    call "Init_IProg"
+ *
  *    Revision 1.69  2007/01/04 20:47:48  bfo
  *    <dllList> added
  *
@@ -66,7 +73,7 @@
  *    Extended for ".DS_Store" support
  *
  *    Revision 1.61  2006/10/01 15:19:06  bfo
- *    <cp->isPtoc> introduced; <ptocMask> eliminated
+ *    <cp->isPtoC> introduced; <ptocMask> eliminated
  *
  *    Revision 1.60  2006/09/08 21:54:49  bfo
  *    <dbgPath> added
@@ -261,7 +268,7 @@
   #define UNIX
 #endif
 
-                
+             
 /* constants */
 /* ========= */
 
@@ -357,12 +364,12 @@
 /* number of dirs */
 #if defined macintosh
   #define MAXDIRS     10000
-#elif defined windows32 || defined linux
+#elif defined win_linux
   #define MAXDIRS     50000
 #endif
 
 /* number of include/exclude list elements */
-#ifdef PTOC_SUPPORT
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   #define MAXLIST       500
 #endif
 
@@ -524,22 +531,6 @@ typedef struct {
             ulong handlerstack;
          } errortrap_typ;
 
-
-/*
-// an allocated memory block
-typedef struct {
-            void* base;
-            ulong size;
-        } memblock_typ;
-
-#ifdef REUSE_MEM
-  typedef struct {
-            memblock_typ f[MAX_MEMALLOC];
-            int          freeN;   // number of free segments
-            ulong        freeMem; // total free memory
-        } free_typ;
-#endif
-*/
 
 /* OS9 simulated directory file constants */
 #define IDMASK      0x001FFFFF /* one bit more because of problems ... (bfo) */
@@ -1058,9 +1049,9 @@ typedef struct {
                 
                 /* general state */
                 pstate_typ        state;    /* process' state */
-                Boolean       isIntUtil;    /* Internal utility flag */
-                Boolean        isPlugin;    /* Acting within a plugin */
-                Boolean          isPtoC;    /* PtoC command */
+                Boolean       isIntUtil;    /* acting as internal utility */
+                Boolean        isNative;    /*    "   "  native program */
+                Boolean        isPlugin;    /*    "   "  plugin program */
                 ushort              mid;    /* the process' primary module ID */
                 
                 char intProcName[OS9NAMELEN]; /* the process' name (for internal utilities) */
@@ -1178,23 +1169,27 @@ extern  alarm_typ*  alarm_queue[MAXALARMS];
 extern  char*       dirtable   [MAXDIRS];
 
 
-#ifdef PTOC_SUPPORT
-  typedef void   (*Prp_IProg_Typ)( ushort* p_curidP, void* p_modBase, 
-                                   void*   p_args,   void* p_cbP );
-  typedef ushort (*Run_IProg_Typ)( const char* progName );
-  
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+  typedef int    ( *Next_NativeProg_Typ)( int* i, char* progName, char*   callMode );
+  typedef int    (   *Is_NativeProg_Typ)(   const char* progName, void**   modBase );
+  typedef ushort (*Start_NativeProg_Typ)(   const char* progName, void* nativeinfo );
+    
   // The plugin element
   typedef struct {
-    char*         name;
-    Prp_IProg_Typ prp_IProg;
-    Run_IProg_Typ run_IProg;
+    char* name;         // the plugin's name
+    long  pVersion;     // the plugin's version
+    int   nNativeProgs; // number of internal progs
+    
+     Next_NativeProg_Typ  next_NativeProg;
+       Is_NativeProg_Typ    is_NativeProg;
+    Start_NativeProg_Typ start_NativeProg;
   } plug_typ;
   
   
   /* the include/exclude list for internal commands */
-  extern char*    includeList[MAXLIST];
-  extern char*    excludeList[MAXLIST];
-  extern plug_typ  pluginList[MAXLIST];
+  extern char*    includeList[ MAXLIST ];
+  extern char*    excludeList[ MAXLIST ];
+  extern plug_typ  pluginList[ MAXLIST ];
   
   extern callback_typ g_cb;
 #endif
@@ -1301,7 +1296,7 @@ extern Boolean nativeActive;
 extern Boolean pluginActive;
 extern Boolean ptocThread;
 extern Boolean fullArb;
-extern Boolean withTitle;
+extern int     withTitle;
 
 extern Boolean logtiming;
 extern Boolean logtiming_disp;
@@ -1330,8 +1325,8 @@ extern ushort  errpid;          /* PID of process that generated that error */
 extern char*   lastpathparsed;  /* last pathstring parsed (NULL if none) */
 
 /* the software's version and revision */
-extern ushort  appl_version;
-extern ushort  appl_revision;
+//extern ushort  appl_version;
+//extern ushort  appl_revision;
 extern ushort  exec_version;
 extern ushort  exec_revision;
 extern char*   hw_site;
@@ -1358,7 +1353,8 @@ extern int fetchnames; /* if set, OS9-filenames beginning with '.' will be trans
 extern int disablefilters; /* if set, output filters will be disabled */
 
 /* internal commands */
-extern Boolean with_intcmds;     /* if set, int commands will be used */
+extern Boolean with_intcmds; // if set, int commands will be used
+extern Boolean with_dbgDLLs; // if set, '*_dbg' DLLs will be preferred
 
 /* Cursor spinning interval */
 extern ulong spininterval;
@@ -1428,9 +1424,8 @@ void    eAdvanceCursor(void);
 /* routines */
 /* ======== */
 
-/* get tool and os9exec versions and revisions */
+// Get HW info
 void   get_hw();
-void   getversions();
 
 /* Entry into OS9 emulation */
 void   os9exec_globinit(void);
