@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.34  2007/01/02 11:30:41  bfo
+ *    2007 text adaption
+ *
  *    Revision 1.33  2006/12/17 00:45:54  bfo
  *    "MountDev" argument ordering corrected
  *
@@ -1060,7 +1063,6 @@ void init_syspaths()
       mco->holdScreen= false;
     #endif
     
-
     #ifdef MPW
       /* stdout */
       spP= &syspaths[sysStdout];
@@ -1218,11 +1220,11 @@ os9err syspath_close( ushort pid, ushort sp )
                                          sp,spP->linkcount)); return 0; /* not yet really closed */
     }
     
-    if (sp==procs[0].usrpaths[usrStdout] ||
-        sp==procs[0].usrpaths[usrStderr]) {
+    if (sp==procs[ 0 ].usrpaths[usrStdout] ||
+        sp==procs[ 0 ].usrpaths[usrStderr]) {
     /* don't close this path because this is used for main system's output */
     	debugprintf(dbgFiles,dbgNorm,("# syspath_close: don't close syspath=%d\n",
-                                         sp,spP->linkcount)); return 0;
+                                         sp,spP->linkcount)); return 1; /* let the path open, this is not an error */
     }
     
     /* --- must close path */
@@ -1230,7 +1232,7 @@ os9err syspath_close( ushort pid, ushort sp )
                                      sp,spP->linkcount));
 
         err= (fmgr_op[spP->type]->close)( pid,spP );
-    if (err==1) return 0;     /* e=1: let the path open, this is not an error */
+    if (err==1) return 0;     /* err=1: let the path open, this is not an error */
     if (err)    return err;   /* do not invalidate, if error */
     
             spP->type= fNone; /* invalidate the path descriptor */
@@ -1239,27 +1241,31 @@ os9err syspath_close( ushort pid, ushort sp )
 } /* syspath_close */
 
 
+
+// close user path
 os9err usrpath_close( ushort pid, ushort up )
-/* close user path */
 {
-    os9err       err;
-    int          ll;
-    ushort*      sp = &procs[pid].usrpaths[up];
-    syspath_typ* spP= get_syspathd( pid,*sp );
+  os9err       err;
+  int          ll;
+  ushort*      sp = &procs[ pid ].usrpaths[ up ];
+  syspath_typ* spP= get_syspathd( pid,*sp );
      
-    if (spP==NULL) ll= 0;
-    else           ll= spP->linkcount-1;
+  if (spP==NULL) ll= 0;
+  else           ll= spP->linkcount-1;
     
-    debugprintf(dbgFMgrType,dbgNorm,("# %s pid/up/sp-lnk: %2d  %2d %2d-%2d %s\n", 
-                                        "close", pid,up,*sp,ll, spP_TypeStr(spP)));
+  debugprintf(dbgFMgrType,dbgNorm,( "# %s pid/up/sp-lnk: %2d  %2d %2d-%2d %s\n", 
+                                       "close", pid, up, *sp, ll, spP_TypeStr( spP ) ) );
     
-    if (up>=MAXUSRPATHS) return os9error(E_BPNUM);
-    err=syspath_close( pid,*sp );
-    debugprintf(dbgFiles,dbgNorm,("# usrpath_close: pid=%d, up=%d, sp=%d, err=%d\n",
-                                     pid,up,*sp,err)); 
-    if   (!err) *sp= 0; /* invalidate if no error */
-    return err;
-} /* usrpath_close */   
+  if (up>=MAXUSRPATHS) return os9error(E_BPNUM);
+  err= syspath_close( pid, *sp );
+  debugprintf(dbgFiles,dbgNorm,("# usrpath_close: pid=%d, up=%d, sp=%d, err=%d\n",
+                                   pid,up,*sp,err)); 
+
+  if   (!err)    *sp= 0; // invalidate if no error
+  if    (err==1) err= 0; // err=1: let the path open, this is not an error
+  return err;
+} // usrpath_close 
+
 
 
 os9err usrpath_link( ushort pid, ushort up, const char* ident )
@@ -1947,7 +1953,7 @@ void close_usrpaths( ushort pid )
     for (k=0; k<MAXUSRPATHS; k++) {
              spN= &procs[pid].usrpaths[k];
         if (*spN>0 && *spN<MAXSYSPATHS) usrpath_close( pid,k ); /* close this path */
-            *spN= 0;                     /* and invalidate to avoid double closing */
+        //  *spN= 0;                     /* and invalidate to avoid double closing */
     } /* for */ 
 } /* close_usrpaths */
 
