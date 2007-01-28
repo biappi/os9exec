@@ -11,13 +11,17 @@ clean: clean_OS9Linux
 ##############################
 TOP_OS9Linux=..
 WD_OS9Linux=$(shell cd ${TOP_OS9Linux};echo `pwd`)
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9App/os9app.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/alarms.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/c_access.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/consio.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/debug.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/events.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/fcalls.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/fileaccess.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/filestuff.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/file_rbf.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/filescsi.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/filters.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/funcdispatch.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/icalls.c
@@ -27,29 +31,25 @@ c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/int_move.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/int_rename.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/memstuff.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/modstuff.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/network.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/os9exec_nt.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/os9main.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/pipefiles.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/printer.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/procstuff.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/telnetaccess.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/utilstuff.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/vmod.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/os9_uae.c
+c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/luzstuff.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/cpudefs.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/cpustbl.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/newcpu.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/os9_uae.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/readcpu.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/support.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/luzstuff.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/cpuemu.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/OS9AppEmu/UAE68emulator/fpp.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/events.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/network.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/telnetaccess.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/vmod.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/Platforms/LINUX/linuxfiles.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/filescsi.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/alarms.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9exec_core/printer.c
-c_SRC_OS9Linux+=${WD_OS9Linux}/OS9App/os9app.c
 c_SRC_OS9Linux+=${WD_OS9Linux}/Platforms/LINUX/net_linux.c
 
 OBJS_OS9Linux+=$(c_SRC_OS9Linux:.c=.c.o)
@@ -74,7 +74,8 @@ clean_OS9Linux:
 
 OS9Linux:
 	$(MAKE) -f os9Linux.mk os9linux TARGET=os9linux\
- CC="gcc"  LD="gcc"  AR="ar -crs"  SIZE="size" LIBS+="/usr/lib/libm.a"
+ CC="gcc"  LD="gcc"  AR="ar -crs"  SIZE="size" LIBS+="/usr/lib/libm.a"\
+ LIBS+="/usr/lib/libltdl.so.3"
 
 os9linux: ${OBJS_OS9Linux} 
 	${CC} ${LDFLAGS} -m32 -o ../../Output/os9linux ${OBJS_OS9Linux} ${LIBS}
