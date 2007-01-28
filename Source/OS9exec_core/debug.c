@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.28  2007/01/07 13:07:32  bfo
+ *    Adapted for the new memblock <mb> structure
+ *
  *    Revision 1.27  2007/01/04 20:54:17  bfo
  *    Display memory size with 7 instead 6 digits
  *
@@ -258,8 +261,8 @@ void _debugprintf(char *format, ...)
     va_end                (vp);
     
     if (cp->isIntUtil &&
-       !cp->isPtoC) printf( buffer );
-    else        upe_printf( buffer );
+       !cp->isNative) printf( buffer );
+    else          upe_printf( buffer );
 
     /* look if also halt enabled for that class */
     debug_halt( tempmask );
