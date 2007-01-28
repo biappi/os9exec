@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.25  2007/01/06 01:13:44  bfo
+ *    "MACOSX" defined as equivalent of __MACH__
+ *
  *    Revision 1.24  2006/06/26 22:08:24  bfo
  *    <setjmp.h> included
  *
@@ -385,28 +388,33 @@ typedef struct dirent dirent_typ;
 #endif
 
 
-#if defined __INTEL__ || defined __MACH__
-  typedef short Boolean;
-  #define true  1
-  #define false 0
-
-  typedef int OSErr;
-#endif
-
-
 // define type shortcuts
-#ifndef UNIX
-  typedef unsigned int      uint;
-  typedef unsigned long int ulong;
-#endif
+#ifndef  __GLOBDEF
+#define  __GLOBDEF
+  typedef unsigned char  byte;
+  typedef unsigned short os9err;
 
-#if defined __MACH__
-  typedef unsigned long ulong;
-#endif
+  #if defined __INTEL__ || defined __MACH__
+    typedef char Boolean;
+    #define true  1
+    #define false 0
+  #endif
 
-#if !defined windows32 || __MWERKS__ >= CW7_MWERKS
-  typedef unsigned char byte;
-#endif
+  #if defined __MACH__
+    typedef unsigned long ulong;
+  #endif
+
+
+  #ifndef UNIX
+    typedef unsigned      int uint;
+    typedef unsigned long int ulong;
+  #endif
+
+  #if defined __INTEL__ || defined __MACH__
+    typedef int OSErr;
+  #endif
+#endif //__GLOBDEF
+
 
 #endif // OS9MAIN_INCL_PRECOMP_H
 
