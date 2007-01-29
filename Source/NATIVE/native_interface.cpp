@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2007/01/28 23:13:41  bfo
+ *    NATIVE "hello_world" added
+ *
  *
  */
 
@@ -51,7 +54,7 @@
 
 #ifdef linux
 #define NULL 0
-typedef int size_t;
+//typedef int size_t;
 #endif
 
 #define NativeName "hello_world"
