@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.2  2007/01/28 21:47:57  bfo
+ *    - __GLOBDEF added / Boolean => int /
+ *    - 'nativeinfo_typ' added
+ *    - getversion/lVersion implemented here now
+ *    - 'ustrcmp' implemented here now
+ *
  *    Revision 1.1  2007/01/07 13:25:33  bfo
  *    *** NEW MODULE ADDED ***
  *
@@ -51,6 +57,7 @@
 // Don't import all other things ...
 #if defined macintosh && !defined __MACH__
   #define MACOS9
+  #include <MacTypes.h>
 #endif
 
 #include "c_access.h"
