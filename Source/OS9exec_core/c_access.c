@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2007/01/29 23:12:08  bfo
+ *    trying to make it clean for MPW (again)
+ *
  *    Revision 1.3  2007/01/29 22:48:29  bfo
  *    'Handle' def imported
  *
@@ -61,6 +64,7 @@
 #if defined macintosh && !defined __MACH__
   #define MACOS9
   #include <ToolUtils.h>
+  #include <Resources.h>
 #endif
 
 #include "c_access.h"
