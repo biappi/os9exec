@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2007/01/29 22:48:29  bfo
+ *    'Handle' def imported
+ *
  *    Revision 1.2  2007/01/28 21:47:57  bfo
  *    - __GLOBDEF added / Boolean => int /
  *    - 'nativeinfo_typ' added
@@ -57,7 +60,7 @@
 // Don't import all other things ...
 #if defined macintosh && !defined __MACH__
   #define MACOS9
-  #include <MacTypes.h>
+  #include <ToolUtils.h>
 #endif
 
 #include "c_access.h"
@@ -80,7 +83,8 @@ void getversion( unsigned short *ver,
 	
   #ifdef MACOS9
     // obtain os9exec version
-    if ((versH=GetResource('vers',2))!=NULL) {
+        versH= GetResource( 'vers',2 );
+    if (versH!=NULL) {
       *ver= *( (byte*)*versH+0 );
       *rev= *( (byte*)*versH+1 );
       ReleaseResource( versH );
