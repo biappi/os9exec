@@ -1677,6 +1677,10 @@
                                         - int command 'native' added
           07-01-28  Bfo     *.mcp       : Up to date
           07-01-29  Bfo     hello_world : NATIVE directory (with "hello_world" added to project)
+                                          HELLO_WORLD target_options.h added
+                                          
+          07-01-29  Bfo     c_access   :  ulong support for MPW, 'Handle' def imported + <Resource.h>
+                            native_interface : size_t def not needed for Linux
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
