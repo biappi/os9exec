@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.2  2007/01/29 22:48:43  bfo
+ *    size_t def not needed for Linux
+ *
  *    Revision 1.1  2007/01/28 23:13:41  bfo
  *    NATIVE "hello_world" added
  *
@@ -182,7 +185,7 @@ int Is_NativeProg( const char* progName, void** modBase )
          pure--;
   } // while
   
-  *modBase= NULL; // there is no assigned module
+  *modBase= No_Module; // there is no assigned module
   return ustrcmp( pure, NativeName )==0;
 } // Is_NativeProg
 
