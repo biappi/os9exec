@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2007/01/29 22:32:49  bfo
+ *    ulong support for MPW
+ *
  *    Revision 1.2  2007/01/28 21:47:57  bfo
  *    - __GLOBDEF added / Boolean => int /
  *    - 'nativeinfo_typ' added
@@ -84,10 +87,13 @@
 #endif 
 
 
+// --------------------------------------------------------------
 #if defined __cplusplus
   extern "C" {
 #endif
 
+
+#define No_Module (void*)1 // predefined value for 'no module'
 
 // 68k registers
 typedef struct {
@@ -127,13 +133,12 @@ typedef struct {
 
 
 // Get the OS9exec version
-void getversion( ushort *ver,
-                 ushort *rev );
+void getversion( ushort *ver, ushort *rev );
 long lVersion  ( void );
 
 
 
-// -------------------------------------------------------------------
+// ---- some utility functions are implemented here -----------------------
 // Memory block copy
 void MoveBlk( void* dst, void* src, ulong size );
 
@@ -141,8 +146,8 @@ void MoveBlk( void* dst, void* src, ulong size );
 int ustrcmp( const char *s1, const char *s2 );
 
 
-// -------------------------------------------------------------------
-// missing "sprintf" operations for "cclib", temporary placed here
+
+// ---- missing "sprintf" operations for "cclib", temporary placed here ----
 void IntToStr  ( char* s, int    i );
 void IntToStrN ( char* s, int    i, int n );
 
