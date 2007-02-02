@@ -1681,6 +1681,12 @@
                                           
           07-01-29  Bfo     c_access   :  ulong support for MPW, 'Handle' def imported + <Resource.h>
                             native_interface : size_t def not needed for Linux
+                            
+          07-02-02  Bfo     os9app_emu_CW9.mcp : Up to date for precompiled headers
+          07-02-02  Bfo     TARGET_PLUGIN_HELLO_WORLD files moved to NATIVE
+          07-02-02  Bfo     c_access   : "No_Module" defintion added
+          07-02-02  Bfo     modstuff   : Reacting correctly to "No_Module"
+          07-02-02  Bfo     native_interface: "No_Module" assignment
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
