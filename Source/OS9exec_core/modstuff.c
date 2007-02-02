@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2007/01/28 22:07:07  bfo
+ *    Support for linking the native resource files
+ *
  *    Revision 1.29  2007/01/07 13:56:32  bfo
  *    "MoveBlk" is now defined at "c_access.c"
  *
@@ -1039,6 +1042,8 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
         }
 
         if (linkstyle && modBase!=NULL) {
+          if (modBase==No_Module) modBase= OS9exec_ptr;
+          
           theModuleP= modBase;
           dsize     = os9_long( theModuleP->_mh._msize );
           isBuiltIn = true;
