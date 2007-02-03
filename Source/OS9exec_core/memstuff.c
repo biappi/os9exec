@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2007/01/07 14:01:04  bfo
+ *    Fully rearranged
+ *    No longer used as import file for PtoC system
+ *    Parts moved to "c_access"
+ *    New <pmem> structure introduced
+ *
  *    Revision 1.25  2007/01/04 20:20:41  bfo
  *    Boolean return type added for 'IsZeroR' and 'IsZeroI'
  *
@@ -621,9 +627,9 @@ void* get_mem( ulong memsz )
         } /* for */
     } /* if */
     
-    #ifndef PLUGIN_DLL
-      upe_printf( "No more memory !!!\n" );
-    #endif
+  //#ifndef PLUGIN_DLL
+    upe_printf( "No more memory !!!\n" );
+  //#endif
     
     return NULL;
 } /* get_mem */
@@ -643,9 +649,9 @@ void* os9malloc( ushort pid, ulong memsz )
         /* memory block list is full */
         release_mem( pp ); pp= NULL;
         
-        #ifndef PLUGIN_DLL
-          upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
-        #endif
+      //#ifndef PLUGIN_DLL
+        upe_printf( "No more memory (MAXMEMBLOCKS) !!!\n" );
+      //#endif
     } // if
    
     debugprintf(dbgMemory,dbgNorm,("# os9malloc:  allocate block #%-2d at $%08X (size=%5u) %8d pid=%d\n",
