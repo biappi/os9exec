@@ -626,7 +626,7 @@
 /* Begin PBXProject section */
 		477F45820A31C24F001898B3 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 47E8244C0A3496AB00DBC0A5 /* Build configuration list for PBXProject "os9App_emu_CW9" */;
+			buildConfigurationList = 47E8244C0A3496AB00DBC0A5 /* Build configuration list for PBXProject "os9App_emu" */;
 			hasScannedForEncodings = 0;
 			mainGroup = 477F457E0A31C24F001898B3;
 			productRefGroup = 477F458C0A31C24F001898B3 /* Products */;
@@ -891,7 +891,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		47E8244C0A3496AB00DBC0A5 /* Build configuration list for PBXProject "os9App_emu_CW9" */ = {
+		47E8244C0A3496AB00DBC0A5 /* Build configuration list for PBXProject "os9App_emu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				47E8244D0A3496AB00DBC0A5 /* Development */,
