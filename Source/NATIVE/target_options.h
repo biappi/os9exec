@@ -20,9 +20,6 @@
 
 
 // Target options
-
-#define PLUGIN_DLL           // This is a Plugin DLL
-
                              // Support for:
                              // ============
 #define PTOC_HELLO_WORLD     // PtoC internal command "hello_world"
