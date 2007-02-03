@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.71  2007/01/28 21:56:54  bfo
+ *    - NATIVE_SUPPORT added
+ *    - native interface definitions added
+ *    - <with_dbgDLLs> added
+ *    - 'init_plugins' and the full plugin support added
+ *    - Callback routines for 'cclib' implemented here now
+ *
  *    Revision 1.70  2007/01/07 13:41:00  bfo
  *    New <pmem> structure added
  *    Callback definitions for plugin DLLs added
@@ -1176,9 +1183,10 @@ extern  char*       dirtable   [MAXDIRS];
     
   // The plugin element
   typedef struct {
-    char* name;         // the plugin's name
-    long  pVersion;     // the plugin's version
-    int   nNativeProgs; // number of internal progs
+    char*   name;         // the plugin's name
+    long    pVersion;     // the plugin's version
+    int     nNativeProgs; // number of internal progs
+    Boolean enabled;      // the plugin is enabled or disabled
     
      Next_NativeProg_Typ  next_NativeProg;
        Is_NativeProg_Typ    is_NativeProg;
