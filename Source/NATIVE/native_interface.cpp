@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.3  2007/02/02 12:54:56  bfo
+ *    "No_Module" assignment
+ *
  *    Revision 1.2  2007/01/29 22:48:43  bfo
  *    size_t def not needed for Linux
  *
@@ -56,8 +59,7 @@
 #include "c_access.h"
 
 #ifdef linux
-#define NULL 0
-//typedef int size_t;
+  #define NULL 0
 #endif
 
 #define NativeName "hello_world"
@@ -78,7 +80,7 @@ int main( void );
 // --------------------------------------------------------------
 #if defined USE_CARBON || defined __MACH__ || defined linux
   // --- temporary implemented locally, because of linking problems
-  static size_t strlen( const char* s )
+  static int strlen( const char* s )
   {
     int       i= 0;
     while (s[ i ]!='\0') i++;
@@ -118,22 +120,22 @@ short OS9_Call( ushort code, Regs_68k &regs )
 // Very simple "printf" implementation, w/o any additional param parsing
 int os9_printf( const char* str, ... )
 {
-  #define  StrLen 80
-  int      i;
-  char     s[ StrLen ];
   Regs_68k regs;
   
+  char               s[ 80 ];
+  char* b  = (char*)&s;
+  int   len= strlen( str );
+  
   // copy the string and replace LF -> CR
-  for (i= 0; i<StrLen; i++) {
-        s[ i ]= str[ i ];
-    if (s[ i ]==0x0a) 
-        s[ i ]= 0x0d;
-    if (s[ i ]=='\0') break;
+  for (int i= 0; i<=len; i++) {
+        *b= str[ i ];
+    if (*b==0x0a) *b= 0x0d;
+         b++;
   } // for
            
   regs.d[ 0 ]= 0; // stdout
-  regs.a[ 0 ]= (ulong) s;
-  regs.d[ 1 ]= strlen( s );
+  regs.a[ 0 ]= (ulong)s;
+  regs.d[ 1 ]= len;
 
   OS9_Call( I_WritLn, regs );
   return 0;
@@ -177,16 +179,18 @@ int Next_NativeProg( int* i, char* progName, char* callMode )
 // Check, if <progName> is a native program; bool result
 int Is_NativeProg( const char* progName, void** modBase )
 {
-  const char*       p= progName;
-  const char* pure= p + strlen( p ) - 1;
+  const   char*       p= progName;
+  const   char* pure= p + strlen( p ) - 1;
+  Boolean ok;
   
   while (pure>p) {  // get the pure file name from eventual abs path name
     if (*pure=='/') { pure++; break; }
          pure--;
   } // while
   
-  *modBase= No_Module; // there is no assigned module
-  return ustrcmp( pure, NativeName )==0;
+         ok= ustrcmp( pure, NativeName )==0;
+  if    (ok) *modBase= No_Module; // there is no assigned module
+  return ok;
 } // Is_NativeProg
 
 
