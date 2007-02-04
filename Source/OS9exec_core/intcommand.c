@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2007/01/28 22:14:00  bfo
+ *    - Native program handling, <modBaseP> param added
+ *    - int command 'native' added
+ *
  *    Revision 1.45  2007/01/07 13:48:17  bfo
  *    "Init_IProg" added
  *    Callback for "StrToFload"/"StrToDouble" placed locally
@@ -172,6 +176,10 @@
 
 /* global includes */
 #include "os9exec_incl.h"
+
+#ifdef UNIX
+  #include <dlfcn.h> // MacOSX and Linux DLL functionality
+#endif
 
 #ifdef THREAD_SUPPORT
   #include <types.h>
@@ -631,20 +639,178 @@ static os9err int_devs( _pid_, int argc, char** argv )
 
 
 // ---------------------------------------------------------------------------------
-// Returns true, if at least one native program can be used
-Boolean Native_Possible( void )
-{
-  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-    Boolean   isBuiltIn;
-    plug_typ* p;
+#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+  // Get the DLL suffix of my operating system
+  const char* DLL_Suffix()
+  {
+    const char* suff;
     
-    int  i;
-    for (i= 0; i<MAXLIST; i++) {
-                 p= &pluginList[ i ];
-      if        (p->name     ==NULL) break;
-      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+    #ifdef windows32
+      suff= ".dll";
+    #elif defined MACOSX
+      suff= ".dylib";
+    #elif defined linux
+      suff= ".so";
+    #else
+      suff= "";
+    #endif
+    
+    return suff;
+  } // DLL_Suffix
+
+  
+  
+  // Get <aFunc> of <aFuncName>
+  static os9err DLL_Func( void* aDLL, const char* aFuncName, void** aFunc )
+  {
+    #if   defined windows32
+      *aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
+    #elif defined UNIX
+      *aFunc= dlsym( aDLL, aFuncName );
+    #else
+      *aFunc= NULL;
+    #endif
+    
+    if (*aFunc==NULL) return E_NES;
+                      return 0;
+  } // DLL_Func
+
+  
+  
+  // Get the number of internal programs for <p>
+  int NumberOfNativeProgs( plug_typ* p )
+  {
+    char iName[ OS9NAMELEN ];
+    char iOpt [ OS9NAMELEN ];
+    
+    int                         i= 0;
+    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) { } // while
+    return                      i;
+  } // NumberOfNativeProgs
+ 
+ 
+ 
+  static os9err DisconnectDLL( plug_typ* p )
+  {
+    if (!p || !p->fDLL ) return E_PNNF;
+    
+    #ifdef windows32
+      FreeLibrary( p->fDLL );
+    #endif
       
-      if (pluginActive || isBuiltIn) return true;
+    #ifdef UNIX
+      dlclose( p->fDLL );
+    #endif
+    
+    return 0;
+  } // DisconnectDLL
+  
+  
+  // Connect to all available DLLs
+  os9err ConnectDLL( plug_typ* p )
+  {
+    os9err err;
+  
+    typedef long (*VersionProc)( void );
+                   VersionProc fModVersion;
+
+    // Get the full path where to search for plugins
+    char    fullName[ OS9PATHLEN ];
+    strcpy( fullName, strtUPath     );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName,"PLUGINS"      );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName, p->name       );
+    
+    #ifdef windows32
+      p->fDLL= LoadLibrary( fullName );
+      
+    #elif defined UNIX
+      #if   defined MACOSX
+        #define mode RTLD_NOW + RTLD_GLOBAL
+      #elif defined linux
+        #define mode RTLD_LAZY
+      #else
+        #define mode 0
+      #endif
+    
+      p->fDLL= dlopen( fullName, mode );
+    
+    #else
+      p->fDLL= NULL;
+    #endif
+    
+    if (!p->fDLL) return E_PNNF;
+
+    // These are the rquired plugin functions:
+              err= DLL_Func( p->fDLL,   "Module_Version", (void**)        &fModVersion );
+    if (!err) err= DLL_Func( p->fDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
+    if (!err) err= DLL_Func( p->fDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
+    if (!err) err= DLL_Func( p->fDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
+    if  (err) {
+      DisconnectDLL( p );
+      return err;
+    } // if
+    
+    p->numNativeProgs= NumberOfNativeProgs( p );
+    p->pVersion      = fModVersion();
+    return 0;
+  } // ConnectDLL
+
+
+
+  // ---------------------------------------------------------------------------------
+  static char** MyElem( int i, Boolean addIt )
+  // Get an element, dependent on <addIt>
+  {
+    if (addIt) return &includeList[ i ];
+    else       return &excludeList[ i ];
+  } // MyElem
+
+
+  // Check, if include list ( <asInclude> = true  ) or
+  //           exclude list ( <asInclude> = false ) is empty
+  static Boolean Native_Empty( Boolean asInclude )
+  {
+    Boolean found= false;
+  
+    #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+      char**   q= MyElem( 0, asInclude );
+      found= (*q!=NULL);
+    #endif
+  
+    return !found;
+  } // Native_Empty
+  
+  
+  static Boolean Native_Enabled( plug_typ* p )
+  {
+    Boolean      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+    Boolean  bp= isBuiltIn || pluginActive;
+    return ( bp || p->pEnabled ) && ! p->pDisabled;
+  } // Native_Enabled
+#endif
+
+
+
+// Returns true, if at least one native program can be used
+Boolean Native_Possible( Boolean hardCheck )
+{
+  Boolean possible= hardCheck; // at least used once
+
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+    Boolean   enabled;
+    plug_typ* p;
+    int       i;
+    
+    for (i= 0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
+      
+      possible= hardCheck || ( nativeActive && Native_Enabled( p ) );
+
+          enabled= possible;
+      if (enabled) return true;
     } // for
   #endif
   
@@ -654,12 +820,25 @@ Boolean Native_Possible( void )
 
 
 // Returns true, if at least one plugin is connected
-Boolean Plugin_Possible( void )
+Boolean Plugin_Possible( Boolean hardCheck )
 {
+  Boolean possible= hardCheck; // at least used once
+
   #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-    plug_typ* p= &pluginList[ 0 ];
-    return    p->name!=NULL &&   // any native program at all
-              p->name[ 0 ]!=NUL; // a plugin (with a name)
+    Boolean   isBuiltIn, enabled;
+    Boolean   natAny= nativeActive || !Native_Empty( true );
+    plug_typ* p;
+    int       i;
+    
+    for (i= 0; i<MAXLIST; i++) {
+                 p= &pluginList[ i ];
+      if        (p->name     ==NULL) break;
+      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+      possible = hardCheck || ( natAny && Native_Enabled( p ) );
+      
+          enabled= possible && !isBuiltIn;
+      if (enabled) return true;
+    } // for
   #endif
   
   return false;
@@ -668,63 +847,159 @@ Boolean Plugin_Possible( void )
 
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  static void ion_usage( char* name )
+  static void native_usage( const char* name, const char* swMode )
+  {
+    upe_printf( "Syntax:   %s [<opts>] [<native utility>]\n", name );
+    upe_printf( "Function: Switch %s native utilities\n", swMode );
+    upe_printf( "Options:\n" );
+    
+    if (strcmp( swMode,"on/off" )==0) {
+      upe_printf( "    -e [<native utility>] enable\n" );
+      upe_printf( "    -d [<native utility>] disable\n" );
+      upe_printf( "    -n [<native utility>] no longer specific\n" );
+      upe_printf( "\n" );
+    } // if
+    
+    upe_printf( "    -i   display include list\n" );
+    upe_printf( "    -x      \"    exclude   \" \n" );
+  } // native_usage
+
+
+  /*
+  static void native_usage( const char* name )
   {
     upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Switch on internal commands\n" );
+    upe_printf( "Function: Switch on/off internal commands\n" );
     upe_printf( "Options:\n" );
-    upe_printf( "    -d         display include list\n" );
-    upe_printf( "    -i            \"       \"      \" \n" );
+    upe_printf( "    -e  enable native utilities\n" );
+    upe_printf( "    -d disable native utilities\n" );
+    upe_printf( "\n" );
+    upe_printf( "    -i         display include list\n" );
     upe_printf( "    -x            \"    exclude   \" \n" );
     upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
-  } // ion_usage
+  } // native_usage
+  */
 
 
-
-  static void ioff_usage( char* name )
-  {
-    upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Switch off internal commands\n" );
-    upe_printf( "Options:\n" );
-    upe_printf( "    -d         display exclude list\n" );
-    upe_printf( "    -x            \"       \"      \" \n" );
-    upe_printf( "    -i            \"    include   \" \n" );
-    upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
-  } // ioff_usage
-
-
-
-  static char** MyElem( int i, Boolean addIt )
-  // Get an element, dependent on <addIt>
-  {
-    if (addIt) return &includeList[ i ];
-    else       return &excludeList[ i ];
-  } // MyElem
-
- 
- 
-  static void display_list( Boolean addIt )
+  static void display_nativeList( Boolean asInclude )
   {
     int     i, n= 0;
     char**  q; 
-    Boolean done= false;
     
-    if (addIt) upe_printf( "Include list:\n" );
-    else       upe_printf( "Exclude list:\n" );
+    if (asInclude) upe_printf( "Include list:\n" );
+    else           upe_printf( "Exclude list:\n" );
     
     for (i=0; i<MAXLIST; i++) {
-           q= MyElem( i, addIt );
+           q= MyElem( i, asInclude );
       if (*q==NULL) break;
       
       if (n>0 && ( n % 5 )==0) upe_printf( "\n" );
       n++;
+      
       upe_printf( " %-15s", *q );
+    } // for
+    
+    if (Native_Empty( asInclude )) upe_printf( "<none>" );
+                                   upe_printf( "\n" );
+  } // display_nativeList
+
+
+
+  void display_pluginList( Boolean dispTitle, Boolean atStartup )
+  {
+    const char* bb= " [built-in]";
+    const char* tt;
+    char        nm  [ OS9PATHLEN ];
+    char        form[ 40 ];
+    
+    int         maxN= 0;
+    Boolean     withBuiltIn= false;
+    Boolean       isBuiltIn= false;
+    Boolean     done       = false;
+    Boolean     enabled;
+    plug_typ*   p;
+    int         i, len;
+    long        ver;
+    ushort      rev;
+ 
+    #ifdef PTOC_SUPPORT
+      withBuiltIn= true;
+    #endif
+
+    if (withBuiltIn) maxN= strlen( bb )-2; // minimum length
+    
+    // get the max length
+    for (i=0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
+      
+               len= strlen( p->name );
+      if (maxN<len) maxN= len;
+    } // for
+    maxN+= 2; // apo addition
+
+    if (!atStartup)
+      upe_printf( "Plugin list:\n" );
+
+    if (dispTitle) {
+      for (i=0; i<MAXLIST; i++) {
+                   p= &pluginList[ i ];
+        if        (p->name==NULL) break;
+        isBuiltIn= p->name[ 0 ]==NUL;
+        
+        if (isBuiltIn) strcpy( nm,  bb       ); 
+        else         { strcpy( nm, "'"       ); // Apo
+                       strcat( nm,  p->name  );
+                       strcat( nm,       "'" ); }
+      
+        // convert into version and revision
+        ver= p->pVersion   / (256*256);
+        rev= (ushort)( ver %  256 );
+        ver=           ver /  256;
+      
+                                 tt= "";
+        if (p->numNativeProgs>1) tt= " (n=%d)"; // attention !!
+        
+             enabled= Native_Enabled( p );
+        if (!enabled)            tt= " (disabled)";
+              
+        sprintf( form, "%s %s%ds %s%s\n", "%s", "%",-maxN, "V%d.%02x", tt );
+      
+                     tt= "";
+        if (atStartup) {
+           if (i==0) tt= "# Connecting plugin module:";
+           else      tt= "#                          ";
+        } // if
+        
+        upe_printf( form, tt, nm, ver,rev, p->numNativeProgs );
+        done= true;
+      } // for
+    } // if
+
+    if (!atStartup) {
+      if (!done) upe_printf( "<none>" );
+                 upe_printf( "\n" );
+    } // if
+
+    /*
+    int       i;
+    plug_typ* p;
+    Boolean   done= false;
+    
+    upe_printf( "Plugin list:\n" );
+    
+    for (i=0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name     ==NULL) break;
+       
+      upe_printf( " %-30s %08X\n", p->name, p->pVersion );
       done= true;
     } // for
     
     if (!done) upe_printf( "<none>" );
                upe_printf( "\n" );
-  } // display_list
+    */
+  } // display_pluginList
 
 
 
@@ -747,7 +1022,7 @@ Boolean Plugin_Possible( void )
  
  
  
-  static void RemoveElement( char* s, Boolean addIt, Boolean* already )
+  static void RemoveNativeElement( const char* s, Boolean addIt, Boolean* already )
   {
     int    i;
     char** q;
@@ -775,11 +1050,11 @@ Boolean Plugin_Possible( void )
         *already= true; // it's there already
       } // if
     } // for
-  } // RemoveElement
+  } // RemoveNativeElement
  
   
   
-  void ChangeElement( char* s, Boolean addIt )
+  void ChangeNativeElement( const char* s, Boolean addIt )
   {
     int       i;
     char**    q;
@@ -788,8 +1063,8 @@ Boolean Plugin_Possible( void )
     Boolean found= false;
     void*   modBase;
     
-    RemoveElement( s, addIt, &already );
-    if                       (already) return;
+    RemoveNativeElement( s, addIt, &already );
+    if                             (already) return;
     
     for (i= 0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
@@ -807,20 +1082,60 @@ Boolean Plugin_Possible( void )
         return;
       } // if
     } // for
-  } // ChangeElement
+  } // ChangeNativeElement
+
+  
+
+  static void ChangePluginElement( const char* s, Boolean enable, Boolean removeIt )
+  {
+    os9err    err;
+    int       i;
+    plug_typ* p;
+    char      suffName[ OS9PATHLEN ];
+    strcpy  ( suffName, s );
+    strcat  ( suffName, DLL_Suffix() );
+    
+    for (i=0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name     ==NULL) break;
+      if (p->name[ 0 ]==NUL ) continue;
+       
+      if (ustrcmp( p->name, s        )==0 ||
+          ustrcmp( p->name, suffName )==0) {
+        if (removeIt) { 
+          p->pEnabled = false;
+          p->pDisabled= false;
+        }
+        else {                          err= 0;
+          if ( enable && !p->pEnabled ) err=    ConnectDLL( p );
+          if (!enable && !p->pDisabled) err= DisconnectDLL( p );
+          if                           (err) break;
+          
+          p->pEnabled =  enable;
+          p->pDisabled= !enable;
+        } // if
+        
+        break;
+      } // if
+    } // for
+  } // ChangePluginElement
 
   
 
   static os9err int_xx( int argc, char** argv, Boolean isOn )
   /* Common part for "ion" and "ioff" command */
   { 
-    int   h;
-    char* p;
-    Boolean dispIn  = false;
-    Boolean dispEx  = false;
-    Boolean removeIt= false;
-    Boolean already;
+    int         h;
+    char*       p;
+    const char* v;
+    Boolean     dispIn  = false;
+    Boolean     dispEx  = false;
+    Boolean     removeIt= false;
+    Boolean     already;
 
+    if (isOn) v= "on";
+    else      v= "off";
+    
     for (h=1; h<argc; h++) {
       p=        argv[ h ];
             
@@ -828,8 +1143,7 @@ Boolean Plugin_Possible( void )
            p++;
         switch (tolower(*p)) {
           case '?' :
-          case 'h' : if (isOn) ioff_usage( argv[ 0 ] ); 
-                     else      ion_usage ( argv[ 0 ] ); 
+          case 'h' : native_usage( argv[ 0 ], v );
                      return 0;
                      
        // case 'd' : if (isOn) dispIn= true;
@@ -839,26 +1153,25 @@ Boolean Plugin_Possible( void )
           case 'x' : dispEx  = true; break;
           case 'n' : removeIt= true; break;
                             
-          default  : if (isOn) ioff_usage( argv[ 0 ] ); 
-                     else      ion_usage ( argv[ 0 ] ); 
+          default  : native_usage( argv[ 0 ], v ); 
                      upe_printf( "Error: unknown option '%c'\n", *p ); 
                      return 1;
         } // switch
       }
       else {
         if (removeIt) {
-          RemoveElement( p, true,  &already );
-          RemoveElement( p, false, &already );
+          RemoveNativeElement( p, true,  &already );
+          RemoveNativeElement( p, false, &already );
         }
         else {
-          if (!dispIn && !dispEx) ChangeElement( p, isOn );
+          if (!dispIn && !dispEx) ChangeNativeElement( p, isOn );
         } // if
       } // if
     } // for
 
     if   (dispIn || dispEx) {
-      if (dispIn) display_list(  true );
-      if (dispEx) display_list( false );
+      if (dispIn) display_nativeList(  true );
+      if (dispEx) display_nativeList( false );
       return 0;
     } // if
 
@@ -878,22 +1191,11 @@ Boolean Plugin_Possible( void )
 
 
   // ---------------------------------------------------------------------------------
-  static void native_usage( char* name )
-  {
-    upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Switch on/off plugin DLLs\n" );
-    upe_printf( "Options:\n" );
-    upe_printf( "    -e  enable native utilities\n" );
-    upe_printf( "    -d disable native utilities\n" );
-  } // native_usage
-
-
-
   static os9err int_native( _pid_, int argc, char** argv )
   // Switch on/off plugin DLLs
   { 
-    int   h;
-    char* p;
+    int     h;
+    char*   p;
     Boolean dispIn  = false;
     Boolean dispEx  = false;
     Boolean removeIt= false;
@@ -911,37 +1213,34 @@ Boolean Plugin_Possible( void )
         
         switch (tolower(*p)) {
           case '?' :
-          case 'h' : native_usage( argv[ 0 ] ); 
+          case 'h' : native_usage( argv[ 0 ], "on/off" ); 
                      return 0;
                      
           case 'd' : isOff   = true; if (specific) isOn = false; break;
           case 'e' : isOn    = true; if (specific) isOff= false; break;
-          
-          case 'i' : dispIn  = true; break;
-          case 'x' : dispEx  = true; break;
-          case 'n' : removeIt= true; break;
+          case 'n' : removeIt= true;                             break;
+          case 'i' : dispIn  = true;                             break;
+          case 'x' : dispEx  = true;                             break;
                             
-          default  : native_usage( argv[ 0 ] ); 
+          default  : native_usage( argv[ 0 ], "on/off" ); 
                      upe_printf( "Error: unknown option '%c'\n", *p ); 
                      return 1;
         } // switch
       }
       else {
         if (removeIt) {
-          RemoveElement( p, true,  &already );
-          RemoveElement( p, false, &already );
+          RemoveNativeElement( p, true,  &already );
+          RemoveNativeElement( p, false, &already );
         }
-        else {
-          if (!dispIn && !dispEx && isOn!=isOff) {
-            ChangeElement( p, isOn ); 
-            specific= true;
-          } // if
+        else if (!dispIn && !dispEx && isOn!=isOff) {
+          ChangeNativeElement( p, isOn ); 
+          specific= true;
         } // if
       } // if
     } // for
 
-    if (dispIn) { display_list(  true ); return 0; }
-    if (dispEx) { display_list( false ); return 0; }
+    if (dispIn) { display_nativeList(  true ); return 0; }
+    if (dispEx) { display_nativeList( false ); return 0; }
 
     if (!specific && isOn!=isOff) { // no additional arguments
       nativeActive=  isOn;
@@ -958,8 +1257,11 @@ Boolean Plugin_Possible( void )
     upe_printf( "Syntax:   %s [<opts>]\n", name );
     upe_printf( "Function: Switch on/off plugin DLLs\n" );
     upe_printf( "Options:\n" );
-    upe_printf( "    -e  enable plugin DLLs\n" );
-    upe_printf( "    -d disable plugin DLLs\n" );
+    upe_printf( "    -e [<plugin DLL>] enable\n" );
+    upe_printf( "    -d [<plugin DLL>] disable\n" );
+    upe_printf( "    -n [<plugin DLL>] no longer specific\n" );
+    upe_printf( "\n" );
+    upe_printf( "    -l                display list\n" );
   } // plugin_usage
 
 
@@ -967,8 +1269,13 @@ Boolean Plugin_Possible( void )
   static os9err int_plugin( _pid_, int argc, char** argv )
   // Switch on/off plugin DLLs
   { 
-    int   h;
-    char* p;
+    int     h;
+    char*   p;
+    Boolean disp    = false;
+    Boolean removeIt= false;
+    Boolean isOn    = false;
+    Boolean isOff   = false;
+    Boolean specific= false;
 
     for (h=1; h<argc; h++) {
       p=        argv[ h ];
@@ -980,15 +1287,32 @@ Boolean Plugin_Possible( void )
           case 'h' : plugin_usage( argv[ 0 ] ); 
                      return 0;
                      
-          case 'd' : pluginActive= false;             break;
-          case 'e' : pluginActive= Plugin_Possible(); break;
+          case 'd' : isOff   = true; if (specific) isOn = false; break;
+          case 'e' : isOn    = true; if (specific) isOff= false; break;
+          case 'n' : removeIt= true;                             break;
+          case 'l' : disp    = true;                             break;
                             
           default  : plugin_usage( argv[ 0 ] ); 
                      upe_printf( "Error: unknown option '%c'\n", *p ); 
                      return 1;
         } // switch
+      }
+      else {
+        if (removeIt) {
+          ChangePluginElement( p, true,  true );
+        }
+        else if (!disp && isOn!=isOff) {
+          ChangePluginElement( p, isOn, false ); 
+          specific= true;
+        } // if
       } // if
     } // for
+    
+    if (disp) { display_pluginList( true, false ); return 0; }
+
+    if (!specific && isOn!=isOff) { // no additional arguments
+      pluginActive=  isOn && Plugin_Possible( true );
+    } // if
     
     return 0;
   } // int_plugin
@@ -1011,7 +1335,7 @@ Boolean Plugin_Possible( void )
     process_typ*   cp  = &procs[ pid ];
     plug_typ*      p;
     int            i;
-    Boolean        isBuiltIn;
+    Boolean        isBuiltIn, enabled;
     void*          modBase;
     nativeinfo_typ ni;
     
@@ -1026,10 +1350,9 @@ Boolean Plugin_Possible( void )
       if        (p->name     ==NULL) break;
       isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
       
-      if (pluginActive || isBuiltIn) {
-        if (p->is_NativeProg( name, &modBase )) {
-          cp->isPlugin=  !isBuiltIn; break;
-        } // if
+          enabled= Native_Enabled( p );
+      if (enabled  && p->is_NativeProg( name, &modBase )) {
+        cp->isPlugin= !isBuiltIn; break;
       } // if
     } // for
     
@@ -1210,17 +1533,21 @@ static int IntCmdIndex( const char* name )
 //
 int isintcommand( const char* name, Boolean *isNative, void** modBaseP )
 {
-  int index;  
-  
   #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
     int         i;
     char**      q;
     plug_typ*   p;
     Boolean     ok= nativeActive;
-    Boolean     isBuiltIn;
+    Boolean     isBuiltIn, enabled;
     const char* cut= name + strlen( name ) - 1;
+  #endif
   
-    // get the pure file name from eventual abs path name
+  int index= 0;  
+  *isNative= false;
+  *modBaseP= NULL;
+  
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+   // get the pure file name from eventual abs path name
     while (cut>name) {
       if (*cut=='/') { cut++; break; }
            cut--;
@@ -1242,16 +1569,13 @@ int isintcommand( const char* name, Boolean *isNative, void** modBaseP )
         if        (p->name     ==NULL) break;
         isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
       
-        if (pluginActive || isBuiltIn) {
-          if (p->is_NativeProg( name, modBaseP )) { ok= true; break; }
-        } // if
+            enabled= Native_Enabled( p );
+        if (enabled && p->is_NativeProg( name, modBaseP )) { ok= true; break; }
       } // for
     } // if
     
+    if       (!ok) *modBaseP= NULL; // just to be sure
     *isNative= ok;
-  #else
-    *isNative= false;
-    *modBaseP= NULL;
   #endif
   
   if (*isNative)      name= "native_calls"; // one entry point for all

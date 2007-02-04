@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.13  2007/01/28 22:14:00  bfo
+ *    - Native program handling, <modBaseP> param added
+ *    - int command 'native' added
+ *
  *    Revision 1.12  2007/01/07 13:48:17  bfo
  *    "Init_IProg" added
  *    Callback for "StrToFload"/"StrToDouble" placed locally
@@ -93,11 +97,15 @@ os9err int_wincmd( ushort pid, int argc, char **argv );
 #endif
 
 /* Native program handling */
-Boolean Native_Possible( void );
-Boolean Plugin_Possible( void );
+Boolean Native_Possible( Boolean hardCheck );
+Boolean Plugin_Possible( Boolean hardCheck );
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  void  ChangeElement  ( char* s, Boolean addIt );
+  const char* DLL_Suffix();
+  int         NumberOfNativeProgs( plug_typ* p );
+  os9err      ConnectDLL         ( plug_typ* p );
+  void        display_pluginList ( Boolean dispTitle, Boolean atStartup );
+  void        ChangeNativeElement( const char* s,     Boolean addIt     );
 #endif
 
 
