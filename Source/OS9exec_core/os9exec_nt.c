@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.95  2007/01/28 21:56:54  bfo
+ *    - NATIVE_SUPPORT added
+ *    - native interface definitions added
+ *    - <with_dbgDLLs> added
+ *    - 'init_plugins' and the full plugin support added
+ *    - Callback routines for 'cclib' implemented here now
+ *
  *    Revision 1.94  2007/01/07 13:40:59  bfo
  *    New <pmem> structure added
  *    Callback definitions for plugin DLLs added
@@ -363,10 +370,6 @@
 
 #include <signal.h>
 #include "os9exec_incl.h"
-
-#ifdef UNIX
-  #include <dlfcn.h> // MacOSX and Linux DLL functionality
-#endif
 
 #ifdef PTOC_SUPPORT
   #include "native_interface.h"
@@ -808,46 +811,6 @@ static void cleanup(void)
 #endif
 
 
-/*
-// obtain os9exec version
-void getversions()
-{
-	#ifdef MACOS9
-	Handle versH;
-	#endif
-	
-	appl_version = 0; 
-	appl_revision= 0;
-	exec_version = 0; 
-	exec_revision= 0;
-	
-	#ifdef MACOS9
-	// obtain tool's version
-	if ((versH=GetResource('vers',1))!=NULL) {
-		appl_version = *((byte*)*versH+0);
-		appl_revision= *((byte*)*versH+1);
-		ReleaseResource(versH);
-	}
-	
-	// obtain os9exec version
-	if ((versH=GetResource('vers',2))!=NULL) {
-		exec_version = *((byte*)*versH+0);
-		exec_revision= *((byte*)*versH+1);
-		ReleaseResource(versH);
-	}
-	
-	#else
-	// simply hardwired for now
-	appl_version =    1; 
-	appl_revision= 0x01;	
-	exec_version =    3;
-	exec_revision= 0x35;
-	#endif
-} // getversions
-*/
-
-
-
 /* must be done before linking "init" module */
 /* and this will be done earlier now */
 void get_hw()
@@ -1056,26 +1019,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  // Get the DLL suffix of my operating system
-  static const char* DLL_Suffix()
-  {
-    const char* suff;
-    
-    #ifdef windows32
-      suff= ".dll";
-    #elif defined MACOSX
-      suff= ".dylib";
-    #elif defined linux
-      suff= ".so";
-    #else
-      suff= "";
-    #endif
-    
-    return suff;
-  } // DLL_Suffix
-
-  
-  
   // Test, if upshifted string <str> begins with <cmp>
   static Boolean SameBegin( const char* str, const char* cmp )
   {
@@ -1191,6 +1134,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   
   
   
+  /*
   // Get <aFunc> of <aFuncName>
   os9err DLL_Function( void* aDLL, const char* aFuncName, void** aFunc )
   {
@@ -1208,81 +1152,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
   
   
-  // Connect to all available DLLs
-  static os9err ConnectDLL( plug_typ* p )
-  {
-    os9err err;
-    void*  aDLL= NULL;
-    
-    typedef long (*VersionProc)( void );
-                   VersionProc aModVersion;
-
-    // Get the full path where to search for plugins
-    char    fullName[ OS9PATHLEN ];
-    strcpy( fullName, strtUPath     );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName,"PLUGINS"      );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName, p->name       );
-    
-    #ifdef windows32
-      aDLL= LoadLibrary( fullName );
-    #endif
-    
-    #ifdef UNIX
-      #if   defined MACOSX
-        #define mode RTLD_NOW + RTLD_GLOBAL
-      #elif defined linux
-        #define mode RTLD_LAZY
-      #else
-        #define mode 0
-      #endif
-    
-      aDLL= dlopen( fullName, mode );
-    #endif
-    
-    if (!aDLL) return E_PNNF;
-
-    // These are the rquired plugin functions:
-              err= DLL_Function( aDLL,   "Module_Version", (void**)        &aModVersion );
-    if (!err) err= DLL_Function( aDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
-    if (!err) err= DLL_Function( aDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
-    if (!err) err= DLL_Function( aDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
-    if  (err) {
-      #ifdef windows32
-        FreeLibrary( aDLL );
-      #endif
-      
-      #ifdef UNIX
-        dlclose( aDLL );
-      #endif
-      
-      return err;
-    } // if
-    
-    p->pVersion= aModVersion();
-    return 0;
-  } // ConnectDLL
-
-
-
-  // Initialize include/exclude list
-  static void Init_NativeProgs( plug_typ* p )
-  {
-    char iName[ OS9NAMELEN ];
-    char iOpt [ OS9NAMELEN ];
-    
-    int                         i= 0;
-    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) {
-      if (strcmp( iOpt, "+" )==0 ||
-          strcmp( iOpt,"I+" )==0) ChangeElement( iName, true  ); 
-      if (strcmp( iOpt, "-" )==0 ||
-          strcmp( iOpt,"I-" )==0) ChangeElement( iName, false ); 
-    } // while
-  } // Init_NativeProgs
-
-
-
   // Get the number of internal programs for <p>
   static int NumberOfNativeProgs( plug_typ* p )
   {
@@ -1296,6 +1165,82 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   
   
   
+  // Connect to all available DLLs
+  static os9err ConnectDLL( plug_typ* p )
+  {
+    os9err err;
+    void*  fDLL= NULL;
+    
+    typedef long (*VersionProc)( void );
+                   VersionProc fModVersion;
+
+    // Get the full path where to search for plugins
+    char    fullName[ OS9PATHLEN ];
+    strcpy( fullName, strtUPath     );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName,"PLUGINS"      );
+    strcat( fullName, PATHDELIM_STR );
+    strcat( fullName, p->name       );
+    
+    #ifdef windows32
+      fDLL= LoadLibrary( fullName );
+    #endif
+    
+    #ifdef UNIX
+      #if   defined MACOSX
+        #define mode RTLD_NOW + RTLD_GLOBAL
+      #elif defined linux
+        #define mode RTLD_LAZY
+      #else
+        #define mode 0
+      #endif
+    
+      fDLL= dlopen( fullName, mode );
+    #endif
+    
+    if (!aDLL) return E_PNNF;
+
+    // These are the rquired plugin functions:
+              err= DLL_Function( fDLL,   "Module_Version", (void**)        &fModVersion );
+    if (!err) err= DLL_Function( fDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
+    if (!err) err= DLL_Function( fDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
+    if (!err) err= DLL_Function( fDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
+    if  (err) {
+      #ifdef windows32
+        FreeLibrary( fDLL );
+      #endif
+      
+      #ifdef UNIX
+        dlclose( fDLL );
+      #endif
+      
+      return err;
+    } // if
+    
+    p->nNativeProgs= NumberOfNativeProgs( p );
+    p->pVersion    = fModVersion();
+    return 0;
+  } // ConnectDLL
+  */
+
+
+  // Initialize include/exclude list
+  static void Init_NativeProgs( plug_typ* p )
+  {
+    char iName[ OS9NAMELEN ];
+    char iOpt [ OS9NAMELEN ];
+    
+    int                         i= 0;
+    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) {
+      if (strcmp( iOpt, "+" )==0 ||
+          strcmp( iOpt,"I+" )==0) ChangeNativeElement( iName, true  ); 
+      if (strcmp( iOpt, "-" )==0 ||
+          strcmp( iOpt,"I-" )==0) ChangeNativeElement( iName, false ); 
+    } // while
+  } // Init_NativeProgs
+
+
+
   static void DispList( int last ) 
   {
     int       i;
@@ -1306,7 +1251,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
           p= &pluginList[ i ];
       if (p->name==NULL) continue;
 
-      upe_printf( "%d '%s' (n=%d)\n", i, p->name, p->nNativeProgs );
+      upe_printf( "%d '%s' (n=%d)\n", i, p->name, p->numNativeProgs );
     } // for
   } // DispList 
 
@@ -1376,21 +1321,21 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
            i= 0;
     while (i<=last) {
           p= &pluginList[ i ];
-      if (p->nNativeProgs>1) break;
+      if (p->numNativeProgs>1) break;
       i++;
     } // while
     
            j= i+1;
     while (j<=last) {
           p= &pluginList[ j ];
-      if (p->nNativeProgs==1) {
+      if (p->numNativeProgs==1) {
       //upe_printf( "swap %d <=> %d\n", i, j );
         SwapElements( i, j );
         
                i++;
         while (i<=last) {
               p= &pluginList[ i ];
-          if (p->nNativeProgs>1) break;
+          if (p->numNativeProgs>1) break;
           i++;
         } // for
         
@@ -1410,15 +1355,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   {
     os9err      err;
     plug_typ*   p;
-    int         i, maxN, len;
-    const char* bb= " [built-in]";
-    Boolean     withBuiltIn= false;
-    
-    char        nm  [ OS9PATHLEN ];
-    char        form[ 40 ];
-    long        ver;
-    ushort      rev;
-  
+    int         i;
+
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
     
                             i= 0;
@@ -1430,10 +1368,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       if (p->name==NULL) break;
     
            err= ConnectDLL( p );
-      if (!err) {
-            p->nNativeProgs= NumberOfNativeProgs( p );
-        if (p->nNativeProgs>0) continue; // at least one native prog must be there
-      } // if
+      if (!err && p->numNativeProgs>0) continue; // at least one native prog must be there
       
       release_mem( p->name ); 
       p->name= NULL;
@@ -1448,18 +1383,30 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
             p= &pluginList[ i ];      // connect the built-in module as the last
         if (p->name==NULL) {
             p->name= "";
-            p->pVersion        = lVersion();
-            p-> next_NativeProg=  Next_NativeProg; // do this before counting
-            p->nNativeProgs    = NumberOfNativeProgs( p );
-            p->   is_NativeProg=    Is_NativeProg;
-            p->start_NativeProg= Start_NativeProg;
-            withBuiltIn        = true;
+            p->pVersion         = lVersion();
+            p->pEnabled         =  true;
+            p->pDisabled        = false;
+            p-> next_NativeProg =    Next_NativeProg; // do this before counting
+            p->   numNativeProgs= NumberOfNativeProgs( p );
+            p->   is_NativeProg =      Is_NativeProg;
+            p->start_NativeProg =   Start_NativeProg;
             break;
         } // if
       
         i++;
       } // while
-    #endif    
+    #endif
+    
+    for (i=0; i<MAXLIST; i++) {
+          p= &pluginList[ i ];
+      if (p->name==NULL) break;
+      Init_NativeProgs( p );
+    } // for
+
+    pluginActive= Plugin_Possible( true ); // built-in will not be taken in account
+    display_pluginList( withTitle, true );
+    
+    /*    
                      maxN= 0;
     if (withBuiltIn) maxN= strlen( bb )-2; // minimum length
     
@@ -1496,9 +1443,9 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
                              nm, ver,rev, p->nNativeProgs );
       } // for
     } // if
+    */
     
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader done\n" ) );
-    pluginActive= Plugin_Possible(); // built-in will not be taken in account
   } // PluginLoader
 #endif
 
@@ -1844,7 +1791,9 @@ static void init_plugins( void )
     for (i= 0; i<MAXLIST; i++)  includeList[ i ]     = NULL;
     for (i= 0; i<MAXLIST; i++)  excludeList[ i ]     = NULL;
     for (i= 0; i<MAXLIST; i++) { pluginList[ i ].name= NULL;
-                                 pluginList[ i ].nNativeProgs= 0; }
+                                 pluginList[ i ].numNativeProgs= 0;
+                                 pluginList[ i ].pEnabled      = false;
+                                 pluginList[ i ].pDisabled     = false; }
                                  
     nativeActive= true; // Native programs are possible
 
