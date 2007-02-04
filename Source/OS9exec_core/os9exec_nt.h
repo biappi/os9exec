@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.72  2007/02/03 12:23:16  bfo
+ *    <enabled> field added for "plug_typ"
+ *
  *    Revision 1.71  2007/01/28 21:56:54  bfo
  *    - NATIVE_SUPPORT added
  *    - native interface definitions added
@@ -1183,10 +1186,13 @@ extern  char*       dirtable   [MAXDIRS];
     
   // The plugin element
   typedef struct {
-    char*   name;         // the plugin's name
-    long    pVersion;     // the plugin's version
-    int     nNativeProgs; // number of internal progs
-    Boolean enabled;      // the plugin is enabled or disabled
+    char*   name;           // the plugin's name
+    void*   fDLL;           // the plugin's reference
+    long    pVersion;       // the plugin's version
+    int     numNativeProgs; // number of internal progs
+    
+    Boolean pEnabled;       // the plugin is explicitely  enabled
+    Boolean pDisabled;      // the plugin is explicitely disabled
     
      Next_NativeProg_Typ  next_NativeProg;
        Is_NativeProg_Typ    is_NativeProg;
