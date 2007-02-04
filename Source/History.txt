@@ -1679,14 +1679,26 @@
           07-01-29  Bfo     hello_world : NATIVE directory (with "hello_world" added to project)
                                           HELLO_WORLD target_options.h added
                                           
-          07-01-29  Bfo     c_access   :  ulong support for MPW, 'Handle' def imported + <Resource.h>
+          07-01-29  Bfo     c_access    : ulong support for MPW, 'Handle' def imported + <Resource.h>
                             native_interface : size_t def not needed for Linux
                             
           07-02-02  Bfo     os9app_emu_CW9.mcp : Up to date for precompiled headers
           07-02-02  Bfo     TARGET_PLUGIN_HELLO_WORLD files moved to NATIVE
-          07-02-02  Bfo     c_access   : "No_Module" defintion added
-          07-02-02  Bfo     modstuff   : Reacting correctly to "No_Module"
-          07-02-02  Bfo     native_interface: "No_Module" assignment
+          07-02-02  Bfo     c_access    : "No_Module" defintion added
+          07-02-02  Bfo     modstuff    : Reacting correctly to "No_Module"
+          07-02-02  Bfo     native_interface : "No_Module" assignment
+          
+          07-02-03  Bfo     native_interface - "No_Module" assignment only, if ok
+                                             - t_size -> int
+                                             - str copy adaption
+          07-02-03  Bfo     memstuff    : PLUGIN_DLL dependencies removed
+          07-02-03  Bfo     os9exec_nt  : <enabled> field added for "plug_typ"
+          07-02-04  Bfo     os9exec_nt  - "plug_typ" with <pEnabled>,<pDisabled> and <fDLL>
+          07-02-04  Bfo                 - "DLL_Suffix", "NumberOfNativeProgs" and "ConnectDLL" moved to 
+                                          "intcommand"
+          07-02-04  Bfo     intcommand  - DLL connect/disconnect implemented here now
+                                        - "Plugin_Possible"/"Native_Possible" enhanced
+          07-02-04  Bfo     fcalls      : "Plugin_Possible"/"Native_Possible" are more orthogonal now
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
