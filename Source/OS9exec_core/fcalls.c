@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.53  2007/01/28 21:16:02  bfo
+ *    'Native_Possible()' added as condition for <nativeActive>
+ *
  *    Revision 1.52  2007/01/07 13:32:22  bfo
  *    <pmem> adaptions
  *    F$SetSys D_IPID: Bit 10..11 additional info for plugins added
@@ -1053,10 +1056,10 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         break;
         
       case D_IPID    : v= 42; // allow programs to identify as os9exec/nt environment
-                       if (cp->isIntUtil)                      v+= 0x0100; // special modes for internal utilities
-                       if (nativeActive && Native_Possible() ) v+= 0x0200;
-                       if (cp->isPlugin )                      v+= 0x0400;
-                       if (pluginActive )                      v+= 0x0800;
+                       if (cp->isIntUtil)            v+= 0x0100; // special modes for internal utilities
+                       if (Native_Possible( false )) v+= 0x0200;
+                       if (cp->isPlugin )            v+= 0x0400;
+                       if (Plugin_Possible( false )) v+= 0x0800;
                        break;
       
       case D_ScreenW : v= GetScreen( 'w' ); break; // not according to OS-9
