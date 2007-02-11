@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2007/01/07 13:57:46  bfo
+ *    Using MACOSX instead of __MACH__
+ *
  *    Revision 1.36  2007/01/04 20:56:31  bfo
  *    'touchfile' only used for MACFILES
  *
@@ -2573,6 +2576,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     ushort mode;
 
     #if defined MACOS9 || defined linux
+  //#if defined MACOS9 || defined UNIX
       OSErr  oserr= 0;
     #endif
       
@@ -2622,7 +2626,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
         HandleEvent();
       }
 
-    #elif defined windows32 || defined MACOSX
+    #elif defined windows32 // || defined MACOSX
 //    spP->dDsc= opendir( spP->fullName );
 //    while (true) {
 //        dEnt= readdir( spP->dDsc ); if (dEnt==NULL) break;
@@ -2642,7 +2646,12 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       sprintf( cmd, "rmdir /S /Q %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
+    #elif defined MACOSX
+      sprintf( cmd, "rmdir %s", pp );
+      err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
+
     #elif defined linux
+  //#elif defined UNIX
       oserr= remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
     #endif
       
