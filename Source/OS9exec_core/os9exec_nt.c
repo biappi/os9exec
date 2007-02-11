@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.96  2007/02/04 20:05:33  bfo
+ *    "DLL_Suffix", "NumberOfNativeProgs" and "ConnectDLL" moved to "intcommand"
+ *
  *    Revision 1.95  2007/01/28 21:56:54  bfo
  *    - NATIVE_SUPPORT added
  *    - native interface definitions added
@@ -444,21 +447,21 @@ ulong		newEventId= 0xffffffff; /* initial value */
 
 short    arbitrate;         // set if arbitrate() should switch away from one running process to next
 ushort   interactivepid;    // process that will get keyboard abort signals
-dir_type mdir;	            // current module dir
-
 
 char     startPath[OS9PATHLEN];   /* start path */
 char     strtUPath[OS9PATHLEN];   /* next higher than start path */
+dir_type mdir;	                  /* current module dir */
 
 #ifdef MACOS9
   /* the MPW-level default directory */
-  short  startVolID;	          /* startup dir's volume id    */
-  long   startDirID;	          /* startup dir's directory id */
-  char    callPath[OS9PATHLEN];
+  short    startVolID;	          /* startup dir's volume id    */
+  long     startDirID;	          /* startup dir's directory id */
+  char     callPath[OS9PATHLEN];
   
-  short   applVolID;	          /* startup dir's volume id    */
-  long    applDirID;	          /* startup dir's directory id */
-  char    applName[OS9PATHLEN];
+  short    applVolID;	          /* startup dir's volume id    */
+  long     applDirID;	          /* startup dir's directory id */
+  char     applName[OS9PATHLEN];
+  int      geCnt;
   
 #else
   /* the default module load directory OS9MDIR */

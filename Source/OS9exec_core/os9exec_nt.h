@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.73  2007/02/04 20:02:58  bfo
+ *    "plug_typ" with <pEnabled>,<pDisabled> and <fDLL>
+ *
  *    Revision 1.72  2007/02/03 12:23:16  bfo
  *    <enabled> field added for "plug_typ"
  *
@@ -1247,30 +1250,28 @@ extern  ulong  newEventId;
 #endif
 
 //extern ushort currentpid; // id of current process
-extern   short  arbitrate;  // set if arbitrate() should switch away from one running process to next
+extern short arbitrate;  // set if arbitrate() should switch away from one running process to next
 
 #if defined __cplusplus
   } // end extern "C"
 #endif
 
-extern  ushort interactivepid; /* process that will get keyboard abort signals */
-
-
-extern  char   startPath[OS9PATHLEN];   /* start path */
-extern  char   strtUPath[OS9PATHLEN];   /* next higher than start path */
+extern ushort   interactivepid;        /* process that will get keyboard abort signals */
+extern char     startPath[OS9PATHLEN]; /* start path */
+extern char     strtUPath[OS9PATHLEN]; /* next higher than start path */
+extern dir_type mdir;                  /* current module dir */
 
 #ifdef MACOS9
   /* the MPW-level default directory */
-  extern    short startVolID;            /* startup dir's volume id */
-  extern    long  startDirID;            /* startup dir's directory id */
-  extern    char   callPath[OS9PATHLEN];
+  extern short  startVolID;            /* startup dir's volume id */
+  extern long   startDirID;            /* startup dir's directory id */
+  extern char   callPath[OS9PATHLEN];
 
-  extern    short  applVolID;            /* startup dir's volume id */
-  extern    long   applDirID;            /* startup dir's directory id */
-  extern    char   applName[OS9PATHLEN];
+  extern short  applVolID;             /* startup dir's volume id */
+  extern long   applDirID;             /* startup dir's directory id */
+  extern char   applName[OS9PATHLEN];
 
-  /* the MPW-level default module load directory {OS9MDIR} */
-  extern dir_type  mdir;                 /* current module dir */
+  extern int    geCnt;
 
 #else
   /* the default module load directory OS9MDIR */
