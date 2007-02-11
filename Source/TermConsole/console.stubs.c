@@ -19,6 +19,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/12/01 19:54:52  bfo
+ *    <consoleSleep> param for "HandleOneEvent" (reduce MacClassic load)
+ *
  *    Revision 1.10  2006/05/26 14:31:02  bfo
  *    Renamed to "ResourceConstants.h"
  *
@@ -105,6 +108,7 @@ int                 gInBackground     = false;
 int                 gConsoleQuickInput= false;
 short               gConsoleEcho      = true;   /* as it was standard in the original */
 int                 gConsoleSleep     = 1;      /* default was 5 */
+int                 gCnt              = 0;
 
 short               gConsoleNLExpand  = true;
 char                gTitle[OS9NAMELEN];         /* title for   /vmod output */
@@ -150,7 +154,7 @@ void EventLoop();
 #ifdef MACOS9
   void DoUpdate(WindowPtr window);
   void DoEvent       ( EventRecord*  event );
-  void HandleOneEvent( EventRecord* pEvent, int consoleSleep );
+  int  HandleOneEvent( EventRecord* pEvent, int consoleSleep );
 #endif
 
 short      InstallConsole( short fd );
@@ -656,7 +660,7 @@ static void HandleVModUpdate( TermWindowPtr tw, ttydev_typ* mco )
 
 /* Define an event loop, so the user doesn't have to
 */
-void HandleOneEvent( EventRecord* pEvent, int consoleSleep )
+int HandleOneEvent( EventRecord* pEvent, int consoleSleep )
 {
 //  RgnHandle      cursorRgn;
     Boolean        gotEvent;
@@ -667,7 +671,7 @@ void HandleOneEvent( EventRecord* pEvent, int consoleSleep )
     Boolean        front= false;
     ulong          ctick= GetSystemTick();
     static int     hov  = STARTVAL;
-    static Boolean first= true;
+  //static Boolean first= true;
 
     #ifdef USE_CLASSIC
       ttydev_typ*    mco;
@@ -675,28 +679,33 @@ void HandleOneEvent( EventRecord* pEvent, int consoleSleep )
     #endif
     
     
-    if     (gNetActive>ctick) {
-        if (gNetLast>0 &&
-            gNetLast+TICKS_PER_SEC>ctick &&
-            hov<0) {
-            hov++; return; /* every nth only */
-        }
+    if   (gNetActive>ctick) {
+      if (gNetLast>0 &&
+          gNetLast+TICKS_PER_SEC>ctick &&
+          hov<0) {
+          hov++; return gCnt; /* every nth only */
+      } // if
         
-        hov     = STARTVAL; 
-        gNetLast= ctick;
-    }
+      hov     = STARTVAL; 
+      gNetLast= ctick;
+    } // if
 
     // if we're not given an event, then wait for one
     if (!pEvent) {
         // LATER: check for WaitNextEvent trap; if unavailable, do something else!
-        if (first)
-            first= false; /* can be used as brkpnt place for ugly starter */
-        gotEvent = WaitNextEvent( everyEvent, &event, consoleSleep, 0 );
-        eventPtr = &event;
-    } else {
-        gotEvent = 1;
-        eventPtr = pEvent;
-    }
+    //if (first)
+    //    first= false; /* can be used as brkpnt place for ugly starter */
+          
+      gotEvent= WaitNextEvent( everyEvent, &event, consoleSleep, 0 );
+      eventPtr= &event;
+      
+      if (gotEvent) gCnt= 0;
+      else          gCnt++;
+    } 
+    else {
+      gotEvent= 1;
+      eventPtr= pEvent;
+    } // if
 
     //
     //  These are the dispatchers for the TermWindow stuff.
@@ -741,6 +750,8 @@ void HandleOneEvent( EventRecord* pEvent, int consoleSleep )
     #ifdef USE_CLASSIC
       if (gotEvent) DoEvent( &event );
     #endif
+    
+    return gCnt;
 } /* HandleOneEvent */
 
 
@@ -764,7 +775,7 @@ static void HandleNthEvent()
 
 void EventLoop()
 {   while ( true ) HandleEvent();
-} /*EventLoop*/
+} /* EventLoop */
 
 
 

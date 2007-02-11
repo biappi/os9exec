@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.10  2006/12/01 19:54:47  bfo
+ *    <consoleSleep> param for "HandleOneEvent" (reduce MacClassic load)
+ *
  *    Revision 1.9  2006/02/19 15:51:07  bfo
  *    Header changed to 2006
  *
@@ -104,7 +107,7 @@ extern  ulong        gNetLast;
     extern FSSpec  gFS;
     
     extern void    Install_AppleEvents( void );
-    extern void    HandleOneEvent     ( EventRecord* pEvent, int consoleSleep );
+    extern int     HandleOneEvent     ( EventRecord* pEvent, int consoleSleep );
     extern long    WriteCharsToConsole( char *buffer, long n );
     extern ulong   SysPathWindow      ( syspath_typ* );
     extern ulong   CurrentWindow      ( void );
