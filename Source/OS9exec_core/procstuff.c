@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2007/01/28 21:58:51  bfo
+ *    <isPtoC> renamed to <isNative>
+ *
  *    Revision 1.54  2007/01/07 13:34:12  bfo
  *    New variable <isPlugin> initialized
  *
@@ -881,6 +884,44 @@ static void wait_for_signal( ushort pid )
 } /* wait_for_signal */
 
 
+static void DoWait( void )
+{
+  #ifdef UNIX
+    struct timespec wait_time;
+    
+    wait_time.tv_sec =       0;
+    wait_time.tv_nsec= 1000000; // = 1 millisecond 
+    nanosleep( &wait_time, NULL );
+    slp_idleticks++;
+                
+  #elif defined windows32
+    ulong ticks= GetSystemTick();
+    Sleep( 1 ); // sleep for a short time
+    HandleEvent();
+    slp_idleticks+= GetSystemTick()-ticks;
+                
+  #elif defined MACOS9
+    int   sWait;
+    ulong ticks= GetSystemTick();
+
+    #ifndef MPW // is not available there
+    //ulong len= 13;
+    //char  s[ 14 ];
+      sWait= ( geCnt / 20 )+1; if (sWait>10) sWait= 10;
+      geCnt= HandleOneEvent( nil,  sWait );
+      
+    //sprintf( s, "%5d %5d\r\n", geCnt, sWait );
+    //syspath_write( currentpid, 1, &len, &s, true );
+    #endif
+                
+    slp_idleticks+= GetSystemTick()-ticks;
+  #else
+    #error architecture not supported
+  #endif
+} // DoWait
+
+
+
 /* arbitrate and prepare next process
  * Note: checks global flag "arbitrate" to see if global "currentpid"
  *       should be changed to next waiting/active process
@@ -898,10 +939,6 @@ void do_arbitrate( ushort allowedIntUtil )
   Boolean      chkAll     = false;        /* 2nd run when all sleeping */
   Boolean      atLeast1;                  /* at least one process is sleeping */
   Boolean      pDone;
-
-  #ifdef UNIX
-    struct timespec wait_time;
-  #endif
 
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
                                           currentpid, arbitrate));
@@ -970,27 +1007,7 @@ void do_arbitrate( ushort allowedIntUtil )
                   pthread_mutex_unlock( &sysCallMutex );
               #endif
 
-              #ifdef UNIX
-                wait_time.tv_sec =        0;
-                wait_time.tv_nsec=  1000000; // = 1 millisecond 
-                nanosleep( &wait_time, NULL );
-                slp_idleticks++;
-                
-              #elif defined windows32
-                ulong ticks= GetSystemTick();
-                Sleep( 10 ); // sleep for one tick
-                
-                HandleEvent();
-                slp_idleticks+= GetSystemTick()-ticks;
-                
-              #elif defined MACOS9
-                ulong ticks= GetSystemTick();
-
-                #ifndef MPW // is not available there
-                  HandleOneEvent( nil, 10 );
-                #endif
-                slp_idleticks+= GetSystemTick()-ticks;
-              #endif
+              DoWait();
            
               #ifdef THREAD_SUPPORT
                 if (sprocess->isIntUtil && ptocThread)
@@ -1030,17 +1047,22 @@ void do_arbitrate( ushort allowedIntUtil )
 
           if  (sprocess->state==pSleeping ||
                sprocess->isIntUtil) {
+            DoWait(); 
+            
+            /*
             #ifdef UNIX
               wait_time.tv_sec =        0;
 //            wait_time.tv_nsec= 10000000;
               wait_time.tv_nsec=  1000000;
               nanosleep( &wait_time, NULL );
               slp_idleticks++;
+              
             #elif defined macintosh || defined windows32
               ulong ticks   = GetSystemTick();
               HandleEvent();
               slp_idleticks+= GetSystemTick()-ticks;
             #endif
+            */
           } 
           else {
             done= true; /* don't stop if sleeping in slow mode */

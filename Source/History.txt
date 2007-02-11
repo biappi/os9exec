@@ -1699,6 +1699,13 @@
           07-02-04  Bfo     intcommand  - DLL connect/disconnect implemented here now
                                         - "Plugin_Possible"/"Native_Possible" enhanced
           07-02-04  Bfo     fcalls      : "Plugin_Possible"/"Native_Possible" are more orthogonal now
+          
+          07-02-11  Bfo     os9exec_nt  : <geCnt> added (MacOS9 reactiveness/idle load balance)
+          07-02-11  Bfo     console_stubs /
+                            consio      : "HandleOneEvent" returns now the <geCnt> value
+          07-02-11  Bfo     fileaccess  : "rmdir" adaption
+          07-02-11  Bfo     procstuff   : DoWait() / <geCnt> balancer added
+          
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
