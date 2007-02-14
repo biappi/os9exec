@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2007/02/04 20:08:29  bfo
+ *    - DLL connect/disconnect implemented here now
+ *    - "Plugin_Possible"/"Native_Possible" enhanced
+ *
  *    Revision 1.46  2007/01/28 22:14:00  bfo
  *    - Native program handling, <modBaseP> param added
  *    - int command 'native' added
@@ -709,38 +713,50 @@ static os9err int_devs( _pid_, int argc, char** argv )
   // Connect to all available DLLs
   os9err ConnectDLL( plug_typ* p )
   {
-    os9err err;
-  
+    os9err  err;
+    Boolean first= true;
+    
     typedef long (*VersionProc)( void );
                    VersionProc fModVersion;
 
     // Get the full path where to search for plugins
-    char    fullName[ OS9PATHLEN ];
-    strcpy( fullName, strtUPath     );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName,"PLUGINS"      );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName, p->name       );
+    char fullName[ OS9PATHLEN ];
     
-    #ifdef windows32
-      p->fDLL= LoadLibrary( fullName );
+    while (true) {
+      strcpy( fullName, strtUPath );
       
-    #elif defined UNIX
-      #if   defined MACOSX
-        #define mode RTLD_NOW + RTLD_GLOBAL
-      #elif defined linux
-        #define mode RTLD_LAZY
+      if (first) {
+        strcat( fullName, PATHDELIM_STR ); // search at "PLUGINS" first
+        strcat( fullName,"PLUGINS"      );
+      } // if
+            
+      strcat( fullName, PATHDELIM_STR );
+      strcat( fullName, p->name       );
+      // now we have the complete path name
+    
+      #ifdef windows32
+        p->fDLL= LoadLibrary( fullName );
+      
+      #elif defined UNIX
+        #if   defined MACOSX
+          #define mode RTLD_NOW + RTLD_GLOBAL
+        #elif defined linux
+          #define mode RTLD_LAZY
+        #else
+          #define mode 0
+        #endif
+    
+        p->fDLL= dlopen( fullName, mode );
+    
       #else
-        #define mode 0
+        p->fDLL= NULL;
       #endif
     
-      p->fDLL= dlopen( fullName, mode );
-    
-    #else
-      p->fDLL= NULL;
-    #endif
-    
-    if (!p->fDLL) return E_PNNF;
+      if (p->fDLL) break; // found
+      
+      if (!first) return E_PNNF; // not found on both paths
+      first= false;
+    } // loop
 
     // These are the rquired plugin functions:
               err= DLL_Func( p->fDLL,   "Module_Version", (void**)        &fModVersion );

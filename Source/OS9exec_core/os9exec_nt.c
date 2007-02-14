@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.97  2007/02/11 14:45:31  bfo
+ *    <geCnt> added (MacOS9 reactiveness/idle load balance)
+ *
  *    Revision 1.96  2007/02/04 20:05:33  bfo
  *    "DLL_Suffix", "NumberOfNativeProgs" and "ConnectDLL" moved to "intcommand"
  *
@@ -1090,7 +1093,9 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
   
   // Search for all DLLs at the "PLUGINS" subdirectory
-  static os9err SearchDLLs( ushort pid, int *i, Boolean withDLLs, Boolean avoidDup )
+  static os9err SearchDLLs( ushort pid, int *i, Boolean withDLLs,
+                                                Boolean atPluginDir, 
+                                                Boolean avoidDup )
   {
     os9err          err, cErr;
     ushort          path;
@@ -1104,8 +1109,9 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     const char* suff= DLL_Suffix();
     if (strcmp( suff,"" )==0) return 0; // no error, if not supported
 
-    strcpy( pathName,  strtUPath );
-    strcat( pathName, "/PLUGINS" ); // sub directory where "dd" has been found
+    strcpy  ( pathName,  strtUPath );
+    if (atPluginDir) 
+      strcat( pathName, "/PLUGINS" ); // sub directory where "dd" has been found
 
         err= usrpath_open( pid, &path, fDir, pathName, 0x81 ); 
     if (err) return err;
@@ -1136,96 +1142,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   } // SearchDLLs
   
   
-  
-  /*
-  // Get <aFunc> of <aFuncName>
-  os9err DLL_Function( void* aDLL, const char* aFuncName, void** aFunc )
-  {
-    #if   defined windows32
-      *aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
-    #elif defined UNIX
-      *aFunc= dlsym( aDLL, aFuncName );
-    #else
-      *aFunc= NULL;
-    #endif
-    
-    if (*aFunc==NULL) return E_NES;
-                      return 0;
-  } // DLL_Function
-
-  
-  
-  // Get the number of internal programs for <p>
-  static int NumberOfNativeProgs( plug_typ* p )
-  {
-    char iName[ OS9NAMELEN ];
-    char iOpt [ OS9NAMELEN ];
-    
-    int                         i= 0;
-    while (p->next_NativeProg( &i, (char*)&iName, (char*)&iOpt )) { } // while
-    return                      i;
-  } // NumberOfNativeProgs
-  
-  
-  
-  // Connect to all available DLLs
-  static os9err ConnectDLL( plug_typ* p )
-  {
-    os9err err;
-    void*  fDLL= NULL;
-    
-    typedef long (*VersionProc)( void );
-                   VersionProc fModVersion;
-
-    // Get the full path where to search for plugins
-    char    fullName[ OS9PATHLEN ];
-    strcpy( fullName, strtUPath     );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName,"PLUGINS"      );
-    strcat( fullName, PATHDELIM_STR );
-    strcat( fullName, p->name       );
-    
-    #ifdef windows32
-      fDLL= LoadLibrary( fullName );
-    #endif
-    
-    #ifdef UNIX
-      #if   defined MACOSX
-        #define mode RTLD_NOW + RTLD_GLOBAL
-      #elif defined linux
-        #define mode RTLD_LAZY
-      #else
-        #define mode 0
-      #endif
-    
-      fDLL= dlopen( fullName, mode );
-    #endif
-    
-    if (!aDLL) return E_PNNF;
-
-    // These are the rquired plugin functions:
-              err= DLL_Function( fDLL,   "Module_Version", (void**)        &fModVersion );
-    if (!err) err= DLL_Function( fDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
-    if (!err) err= DLL_Function( fDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
-    if (!err) err= DLL_Function( fDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
-    if  (err) {
-      #ifdef windows32
-        FreeLibrary( fDLL );
-      #endif
-      
-      #ifdef UNIX
-        dlclose( fDLL );
-      #endif
-      
-      return err;
-    } // if
-    
-    p->nNativeProgs= NumberOfNativeProgs( p );
-    p->pVersion    = fModVersion();
-    return 0;
-  } // ConnectDLL
-  */
-
 
   // Initialize include/exclude list
   static void Init_NativeProgs( plug_typ* p )
@@ -1363,8 +1279,10 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
     
                             i= 0;
-    err= SearchDLLs( cpid, &i,  with_dbgDLLs, false ); if (err) return;
-    err= SearchDLLs( cpid, &i, !with_dbgDLLs, true  ); if (err) return;
+    err= SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;
+    err= SearchDLLs( cpid, &i,  with_dbgDLLs, false, false ); if (err) return;
+    err= SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  ); if (err) return;
+    err= SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  ); if (err) return;
     
     for (i= 0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
