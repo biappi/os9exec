@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.38  2007/02/11 14:49:01  bfo
+ *    "rmdir" adaption
+ *
  *    Revision 1.37  2007/01/07 13:57:46  bfo
  *    Using MACOSX instead of __MACH__
  *
@@ -1208,7 +1211,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       
       #ifdef windows32
 //      if (!DeleteFile( adapted )) oserr= GetLastError();
-        sprintf( cmd, "del %s", pathname );
+        sprintf( cmd, "del %s /A", pathname );
         err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
       #else
