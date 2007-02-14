@@ -1706,6 +1706,9 @@
           07-02-11  Bfo     fileaccess  : "rmdir" adaption
           07-02-11  Bfo     procstuff   : DoWait() / <geCnt> balancer added
           
+          07-02-14  Bfo     fileaccess  : win32 remove will be done now with /A
+          07-02-14  Bfo     os9exec_nt  /
+                            intcommand  : Search DLLs at PLUGINS and one level higher
                                                 
     3.35  07-??-??  Bfo
     ------------------- 
