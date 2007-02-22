@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2007/01/29 23:19:36  bfo
+ *    import "Resource.h"
+ *
  *    Revision 1.4  2007/01/29 23:12:08  bfo
  *    trying to make it clean for MPW (again)
  *
@@ -96,7 +99,7 @@ void getversion( unsigned short *ver,
   #else
     // simply hardwired for all other platforms
     *ver=    3;
-    *rev= 0x35;
+    *rev= 0x36;
   #endif
 } // getversion
 
