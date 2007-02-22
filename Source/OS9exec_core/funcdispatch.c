@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.45  2007/01/28 21:30:45  bfo
+ *    'Regs_68k' introduced, 'built-in' renamed to 'native'
+ *
  *    Revision 1.44  2007/01/07 13:23:21  bfo
  *    "trap0_call" introduced (for PLUGIN_DLL callback)
  *
@@ -537,7 +540,7 @@ void arb_to_os9( Boolean last_arbitrate )
 
 
 
-Boolean Dbg_SysCall( ushort pid, regs_type* rp )
+Boolean Dbg_SysCall( regs_type* rp, ushort pid )
 {
   process_typ* cp= &procs[pid];
   
@@ -548,25 +551,25 @@ Boolean Dbg_SysCall( ushort pid, regs_type* rp )
 } /* Dbg_SysCall */
 
 
-void debug_comein( ushort pid, regs_type* rp )
+void debug_comein( regs_type* rp, ushort pid )
 {
   process_typ* cp= &procs[pid];
-	const funcdispatch_entry* fdeP= getfuncentry(cp->func);
-	Boolean                   msk = cp->masklevel>0;
+  const funcdispatch_entry* fdeP= getfuncentry(cp->func);
+  Boolean                   msk = cp->masklevel>0;
 
-  if (!Dbg_SysCall( pid,rp )) return;
-	if (cp->state==pWaitRead) return; /* avoid dbg display in pWaitRead mode */
+  if (!Dbg_SysCall( rp, pid )) return;
+  if (cp->state==pWaitRead)    return; /* avoid dbg display in pWaitRead mode */
 
-	/* (enclosed in another if to avoid get_syscall_name invocation */
-	/* in nodebug case!) */
-	uphe_printf( ">>>%cPid=%02d: OS9 %s : ",msk ? '*':' ', pid,fdeP->name );
-	show_maskedregs( rp,fdeP->inregs );
-	upe_printf ( "\n" );
+  /* (enclosed in another if to avoid get_syscall_name invocation */
+  /* in nodebug case!) */
+  uphe_printf( ">>>%cPid=%02d: OS9 %s : ",msk ? '*':' ', pid,fdeP->name );
+  show_maskedregs( rp,fdeP->inregs );
+  upe_printf ( "\n" );
 } /* debug_comein */
 
 
 
-void debug_return( ushort pid, regs_type* crp, Boolean cwti )
+void debug_return( regs_type* crp, ushort pid, Boolean cwti )
 {	
   process_typ*              cp  = &procs[ pid ];
   const funcdispatch_entry* fdeP= getfuncentry(cp->func);
@@ -580,7 +583,7 @@ void debug_return( ushort pid, regs_type* crp, Boolean cwti )
   Boolean   hdl= cp->pd._sigvec!=0;
   Boolean   strt;
   
-  if (!Dbg_SysCall( pid,crp )) return;
+  if (!Dbg_SysCall( crp, pid )) return;
   
   if (cwti) {
     uphe_printf( "<<<%cPid=%02d: OS9 INTERCEPT%s, state=%s, ", 
@@ -683,7 +686,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
   if (withinIntUtil) {
     // make the debug logging for systemcalls within int commands here
     cp->func= func;
-    debug_comein( pid,rp );
+    debug_comein( rp, pid );
   } // if
   
   cp->oerr= (fdeP->func)( rp,pid );
@@ -723,7 +726,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
       currentpid= pid; // make sure it is not changed
     }
     else {
-      debug_return( pid, rp, false );
+      debug_return( rp, pid, false );
     } // if
   } // if
   

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2007/01/28 21:30:45  bfo
+ *    'Regs_68k' introduced, 'built-in' renamed to 'native'
+ *
  *    Revision 1.10  2007/01/07 13:23:25  bfo
  *    "trap0_call" introduced (for PLUGIN_DLL callback)
  *
@@ -116,9 +119,9 @@ void xxx_to_arb( ushort func, ushort pid );
 void arb_to_os9( Boolean last_arbitrate  );
 
 
-Boolean Dbg_SysCall ( ushort pid, regs_type* rp );
-void    debug_comein( ushort pid, regs_type* rp );
-void    debug_return( ushort pid, regs_type* rp, Boolean cwti );
+Boolean Dbg_SysCall ( regs_type* rp, ushort pid );
+void    debug_comein( regs_type* rp, ushort pid );
+void    debug_return( regs_type* rp, ushort pid, Boolean cwti );
 
 // ---- accessible for the C++ world as well ----
 #if defined __cplusplus
