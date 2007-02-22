@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.98  2007/02/14 20:59:01  bfo
+ *    Search DLLs at PLUGINS and one level higher
+ *
  *    Revision 1.97  2007/02/11 14:45:31  bfo
  *    <geCnt> added (MacOS9 reactiveness/idle load balance)
  *
@@ -1217,9 +1220,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     plug_typ* q;
     int       last, i, j;
     
-    last= PLast();
-  //DispList( last );
-    
+    // Get the ones with names first
+                  last= PLast();
     for (i= 0; i<=last; i++) {
           p= &pluginList[ i ];
       if (p->name==NULL) {
@@ -1234,16 +1236,25 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       } // if
     } // for
     
-    last= PLast();
-  //DispList( last );
+    // bubble sort
+                      last= PLast();
+    for   (i= 0;   i<=last; i++) {
+      for (j= i+1; j<=last; j++) {
+        p= &pluginList[ i ];
+        q= &pluginList[ j ];
+        if (strcmp( p->name, q->name )>0)
+          SwapElements( i, j );
+      } // for
+    } // for
     
-           i= 0;
+           i= 0; 
     while (i<=last) {
           p= &pluginList[ i ];
       if (p->numNativeProgs>1) break;
       i++;
     } // while
     
+    // Get the ones with just 1 program first
            j= i+1;
     while (j<=last) {
           p= &pluginList[ j ];
@@ -1263,8 +1274,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
       
       j++;
     } // while
-    
-  //DispList( last );
   } // SortedPluginList
   
 
@@ -1311,6 +1320,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
             p->   numNativeProgs= NumberOfNativeProgs( p );
             p->   is_NativeProg =      Is_NativeProg;
             p->start_NativeProg =   Start_NativeProg;
+            p-> call_Intercept  =    Call_Intercept;
             break;
         } // if
       
@@ -1326,45 +1336,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
     pluginActive= Plugin_Possible( true ); // built-in will not be taken in account
     display_pluginList( withTitle, true );
-    
-    /*    
-                     maxN= 0;
-    if (withBuiltIn) maxN= strlen( bb )-2; // minimum length
-    
-    for (i=0; i<MAXLIST; i++) {
-          p= &pluginList[ i ];
-      if (p->name==NULL) break;
-      
-               len= strlen( p->name );
-      if (maxN<len) maxN= len;
-      
-      Init_NativeProgs( p );
-    } // for
-    maxN+= 2; // apo addition
-
-    if (withTitle) {
-      for (i=0; i<MAXLIST; i++) {
-            p= &pluginList[ i ];
-        if (p->name     ==NULL) break;
-        if (p->name[ 0 ]==NUL) strcpy( nm,  bb       ); 
-        else                 { strcpy( nm, "'"       );
-                               strcat( nm,  p->name  );
-                               strcat( nm,       "'" ); }
-      
-        // convert into version and revision
-        ver= p->pVersion   / (256*256);
-        rev= (ushort)( ver %  256 );
-        ver=           ver /  256;
-      
-        sprintf   ( form, "# %s %s%ds %s %s\n", "%s", "%",-maxN, "V%d.%02x", 
-                             p->nNativeProgs==1 ? "" : "(n=%d)" );
-      
-        upe_printf( form, i==0 ? "Connecting plugin module:"
-                               : "                         ", 
-                             nm, ver,rev, p->nNativeProgs );
-      } // for
-    } // if
-    */
     
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader done\n" ) );
   } // PluginLoader
@@ -1629,21 +1600,23 @@ static Boolean TCALL_or_Exception( process_typ* cp, regs_type* crp, ushort cpid 
 
 
 
-static void debug_retsystask( process_typ* cp, regs_type* crp, ushort cpid )
+static void debug_retsystask( regs_type* crp, ushort cpid )
 {
-	const funcdispatch_entry* fdeP= getfuncentry(cp->lastsyscall);
-	char  *errnam,*errdesc;
+  process_typ* cp= &procs[ cpid ];
+  const        funcdispatch_entry* fdeP= getfuncentry(cp->lastsyscall);
+  char*        errnam;
+  char*        errdesc;
 	
-	uphe_printf("<<< Pid=%02d: OS9 %s returns (from sysTask!): ",cpid,fdeP->name);
+  uphe_printf("<<< Pid=%02d: OS9 %s returns (from sysTask!): ",cpid,fdeP->name);
 	
-	if (cp->oerr) {
-		get_error_strings(cp->oerr, &errnam,&errdesc);
-		upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
-	}
-	else {
-		show_maskedregs(crp,fdeP->outregs);
-		upe_printf( "\n" );
-	}
+  if (cp->oerr) {
+    get_error_strings(cp->oerr, &errnam, &errdesc );
+    upe_printf( "#%03d:%03d - %s\n", cp->oerr>>8,cp->oerr &0xFF,errnam );
+  }
+  else {
+    show_maskedregs( crp, fdeP->outregs );
+    upe_printf( "\n" );
+  }
 } /* debug_retsystask */
 
 
@@ -1751,6 +1724,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
   ushort       cpid;
   process_typ* cp;
   Boolean      cwti, cwti_svd;
+//Boolean      ncwti;
   regs_type*   crp;
   save_type*   svd;
   
@@ -1785,12 +1759,19 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     cwti_svd= cwti;
 
     if (xErr==0) {
+      /*
       if (cp->isIntUtil && 
           cp->state==pSleeping) cwti= false;
       
-      if (cwti && !cp->isIntUtil) cp->masklevel= 1;
-      debug_return( cpid, crp, cwti );
-    
+                               ncwti= cwti && !cp->isIntUtil;
+      if                      (ncwti) cp->masklevel= 1;
+      debug_return( cpid, crp, ncwti );
+      */
+      
+      if (cp->isIntUtil)       cwti= false;
+      if                      (cwti) cp->masklevel= 1;
+      debug_return( crp, cpid, cwti );
+
       if (cp->state==pActive && 
           cp->isIntUtil) break; // for an int utility everything is done already
      } // if                    // only in case of bus error, error handling is required
@@ -1812,7 +1793,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       if (cp->oerr) set_os9_state( cpid, pActive, "" ); // on error, continue with task execution anyway
       if (cp->state==pActive) {
         // process gets active again, report errors to OS9 programm
-        if (Dbg_SysCall( cpid,crp )) debug_retsystask( cp,crp, cpid );
+        if    (Dbg_SysCall( crp, cpid ))
+          debug_retsystask( crp, cpid );
 
         if (cp->oerr) { retword(crp->d[ 1 ])= cp->oerr;
                                 crp->sr |=  CARRY; }
@@ -1889,9 +1871,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       else {
         // TRAP0 = OS-9 system call called
         arbitrate= false; // disallow arbitration by default
-        debug_comein( cpid,crp );
-        
-        exec_syscall( cp->func, cpid,crp, false );
+        debug_comein( crp,      cpid );
+        exec_syscall( cp->func, cpid, crp, false );
           
         // analyze result
         if (debugcheck(dbgSysCall,dbgDeep)) {

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.74  2007/02/11 14:45:31  bfo
+ *    <geCnt> added (MacOS9 reactiveness/idle load balance)
+ *
  *    Revision 1.73  2007/02/04 20:02:58  bfo
  *    "plug_typ" with <pEnabled>,<pDisabled> and <fDLL>
  *
@@ -1053,6 +1056,31 @@ typedef struct {
 
 
 
+//#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+  typedef int    ( *Next_NativeProg_Typ)( int* i, char* progName, char*   callMode );
+  typedef int    (   *Is_NativeProg_Typ)(   const char* progName, void**   modBase );
+  typedef os9err (*Start_NativeProg_Typ)(   const char* progName, void* nativeinfo );
+  typedef os9err (  *Call_Intercept_Typ)( void* routine,    short code, ulong ptr  );
+    
+  // The plugin element
+  typedef struct {
+    char*   name;           // the plugin's name
+    void*   fDLL;           // the plugin's reference
+    long    pVersion;       // the plugin's version
+    int     numNativeProgs; // number of internal progs
+    
+    Boolean pEnabled;       // the plugin is explicitely  enabled
+    Boolean pDisabled;      // the plugin is explicitely disabled
+    
+     Next_NativeProg_Typ  next_NativeProg;
+       Is_NativeProg_Typ    is_NativeProg;
+    Start_NativeProg_Typ start_NativeProg;
+      Call_Intercept_Typ  call_Intercept;
+  } plug_typ;
+//#endif
+  
+  
+
 /* the process descriptor */
 typedef struct {
                 regs_type       os9regs;    /* the process' register stack */
@@ -1065,6 +1093,7 @@ typedef struct {
                 Boolean       isIntUtil;    /* acting as internal utility */
                 Boolean        isNative;    /*    "   "  native program */
                 Boolean        isPlugin;    /*    "   "  plugin program */
+                plug_typ*      plugElem;    /* plugin type reference    */
                 ushort              mid;    /* the process' primary module ID */
                 
                 char intProcName[OS9NAMELEN]; /* the process' name (for internal utilities) */
@@ -1183,26 +1212,6 @@ extern  char*       dirtable   [MAXDIRS];
 
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  typedef int    ( *Next_NativeProg_Typ)( int* i, char* progName, char*   callMode );
-  typedef int    (   *Is_NativeProg_Typ)(   const char* progName, void**   modBase );
-  typedef ushort (*Start_NativeProg_Typ)(   const char* progName, void* nativeinfo );
-    
-  // The plugin element
-  typedef struct {
-    char*   name;           // the plugin's name
-    void*   fDLL;           // the plugin's reference
-    long    pVersion;       // the plugin's version
-    int     numNativeProgs; // number of internal progs
-    
-    Boolean pEnabled;       // the plugin is explicitely  enabled
-    Boolean pDisabled;      // the plugin is explicitely disabled
-    
-     Next_NativeProg_Typ  next_NativeProg;
-       Is_NativeProg_Typ    is_NativeProg;
-    Start_NativeProg_Typ start_NativeProg;
-  } plug_typ;
-  
-  
   /* the include/exclude list for internal commands */
   extern char*    includeList[ MAXLIST ];
   extern char*    excludeList[ MAXLIST ];
