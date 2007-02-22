@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2007/02/14 20:59:55  bfo
+ *    Search DLLs at PLUGINS and one level higher
+ *
  *    Revision 1.47  2007/02/04 20:08:29  bfo
  *    - DLL connect/disconnect implemented here now
  *    - "Plugin_Possible"/"Native_Possible" enhanced
@@ -758,18 +761,27 @@ static os9err int_devs( _pid_, int argc, char** argv )
       first= false;
     } // loop
 
-    // These are the rquired plugin functions:
+
+    /* These are the rquired plugin functions: */
               err= DLL_Func( p->fDLL,   "Module_Version", (void**)        &fModVersion );
     if (!err) err= DLL_Func( p->fDLL,  "Next_NativeProg", (void**)&p-> next_NativeProg );
     if (!err) err= DLL_Func( p->fDLL,    "Is_NativeProg", (void**)&p->   is_NativeProg );
     if (!err) err= DLL_Func( p->fDLL, "Start_NativeProg", (void**)&p->start_NativeProg );
+
+    if (!err) {                                                    
+      p->pVersion      = fModVersion();
+      p->call_Intercept= NULL;
+      
+      if (p->pVersion>=0x03360000)                              
+              err= DLL_Func( p->fDLL,   "Call_Intercept", (void**)&p->call_Intercept );
+    } // if
+
     if  (err) {
       DisconnectDLL( p );
       return err;
     } // if
     
     p->numNativeProgs= NumberOfNativeProgs( p );
-    p->pVersion      = fModVersion();
     return 0;
   } // ConnectDLL
 
@@ -880,21 +892,6 @@ Boolean Plugin_Possible( Boolean hardCheck )
     upe_printf( "    -x      \"    exclude   \" \n" );
   } // native_usage
 
-
-  /*
-  static void native_usage( const char* name )
-  {
-    upe_printf( "Syntax:   %s [<opts>]\n", name );
-    upe_printf( "Function: Switch on/off internal commands\n" );
-    upe_printf( "Options:\n" );
-    upe_printf( "    -e  enable native utilities\n" );
-    upe_printf( "    -d disable native utilities\n" );
-    upe_printf( "\n" );
-    upe_printf( "    -i         display include list\n" );
-    upe_printf( "    -x            \"    exclude   \" \n" );
-    upe_printf( "    -n <prog>  remove <prog> from include/exclude list\n" );
-  } // native_usage
-  */
 
 
   static void display_nativeList( Boolean asInclude )
@@ -1349,7 +1346,7 @@ Boolean Plugin_Possible( Boolean hardCheck )
     os9err         err;
     char*          name= argv[ 0 ];
     process_typ*   cp  = &procs[ pid ];
-    plug_typ*      p;
+  //plug_typ*      p;
     int            i;
     Boolean        isBuiltIn, enabled;
     void*          modBase;
@@ -1362,12 +1359,12 @@ Boolean Plugin_Possible( Boolean hardCheck )
     #endif
 
     for (i= 0; i<MAXLIST; i++) {
-                 p= &pluginList[ i ];
-      if        (p->name     ==NULL) break;
-      isBuiltIn= p->name[ 0 ]==NUL; // built-in has no name
+                 cp->plugElem= &pluginList[ i ];
+      if        (cp->plugElem->name     ==NULL) break;
+      isBuiltIn= cp->plugElem->name[ 0 ]==NUL; // built-in has no name
       
-          enabled= Native_Enabled( p );
-      if (enabled  && p->is_NativeProg( name, &modBase )) {
+          enabled= Native_Enabled( cp->plugElem );
+      if (enabled  && cp->plugElem->is_NativeProg( name, &modBase )) {
         cp->isPlugin= !isBuiltIn; break;
       } // if
     } // for
@@ -1378,16 +1375,17 @@ Boolean Plugin_Possible( Boolean hardCheck )
     #endif
 
     err= E_MNF; // default, if not found
-    if (p->name) {
+    if (cp->plugElem->name) {
       ni.pid     = &currentpid;
       ni.modBase = os9modules[ cp->mid ].modulebase;
       ni.os9_args= (void*)cp->my_args;
       ni.cbP     = &g_cb;
       
-      err= p->start_NativeProg( name, &ni );
+      err= cp->plugElem->start_NativeProg( name, &ni );
     } // if
         
     cp->isPlugin= false;
+    cp->plugElem= NULL;
     return err;
   } // native_calls
 #endif
@@ -1851,7 +1849,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
     debugprintf(dbgUtils,dbgNorm,("# call internal '%s' (before) pid=%d\n", name,pid ));
     
     if (cp->isNative) 
-      debug_return( pid, &cp->os9regs, false );
+      debug_return( &cp->os9regs, pid, false );
     
     #ifdef THREAD_SUPPORT
       if (*asThread) {
