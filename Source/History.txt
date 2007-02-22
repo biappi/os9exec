@@ -1711,6 +1711,19 @@
                             intcommand  : Search DLLs at PLUGINS and one level higher
     3.35  07-02-17  Bfo     V3.35 released
     ------------------- 
+
+          07-02-17  Bfo     Version changed to V3.36
+          07-02-20  Bfo     os9exec_nt  - <call_Intercept> added
+                                        - Alphabetic sorting
+                                        - Parameters reordered
+          07-02-20  Bfo     plugin.def  : "Call_Intercept" added                             
+          07-02-20  Bfo     funcdispatch: Parameters reordered
+          07-02-20  Bfo     native_interface : "Call_Intercept" added
+          07-02-20  Bfo     procstuff   : sigp->plugElem->call_Intercept
+          07-02-20  Bfo     intcommand  : <call_Intercept> and parameter adaptions
+          
+    3.36  07-??-??  Bfo
+    ------------------- 
 */
 
 
