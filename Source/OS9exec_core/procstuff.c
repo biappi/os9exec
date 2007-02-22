@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2007/02/11 14:50:39  bfo
+ *    DoWait() / <geCnt> balancer added
+ *
  *    Revision 1.55  2007/01/28 21:58:51  bfo
  *    <isPtoC> renamed to <isNative>
  *
@@ -299,10 +302,11 @@ void init_processes()
         for (j=0; j<   7; j++) pd->FPExStk [j]= NULL;
      // for (j=0; j<1168; j++) pd->_procstk[j]= NUL; /* invisible at DevPak von 68K OS-9 V1.2 */
         
-        set_os9_state( k, pUnused, "init_process" );   /* invalidate this process  */
-        procs[k].isIntUtil= false;
-        procs[k].isPlugin = false;
-        prDBT[k]= 0;                   /* and also the table entry */
+        set_os9_state( k, pUnused, "init_process" ); /* invalidate this process  */
+        procs[ k ].isIntUtil= false;
+        procs[ k ].isPlugin = false;
+        procs[ k ].plugElem = NULL;
+        prDBT[ k ]= 0;                   /* and also the table entry */
     } /* for */
     
                                   s= (short*)prDBT;
@@ -614,16 +618,21 @@ os9err kill_process( ushort pid )
 
 
 /* send a signal to a process */
-os9err send_signal(ushort spid, ushort signal)
+os9err send_signal( ushort spid, ushort signal )
 {
+  #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+    os9err err= 0;
+    short  sv;
+  #endif
+	
   process_typ* cp  = &procs[currentpid]; /* ptr to my procs dsc */
   process_typ* sigp;                     /* ptr to procs dsc to which the signal will be sent */
   sig_typ*     s   = &sig_queue;
   save_type*   svd;
   int          k;
-  Boolean      wRead;
+  Boolean      wRead, ptocOK;
   regs_type*   v;
-	
+  
   /* the broadcast (send to pid=0) is implemented here */
   if (currentpid!=0 && spid==0) {
     for (k=1; k<MAXPROCESSES; k++) {
@@ -689,9 +698,6 @@ os9err send_signal(ushort spid, ushort signal)
   cp->icpt_pid   = spid;    /* keep it save */
   cp->icpt_signal= signal;
   
-//if (procs[cp->icpt_pid].isIntUtil)
-//  printf( "%d wer sendet denn da %d\n", currentpid, signal ); /* %bfo% */
-        
   /* first, wakeup process, if sleeping */
   if (sigp->state==pSleeping &&
      !sigp->isIntUtil) {
@@ -702,7 +708,6 @@ os9err send_signal(ushort spid, ushort signal)
     
     sigp->way_to_icpt = true;   /* activate both */
       cp->way_to_icpt = true;
-  //if (!cp->isIntUtil) cp->way_to_icpt= true;
     
     arbitrate= false;           /* don't arbitrate, continue with woken-up process */
     
@@ -731,11 +736,17 @@ os9err send_signal(ushort spid, ushort signal)
     arbitrate= false;
     sigp->pd._signal= os9_word(signal);      /* signal currently being processed */
 
+    #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+      ptocOK= !sigp->isIntUtil || ( sigp->plugElem && 
+                                    sigp->plugElem->call_Intercept );
+    #else
+      ptocOK= !sigp->isIntUtil;
+    #endif
+      
     /* now, check if target can catch signal */
-    if (sigp->pd._sigvec!=0 &&
-       !sigp->isIntUtil) {          /* prepare execution of intercept routine */
-        sigp->way_to_icpt= true;    /* activate both */
-          cp->way_to_icpt= true;
+    if   (sigp->pd._sigvec!=0 && ptocOK) {
+          sigp->way_to_icpt= true;    /* activate both */
+            cp->way_to_icpt= true;
       
       if (sigp->state==pWaitRead) {
                           svd= &sigp->savread; 
@@ -761,7 +772,34 @@ os9err send_signal(ushort spid, ushort signal)
       sigp->os9regs.a[6]= sigp->icpta6;
       sigp->os9regs.d[1]= signal;
       sigp->icpt_signal = signal;  
- 
+
+      #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
+        if (sigp->isIntUtil) {      /* prepare execution of intercept routine */
+            sigp->way_to_icpt= false; /* don't handle it as intercept */
+              cp->way_to_icpt= false;
+              
+          sv= currentpid;
+              currentpid= spid;                       sigp->masklevel= 1;
+          debug_return                              ( sigp, spid, true );
+          err= sigp->plugElem->call_Intercept( (void*)sigp->os9regs.pc,
+                                              signal, sigp->icpta6 );
+                                              
+          if (sigp->state!=pDead) {
+            if (err) {
+              sigp->exiterr= err; /* return signal as abort code */
+              kill_process( spid );
+            } 
+            else {             sigp->func= F_RTE;
+              debug_comein  ( &sigp->os9regs, spid );
+              err= OS9_F_RTE( &sigp->os9regs, spid );
+            } // if
+          } // if
+          
+          currentpid= sv;          
+          return 0;
+        } // if
+      #endif
+      
     //debugprintf(dbgSysCall,dbgNorm,("# PREP SIGNAL intUtil=%d pid=%d spid=%d signal=%d\n", 
     //                                   cp->isIntUtil, sigp->pd._id, spid, signal ));
 
