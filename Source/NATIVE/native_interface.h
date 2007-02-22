@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2007/01/28 23:13:41  bfo
+ *    NATIVE "hello_world" added
+ *
  *
  */
 
@@ -128,6 +131,12 @@ _ENTRY_ int Is_NativeProg( const char* progName, void** modBase );
  * <nativeInfo> contains <pid> reference, <modBase>, <os9_args> and callback structure
  */
 _ENTRY_ os9err Start_NativeProg( const char* progName, void* nativeinfo );
+
+
+/*
+ * Intercept callback
+ */
+_ENTRY_ os9err Call_Intercept( void* routine, short code, ulong ptr );
 
 
 #ifdef __cplusplus

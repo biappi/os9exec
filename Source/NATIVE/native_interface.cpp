@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.4  2007/02/03 12:17:09  bfo
+ *    - "No_Module" assignment only, if ok
+ *    - t_size -> int
+ *    - str copy adaption
+ *
  *    Revision 1.3  2007/02/02 12:54:56  bfo
  *    "No_Module" assignment
  *
@@ -215,6 +220,24 @@ os9err Start_NativeProg( const char* progName, void* nativeInfo )
   
   return err;
 } // Call_NativeProg
+
+
+
+os9err Call_Intercept( void* routine, short code, ulong ptr )
+{
+  os9err err= 0;
+
+  try {
+    typedef void  (*IcptRoutine)( short code, ulong ptr );
+    IcptRoutine p= (IcptRoutine)routine;
+                p( code, ptr );
+  }
+  catch( unsigned short exiterr ) { // the only way to come back from F$Exit
+                   err= exiterr;  
+  }
+  
+  return err;
+} // Call_Intercept
 
 
 #ifdef MACOSX
