@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2007/01/28 21:33:40  bfo
+ *    'ustrcmp' made invisible / DirEntry dbgNorm -> dbgDetail
+ *
  *    Revision 1.53  2007/01/07 13:17:25  bfo
  *    Use MACOS9 define
  *
@@ -1287,42 +1290,43 @@ void EatBack( char* pathname )
 
 
 os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt, 
-              ulong *id, Boolean isFirst, Boolean useInodes )
+              ulong *id, long dirid, char* fName, Boolean isFirst, Boolean useInodes )
 {
     #ifdef MACOS9
-    #pragma unused(spP,dEnt,isFirst,useInodes)
+      #pragma unused(spP,dEnt,isFirst,useInodes)
     #endif
 
-    #if defined windows32 || defined MACOS9 || defined linux
+    #if defined windows32 || defined MACOS9 || defined linux || defined __MACH__
       #define ATTR_DIR 0x0010
-      char    tmp[MAX_PATH];
-      int     ii;
-      char**  m;
-      Boolean isNew= false;
-    #endif
+      char      tmp[MAX_PATH];
+      int       ii;
+      direntry* m;
+      Boolean   isNew= false;
     
-    #ifdef linux
-      if (useInodes) {
-        if (spP!=NULL) {
-        //if (dEnt!=NULL) printf( "gugus: '%s'\n", dEnt->d_name );
+      #if defined linux || defined __MACH__
+        // .. when using Inodes
+        if (useInodes) {
+          if (spP!=NULL) {
+            while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
+                   dEnt= ReadTDir( spP->dDsc ); 
+            } // while
+          } // if
       
-          while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
-                 dEnt= ReadTDir( spP->dDsc ); 
-          } // while
-        } // if
-      
-        if (dEnt==NULL) *id= 0;
-        else            *id= dEnt->d_ino;
-        
-        return 0;
-      }
-    #endif
+          if (dEnt==NULL) *id= 0;
+          else            *id= dEnt->d_ino;
+    
+          #if defined __MACH__
+            if (*id==1) *id= 2; // adapt for top dir searching
+          #endif
+          
+          return 0;
+        }
+      #endif
 
-    #if defined windows32 || defined MACOS9 || defined linux
       strcpy( tmp,pathname );
     //printf( "tmp='%s'\n", tmp );
       
-      #if defined windows32 || defined linux
+      #if defined windows32 || defined linux || defined __MACH__
         if      (tmp[strlen(tmp)-1]!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
         strcat ( tmp, dEnt->d_name );
         EatBack( tmp );
@@ -1332,29 +1336,30 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
       
       *id= (ulong)-1; /* undefined */
       for (ii=0;ii<MAXDIRS-1;ii++) {
-               m= &dirtable[ii];
-          if (*m==NULL) {
-              *m= get_mem( strlen(tmp)+1 );
-              strcpy( *m,tmp );
+              m= &dirtable[ii];
+          if (m->ident==NULL) {
+                      m->ident= get_mem( strlen( tmp )+1 );
+              strcpy( m->ident,                  tmp );
+              //      m->dirid= dirid;
+                      m->fName= get_mem( strlen( fName )+1 );
+              strcpy( m->fName,                  fName );
+             
           //  dirtable[ii+1]= NULL; /* prepare the next undefined field */
               
               isNew= true;
           } /* if */
-              
-          if (ustrcmp( *m,tmp )==0) {
-            //#ifdef windows32
-            //  *id= (ulong)m;
-            //#else
-                *id= (ulong)ii+1;
-            //#endif  
-                
-              break;
+          
+          if (dirid!=0) m->dirid= dirid; 
+          if (ustrcmp ( m->ident, tmp )==0) {
+            *id= (ulong)ii+1;
+            break;
           } /* if */
       } /* for */
       if (*id==(ulong)-1) return E_NORAM;
           
     //printf( "'%s' %d %s\n", tmp, *id, isNew ? "new":"exists" );
-      
+    
+    /*  
     #elif defined linux_INODE
       if (spP!=NULL) {
       //if (dEnt!=NULL) printf( "gugus: '%s'\n", dEnt->d_name );
@@ -1366,10 +1371,11 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
       
       if (dEnt==NULL) *id= 0;
       else            *id= dEnt->d_ino;
+    */
     
-    #elif defined __MACH__
-      *id= dEnt->d_ino;
-      if (*id==1) *id= 2; // adapt for top dir searching
+  //#elif defined __MACH__
+  //  *id= dEnt->d_ino;
+  //  if (*id==1) *id= 2; // adapt for top dir searching
       
     #else
       *id= 0;
@@ -1594,6 +1600,7 @@ int stat_( const char* pathname, struct stat *buf )
 
 
 Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useInodes )
+// Only Linux StartDir uses useInodes = true
 {
   Boolean ok= false;
 
@@ -1623,7 +1630,7 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
             dEnt= ReadTDir( d );
         if (dEnt==NULL) break;
       //printf( "DirName='%s'\n", pathname );
-        FD_ID( NULL,pathname,dEnt, &fd, false,useInodes );
+        FD_ID( NULL,pathname,dEnt, &fd, 0, "", false,useInodes );
               
       //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
         if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
@@ -1646,7 +1653,7 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
             q[ len-6 ]= 0;
           
           //upo_printf( "q='%s' sv='%s'\n", q, sv );
-		        err= stat_ ( q, &qInfo ); if (err) break;
+		    err= stat_ ( q, &qInfo ); if (err) break;
           //upo_printf( "q='%s' ino=%d err=%d\n", q, qInfo.st_ino, err );
               
                 d= (DIR*)opendir( pathname ); /* search for the current inode */
@@ -1715,7 +1722,7 @@ ulong My_Ino( const char* pathname )
               if (dEnt==NULL) break;
               if (ustrcmp(dEnt->d_name,q)==0) {
               //printf( "MyIno='%s'\n", p );
-                FD_ID( NULL, p,dEnt, &ino, false,false );
+                FD_ID( NULL, p,dEnt, &ino, 0, "", false,false );
                 break;
               }
           } /* while */

@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2007/01/28 21:34:04  bfo
+ *    'ustrcmp' made invisible
+ *
  *    Revision 1.28  2007/01/07 13:17:07  bfo
  *    Use MACOS9 define
  *
@@ -169,7 +172,7 @@ Boolean FileFound    ( const char* pathname );
 void    CutUp( char* pathname, const char* prev );
 void    EatBack                      ( char* pathname );
 os9err  FD_ID( syspath_typ* spP, const char* pathname, 
-               dirent_typ* dEnt, ulong *id, Boolean isFirst, Boolean useInodes );
+               dirent_typ* dEnt, ulong *id, long dirid, char* fName, Boolean isFirst, Boolean useInodes );
 
 
 #ifdef win_unix
