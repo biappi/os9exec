@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.35  2007/01/28 21:23:03  bfo
+ *    err=1: let the path open, this is not an error
+ *
  *    Revision 1.34  2007/01/02 11:30:41  bfo
  *    2007 text adaption
  *
@@ -589,7 +592,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     if (exedir) { r= &cp->x; ptx= "exec"; c= 'x'; }
     else        { r= &cp->d; ptx= "data"; c= 'd'; }
                 
-    debugprintf(dbgFiles,dbgNorm,("# parsepathext(data): pid=%d, %c.volID=%d, %c.dirID=%ld\n",
+    debugprintf(dbgFiles,dbgNorm,("# parsepathext(%s): pid=%d, %c.volID=%d, %c.dirID=%ld\n",
               ptx, pid, c,r->volID, c,r->dirID ));                                      
     oserr= HSetVol( NULL, r->volID,   r->dirID ); if (oserr) return host2os9err(oserr,E_BPNAM);
 
