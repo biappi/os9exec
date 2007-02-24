@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.99  2007/02/22 23:03:15  bfo
+ *    - <call_Intercept> added
+ *    - Alphabetic sorting
+ *    - Parameters reordered
+ *
  *    Revision 1.98  2007/02/14 20:59:01  bfo
  *    Search DLLs at PLUGINS and one level higher
  *
@@ -415,8 +420,11 @@ sig_typ     sig_queue;
 alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
+
 /* the dir table */
-char*       dirtable   [MAXDIRS];
+direntry    dirtable[MAXDIRS];
+//char*     dirtable[MAXDIRS];
+
 
 /* the include/exclude/dll list for internal commands */
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
@@ -1772,9 +1780,13 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       if                      (cwti) cp->masklevel= 1;
       debug_return( crp, cpid, cwti );
 
-      if (cp->state==pActive && 
-          cp->isIntUtil) break; // for an int utility everything is done already
-     } // if                    // only in case of bus error, error handling is required
+      if (cp->isIntUtil &&
+         (cp->state==pActive ||
+          cp->state==pWaitRead)) break;
+
+    //if (cp->state==pActive && 
+    //    cp->isIntUtil) break; // for an int utility everything is done already
+    } // if                     // only in case of bus error, error handling is required
     
     // --- make sure, that good old MacOS gets its time, too
         my_tick= GetSystemTick();
@@ -1857,7 +1869,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 				
       // in case of a unsuccessful read just repeat the call with saved registers
       // correct exception handling
-      if (cp->state==pWaitRead) {
+      if (cp->state==pWaitRead && !cp->isIntUtil) {
         // registers of the last command will be restored
         cp->os9regs= svd->r;
         cp->vector = svd->vector;
@@ -2244,7 +2256,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
   /* no table entries at the beginning */
-  for (ii= 0; ii<MAXDIRS; ii++) dirtable[ ii ]= NULL;
+  for (ii= 0; ii<MAXDIRS; ii++) dirtable[ ii ].ident= NULL;
 
   debug_prep();
   debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 

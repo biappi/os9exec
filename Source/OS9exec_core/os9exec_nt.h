@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.75  2007/02/22 23:03:15  bfo
+ *    - <call_Intercept> added
+ *    - Alphabetic sorting
+ *    - Parameters reordered
+ *
  *    Revision 1.74  2007/02/11 14:45:31  bfo
  *    <geCnt> added (MacOS9 reactiveness/idle load balance)
  *
@@ -329,7 +334,7 @@
 #define MAXPRINTFLEN    500
 #define ICMDPBUFF     20480 /* pipe buffer for internal commands */
 #define MAX_PICTS         8 /* max number of picts to be displayed at /vmod display */
-#define MAXTRIES        100 /* max tries to delete a file */
+#define MAXTRIES_DEL    100 /* max tries to delete a file */
 
 #ifndef windows32
   #define MAX_PATH     1024
@@ -1207,8 +1212,15 @@ extern  sig_typ     sig_queue;
 extern  alarm_typ   alarms     [MAXALARMS];
 extern  alarm_typ*  alarm_queue[MAXALARMS];
 
+
 /* the dir table */
-extern  char*       dirtable   [MAXDIRS];
+typedef struct {
+  char* ident;
+  long  dirid;
+  char* fName;
+} direntry;
+
+extern direntry dirtable[MAXDIRS];
 
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
