@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2007/02/22 23:06:28  bfo
+ *    Parameters reordered
+ *
  *    Revision 1.45  2007/01/28 21:30:45  bfo
  *    'Regs_68k' introduced, 'built-in' renamed to 'native'
  *
@@ -744,6 +747,7 @@ os9err exec_syscall( ushort func, ushort pid, regs_type* rp, Boolean withinIntUt
 os9err trap0_call( ushort code, Regs_68k* regs )
 {
   const int RegsSize= 16*sizeof( ulong );
+  process_typ* cp= &procs[ currentpid ];
    
   os9err    err;
   regs_type rp;
@@ -753,9 +757,13 @@ os9err trap0_call( ushort code, Regs_68k* regs )
     arbitrate= true;
   } // if
 
-  MoveBlk( (void*)&rp.d[ 0 ], (void*)regs, RegsSize ); // copy forth ...
-  err= exec_syscall( code, currentpid, &rp, true );
-  MoveBlk( (void*)regs, (void*)&rp.d[ 0 ], RegsSize ); // ... and back
+  do {
+    MoveBlk( (void*)&rp.d[ 0 ], (void*)regs, RegsSize ); // copy forth ...
+  
+    err= exec_syscall( code, currentpid, &rp, true );
+  } while (cp->state==pWaitRead);
+  
+  MoveBlk  ( (void*)regs, (void*)&rp.d[ 0 ], RegsSize ); // ... and back
   
   return err;
 } // trap0_call
