@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.39  2007/02/14 20:57:07  bfo
+ *    win32 remove will be done now with /A
+ *
  *    Revision 1.38  2007/02/11 14:49:01  bfo
  *    "rmdir" adaption
  *
@@ -568,41 +571,81 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
 
 
+#ifdef MACOS9
+  // Get deP->fdSect from <volid>,<objid>,<dirid>
+  static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
+  {
+    dirent_typ* dEnt= NULL;
+    char hashV[ 80 ];
+    char fName[ OS9NAMELEN ];
+    
+    if (volid>=       0 || 
+        volid< VOLIDMIN ||
+        objid>=  IDSIGN || 
+        objid<  -IDSIGN) {
+      strcpy( fName, deP->name );
+      fName[ strlen(fName)-1 ] &= 0x7f;
+        
+    //sprintf    ( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
+      sprintf    ( hashV, "%d %d", -volid, objid );
+      FD_ID( NULL, hashV, dEnt, &objid, dirid, &fName, false,false );
+      debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
+                                           objid, -IDSIGN,IDSIGN-1, deP->name ));
+      debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: hashV='%s'\n", hashV ));
+                      
+      deP->fdsect= objid; /* assign the new value */
+      return;
+    } /* if */
+
+    deP->fdsect = (volid & VOLIDMASK) << IDSHIFT;
+    deP->fdsect|=  objid &    IDMASK;
+  } /* assign_fdsect */
+#endif
+
+
+
 os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 {
-    os9err err= pRBFopt( pid,spP, buffer );
+  os9err err= pRBFopt( pid,spP, buffer );
+  ulong  fd;
+  ulong* l;
     
-    #ifdef MACOS9
-      FSSpec*    spc= &spP->u.disk.spec;
-      CInfoPBRec cipb;
+  #ifdef MACOS9
+    FSSpec*         spc= &spP->u.disk.spec;
+    CInfoPBRec      cipb;
+    os9direntry_typ dEnt;
     
-      short  volid;
-      long   objid;
-      ulong  fd;
-      ulong* l;
+    short volid;
+    long  objid;
       
-      err= getCipb( &cipb,spc );  
+    err= getCipb( &cipb, spc );  
     
-            volid= spc->vRefNum; /* get volume ID */
-      fd=  (volid & VOLIDMASK) << IDSHIFT;
-            objid= cipb.hFileInfo.ioDirID;
-      fd |= objid & IDMASK;
+    volid= spc->vRefNum;           // get volume ID
+    objid= cipb.hFileInfo.ioDirID; // get object ID
+ 
+    strcpy        ( dEnt.name, spP->name );
+    assign_fdsect( &dEnt, volid, objid, 0 );
+    fd=             dEnt.fdsect;
+    
+    /*
+          volid= spc->vRefNum; // get volume ID
+    fd=  (volid & VOLIDMASK) << IDSHIFT;
+          objid= cipb.hFileInfo.ioDirID;
+    fd |= objid & IDMASK;
+    */
+    
+  #elif defined win_unix
+    dirent_typ  dEnt;
+  //ulong       fdpos;
+  //ulong*      l;
 
-      l= &buffer[ PD_FD ]; *l= os9_long(fd)<<BpB; /* LSN of file */
-      
-    #elif defined win_unix
-      dirent_typ  dEnt;
-      ulong       fdpos;
-      ulong*      l;
-
-      strcpy( dEnt.d_name, spP->name );
-      FD_ID ( spP,spP->fullName, &dEnt, &fdpos, false,false );
-    //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
-      
-      l= (ulong*)&buffer[ PD_FD ]; *l= os9_long(fdpos); /* LSN of file */
-    #endif
+    strcpy( dEnt.d_name, spP->name );
+    FD_ID ( spP, spP->fullName, &dEnt, &fd, 0, "", false,false );
+  //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
+  #endif
     
-    return err;
+  l= (ulong*)&buffer[ PD_FD ]; *l= os9_long( fd )<<BpB; /* LSN of file */
+  return err;
 } /* pFopt */
 
 
@@ -645,24 +688,38 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       
     #elif defined MACOSX
       /* MacOSX has a very special structure */
+      strcpy( volname, "Volumes" );
+      
+      /*
+      #define VVP "Volumes"
       #define VV "/Volumes/"
+      
       char* w= &spP->fullName;
       char* v= w;
 
       if (ustrncmp( w,VV, strlen(VV) )==0) {
-        if  (*v==PATHDELIM) v++; // cut slash at the beginning
-        strcpy( volname, v );
+        strcpy( volname, VVP );
         
-        w= volname + strlen(VV)-1;
-        v= strstr( w, PATHDELIM_STR );
-        if (v!=NULL) *v= NUL;   /* Keep "/Volumes/XXX" */
+      //if  (*v==PATHDELIM) v++; // cut slash at the beginning
+      //strcpy( volname, v );
+      //
+      //w= volname + strlen(VV)-1;
+      //v= strstr( w, PATHDELIM_STR );
+      //if (v!=NULL) *v= NUL;   // Keep "/Volumes/XXX"
       } // if 
-      else {
+      else
         strcpy( volname, "" );
+      */
         
      // v= &volname[ strlen(volname)-1 ];
      // if (*v==PATHDELIM) *v= NUL; // cut slash at the end
-      }
+      
+      /*  
+      char* v;
+      strcpy( volname, "" );
+      v=     &volname[ strlen(volname)-1 ];
+      if (*v==PATHDELIM) *v= NUL; // cut slash at the end
+      */
       
     #else
       return E_UNKSVC;
@@ -1199,11 +1256,11 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
 
       /* unfortunately the Mac system needs some time to be ready   */
       /* for deleting an empty directory => make some timeout loops */
-      for (kk=0; kk<MAXTRIES; kk++) {
-               oserr= FSpDelete( &delSpec );
-          if (!oserr) break;
-          HandleEvent();
-      }
+      for (kk=0; kk<MAXTRIES_DEL; kk++) {
+             oserr= FSpDelete( &delSpec );
+        if (!oserr) break;
+        HandleEvent();
+      } // for
     
     #elif defined win_unix
       err     = AdjustPath( pathname,adapted, false ); if (err) return err;
@@ -1222,7 +1279,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       #error I_Delete not yet implemented
     #endif
     
-    return host2os9err(oserr,E_SHARE);  
+    return host2os9err( oserr,E_SHARE );  
 } /* pFdelete */
 
 
@@ -1734,7 +1791,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
 } /* setFD */
 
 
-/* get file descriptor for HFS object */
+/* get file descriptor for object */
 os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 {
     void* fdl;
@@ -1757,12 +1814,12 @@ os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
     #endif
     
     getFD( fdl, loword(*maxbytP),buffer );
-    debugprintf(dbgFiles,dbgNorm,("# pHgetFD: no longer alive %d\n"));
+    debugprintf(dbgFiles,dbgNorm,("# pHgetFD: no longer alive\n"));
     return 0;
 } /* pHgetFD */
 
 
-/* set file descriptor for HFS object */
+/* set file descriptor for object */
 /* %%% currently only the file date will be set */
 os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
 {
@@ -1807,34 +1864,52 @@ os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
 
 
 #ifdef MACFILES
-static Boolean check_vod( short *volid, long *objid, long *dirid, char* fN )
-{
+  static Boolean check_vod( short *volid, long *objid, long *dirid, char* fN )
+  {
     Boolean conv= false;
-    char    *m, *a, *b, *c, v[ 20 ];
+    direntry* m;
+    char*     a;
+    char*     b;
+    char      v[ 20 ];
+  //char*     c;
     
-    if (*volid==0  &&   *objid<MAXDIRS) {
-            m= dirtable[*objid-1];
-        if (m!=NULL) {
-            sprintf( v, "%c", m[ 0 ] );
-            *volid= -atoi( v );
+    if (*volid==0   &&  *objid<MAXDIRS) {
+           m= &dirtable[ *objid-1 ];
+      if  (m->ident!=NULL) {
+        a= m->ident;
+        b= strstr( a," " ); b++;
+        
+        memset( v, 0, 20    );
+        memcpy( v, a, b-a-1 ); 
+        
+        *volid= -atoi( v );
+        *objid=  atoi( b );
+        *dirid=     m->dirid;
+        strcpy( fN, m->fName );                       
+     
+        /*
+        sprintf( v, "%c", m->ident[ 0 ] );
+        *volid= -atoi( v );
             
-            a= strstr( m," " ); a++;
-            b= strstr( a," " ); b++;
-            c= strstr( b," " ); c++;
+        a= strstr( m," " ); a++;
+        b= strstr( a," " ); b++;
+        c= strstr( b," " ); c++;
+        
+        memset( v, 0, 20    );
+        memcpy( v, a, b-a-1 ); *objid=  atoi( v );
             
-            memset( v, 0, 20    );
-            memcpy( v, a, b-a-1 ); *objid=  atoi( v );
+        memset( v, 0, 20    );
+        memcpy( v, b, c-b-1 ); *dirid=  atoi( v );
             
-            memset( v, 0, 20    );
-            memcpy( v, b, c-b-1 ); *dirid=  atoi( v );
+        strcpy( fN,c );
+        */
             
-            strcpy( fN,c );
-            conv= true;
-        }
-    }
+        conv= true;
+      } // if
+    } // if
     
     return conv;
-} /* check_vod */
+  } /* check_vod */
 #endif
 
 
@@ -1846,6 +1921,8 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
     void* fdl;
     
     #ifdef MACFILES
+      #pragma unused(spP)
+      
       union {
           CInfoPBRec    cipb;
           HParamBlockRec hpb;
@@ -1865,12 +1942,11 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
 
     
     #ifdef MACFILES
-      #pragma unused(spP)
       /* extract volid and file/dirid */    /* if (volid & VOLIDSIGN) volid |= VOLIDEXT; */
-      volid= (*fdinf >> IDSHIFT) & VOLIDMASK; if (volid != 0       ) volid |= VOLIDEXT;
-      objid=  *fdinf &  IDMASK; if (objid & IDSIGN) objid |= IDEXT;
+      volid= (*fdinf >> IDSHIFT) & VOLIDMASK; if (volid != 0    ) volid |= VOLIDEXT;
+      objid=  *fdinf &  IDMASK;               if (objid & IDSIGN) objid |= IDEXT;
 
-      conv= check_vod( &volid,&objid,&dirid, &fN );
+      conv= check_vod( &volid, &objid, &dirid, &fN );
       
       /* try to locate the file/dir */
       /* --- first assume that it is a file and try to resolve ID */
@@ -1933,7 +2009,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
       return E_UNKSVC;
     #endif
     
-    getFD( fdl, loword(*maxbytP),buffer );
+    getFD( fdl, loword(*maxbytP), buffer );
     return 0;
 } /* pHgetFDInf */
 
@@ -2027,48 +2103,22 @@ os9err pDclose( _pid_, syspath_typ* spP )
     #ifdef win_unix
       DIR* d= spP->dDsc;
       if  (d!=NULL) { err= closedir( d ); spP->dDsc= NULL; }
-      debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", 
-                                        spP->fullName,err ));
+      debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", spP->fullName, err ));
     #else
-      #pragma unused(spP)
+      debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", spP->name,     err ));
     #endif
     
     return err;
 } /* pDclose */
 
 
-
-
 #ifdef MACOS9
-static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
-{
-    dirent_typ* dEnt= NULL;
-    char hashV[ 80 ];
-    char fName[ OS9NAMELEN ];
-
-    if (objid>= IDSIGN || 
-        objid< -IDSIGN) {
-        strcpy( fName, deP->name );
-        fName[ strlen(fName)-1 ] &= 0x7f;
-        
-        sprintf    ( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
-        FD_ID( NULL, hashV, dEnt, &objid, false,false );
-        debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
-                                             objid, -IDSIGN,IDSIGN-1, deP->name ));
-                      
-        deP->fdsect= objid; /* assign the new value */
-    } /* if */
-
-    deP->fdsect |= objid & IDMASK;
-} /* assign_fdsect */
-
-
-static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *spP )
-/* get directory entry referred to by index
- *  index=0 returns parent     ("..")
- *  index=1 returns dir itself (".")
- */
-{
+  static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *spP )
+  /* get directory entry referred to by index
+   *  index=0 returns parent     ("..")
+   *  index=1 returns dir itself (".")
+   */
+  {
     os9err  err;
     OSErr   oserr;
     FSSpec* spc= &spP->u.disk.spec;
@@ -2087,12 +2137,12 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
     /* set the vrefnum of the file or dir */
     volid= spc->vRefNum; /* get volume ID */
                                        /* (volid>VOLIDSIGN-1 || volid<-VOLIDSIGN)) */
-    if (debugcheck(dbgAnomaly,dbgNorm) && (volid>=0          || volid< VOLIDMIN)) {
-        uphe_printf("get_dir_entry: vRefnum=%hd out of 3-bit range\n",volid); 
-    }
+  //if (debugcheck(dbgAnomaly,dbgNorm) && (volid>=0          || volid< VOLIDMIN)) {
+  //    uphe_printf("get_dir_entry: vRefnum=%hd out of 3-bit range\n",volid); 
+  //} // if
 
-    deP->fdsect= (volid & VOLIDMASK) << IDSHIFT;
-    memset(deP->name, 0,DIRNAMSZ); /* clear before using */
+    //      deP->fdsect= (volid & VOLIDMASK) << IDSHIFT;
+    memset( deP->name, 0, DIRNAMSZ ); /* clear before using */
 
     /* now get the entry */
     if (index==0) {
@@ -2103,9 +2153,8 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
         if (objid==fsRtParID) {
             /* this points to the (nonexistant) "root of root" */
             objid= fsRtDirID; /* let parent entry point again to the root */
-        }
-
-        dirid= objid;
+        } // if
+                                        dirid= objid;
         assign_fdsect( deP, volid,objid,dirid );
         debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='..', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
                                            index, volid, dirid, deP->fdsect ));
@@ -2120,8 +2169,8 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
         if (index==1) {
             /* current directory is the SECOND entry */
             strcpy(deP->name,"\xAE");
-            objid= dirid;
-            assign_fdsect( deP, volid,objid,dirid );
+                                      objid= dirid;
+            assign_fdsect( deP, volid,objid, dirid );
             debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='.', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
                                                index, volid, objid, deP->fdsect ));
         }
@@ -2156,7 +2205,7 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
             
             deP->name[n-1] |= 0x80; /* set old-style terminator */
             if (pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask) {
-                objid= pbu.cipb.dirInfo.ioDrDirID;
+                                          objid= pbu.cipb.dirInfo.ioDrDirID;
                 assign_fdsect( deP, volid,objid,dirid );
                 debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: dirname='%#s', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
                                                    index, fName, volid, objid, deP->fdsect ));
@@ -2179,7 +2228,7 @@ static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *sp
     } /* if (index==0) */
 
     return 0;
-} /* get_dir_entry */
+  } /* get_dir_entry */
 #endif
 
 
@@ -2196,14 +2245,12 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
     
   ulong  cnt, nbytes;
   os9direntry_typ os9dirent;
-//int ii;
   
   #ifdef win_unix
     dirent_typ*  dEnt;
     int          len;
     ulong        fdpos;
     Boolean      topFlag= false;
-  //Boolean      de_call;
       
     #ifdef windows32
       dirent_typ dField;
@@ -2235,91 +2282,37 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
         } // if
       #endif
           
-    //printf( "nth=%d err=%d '%s' '%s'\n", 
-    //         index, err, spP->fullName, dEnt==NULL ? "<NULL>" : dEnt->d_name );
-                   
       if      (err) {
         if    (err==E_EOF && cnt<*n) break; // EOF can be handled !!
         return err;
       } // if
           
-        /* ".." and "." are swapped in UXIX !! */
-        //if (*pos-offs==DIRENTRYSZ) { /* if 2nd entry */
-        //  strncpy( (char*)&os9dirent.name,".", DIRNAMSZ );
-        //  fdpos= spP->u.disk.u.dir.fdcur; /* get current dir info */
-        //}
-        //else {
-            /*
-            if (index>1 || ( dEnt!=NULL &&
-                     strcmp( dEnt->d_name,".." )!=0 &&
-                     strcmp( dEnt->d_name,"."  )!=0 )) {
-              dEnt= ReadTDir( spP->dDsc );         
-            } // if
-            
-            // ignore ".AppleDouble"
-            while (dEnt!=NULL && ustrcmp( (char*)dEnt->d_name,AppDo )==0) {
-                   dEnt= ReadTDir( spP->dDsc );
-            } // while
-            */
-
-            /*
-            do {     dEnt= ReadTDir( spP->dDsc );
-            } while (dEnt!=NULL && ustrcmp( (char*)dEnt->d_name,AppDo )==0);
-            */
-            /* ignore ".AppleDouble" */
-            
-            /*  
-            while (true) { // ignore ".AppleDouble"
-                     dEnt= ReadTDir( spP->dDsc );
-                 if (dEnt==NULL ||
-                     ustrcmp( (char*)dEnt->d_name,AppDo )!=0 ) break;
-            } // while
-            */
-            
-            if (*pos-offs==0) { /* if 1st entry, ".." expected */
-              #ifdef windows32
-                if (dEnt==NULL) {
-                    dEnt= &dField;
-                    strcpy( dEnt->d_name,"" ); /* virtual field */
-                } // if
+      if (*pos-offs==0) { /* if 1st entry, ".." expected */
+        #ifdef windows32
+          if (dEnt==NULL) {
+              dEnt= &dField;
+              strcpy( dEnt->d_name,"" ); /* virtual field */
+          } // if
                     
-                if (dEnt!=NULL &&
-                  ustrcmp( (char*)dEnt->d_name,"." )!=0 ) {
-                  strcpy( dEnt->d_name,"." );
-                  topFlag= true;
-               // printf( "top '%s' '%s'\n", spP->fullName,dEnt->d_name );
-                }
-              #endif
+          if (dEnt!=NULL &&
+            ustrcmp( (char*)dEnt->d_name, "." )!=0 ) {
+            strcpy        ( dEnt->d_name, "." );
+            topFlag= true;
+         // printf( "top '%s' '%s'\n", spP->fullName,dEnt->d_name );
+          }
+        #endif
                   
-            //FD_ID( spP,spP->fullName,dEnt, &spP->u.disk.u.dir.fdcur, true );
-              if (topFlag) strcpy( dEnt->d_name,".." );
-              
-              /*
-              else {
-                do {     dEnt= ReadTDir( spP->dDsc ); // the ".." entry can come later
-                } while( dEnt!=NULL && strcmp( dEnt->d_name,".." )!=0 );
-              } // if
-              */
-            } // if
+        if (topFlag) strcpy( dEnt->d_name,".." );
+      } // if
             
-            /*
-            else {
-              while (dEnt!=NULL && (strcmp( dEnt->d_name,".." )==0 ||
-                                    strcmp( dEnt->d_name,"."  )==0)) // ignore it, if later
-                     dEnt= ReadTDir( spP->dDsc );
-            } // if
-            */
-            
-            if (dEnt!=NULL) {
-              GetEntry( dEnt,os9dirent.name, true );
-              FD_ID( spP,spP->fullName,dEnt, &fdpos, false,false );                      
-              if (topFlag) { seekD0( spP ); topFlag= false; }
-            }
-            else err= E_EOF;
-        //} /* if (*pos-offs==DIRENTRYSZ) */
+      if (dEnt!=NULL) {
+        GetEntry( dEnt, os9dirent.name, true );
+        FD_ID( spP, spP->fullName, dEnt, &fdpos, 0, "", false,false );                      
+        if (topFlag) { seekD0( spP ); topFlag= false; }
+      }
+      else err= E_EOF;
           
       if (!err) {
-      //printf( "==> '%s' %08X\n", os9dirent.name, fdpos );
         len= strlen( os9dirent.name );
         os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
         os9dirent.fdsect= os9_long( fdpos );
@@ -2606,28 +2599,33 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       
     #ifdef win_unix
           err= RemoveAppledouble( spP ); /* because this file is not visible */
-    //printf( "pDsetatt err=%d\n", err );
       if (err==E_EOF) err= 0; // this is not an error !!
       if (err) return err;
     #endif
-      
-    /* can't change attributes in Mac/Linux/Windows */
-    /* But remove and recreate as file is possible */
-    pDclose( pid, spP );
       
     #ifdef MACOS9
       sv   = pp; /* 'parsepath' will change <pp> */
       err  = parsepath( pid,&pp, pathname, false); if (err) return err;
       oserr= getFSSpec( pid,     pathname, _data, &delSpec );
       pp   = sv;
-        
+    #endif
+    
+    /* can't change attributes in Mac/Linux/Windows */
+    /* But remove and recreate as file is possible */
+    err= pDclose( pid, spP ); if (err) return err;
+      
+    #ifdef MACOS9
       /* unfortunately the Mac system needs some time to be ready   */
       /* for deleting an empty directory => make some timeout loops */
-      for (k=0; k<MAXTRIES; k++) {
+      for (k=0; k<MAXTRIES_DEL; k++) {
              oserr= FSpDelete( &delSpec );
+      //if ((k % 2)==0) upe_printf( "k=%d err=%d\n", k, oserr );
         if (!oserr) break;
         HandleEvent();
-      }
+      } // for
+      
+      debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove oserr=%d\n", pp, oserr )); 
+      if (oserr) err= host2os9err( oserr,E_SHARE );
 
     #elif defined windows32 // || defined MACOSX
 //    spP->dDsc= opendir( spP->fullName );
@@ -2655,7 +2653,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 
     #elif defined linux
   //#elif defined UNIX
-      oserr= remove( pp ); if (oserr) err= host2os9err(oserr,E_DNE);
+      oserr= remove( pp ); if (oserr) err= host2os9err( oserr,E_DNE );
     #endif
       
     debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove err=%d\n", pp,err )); 
