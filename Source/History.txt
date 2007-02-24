@@ -1722,6 +1722,19 @@
           07-02-20  Bfo     procstuff   : sigp->plugElem->call_Intercept
           07-02-20  Bfo     intcommand  : <call_Intercept> and parameter adaptions
           
+          07-02-24  Bfo     utilstuff   - FD_ID: Additional params <dirid> and <fName>
+          07-02-24  Bfo                 - MacOSX no longer based on Inodes (same as Linux)
+          07-02-24  Bfo                 - Consistent m->ident key handling for MacOS9
+          07-02-24  Bfo     os9exec_nt  - New <direntry> struct with <dirid> and fName>
+                                        - pWaitRead recognized for internal commands
+          07-02-24  Bfo     funcdispatch: pWaitRead correctly handled for internal commands
+          07-02-24  Bfo     filestuff   : Missing %s (data/exec) added in debugprintf
+          07-02-24  Bfo     fileaccess  - All volume/file IDs will be stored as <hashV> now
+                                        - General use of "assign_fdsect"
+                                        - "/Volumes" adaption for MacOSX w/o Inode use
+                                        - MAXTRIES_DEL debugging for directory delete (delay)
+                                        - "check_vod" reads back <hashV>, <dirid> and <fName> 
+             
     3.36  07-??-??  Bfo
     ------------------- 
 */
