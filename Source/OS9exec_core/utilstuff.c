@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2007/02/24 14:06:57  bfo
+ *    - FD_ID: Additional params <dirid> and <fName>
+ *    - MacOSX no longer based on Inodes (same as Linux)
+ *    - Consistent m->ident key handling for MacOS9
+ *
  *    Revision 1.54  2007/01/28 21:33:40  bfo
  *    'ustrcmp' made invisible / DirEntry dbgNorm -> dbgDetail
  *
@@ -1338,11 +1343,11 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
       for (ii=0;ii<MAXDIRS-1;ii++) {
               m= &dirtable[ii];
           if (m->ident==NULL) {
-                      m->ident= get_mem( strlen( tmp )+1 );
-              strcpy( m->ident,                  tmp );
+                      m->ident= malloc( strlen( tmp )+1 );
+              strcpy( m->ident,                 tmp );
               //      m->dirid= dirid;
-                      m->fName= get_mem( strlen( fName )+1 );
-              strcpy( m->fName,                  fName );
+                      m->fName= malloc( strlen( fName )+1 );
+              strcpy( m->fName,                 fName );
              
           //  dirtable[ii+1]= NULL; /* prepare the next undefined field */
               
