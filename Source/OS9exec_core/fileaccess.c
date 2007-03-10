@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.41  2007/03/10 12:46:15  bfo
+ *    - No longer GetFPos/SetFPos for every read/readln call
+ *    - Use new <readFlag> instead
+ *    - ".log" files are TEXT (for MACOS9)
+ *    - DeletePath enhanced for MACOS9: Rename, move, delete (later) !
+ *
  *    Revision 1.40  2007/02/24 14:28:30  bfo
  *    - All volume/file IDs will be stored as <hashV> now
  *    - General use of "assign_fdsect"
@@ -2677,16 +2683,13 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 {
     os9err err= 0;
-  //ushort mode;
 
     #if defined MACOS9 || defined linux
-  //#if defined MACOS9 || defined UNIX
       OSErr  oserr= 0;
     #endif
       
     #ifdef MACOS9
       char*  pp= spP->name;
-    //char*  sv;
       char   pathname[OS9PATHLEN]; 
       FSSpec delSpec;
       FSSpec spc;
@@ -2696,9 +2699,8 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
         FSSpec dstSpec;
         FSRef  delRef;
         FSRef  dstRef;
-      //FSRef  newRef;
-        int    pnd;
         pending_typ* dpp;
+        int    pnd;
       #else
         int    k;
       #endif
@@ -2738,21 +2740,21 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
   //err= syspath_close( pid, spP->nr ); if (err) return err;
       
     #ifdef MACOS9
-      // try to delete all of them
-      for (pnd= 0; pnd<PENDING_MAX; pnd++) {
-            dpp= &dPending[ pnd ];
-        if (dpp->toBeDeleted) {
-               oserr= FSDeleteObject( &dpp->newRef );
-          if (!oserr) dpp->toBeDeleted= false;
-        } // if
-      } // if
-
-      for (pnd= 0; pnd<PENDING_MAX; pnd++) {
-             dpp= &dPending[ pnd ];
-        if (!dpp->toBeDeleted) break;
-      } // if
-      
       #ifdef powerc
+        // try to delete all of them
+        for (pnd= 0; pnd<PENDING_MAX; pnd++) {
+              dpp= &dPending[ pnd ];
+          if (dpp->toBeDeleted) {
+                 oserr= FSDeleteObject( &dpp->newRef );
+            if (!oserr) dpp->toBeDeleted= false;
+          } // if
+        } // if
+
+        for (pnd= 0; pnd<PENDING_MAX; pnd++) {
+               dpp= &dPending[ pnd ];
+          if (!dpp->toBeDeleted) break;
+        } // if
+      
              oserr= FSpMakeFSRef( &delSpec, &delRef );
         if (!oserr) oserr= getFSSpec( pid, "", _start, &dstSpec );
       //upe_printf( "oserr=%d -> pathname='%s'\n", oserr, "destDir" );
