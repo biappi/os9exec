@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.36  2007/02/24 14:22:37  bfo
+ *    Missing %s (data/exec) added in debugprintf
+ *
  *    Revision 1.35  2007/01/28 21:23:03  bfo
  *    err=1: let the path open, this is not an error
  *
@@ -1236,11 +1239,12 @@ os9err syspath_close( ushort pid, ushort sp )
 
         err= (fmgr_op[spP->type]->close)( pid,spP );
     if (err==1) return 0;     /* err=1: let the path open, this is not an error */
-    if (err)    return err;   /* do not invalidate, if error */
+  //if (err)    return err;   /* do not invalidate, if error */
     
             spP->type= fNone; /* invalidate the path descriptor */
     strcpy( spP->name,"" );
-    return 0;
+    
+    return err;
 } /* syspath_close */
 
 
