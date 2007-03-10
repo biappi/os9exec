@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.43  2007/03/10 13:52:30  bfo
+ *    MPW adaptions
+ *
  *    Revision 1.42  2007/03/10 13:38:29  bfo
  *    Pending things not for 68k
  *
@@ -2636,8 +2639,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 
 
 
-#if defined MACOS9 && defined powerc
-//static OSErr FSRename_Unique( FSRef* srcRef, FSRef* dstRef, const char* pathName, FSRef* newRef )
+#if defined MACOS9 && defined powerc && !defined MPW
   static OSErr FSRename_Unique( FSRef* srcRef, FSRef* dstRef, FSRef* newRef )
   {
     #define DelMe ".delete_me"
