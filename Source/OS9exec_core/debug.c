@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2007/01/28 21:28:42  bfo
+ *    <isPtoC> renamed to <isNative>
+ *
  *    Revision 1.28  2007/01/07 13:07:32  bfo
  *    Adapted for the new memblock <mb> structure
  *
@@ -631,6 +634,7 @@ ushort debugwait( void )
     ushort temp,temp2;
     int    numitems;
     ushort extra= false;
+    ushort k= 0;
     
     #ifdef USE_UAEMU
       m68k_os9trace=false;
@@ -762,6 +766,8 @@ ushort debugwait( void )
                           dumpmem(&listbase,8); 
                           break;
                           
+          //case 'o' : Change_DbgPath( 0, NULL, &inp[ 1 ], &k ); break;
+            
             case 'o' : if (sscanf(&inp[1],"%d",  &dbgOut)     <1) {  dbgOut     = 0; }; break;
             case 'w' : if (sscanf(&inp[1],"%d",  &without_pid)<1) {  without_pid= 0; }; break;
             case 'j' : if (sscanf(&inp[1],"%d", &justthis_pid)<1) { justthis_pid= 0; }; break;
