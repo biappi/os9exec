@@ -41,6 +41,13 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.40  2007/02/24 14:28:30  bfo
+ *    - All volume/file IDs will be stored as <hashV> now
+ *    - General use of "assign_fdsect"
+ *    - "/Volumes" adaption for MacOSX w/o Inode use
+ *    - MAXTRIES_DEL debugging for directory delete (delay)
+ *    - "check_vod" reads back <hashV>, <dirid> and <fName>
+ *
  *    Revision 1.39  2007/02/14 20:57:07  bfo
  *    win32 remove will be done now with /A
  *
@@ -282,12 +289,14 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     #ifdef MACFILES
       long  effpos;
       OSErr oserr;
+      file_typ* f= &spP->u.disk.u.file;
+      
     #elif defined windows32 || defined MACOSX
       fpos_t tmp_pos;
     #endif
     
     assert( buffer!=NULL );
-  
+
     if     (spP->rawMode) {
         if (spP->rawPos    > STD_SECTSIZE) return E_EOF; /* finished */
         if (spP->rawPos+*n > STD_SECTSIZE) *n= STD_SECTSIZE-spP->rawPos;
@@ -295,11 +304,16 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
         memcpy( buffer, spP->rw_sct+spP->rawPos, *n );
         spP->rawPos+= *n;
         return 0;
-    }
+    } // if
   
     #ifdef MACFILES
+
       cnt= *n; if (cnt==0) return 0; /* null read returns w/o error */
-      oserr= FSRead(spP->u.disk.u.file.refnum, &cnt, (void*)buffer);
+      oserr= FSRead( f->refnum, &cnt, (void*)buffer );
+    //GetFPos      ( f->refnum,             &effpos );
+    //SetFPos      ( f->refnum, fsFromStart, effpos );
+      f->readFlag= true;
+
       debugprintf(dbgFiles,dbgDeep,("# pFread: FSRead requested=%ld, returned=%ld, oserr=%d\n",
                                        *n, cnt, oserr));
       if (oserr && oserr!=eofErr) return host2os9err(oserr,E_READ);
@@ -308,7 +322,7 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       /* show read for debug */
       if (debugcheck(dbgFiles,dbgDeep)) {
           effpos=0x12345678; /* um Himmels willen Lukas, was soll denn das ? */
-          GetFPos(spP->u.disk.u.file.refnum, &effpos);
+          GetFPos( f->refnum, &effpos);
           uphe_printf("pFread: read $%lX bytes, ending pos now=$%lX: ",cnt,effpos);
       }
     #else     
@@ -345,11 +359,17 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     long cnt;
 
     #ifdef MACFILES
-      long bytes,chunkbytes, cht, k;
-      OSErr oserr;
-      #define READCHUNKSZ 200
+      long      bytes,chunkbytes, cht, k;
+      OSErr     oserr;
+      #define   READCHUNKSZ 200
+    //long      effpos;
+      file_typ* f= &spP->u.disk.u.file;
+
     #else
-      #ifndef MACOS9
+      #ifdef MACOS9
+        file_typ* f= &spP->u.disk.u.file;
+        
+      #else
         char* p;
         char  c;
       #endif
@@ -371,7 +391,11 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       cht= 0; /* new variable */
       while  (bytes>0) {
           if (bytes>READCHUNKSZ) chunkbytes=READCHUNKSZ; else chunkbytes=bytes;
-          oserr=FSRead(spP->u.disk.u.file.refnum, &chunkbytes, (void*)buffer);
+          oserr= FSRead( f->refnum, &chunkbytes, (void*)buffer);
+        //GetFPos      ( f->refnum,             &effpos );
+        //SetFPos      ( f->refnum, fsFromStart, effpos );
+          f->readFlag= true;
+
           if (debugcheck(dbgFiles,dbgDeep)) {
               int k;
               uphe_printf("pFreadLn: chunkread: FSRead returned=%ld, oserr=%d: '",chunkbytes,oserr);
@@ -391,51 +415,51 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
                   /* now pull back file pointer (if required) */
                   if (chunkbytes>k) {
                       /* seek back */
-                          oserr=SetFPos(spP->u.disk.u.file.refnum, fsFromMark, k-chunkbytes);
+                          oserr= SetFPos( f->refnum, fsFromMark, k-chunkbytes );
                       if (oserr) return host2os9err(oserr,E_SEEK);
                   }
                   goto readlnok; /* exit both loops, cnt is updated */
-              }
-          }
+              } // if
+          } // for
         
           bytes-=k;
           cnt  +=k;
           if (oserr==eofErr) goto readlnok; /* don't try to read more, because this is EOF, even if there's no CR */
-      }
+      } // while
     
       if (cnt==0) return os9error(E_EOF);
       /* on exit from while: cnt=# of chars actually read */
-
+      
     readlnok:
       /* cnt is always >0 here, so no EOF check is needed */
       if (cnt>cht) cnt=cht;  /* this must be adapted also (bfo) */
-      
+ 
     #else
       /* input not more than one line from a FILE */
       #ifdef MACOS9
         if     (*n <2) {
             if (*n!=0) {
                 /* single char only */
-                cnt= fread( (void*)buffer, 1,1, spP->u.disk.u.file.stream );
+                cnt= fread( (void*)buffer, 1,1, f->stream );
             }
             else return 0; /* nothing to read at all */
         }
         /* more than 1 char */
-        if (fgets((void *)buffer, *n-1, spP->u.disk.u.file.stream)==NULL) { /* read all but one char */
-            if (feof(spP->u.disk.u.file.stream)) return os9error(E_EOF);
+        if (fgets((void *)buffer, *n-1, f->stream)==NULL) { /* read all but one char */
+            if (feof( f->stream)) return os9error(E_EOF);
             return c2os9err(errno,E_READ);
-        }
+        } // if
         
             cnt=strlen(buffer); /* find size of string read */
         if (cnt==*n-1) {
             /* all read */
             if (buffer[cnt-1]!=CR) {
                 /* not stopped by a CR, read one more, if possible */
-                cnt+= fread( (void*)&buffer[cnt], 1,1, spP->u.disk.u.file.stream );
+                cnt+= fread( (void*)&buffer[cnt], 1,1, f->stream );
             }
         }
-        if ((cnt==0) && feof(spP->u.disk.u.file.stream)) return os9error(E_EOF);
-
+        if ((cnt==0) && feof( f->stream )) return os9error(E_EOF);
+      
       #else
         /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
         /* single char for now */
@@ -468,12 +492,13 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
 
 
-#ifdef MACFILES
 /* output to file */
 os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
-    OSErr oserr;
+  #ifdef MACFILES
+    OSErr      oserr;
     long  cnt, effpos, k;
+    file_typ*  f= &spP->u.disk.u.file;
 
     assert( buffer!=NULL );
     
@@ -482,27 +507,29 @@ os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     
     /* show what we write for debug */
     if (debugcheck(dbgFiles,dbgDeep)) {
-        effpos=0x12345678;
-        GetFPos(spP->u.disk.u.file.refnum, &effpos);
-        uphe_printf("pFwrite: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
-        for (k=0; k<8 && k<cnt; k++) {
-            upe_printf("$%02X ",(byte) buffer[k]);
-        }
-        upe_printf("...\n");
-    }
+                           effpos= 0x12345678;
+      GetFPos( f->refnum, &effpos );
+      uphe_printf("pFwrite: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
+      for (k=0; k<8 && k<cnt; k++) {
+        upe_printf("$%02X ",(byte) buffer[k]);
+      } // for
+        
+      upe_printf("...\n");
+    } // if
+
     /* actual write */
-        oserr=FSWrite(spP->u.disk.u.file.refnum, &cnt, (void*)buffer);
+    if (f->readFlag) {
+      GetFPos( f->refnum,             &effpos );
+      SetFPos( f->refnum, fsFromStart, effpos );
+      f->readFlag= false;
+    } // if
+    
+        oserr= FSWrite( f->refnum, &cnt, (void*)buffer );
     if (oserr) return host2os9err(oserr,E_WRITE);
     
     debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, oserr=%d\n",*n,cnt,oserr));   
-    *n= cnt;
-    return 0;
-} /* pFwrite */
 
-#else
-/* output to file */
-os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
-{
+  #else
     long  cnt;
 
     assert( buffer!=NULL );
@@ -513,18 +540,21 @@ os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
     debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, ferror=%d, errno=%d\n",*n,cnt,ferror(spP->stream),errno));
     if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-    *n= cnt;
-    return 0;
+  #endif
+  
+  *n= cnt;
+  return 0;
 } /* pFwrite */
-#endif
 
 
-#ifdef MACFILES
+
 /* output to file */
 os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
-    long cnt,effpos,k;
-    OSErr oserr;
+  #ifdef MACFILES
+    long      cnt, effpos, k;
+    OSErr     oserr;
+    file_typ* f= &spP->u.disk.u.file;
 
     assert( buffer!=NULL );
 
@@ -536,26 +566,31 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
     /* show what we write for debug */
     if (debugcheck(dbgFiles,dbgDeep)) {
-        effpos=0x12345678;
-        GetFPos(spP->u.disk.u.file.refnum, &effpos);
-        uphe_printf("pFwriteln: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
-        for (k=0; k<8 && k<cnt; k++) {
-            upe_printf("$%02X ",(byte) buffer[k]);
-        }
-        upe_printf("...\n");
-    }
+                           effpos=0x12345678;
+      GetFPos( f->refnum, &effpos );
+      uphe_printf("pFwriteln: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
+      for (k=0; k<8 && k<cnt; k++) {
+        upe_printf("$%02X ",(byte) buffer[k]);
+      } // for
+      
+      upe_printf("...\n");
+    } // if
+
     /* actual write */
-        oserr=FSWrite(spP->u.disk.u.file.refnum, &cnt, (void*)buffer);
+    if (f->readFlag) {
+      GetFPos( f->refnum,             &effpos );
+      SetFPos( f->refnum, fsFromStart, effpos );
+      f->readFlag= false;
+    } // if
+    
+    /* actual write */
+        oserr= FSWrite( f->refnum, &cnt, (void*)buffer );
     if (oserr) return host2os9err(oserr,E_WRITE);
     
     debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, oserr=%d\n",*n,cnt,oserr));   
-    *n= cnt; return 0;
-} /* pFwriteln */
 
-#else
-os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
-{
-    long cnt,ii;
+  #else
+    long cnt, ii;
 
     assert( buffer!=NULL );
     
@@ -565,9 +600,11 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     fflush( spP->stream ); /* don't forget this */
     
     if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-    *n= cnt; return 0;
+  #endif
+  
+  *n= cnt; 
+  return 0;
 } /* pFwriteln */
-#endif
 
 
 
@@ -636,8 +673,6 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
     
   #elif defined win_unix
     dirent_typ  dEnt;
-  //ulong       fdpos;
-  //ulong*      l;
 
     strcpy( dEnt.d_name, spP->name );
     FD_ID ( spP, spP->fullName, &dEnt, &fd, 0, "", false,false );
@@ -793,7 +828,6 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
   {
     struct tm tim;       // Important Note: internal use of <tm> as done in OS-9
     byte      fdbeg[16]; // buffer for preparing FD
-//  ulong     maxbyte = 16;
     int       k;
     
     for (k=0; k<16; k++) fdbeg[ k]= 0; // initialize it
@@ -831,6 +865,7 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
   static Boolean TCCWIE( VType* v, char* suffix )
   {   return TCSuff( v,suffix, 'CWIE','TEXT' ); /* CodeWarrior text */
   } /* TCCWIE */
+  
   
   static Boolean TCRBFi( VType* v, char* suffix )
   {   return TCSuff( v,suffix, 'os9a','RBFi' ); /* CodeWarrior text */
@@ -900,7 +935,8 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 	      if (TCSuff( &v, ".ppt",     'PPT3','SLD8' )) return; // MS Powerpoint
 
 	      if (TCSuff( &v, ".Me",      'MPS ','TEXT' )) return; // text file
-	      if (TCSuff( &v, ".txt",     'ttxt','TEXT' )) return; // text file
+	      if (TCSuff( &v, ".txt",     'ttxt','TEXT' ) ||
+	          TCSuff( &v, ".log",     'ttxt','TEXT' )) return; // text file
       }
 
       if   ( RBF_Rsc( spc ) && TCRBFi( &v, "" ) )      return; // RBF images
@@ -971,49 +1007,62 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
     
     #ifdef MACFILES
+      f->readFlag= false;
+      
   //  if (strlen(loc)>DIRNAMSZ) return os9error(E_BPNAM);
     
       /* Get FSSpec for requested file */
-                              defdir= exedir ? _exe:_data;
-      err= getFSSpec( pid,pp, defdir, spc );
-      debugprintf(dbgFiles,dbgDetail,("# pFopen: getFSSpec returned err=%d\n",err));
-      if (err==E_FNA) return err; /* seems to be a file instead of a sub-direcotry */
+                               defdir= exedir ? _exe:_data;
+      err= getFSSpec( pid, pp, defdir, spc );
+      debugprintf( dbgFiles,dbgNorm, ("# pFopen: getFSSpec returned err=%d\n", err ) );
+      if (err==E_FNA) return err; /* seems to be a file instead of a sub-directory */
 
       /* now see if create or open */
       if (cre) {
-          /* --- create */
-          debugprintf( dbgFiles,dbgDetail,( "# pFopen:  trying to create '%s'\n",pp ));
+          /* --- create it */
+          debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' err=%d\n", pp, err ) );
           /* check if file exists */
-          if (err==0)      return os9error(E_CEF); /* no error on MakeFSSpec -> object already exists */
+          if (err==0)      return os9error( E_CEF ); /* no error on MakeFSSpec -> object already exists */
           if (err!=E_PNNF) return err;
         
           /* file does not exist yet, create it first */
-          Get_Creator_And_Type( spc, &creator, &type );
-              oserr=FSpCreate ( spc,  creator,  type, smSystemScript);
-          if (oserr) return host2os9err(oserr,E_ILLARG);
-
+          Get_Creator_And_Type ( spc, &creator, &type );
+               oserr= FSpCreate( spc,  creator,  type, smSystemScript);
+          if  (oserr) {
+           debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' oserr=%d\n", pp, oserr ) );
+           if (oserr==dupFNErr) return E_PNNF; // special case handling
+           return  host2os9err( oserr, E_ILLARG );
+          } // if
+          
           /* now open it */     
-              oserr=FSpOpenDF( spc, fsRdWrPerm, &f->refnum);
-          if (oserr) return host2os9err(oserr,E_PNNF);
+              oserr= FSpOpenDF( spc, fsRdWrPerm, &f->refnum );
+          if (oserr) {
+            debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' oserr=%d\n", pp, oserr ) );
+            return host2os9err( oserr, E_PNNF );
+          } // if
       }
       else {
           /* --- open it */
-          debugprintf(dbgFiles,dbgDetail,("# pFopen: trying to open '%s', mode=$%04hX\n",
-                                             pp,*modeP));
+          debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to open '%s', mode=$%04hX err=%d\n", pp, *modeP, err ) );
           if (!err) {
-              /* object exists, but make sure it is not a directory */
-              getCipb( &cipb, spc );/* it's a directory, return error */ 
-              if       (cipb.hFileInfo.ioFlAttrib & ioDirMask) return os9error(E_FNA);
-          }
+               /* object exists, but make sure it is not a directory */
+            getCipb( &cipb, spc ); /* it's a directory, return error */ 
+            if      ( cipb.hFileInfo.ioFlAttrib & ioDirMask ) return os9error( E_FNA );
+          } // if
+          
+          if (err) return err;
                  
-              oserr=FSpOpenDF( spc, isW ? fsRdWrPerm:fsRdPerm, &f->refnum);
-          if (oserr) return host2os9err(oserr,E_PNNF);
-
+              oserr= FSpOpenDF( spc, isW ? fsRdWrPerm:fsRdPerm, &f->refnum );
+          if (oserr) {
+            debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to open '%s' oserr=%d\n", pp, oserr ) );
+            return host2os9err( oserr,E_PNNF );
+          } // if
+           
           /* and adapt file date if open for writing */
           if (isW) { err= touchfile( pid, spP ); if (err) return err; }
-      }
-      debugprintf(dbgFiles,dbgDetail,("# pFopen: open/create successful, refnum=%d\n",
-                                         f->refnum));
+      } // if
+      
+      debugprintf( dbgFiles,dbgNorm, ("# pFopen: open/create successful, refnum=%d\n", f->refnum ) );
 
     #else
       debugprintf(dbgFiles,dbgNorm,("# pFopen: trying to %s '%s', mode=$%04hX\n",
@@ -1137,6 +1186,7 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
     #ifdef MACFILES
       OSErr oserr;
       ulong effpos;
+      file_typ* f= &spP->u.disk.u.file;
     #else
       int   fildes;
     #endif
@@ -1149,34 +1199,34 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
 
     #ifdef MACFILES
       /* try to set position */
-      oserr= SetFPos(spP->u.disk.u.file.refnum, fsFromStart, (long) *posP);
-      debugprintf(dbgFiles,dbgDetail,("# pFseek: tried to seek to $%08lX, oserr=%d\n",*posP,oserr));
+      oserr= SetFPos( f->refnum, fsFromStart, (long) *posP );
+      debugprintf(dbgFiles,dbgNorm,("# pFseek: tried to seek to $%08lX, oserr=%d\n",*posP,oserr));
       if (oserr==eofErr) {
           /* tried to seek beyond currend EOF -> try to extend file */
-          oserr=SetEOF(spP->u.disk.u.file.refnum, (long) *posP);
-          debugprintf(dbgFiles,dbgDetail,("# pFseek: Tried to extend file to size=$%08lX, oserr=%d\n",*posP,oserr));
+          oserr= SetEOF( f->refnum, (long) *posP );
+          debugprintf(dbgFiles,dbgNorm,("# pFseek: Tried to extend file to size=$%08lX, oserr=%d\n",*posP,oserr));
           if (oserr==wrPermErr) {
-              debugprintf(dbgFiles,dbgDetail,("# pFseek: File not writable, oserr=wrPermErr\n"));
+              debugprintf(dbgFiles,dbgNorm,("# pFseek: File not writable, oserr=wrPermErr\n"));
               oserr=0; /* file not open for write, can't extend, simply ignore */
           }
           if (!oserr) {
               /* now as file is extended, seek to new LEOF */
-              oserr=SetFPos(spP->u.disk.u.file.refnum, fsFromLEOF, 0);
-              debugprintf(dbgFiles,dbgDeep,("# pFseek: Extended file to size $%08lX (setting pos -> oserr=%d\n",*posP,oserr));
-          }
-      }
+              oserr= SetFPos( f->refnum, fsFromLEOF, 0 );
+              debugprintf(dbgFiles,dbgNorm,("# pFseek: Extended file to size $%08lX (setting pos -> oserr=%d\n",*posP,oserr));
+          } // if
+      } // if
       
       /* show result of seek */
-      if (debugcheck(dbgFiles,dbgDeep)) {
+      if (debugcheck(dbgFiles,dbgNorm)) {
           effpos=0x12345678;
-          GetFPos(spP->u.disk.u.file.refnum, &effpos);
+          GetFPos( f->refnum, &effpos );
           uphe_printf("pFseek: Actual pos (GetFPos)=$%lX\n",effpos);
           if (effpos!=*posP) {
               uphe_printf("pFseek: FATAL: seek did not reach desired position ($%lX)\n",*posP);
               debugwait();
           }
           effpos=0x12345678;
-          GetEOF(spP->u.disk.u.file.refnum, &effpos);
+          GetEOF( f->refnum, &effpos );
           uphe_printf("pFseek: Actual EOF (GetEOF)=$%lX\n",effpos);
       }
       /* now seek should be done or failed definitely */
@@ -1287,12 +1337,13 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
 /* get file position */
 os9err pFpos( _pid_, syspath_typ* spP, ulong *posP )
 {   
-    #ifdef MACFILES
-      return host2os9err( GetFPos(spP->u.disk.u.file.refnum, (long *)posP),E_SEEK );
-    #else
-      *posP= (ulong) ftell( spP->stream );
-      return 0;
-    #endif
+  #ifdef MACFILES
+    file_typ* f= &spP->u.disk.u.file;
+    return host2os9err( GetFPos( f->refnum, (long *)posP),E_SEEK );
+  #else
+    *posP= (ulong) ftell( spP->stream );
+    return 0;
+  #endif
 } /* pFpos */
 
 
@@ -1300,33 +1351,32 @@ os9err pFpos( _pid_, syspath_typ* spP, ulong *posP )
 /* get file size */
 os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
-    os9err err= 0;
+  os9err err= 0;
     
-    #ifdef win_linux
-      int    fd= fileno( spP->stream );
-      struct stat info;
-    #endif
+  #if defined MACFILES
+    file_typ* f= &spP->u.disk.u.file;
 
-    
-    #if defined MACFILES
-      OSErr oserr= GetEOF( spP->u.disk.u.file.refnum, (long*)sizeP );
-      err= host2os9err( oserr,E_SEEK );
+    OSErr oserr= GetEOF( f->refnum, (long*)sizeP );
+    err= host2os9err( oserr,E_SEEK );
 
-    #elif defined win_linux
-          err= fstat( fd,&info );
-      if (err) return E_SEEK;
-      *sizeP= info.st_size; // for MACOSX <st_size> is unfortunately 0
+  #elif defined win_linux
+    int    fd= fileno( spP->stream );
+    struct stat info;
+
+        err= fstat( fd,&info );
+    if (err) return E_SEEK;
+    *sizeP= info.st_size; // for MACOSX <st_size> is unfortunately 0
       
-    #else
-      fpos_t tmp_pos;
+  #else
+    fpos_t tmp_pos;
      
-      fgetpos( spP->stream,  &tmp_pos );   /* save current position */
-      fseek  ( spP->stream,0,SEEK_END );   /* go to EOF */
-      *sizeP= (ulong)ftell( spP->stream ); /* get position now = file size */
-      fsetpos( spP->stream,  &tmp_pos );   /* restore position */
-    #endif
+    fgetpos( spP->stream,  &tmp_pos );   /* save current position */
+    fseek  ( spP->stream,0,SEEK_END );   /* go to EOF */
+    *sizeP= (ulong)ftell( spP->stream ); /* get position now = file size */
+    fsetpos( spP->stream,  &tmp_pos );   /* restore position */
+  #endif
       
-    return err;
+  return err;
 } /* pFsize */
 
 
@@ -1341,9 +1391,17 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
     ulong  tmp_pos= 0;
 
     #ifdef MACFILES
-      OSErr oserr= SetEOF( spP->u.disk.u.file.refnum, (long)*sizeP );
+      OSErr     oserr;
+      file_typ* f= &spP->u.disk.u.file;
+      long      curSize;
+      
+      oserr= GetFPos( f->refnum, (long*)&tmp_pos );
       err= host2os9err( oserr,E_SEEK ); if (err) return err;
-
+     
+             GetEOF ( f->refnum, &curSize     );
+      oserr= SetEOF ( f->refnum, (long)*sizeP );
+      err= host2os9err( oserr,E_SEEK ); if (err) return err;
+      
     #else
       #ifdef windows32
         int    fno;
@@ -1385,13 +1443,13 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
         if (*sizeP==0) {
           fclose( spP->stream );
           oserr=          remove( spP->fullName );
-              spP->stream= fopen( spP->fullName,"wb+" ); /* create for update, use binary mode (bfo) ! */
+              spP->stream= fopen( spP->fullName,"wb+" );       /* create for update, use binary mode (bfo) ! */
           if (spP->stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
         }
       #endif
       
       if (*sizeP>0) {
-        #ifdef UNIX
+        #if defined UNIX || defined MACFILES
           if (*sizeP<=curSize) {              n= sizeof(b);
                                     p= *sizeP-n;
             err= pFseek( pid, spP, &p );               if (err) break;
@@ -1421,23 +1479,24 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
 os9err pFeof( _pid_, syspath_typ* spP )
 /* check for EOF */
 {
-    #ifdef MACFILES
-      long  curpos,curend;
-      OSErr oserr;
+  #ifdef MACFILES
+    long  curpos, curend;
+    OSErr oserr;
+    file_typ* f= &spP->u.disk.u.file;
     
-          oserr= GetEOF (spP->u.disk.u.file.refnum, &curend);
-      if (oserr) return host2os9err(oserr,E_SEEK);
+        oserr= GetEOF ( f->refnum, &curend );
+    if (oserr) return host2os9err(oserr,E_SEEK);
 
-          oserr= GetFPos(spP->u.disk.u.file.refnum, &curpos);
-      if (oserr) return host2os9err(oserr,E_SEEK);
+        oserr= GetFPos( f->refnum, &curpos );
+    if (oserr) return host2os9err(oserr,E_SEEK);
     
-      if (curpos>curend)     return os9error(E_EOF);
+    if (curpos>=curend)    return os9error(E_EOF);
 
-    #else   
-      if (feof(spP->stream)) return os9error(E_EOF);
-    #endif
+  #else   
+    if (feof(spP->stream)) return os9error(E_EOF);
+  #endif
 
-    return 0;
+  return 0;
 } /* pFeof */
 
 
@@ -2019,7 +2078,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
 /* ------------------------ */
 
 /* open directory */
-os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname)
+os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname )
 {
     os9err  err= 0;
     char*   pastpath;
@@ -2053,15 +2112,17 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
                                    defdir= exedir ?_exe:_data;  
            err= getFSSpec( pid,pp, defdir, spc );
       if (!err) {
-          /* object exists, but make sure it is a directory */
-          getCipb( &cipb, spc ); /* it's a file, return error */
-          if     (!(cipb.hFileInfo.ioFlAttrib & ioDirMask)) return os9error(E_FNA);  
+        /* object exists, but make sure it is a directory */
+        getCipb( &cipb, spc ); /* it's a file, return error */
+        if     (!(cipb.hFileInfo.ioFlAttrib & ioDirMask)) return os9error( E_FNA );  
 
-          /* OS9TCP/ftp requires open dir for write !?! */
-          // if (*modeP & 0x02) return os9error(E_FNA); /* can't open dir for write */
+        /* OS9TCP/ftp requires open dir for write !?! */
+        // if (*modeP & 0x02) return os9error(E_FNA); /* can't open dir for write */
+        
+        strcpy( spP->fullName, pp );  
       } // if
 
-      debugprintf(dbgFiles,dbgDetail,("# pDopen: MakeFSSpec returned err=%d\n",err));
+      debugprintf( dbgFiles,dbgNorm,( "# pDopen: MakeFSSpec '%s' returned err=%d\n", pp, err ) );
 
     #elif defined win_unix
       err= AdjustPath( pp,adapted, false ); if (err) return err;
@@ -2566,10 +2627,57 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 
 
 
+#if defined MACOS9 && defined powerc
+//static OSErr FSRename_Unique( FSRef* srcRef, FSRef* dstRef, const char* pathName, FSRef* newRef )
+  static OSErr FSRename_Unique( FSRef* srcRef, FSRef* dstRef, FSRef* newRef )
+  {
+    #define DelMe ".delete_me"
+    OSErr oserr;
+    int   i, len, n= 1; 
+    char  name    [ 80 ];
+    char  unifield[ 80 ];
+    FSRef renRef, savRef;
+    
+    /*
+    const char*      p= pathName;
+    if      (strstr( p, DelMe )==p) {
+          p= strstr( p, "_" );
+      if (p==NULL)   p= pathName;
+      else           p++;
+    } // if
+    */
+    
+    while (true) {
+      sprintf    ( name, "%s_%d", DelMe, n++ );
+      len= strlen( name );
+      
+      for (i= 0; i<len; i++) {
+        unifield[ 2*i   ]= '\0'; // Create unicode field
+        unifield[ 2*i+1 ]= name[ i ];
+      } // for
+    
+            oserr= FSRenameUnicode( srcRef, len, (UniChar*)unifield, kTextEncodingMacRoman, &renRef );
+      if   (oserr!=dupFNErr) {
+        if (oserr) break;
+            
+            oserr= FSMoveObject( &renRef, dstRef, newRef );
+        if (oserr!=dupFNErr) break;
+        
+        memcpy( &savRef, &renRef, sizeof( FSRef ) ); // rename was possible, take new one already
+        srcRef= &savRef;
+      } // if
+    } // loop
+    
+    return oserr;
+  } // FSRename_Unique
+#endif
+
+
+
 os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 {
     os9err err= 0;
-    ushort mode;
+  //ushort mode;
 
     #if defined MACOS9 || defined linux
   //#if defined MACOS9 || defined UNIX
@@ -2577,14 +2685,27 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     #endif
       
     #ifdef MACOS9
-      int    k;
       char*  pp= spP->name;
-      char*  sv;
+    //char*  sv;
       char   pathname[OS9PATHLEN]; 
       FSSpec delSpec;
+      FSSpec spc;
+      OSType creator, type;
+
+      #ifdef powerc
+        FSSpec dstSpec;
+        FSRef  delRef;
+        FSRef  dstRef;
+      //FSRef  newRef;
+        int    pnd;
+        pending_typ* dpp;
+      #else
+        int    k;
+      #endif
         
     #elif defined win_unix
-      char*  pp= spP->fullName;
+     ushort mode;
+     char*  pp= spP->fullName;
       
       #if defined windows32 || defined MACOSX
         char cmd[OS9PATHLEN];
@@ -2604,26 +2725,73 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     #endif
       
     #ifdef MACOS9
-      sv   = pp; /* 'parsepath' will change <pp> */
-      err  = parsepath( pid,&pp, pathname, false); if (err) return err;
+    //sv   = pp; /* 'parsepath' will change <pp> */
+    //err  = parsepath( pid,&pp, pathname, false ); if (err) return err;
+      strcpy                   ( pathname, spP->fullName );
       oserr= getFSSpec( pid,     pathname, _data, &delSpec );
-      pp   = sv;
+    //pp   = sv;
     #endif
     
     /* can't change attributes in Mac/Linux/Windows */
     /* But remove and recreate as file is possible */
-    err= pDclose( pid, spP ); if (err) return err;
+    err= pDclose      ( pid, spP     ); if (err) return err;
+  //err= syspath_close( pid, spP->nr ); if (err) return err;
       
     #ifdef MACOS9
-      /* unfortunately the Mac system needs some time to be ready   */
-      /* for deleting an empty directory => make some timeout loops */
-      for (k=0; k<MAXTRIES_DEL; k++) {
-             oserr= FSpDelete( &delSpec );
-      //if ((k % 2)==0) upe_printf( "k=%d err=%d\n", k, oserr );
-        if (!oserr) break;
-        HandleEvent();
-      } // for
+      // try to delete all of them
+      for (pnd= 0; pnd<PENDING_MAX; pnd++) {
+            dpp= &dPending[ pnd ];
+        if (dpp->toBeDeleted) {
+               oserr= FSDeleteObject( &dpp->newRef );
+          if (!oserr) dpp->toBeDeleted= false;
+        } // if
+      } // if
+
+      for (pnd= 0; pnd<PENDING_MAX; pnd++) {
+             dpp= &dPending[ pnd ];
+        if (!dpp->toBeDeleted) break;
+      } // if
       
+      #ifdef powerc
+             oserr= FSpMakeFSRef( &delSpec, &delRef );
+        if (!oserr) oserr= getFSSpec( pid, "", _start, &dstSpec );
+      //upe_printf( "oserr=%d -> pathname='%s'\n", oserr, "destDir" );
+
+        if (!oserr) oserr= FSpMakeFSRef( &dstSpec, &dstRef );
+      //upe_printf( "oserr=%d dstSpec\n", oserr );
+ 
+      //if (!oserr) oserr= FSRename_Unique( &delRef, &dstRef, spP->name, &dpp->newRef );
+        if (!oserr) oserr= FSRename_Unique( &delRef, &dstRef, &dpp->newRef );
+      //upe_printf( "oserr=%d =>pathname='%s'\n", oserr, "renamed to DeleteMe_XXX" );
+      
+        if (!oserr) oserr= FSDeleteObject( &dpp->newRef );
+      //upe_printf( "oserr=%d DELETED\n", oserr );
+
+        /*
+        if  (oserr) {
+          for (k=0; k<MAXTRIES_DEL; k++) {
+                 oserr= FSDeleteObject( &newRef );
+            if (!oserr) break;
+        
+            HandleEvent(); 
+          } // for
+        } // if
+        */
+        
+        if  (oserr==fBsyErr) { dpp->toBeDeleted= true; oserr= 0; }
+    
+      #else
+        for (k=0; k<MAXTRIES_DEL; k++) {
+               oserr= FSpDelete( &delSpec );
+          if (!oserr) break;
+        
+          if (k<20) HandleEvent();
+          else      HandleOneEvent( nil, 100 ); 
+        } // for
+
+        upe_printf( "oserr=%d k=%d DELETED\n", oserr, k );
+      #endif
+            
       debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove oserr=%d\n", pp, oserr )); 
       if (oserr) err= host2os9err( oserr,E_SHARE );
 
@@ -2660,9 +2828,41 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     if (err) return err;
       
     spP->type= fFile; /* change the file type now */
-    mode= 0x03 | poCreateMask;
-    err = pFopen( pid,spP, &mode, pp );
     
+    #ifdef MACOS9
+    //strcpy               ( pathname, "deleted_directory" );
+      strcpy               ( pathname, spP->fullName );
+      oserr= getFSSpec( pid, pathname, _data, &spc   );
+      debugprintf( dbgFiles,dbgNorm, ("# pDsetatt: getFSSpec returned err=%d\n", err ) );
+    
+      /* file does not exist yet, create it first */
+      Get_Creator_And_Type ( &spc, &creator, &type );
+      oserr=      FSpCreate( &spc,  creator,  type, smSystemScript);
+      debugprintf( dbgFiles,dbgNorm, ("# pDsetatt: FSpCreate returned err=%d\n", err ) );
+        
+          oserr= FSpOpenDF( &spc, fsRdWrPerm, &spP->u.disk.u.file.refnum );
+      if (oserr) err= host2os9err( oserr,E_PNNF );
+    //upe_printf( "oserr=%d err=%d OPEN_IT\n", oserr, err ); 
+    #else
+                               mode= 0x03 | poCreateMask;
+       err= pFopen( pid, spP, &mode, pp ); // and open it as file again on the same system path
+    #endif  
+    
+    /*
+    #ifdef MACOS9
+      for (k=0; k<MAXTRIES_DEL; k++) {
+        if  (err!=E_CEF) break;
+                                     mode= 0x03;
+             err= pFopen( pid, spP, &mode, pp ); // try do open it
+        if (!err) break;
+        
+                                     mode= 0x03 | poCreateMask;
+        err=      pFopen( pid, spP, &mode, pp );
+      } // for
+    #endif
+    */
+    
+    debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' end err=%d\n", pp, err )); 
     return err;
 } /* pDsetatt */
 
