@@ -1733,9 +1733,25 @@
                                         - General use of "assign_fdsect"
                                         - "/Volumes" adaption for MacOSX w/o Inode use
                                         - MAXTRIES_DEL debugging for directory delete (delay)
-                                        - "check_vod" reads back <hashV>, <dirid> and <fName> 
-             
-    3.36  07-??-??  Bfo
+                                        - "check_vod" reads back <hashV>, <dirid> and <fName>
+                                        
+          07-03-10  Bfo     os9exec_nt  - number of dirs adaption
+                                        - pending_typ / PENDING_MAX introduced (DeletePath problem)
+                                        - readflag for r/w seek problem
+                                        - "SearchDLLs": Don't break on error
+          07-03-10  Bfo     intcommand  - "Change_DbgPath" implemented here now (visible from outside)
+          07-03-10  Bfo     debug       : "Change_DbgPath" cannot yet be called from here 
+          07-03-10  Bfo     macfiles    : Extended search strategy in case of fnfErr
+          07-03-10  Bfo     filestuff   : Invalidate correctly at "syspath_close"
+          07-03-10  Bfo     funcdispatch- "shell" <=> "ll" problem is fixed now
+                                        - Source text formatting adaptions
+          07-03-10  Bfo     procstuff   : Params corrected: debug_return( &sigp->os9regs, spid, true )
+          07-03-10  Bfo     utilstuff   : Use "malloc" instead "get_mem" here (avoid memory scattering)
+          07-03-10  Bfo     fileaccess  - No longer GetFPos/SetFPos for every read/readln call
+                                        - Use new <readFlag> instead
+                                        - ".log" files are TEXT (for MACOS9)
+                                        - DeletePath enhanced for MACOS9: Rename, move, delete (later) !
+    3.36  07-03-10  Bfo     V3.36 released
     ------------------- 
 */
 
