@@ -262,7 +262,20 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
     
     debugprintf(dbgFiles,dbgNorm,("# Resolved_FSSpec(Vol=%d, Dir=%ld, Name='%s') returns oserr=%d\n",
                                      volID,dirID, cstr, oserr));
-    return host2os9err(oserr,E_PNNF);
+    
+    if (oserr==fnfErr) {
+      if (pathname==NULL) strcpy( cstr,""       );
+      else                strcpy( cstr,pathname ); /* make a local copy */
+
+      strcpy( pasmac,cstr );
+      c2pstr( pasmac );
+      oserr= FSMakeFSSpec( volID,dirID, pasmac, fsP );
+      
+      debugprintf(dbgFiles,dbgNorm,("# Resolved_FSSpec(Vol=%d, Dir=%ld, Name='%s') returns oserr=%d\n",
+                                       volID,dirID, cstr, oserr));
+    } // if
+                                     
+    return host2os9err( oserr,E_PNNF );
 } /* Resolved_FSSpec */
 
 
