@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.42  2007/03/10 13:38:29  bfo
+ *    Pending things not for 68k
+ *
  *    Revision 1.41  2007/03/10 12:46:15  bfo
  *    - No longer GetFPos/SetFPos for every read/readln call
  *    - Use new <readFlag> instead
@@ -2695,7 +2698,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       FSSpec spc;
       OSType creator, type;
 
-      #ifdef powerc
+      #if defined powerc && !defined MPW
         FSSpec dstSpec;
         FSRef  delRef;
         FSRef  dstRef;
@@ -2740,7 +2743,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
   //err= syspath_close( pid, spP->nr ); if (err) return err;
       
     #ifdef MACOS9
-      #ifdef powerc
+      #if defined powerc && !defined MPW
         // try to delete all of them
         for (pnd= 0; pnd<PENDING_MAX; pnd++) {
               dpp= &dPending[ pnd ];

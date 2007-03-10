@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.102  2007/03/10 13:37:40  bfo
+ *    Changes really comitted
+ *
  *    Revision 1.100  2007/02/24 14:13:44  bfo
  *    - New <direntry> struct with <dirid> and fName>
  *    - pWaitRead recognized for internal commands
@@ -430,7 +433,7 @@ direntry    dirtable[MAXDIRS];
 //char*     dirtable[MAXDIRS];
 
 
-#if defined MACOS9 && defined powerc
+#if defined MACOS9 && defined powerc && !defined MPW
   pending_typ dPending[ PENDING_MAX ];
 #endif
 
@@ -2275,7 +2278,7 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* no table entries at the beginning */
   for (ii= 0; ii<MAXDIRS;     ii++) dirtable[ ii ].ident      = NULL;
   
-  #if defined MACOS9 && defined powerc 
+  #if defined MACOS9 && defined powerc && !defined MPW
   for (ii= 0; ii<PENDING_MAX; ii++) dPending[ ii ].toBeDeleted= false;
   #endif
 

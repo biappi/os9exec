@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.77  2007/03/10 12:19:26  bfo
+ *    - number of dirs adaption
+ *    - pending_typ / PENDING_MAX introduced (DeletePath problem)
+ *    - readflag for r/w seek problem
+ *    - "SearchDLLs": Don't break on error
+ *
  *    Revision 1.76  2007/02/24 14:13:44  bfo
  *    - New <direntry> struct with <dirid> and fName>
  *    - pWaitRead recognized for internal commands
@@ -1242,7 +1248,7 @@ typedef struct {
 
 extern direntry dirtable[MAXDIRS];
 
-#if defined MACOS9 && defined powerc
+#if defined MACOS9 && defined powerc && !defined MPW
   typedef struct {
     FSRef   newRef;
     Boolean toBeDeleted;
