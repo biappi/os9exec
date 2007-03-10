@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2007/02/04 20:08:29  bfo
+ *    - DLL connect/disconnect implemented here now
+ *    - "Plugin_Possible"/"Native_Possible" enhanced
+ *
  *    Revision 1.13  2007/01/28 22:14:00  bfo
  *    - Native program handling, <modBaseP> param added
  *    - int command 'native' added
@@ -110,6 +114,8 @@ Boolean Plugin_Possible( Boolean hardCheck );
 
 
 /* utility */
+void    Change_DbgPath( int argc, char** argv, char** pp, ushort* kp );
+
 os9err  _errmsg( os9err err, char* format, ...);
 
 int     isintcommand( const char* name, Boolean *isNative, void** modBaseP );

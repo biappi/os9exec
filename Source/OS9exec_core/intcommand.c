@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2007/02/22 23:12:04  bfo
+ *     <call_Intercept> and parameter adaptions
+ *
  *    Revision 1.48  2007/02/14 20:59:55  bfo
  *    Search DLLs at PLUGINS and one level higher
  *
@@ -259,18 +262,62 @@ static void idbg_usage( char* name )
 
 
 
+void Change_DbgPath( int argc, char** argv, char** pp, ushort* kp )
+{ 
+  os9err    err;
+  ptype_typ type;
+  ulong     size;
+  char*     v;
+  
+  // switch off a potentialy open dbgPath
+  if (dbgPath>0) {
+    err= syspath_close( 0, dbgPath );
+    dbgPath=  0;
+  } // if
+  
+       v= (*pp)+1;                         
+  if (*v=='=' ||
+      *v==' ') (*pp)+= 2;
+  else { 
+        (*kp)++; // next arg
+    if ((*kp)>=argc) { dbgOut= 0; return; }
+    
+    *pp= argv[ (*kp) ];
+  } // if
+                            
+  // try as path number first
+  if (sscanf( *pp,"%d", &dbgOut )>=1) return;
+  dbgOut= 0;
+  
+  // open log file, create it if not yet existing ...
+  if (**pp!=NUL) {                       type= IO_Type( 0,  *pp, 0x03 );
+         err= syspath_open( 0, &dbgPath, type,              *pp, 0x03 );
+    if  (err==E_PNNF)
+         err= syspath_open( 0, &dbgPath, type, *pp, poCreateMask|0x03 );
+    if (!err) {
+         err= syspath_gs_size( 0, dbgPath, &size );
+         err= syspath_seek   ( 0, dbgPath,  size );
+    } // if
+                              
+    if (err) dbgPath= 0;
+    dbgOut=  dbgPath;
+  } // if
+} // Change_DbgPath
+
+
+
 static os9err int_debughalt( ushort pid, int argc, char** argv )
 /* OS9exec debug halt */
 {
-    os9err    err;
+  //os9err    err;
     ushort    k;
     Boolean   opt;
     Boolean   fullScreen= false;
     char*     p;
     ushort*   usp;
     ushort    level;
-    ptype_typ type;
-    ulong     size;
+  //ptype_typ type;
+  //ulong     size;
     
     /* get arguments and options */
     opt=false;
@@ -330,6 +377,10 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                             if (sscanf( p,"%d", &justthis_pid )<1) justthis_pid= 0;
                             break;
             
+                case 'o' :  Change_DbgPath( argc, argv, &p, &k );
+                            break;
+ 
+                /*
                 case 'o' :  // switch off a potentialy open dbgPath
                             if (dbgPath>0) {
                               err= syspath_close( 0, dbgPath );
@@ -337,7 +388,7 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                             } // if
                             
                             if (*(p+1)=='=') p+=2;
-                            else {  k++; /* next arg */
+                            else {  k++; // next arg
                                 if (k>=argc)  { dbgOut= 0; break; }
                                 p= argv[k];
                             } // if
@@ -360,6 +411,7 @@ static os9err int_debughalt( ushort pid, int argc, char** argv )
                               dbgOut=  dbgPath;
                             } // if
                             break;
+				*/
 				
 				case 'z' :  fullScreen= true; break; /* full screen mode */
 
