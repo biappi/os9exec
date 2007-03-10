@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.100  2007/02/24 14:13:44  bfo
+ *    - New <direntry> struct with <dirid> and fName>
+ *    - pWaitRead recognized for internal commands
+ *
  *    Revision 1.99  2007/02/22 23:03:15  bfo
  *    - <call_Intercept> added
  *    - Alphabetic sorting
@@ -426,6 +430,11 @@ direntry    dirtable[MAXDIRS];
 //char*     dirtable[MAXDIRS];
 
 
+#if defined MACOS9 && defined powerc
+  pending_typ dPending[ PENDING_MAX ];
+#endif
+
+
 /* the include/exclude/dll list for internal commands */
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   char*     includeList[MAXLIST];
@@ -468,12 +477,12 @@ dir_type mdir;	                  /* current module dir */
 
 #ifdef MACOS9
   /* the MPW-level default directory */
-  short    startVolID;	          /* startup dir's volume id    */
-  long     startDirID;	          /* startup dir's directory id */
+  short    startVolID;	          // startup dir's volume    id
+  long     startDirID;	          // startup dir's directory id
   char     callPath[OS9PATHLEN];
   
-  short    applVolID;	          /* startup dir's volume id    */
-  long     applDirID;	          /* startup dir's directory id */
+  short    applVolID;	          // app's   dir's volume    id
+  long     applDirID;	          // app's   dir's directory id
   char     applName[OS9PATHLEN];
   int      geCnt;
   
@@ -1289,17 +1298,24 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
   // Main routine for connecting plugin DLLs
   static void PluginLoader( ushort cpid )
   {
-    os9err      err;
+    os9err      err= 0;
     plug_typ*   p;
     int         i;
 
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
     
-                            i= 0;
+    /*                      i= 0;
     err= SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;
     err= SearchDLLs( cpid, &i,  with_dbgDLLs, false, false ); if (err) return;
     err= SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  ); if (err) return;
     err= SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  ); if (err) return;
+    */
+    
+                       i= 0;
+    SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;
+    SearchDLLs( cpid, &i,  with_dbgDLLs, false, false ); if (err) return;
+    SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  ); if (err) return;
+    SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  ); if (err) return;
     
     for (i= 0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
@@ -1781,7 +1797,8 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       debug_return( crp, cpid, cwti );
 
       if (cp->isIntUtil &&
-         (cp->state==pActive ||
+         (cp->state==pActive  ||
+          cp->state==pWaiting ||
           cp->state==pWaitRead)) break;
 
     //if (cp->state==pActive && 
@@ -2256,7 +2273,11 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
   /* no table entries at the beginning */
-  for (ii= 0; ii<MAXDIRS; ii++) dirtable[ ii ].ident= NULL;
+  for (ii= 0; ii<MAXDIRS;     ii++) dirtable[ ii ].ident      = NULL;
+  
+  #if defined MACOS9 && defined powerc 
+  for (ii= 0; ii<PENDING_MAX; ii++) dPending[ ii ].toBeDeleted= false;
+  #endif
 
   debug_prep();
   debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
@@ -2271,10 +2292,9 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     /* must be synchronized to OpenDocument Apple Event */
     #ifdef MACTERMINAL
       #ifndef USE_CARBON
-  	    memcpy( &gFS,  &fs, sizeof(FSSpec) );
+  	    memcpy( &gFS, &fs, sizeof( FSSpec ) );
         while (!gDocDone) HandleEvent();
-
-        memcpy(    &fs, &gFS, sizeof(FSSpec) );
+        memcpy( &fs, &gFS, sizeof( FSSpec ) );
       #endif
 
       // If file has correct type and creator

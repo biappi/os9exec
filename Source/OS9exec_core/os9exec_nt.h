@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.76  2007/02/24 14:13:44  bfo
+ *    - New <direntry> struct with <dirid> and fName>
+ *    - pWaitRead recognized for internal commands
+ *
  *    Revision 1.75  2007/02/22 23:03:15  bfo
  *    - <call_Intercept> added
  *    - Alphabetic sorting
@@ -382,10 +386,19 @@
 #define MYPRIORITY      128 /* priority for first process (defaults to IRQs enabled) */
 #define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
 
-/* number of dirs */
+/*
+// number of dirs
 #if defined macintosh
   #define MAXDIRS     10000
 #elif defined win_linux
+  #define MAXDIRS     50000
+#endif
+*/
+
+/* number of dirs */
+#if defined MACOS9 && !defined powerc
+  #define MAXDIRS     10000
+#else
   #define MAXDIRS     50000
 #endif
 
@@ -421,6 +434,11 @@ typedef struct {
 typedef struct {
   memblock_typ m[ MAXMEMBLOCKS ]; // the process' allocated memory blocks
 } pmem_typ;
+
+#if defined MACOS9 && defined powerc
+  #define PENDING_MAX 100
+#endif
+// 
 
 
 /* "per-process" constants */
@@ -692,7 +710,8 @@ typedef struct {
             time_t  moddate;
             
             #ifdef MACFILES
-              short refnum;             /* the path's refNum if it is a MACFILES fFile */
+              short   refnum;           /* the path's refNum if it is a MACFILES fFile */
+              Boolean readFlag;         /* keep track for r/w changes */
             #endif
         } file_typ;
 
@@ -815,9 +834,9 @@ typedef struct {
 
                     
 /* the system path descriptor itself */         
-#define STD_SECTSIZE 256 // standard sector size for OS9
+#define STD_SECTSIZE 256        // (old) standard sector size for OS9
 
-#define MIN_TMP_SCT_SIZE 2048 // minimu size of temp sector buffer (to read sector 0)
+#define MIN_TMP_SCT_SIZE 2048   // minimu size of temp sector buffer (to read sector 0)
 
 typedef struct {
     /* common for all types */
@@ -847,8 +866,9 @@ typedef struct {
       FILE*   stream;           /* the associated stream */
     #endif
         
+    char      fullName[OS9PATHLEN]; /* direct access makes life easier */
+
     #if defined win_unix
-      char    fullName[OS9PATHLEN]; /* direct access makes life easier */
       DIR*    dDsc;
     #endif
         
@@ -856,19 +876,19 @@ typedef struct {
 
     /* no errors for mac/linux definition */
     #ifdef windows32        
-      HANDLE    printerHandle; /* handle for printer devices */
+      HANDLE    printerHandle;  /* handle for printer devices */
     #endif
 
 
     /* variants for different types */
     union {
-      pipe_typ pipe;          /* Pipe          object */
-      disk_typ disk;          /* Disk file/dir object */
-       rbf_typ rbf;           /* RBF  file/dir object */
-       scf_typ scf;           /* SCF           object */
+      pipe_typ pipe;            /* Pipe          object */
+      disk_typ disk;            /* Disk file/dir object */
+       rbf_typ rbf;             /* RBF  file/dir object */
+       scf_typ scf;             /* SCF           object */
          
       #ifdef NET_SUPPORT
-        net_typ net;          /* Network       object */
+        net_typ net;            /* Network       object */
       #endif
     } u;
 } syspath_typ;
@@ -1222,6 +1242,14 @@ typedef struct {
 
 extern direntry dirtable[MAXDIRS];
 
+#if defined MACOS9 && defined powerc
+  typedef struct {
+    FSRef   newRef;
+    Boolean toBeDeleted;
+  } pending_typ;
+  
+  extern pending_typ dPending[ PENDING_MAX ];
+#endif
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   /* the include/exclude list for internal commands */
@@ -1284,16 +1312,15 @@ extern dir_type mdir;                  /* current module dir */
 
 #ifdef MACOS9
   /* the MPW-level default directory */
-  extern short  startVolID;            /* startup dir's volume id */
-  extern long   startDirID;            /* startup dir's directory id */
-  extern char   callPath[OS9PATHLEN];
-
-  extern short  applVolID;             /* startup dir's volume id */
-  extern long   applDirID;             /* startup dir's directory id */
-  extern char   applName[OS9PATHLEN];
-
-  extern int    geCnt;
-
+  extern short    startVolID;	          // startup dir's volume    id
+  extern long     startDirID;	          // startup dir's directory id
+  extern char     callPath[OS9PATHLEN];
+  
+  extern short    applVolID;	          // app's   dir's volume    id
+  extern long     applDirID;	          // app's   dir's directory id
+  extern char     applName[OS9PATHLEN];
+  extern int      geCnt;
+ 
 #else
   /* the default module load directory OS9MDIR */
   extern    char   mdirPath[MAX_PATH];    /* current mdir path */
