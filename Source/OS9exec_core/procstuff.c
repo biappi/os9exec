@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.57  2007/02/22 23:10:10  bfo
+ *    sigp->plugElem->call_Intercept
+ *
  *    Revision 1.56  2007/02/11 14:50:39  bfo
  *    DoWait() / <geCnt> balancer added
  *
@@ -780,7 +783,7 @@ os9err send_signal( ushort spid, ushort signal )
               
           sv= currentpid;
               currentpid= spid;                       sigp->masklevel= 1;
-          debug_return                              ( sigp, spid, true );
+          debug_return                             ( &sigp->os9regs, spid, true );
           err= sigp->plugElem->call_Intercept( (void*)sigp->os9regs.pc,
                                               signal, sigp->icpta6 );
                                               
