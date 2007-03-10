@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2007/02/24 14:15:13  bfo
+ *    pWaitRead correctly handled for internal commands
+ *
  *    Revision 1.46  2007/02/22 23:06:28  bfo
  *    Parameters reordered
  *
@@ -426,74 +429,77 @@ static ulong DiffTick( void )
 void os9_to_xxx( ushort pid )
 /* Get systime ticks on the way from OS-9 to XXX command */
 {
-    char         *mn, *p, *q, *systime_end;
-    int          mid, ii, jj, kk;
-    mod_exec*    mod;
-    st_typ       *s, *sj, *sj1;
-    Boolean      eli= false; /* end of list */
-    ulong        a= DiffTick();
-    process_typ* cp= &procs[ pid ];
-    procid*      pd= &cp->pd;
+  char         *mn, *p, *q, *systime_end;
+  int          mid, ii, jj, kk;
+  mod_exec*    mod;
+  st_typ       *s, *sj, *sj1;
+  Boolean      eli= false; /* end of list */
+  ulong        a= DiffTick();
+  process_typ* cp= &procs[ pid ];
+  procid*      pd= &cp->pd;
     
-    /* try to measure ticks */
-    os9_long_inc( &pd->_uticks, a ); /* info for F$GPrDsc */
+  /* try to measure ticks */
+  os9_long_inc( &pd->_uticks, a ); /* info for F$GPrDsc */
 
-        mid=     cp->mid;    
-        mod= os9mod( mid );
-    if (mid==0 || mod==NULL) mn= (char*)&cp->intProcName;
-    else                     mn= Mod_Name( mod );
+      mid=     cp->mid;    
+      mod= os9mod( mid );
+  if (mid==0 || mod==NULL) mn= (char*)&cp->intProcName;
+  else                     mn= Mod_Name( mod );
 
-    /* question: must it be logged ? */
-    systime_prog_ok= (*systime_prog==NUL)
-          || (ustrcmp( systime_prog,mn )==0);
+  /* question: must it be logged ? */
+  systime_prog_ok= (*systime_prog==NUL)
+        || (ustrcmp( systime_prog,mn )==0);
 
-    /* search for "xxx,yyy" */
-    if (!systime_prog_ok) {
-        p= systime_prog;
-        while (true) {
-            p= strstr( p,mn ); if (p==NULL) break;
-            
-            systime_end= systime_prog+strlen(systime_prog)-1;
-            q          = p           +strlen(mn)          -1;
+  // search for "xxx,yyy", 
+  // "shell" <=> "ll" problem is fixed now
+  if (!systime_prog_ok) {
+                 p= systime_prog;
+    systime_end= p + strlen( p );
+        
+    while (true) {
+         p=  strstr( p,mn ); if (p==NULL) break;
+      q= p + strlen  ( mn );
                               
-            if ((p==systime_prog || *(p-1)==',') &&
-                (q==systime_end  || *(q+1)==',')) { systime_prog_ok= true; break; }
-        } /* loop */
-    } /* if */
+      if ((p==systime_prog || *(p-1)==',') && // first or subsequent
+          (q==systime_end  ||  *q   ==',')) { systime_prog_ok= true; break; }
+              
+      p= q;
+    } // loop
+  } // if
 
-    if (!systime_prog_ok) { mn= "      (other progs)"; eli= true; }
+  if (!systime_prog_ok) { mn= "      (other progs)"; eli= true; }
     
-    /* search for the module's name in the list, if not there add name to list */
-    for (ii=0; ii<MAX_OS9PROGS; ii++) {
-                               s= &statistics[ii];
-        if                  ( *s->name==NUL            /* not yet in the list */
-         || (!eli && ustrncmp( s->name," ", 1 )==0)
-         || (!eli && ustrcmp ( s->name,mn     ) >0)) { /* sort them alphabetically */
+  /* search for the module's name in the list, if not there add name to list */
+  for (ii=0; ii<MAX_OS9PROGS; ii++) {
+                            s= &statistics[ii];
+    if                   ( *s->name==NUL            /* not yet in the list */
+      || (!eli && ustrncmp( s->name," ", 1 )==0)
+      || (!eli && ustrcmp ( s->name,mn     ) >0)) { /* sort them alphabetically */
 
-            kk= ii; /* search for the last item, don't go OVER the limit !! */
-            while (kk<MAX_OS9PROGS-1 && *statistics[kk].name!=NUL) kk++;
+             kk= ii; /* search for the last item, don't go OVER the limit !! */
+      while (kk<MAX_OS9PROGS-1 && *statistics[kk].name!=NUL) kk++;
 
-            for (jj= kk; jj>ii;  jj--) { /* shift up */
-                sj = &statistics[jj  ];
-                sj1= &statistics[jj-1];
-                strcpy( sj->name,   sj1->name );
-                        sj->intern= sj1->intern;
-                        sj->ticks = sj1->ticks;
-                        sj->num   = sj1->num;
-            } /* inner for */
+      for (jj= kk; jj>ii;  jj--) { /* shift up */
+        sj = &statistics[jj  ];
+        sj1= &statistics[jj-1];
+        strcpy( sj->name,   sj1->name );
+                sj->intern= sj1->intern;
+                sj->ticks = sj1->ticks;
+                sj->num   = sj1->num;
+      } /* inner for */
         
-            strcpy( s->name,mn );
-            s->intern= !eli && cp->isIntUtil;
-            s->ticks = 0;
-            s->num   = 0;
-        }
+      strcpy( s->name,mn );
+              s->intern= !eli && cp->isIntUtil;
+              s->ticks = 0;
+              s->num   = 0;
+    } // if
         
-        if (ustrcmp( mn,s->name )==0) {
-                        s->ticks+= a;
-                        s->num  ++; break;
-        }
-    } /* outer for */
-} /* os9_to_xxx */
+    if (ustrcmp( mn,s->name )==0) {
+                    s->ticks+= a;
+                    s->num  ++; break;
+    } // if
+  } // outer for 
+} // os9_to_xxx
 
 
 
