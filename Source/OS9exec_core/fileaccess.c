@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.44  2007/03/10 13:54:52  bfo
+ *    MPW adaptions
+ *
  *    Revision 1.43  2007/03/10 13:52:30  bfo
  *    MPW adaptions
  *
@@ -2792,8 +2795,12 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
                oserr= FSpDelete( &delSpec );
           if (!oserr) break;
         
-          if (k<20) HandleEvent();
-          else      HandleOneEvent( nil, 100 ); 
+          #ifdef MPW
+            HandleEvent();
+          #else
+            if (k<20) HandleEvent();
+            else      HandleOneEvent( nil, 100 );
+          #endif
         } // for
 
         upe_printf( "oserr=%d k=%d DELETED\n", oserr, k );
