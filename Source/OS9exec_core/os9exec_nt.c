@@ -1312,10 +1312,10 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     */
     
                        i= 0;
-    SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;
-    SearchDLLs( cpid, &i,  with_dbgDLLs, false, false ); if (err) return;
-    SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  ); if (err) return;
-    SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  ); if (err) return;
+    SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); // don't break on error
+    SearchDLLs( cpid, &i,  with_dbgDLLs, false, false );
+    SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  );
+    SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  );
     
     for (i= 0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
