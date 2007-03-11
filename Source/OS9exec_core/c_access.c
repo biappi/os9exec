@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2007/02/22 22:58:28  bfo
+ *    Version changed to V3.36
+ *
  *    Revision 1.5  2007/01/29 23:19:36  bfo
  *    import "Resource.h"
  *
@@ -99,7 +102,7 @@ void getversion( unsigned short *ver,
   #else
     // simply hardwired for all other platforms
     *ver=    3;
-    *rev= 0x36;
+    *rev= 0x37; /* V3.37 */
   #endif
 } // getversion
 

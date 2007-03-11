@@ -1753,6 +1753,10 @@
                                         - DeletePath enhanced for MACOS9: Rename, move, delete (later) !
     3.36  07-03-10  Bfo     V3.36 released
     ------------------- 
+
+          07-03-11  Bfo     Version changed to V3.37
+    3.37  07-??-??  Bfo
+    ------------------- 
 */
 
 
