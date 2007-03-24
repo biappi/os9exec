@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.29  2007/01/28 21:27:21  bfo
+ *    -k: use '*_dbg' plugin dlls / closing the last path correctly
+ *
  *    Revision 1.28  2007/01/07 14:02:58  bfo
  *    Using MACOSX instead of __MACH__
  *
@@ -215,6 +218,7 @@ char* egetenv( const char* name )
       char*   sv;      
       char*   rslt;
       Boolean cm= false;
+      Boolean isRBF;
       
       #ifdef windows32
         Boolean isWin= true;
@@ -291,8 +295,11 @@ char* egetenv( const char* name )
             }
             sv= rslt;
             
-            if (!F_Avail(rslt) || isWin) {
-                if (cm)  rslt= "/dd/CMDS"; /* make it suitable for RBF devices */
+            isRBF= isWin && cm && IO_Type( 1, startPath, 0 )==fRBF;
+            if (!F_Avail(rslt) || isRBF /* isWin */) {
+              //upe_printf( "ty=%d fRBf=%d\n", IO_Type( 1, startPath, 0 ), fRBF ); // get device type: Mac/PC or RBF
+
+                if (cm) rslt= "/dd/CMDS"; /* make it suitable for RBF devices */
                 else {
                     debugprintf(dbgStartup,dbgNorm,("# startPath: '%s'\n", startPath));
                     strcpy( tmp,startPath );
