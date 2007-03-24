@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.103  2007/03/10 13:52:30  bfo
+ *    MPW adaptions
+ *
  *    Revision 1.102  2007/03/10 13:37:40  bfo
  *    Changes really comitted
  *
@@ -427,11 +430,9 @@ sig_typ     sig_queue;
 alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
-
 /* the dir table */
 direntry    dirtable[MAXDIRS];
-//char*     dirtable[MAXDIRS];
-
+int         hittable[MAXDIRHIT];
 
 #if defined MACOS9 && defined powerc && !defined MPW
   pending_typ dPending[ PENDING_MAX ];
@@ -990,7 +991,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 {
 	os9err err;
 	char   tmp[OS9PATHLEN];
-
+    Boolean doRep= false;
+    
 	#ifdef MACOS9
 	  char svPath[OS9PATHLEN];
 	#endif
@@ -998,33 +1000,49 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	char*  p= egetenv( envname ); /* get path for default module loading dir */
 	if    (p==NULL) return;
 	
-	strcpy( tmp,p ); p= tmp; /* make a local copy */
+	strcpy( tmp, p ); p= tmp; /* make a local copy */
 	MakeOS9Path( p ); 
   
-      drP->type= IO_Type( 1,           p,mode ); /* get device type: Mac/PC or RBF */
-  if (drP->type==fRBF) {
-		err=      change_dir( 1,drP->type, p,mode ); /* set the types at procid 0 */
+        drP->type= IO_Type( 1,           p,mode ); // get device type: Mac/PC or RBF
+    if (drP->type==fRBF) {
+		err=    change_dir( 1,drP->type, p,mode ); // set the types at procid 0
 		return;
 	} // if
+
+    /*
+        drP->type= IO_Type( 1,           p,mode ); // get device type: Mac/PC or RBF
+    if (drP->type==fRBF ||
+        drP->type==fDir) {
+      err=      change_dir( 1,drP->type, p,mode ); // set the types at procid 0
+      if (drP->type==fRBF) return;
+	} // if
+	*/
 	
 	#ifdef MACOS9
 	  p++;
+	  doRep= true;
+	  
 	#elif defined windows32
-	  if (p[0]==PSEP && 
-		  p[2]==PSEP) { /* adapt for windows notation */
-		  p[0]= p[1];
-		  p[1]= ':';
-	  }	  
+	  if (p[ 0 ]==PSEP && 
+		 (p[ 2 ]==PSEP ||
+		  p[ 2 ]=='\0')) { /* adapt for windows notation */
+		  p[ 0 ]= p[ 1 ];
+		  p[ 1 ]= ':';
+		  doRep= true;
+	  }  
 	#endif
 		      
 	strcpy( tmp, p );
 	p=      tmp;
 
-	while  (*p!=NUL) { /* replace slashes -> PATHDELIM */
-		if (*p==PSEP) *p= PATHDELIM;
-		p++;
-	} /* while */
-	p= tmp;
+	if (doRep) {
+	  while  (*p!=NUL) { /* replace slashes -> PATHDELIM */
+		  if (*p==PSEP) *p= PATHDELIM;
+		  p++;
+	  } /* while */
+	  
+	  p= tmp;
+	} // if
 	
 	/* do this before the recursive loop */
 	strncpy( drP->path,p, OS9PATHLEN );
@@ -1116,9 +1134,9 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 
   
   // Search for all DLLs at the "PLUGINS" subdirectory
-  static os9err SearchDLLs( ushort pid, int *i, Boolean withDLLs,
-                                                Boolean atPluginDir, 
-                                                Boolean avoidDup )
+  static os9err SearchDLLs( ushort pid, int *i,  Boolean withDLLs,
+                            const char* dirName, Boolean atPluginDir, 
+                                                 Boolean avoidDup )
   {
     os9err          err, cErr;
     ushort          path;
@@ -1132,11 +1150,14 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     const char* suff= DLL_Suffix();
     if (strcmp( suff,"" )==0) return 0; // no error, if not supported
 
-    strcpy  ( pathName,  strtUPath );
+    strcpy     ( pathName, dirName );
+    MakeOS9Path( pathName );
+    
     if (atPluginDir) 
       strcat( pathName, "/PLUGINS" ); // sub directory where "dd" has been found
 
         err= usrpath_open( pid, &path, fDir, pathName, 0x81 ); 
+    debugprintf( dbgFiles, dbgNorm,( "# DLL path='%s' err=%d\n", pathName, err ));
     if (err) return err;
   
     while (true) {                    size= sizeof( dEnt );
@@ -1315,10 +1336,15 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     */
     
                        i= 0;
-    SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); // don't break on error
-    SearchDLLs( cpid, &i,  with_dbgDLLs, false, false );
-    SearchDLLs( cpid, &i, !with_dbgDLLs, true,  true  );
-    SearchDLLs( cpid, &i, !with_dbgDLLs, false, true  );
+    SearchDLLs( cpid, &i,  with_dbgDLLs, startPath, true,  false ); // don't break on error
+    SearchDLLs( cpid, &i,  with_dbgDLLs, strtUPath, true,  false );
+    SearchDLLs( cpid, &i,  with_dbgDLLs, startPath, false, false );
+    SearchDLLs( cpid, &i,  with_dbgDLLs, strtUPath, false, false );
+
+    SearchDLLs( cpid, &i, !with_dbgDLLs, startPath, true,  true  );
+    SearchDLLs( cpid, &i, !with_dbgDLLs, strtUPath, true,  true  );
+    SearchDLLs( cpid, &i, !with_dbgDLLs, startPath, false, true  );
+    SearchDLLs( cpid, &i, !with_dbgDLLs, strtUPath, false, true  );
     
     for (i= 0; i<MAXLIST; i++) {
           p= &pluginList[ i ];
@@ -2276,7 +2302,16 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   sig_queue.cnt = 0; // no signal pending at the beginning
 	
   /* no table entries at the beginning */
-  for (ii= 0; ii<MAXDIRS;     ii++) dirtable[ ii ].ident      = NULL;
+  for (ii= 0; ii<MAXDIRS;     ii++) {
+    dirtable[ ii ].ident= NULL;
+  
+    #ifdef LINKED_HASH
+    dirtable[ ii ].next = NULL;
+    #endif
+  } // for
+  
+  for (ii= 0; ii<MAXDIRHIT; ii++) hittable[ ii ]= 0;
+                                  hittable[  0 ]= MAXDIRS;
   
   #if defined MACOS9 && defined powerc && !defined MPW
   for (ii= 0; ii<PENDING_MAX; ii++) dPending[ ii ].toBeDeleted= false;

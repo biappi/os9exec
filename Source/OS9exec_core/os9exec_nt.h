@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.78  2007/03/10 13:52:30  bfo
+ *    MPW adaptions
+ *
  *    Revision 1.77  2007/03/10 12:19:26  bfo
  *    - number of dirs adaption
  *    - pending_typ / PENDING_MAX introduced (DeletePath problem)
@@ -392,21 +395,14 @@
 #define MYPRIORITY      128 /* priority for first process (defaults to IRQs enabled) */
 #define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
 
-/*
-// number of dirs
-#if defined macintosh
-  #define MAXDIRS     10000
-#elif defined win_linux
-  #define MAXDIRS     50000
-#endif
-*/
-
 /* number of dirs */
 #if defined MACOS9 && !defined powerc
   #define MAXDIRS     10000
 #else
-  #define MAXDIRS     50000
+  #define MAXDIRS     65536
 #endif
+
+#define MAXDIRHIT        60
 
 /* number of include/exclude list elements */
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
@@ -714,10 +710,10 @@ typedef struct {
 typedef struct {
             Boolean moddate_changed;
             time_t  moddate;
+            Boolean readFlag;           /* keep track for r/w changes */
             
             #ifdef MACFILES
-              short   refnum;           /* the path's refNum if it is a MACFILES fFile */
-              Boolean readFlag;         /* keep track for r/w changes */
+              short refnum;             /* the path's refNum if it is a MACFILES fFile */
             #endif
         } file_typ;
 
@@ -875,7 +871,9 @@ typedef struct {
     char      fullName[OS9PATHLEN]; /* direct access makes life easier */
 
     #if defined win_unix
-      DIR*    dDsc;
+      DIR*        dDsc;
+      int         svD_n;
+      dirent_typ* svD_dEnt;
     #endif
         
     int       term_id;          /* terminal/port id number, console|pipe|printer used together */
@@ -1242,11 +1240,19 @@ extern  alarm_typ*  alarm_queue[MAXALARMS];
 /* the dir table */
 typedef struct {
   char* ident;
-  long  dirid;
-  char* fName;
+  
+  #ifdef MACOS9
+    long  dirid;
+    char* fName;
+  #endif
+  
+  #ifdef LINKED_HASH
+    void* next;
+  #endif
 } direntry;
 
 extern direntry dirtable[MAXDIRS];
+extern int      hittable[MAXDIRHIT];
 
 #if defined MACOS9 && defined powerc && !defined MPW
   typedef struct {
