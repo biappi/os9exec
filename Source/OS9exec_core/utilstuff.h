@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2007/02/24 14:06:57  bfo
+ *    - FD_ID: Additional params <dirid> and <fName>
+ *    - MacOSX no longer based on Inodes (same as Linux)
+ *    - Consistent m->ident key handling for MacOS9
+ *
  *    Revision 1.29  2007/01/28 21:34:04  bfo
  *    'ustrcmp' made invisible
  *
@@ -169,11 +174,13 @@ dirent_typ* ReadTDir                       ( DIR*  d );
 Boolean PathFound    ( const char* pathname );
 Boolean FileFound    ( const char* pathname );
 
-void    CutUp( char* pathname, const char* prev );
-void    EatBack                      ( char* pathname );
-os9err  FD_ID( syspath_typ* spP, const char* pathname, 
-               dirent_typ* dEnt, ulong *id, long dirid, char* fName, Boolean isFirst, Boolean useInodes );
-
+void    CutUp              ( char* pathname, const char* prev );
+void    EatBack            ( char* pathname );
+os9err  FD_ID       ( syspath_typ* spP, 
+                       const char* pathname, 
+                       dirent_typ* dEnt, ulong *id, long dirid, char* fName, 
+                           Boolean isFirst, Boolean useInodes );
+os9err  FD_Name( long fdID, char** pathnameP );
 
 #ifdef win_unix
   os9err DirNthEntry       ( syspath_typ*, int n, dirent_typ** dEnt );
