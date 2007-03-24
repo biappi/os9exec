@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.1  2005/06/30 11:01:35  bfo
+ *    Moved to the platform dependent things
+ *
  *    Revision 1.5  2004/11/20 11:44:07  bfo
  *    Changed to version V3.25 (titles adapted)
  *
@@ -64,7 +67,8 @@ os9err Resolved_FSSpec( short  volID,   long  dirID,   char* pathname,
 os9err getFSSpec      ( ushort pid,                    char* pathname, 
                         defdir_typ defdir, FSSpec *fsP );
 
-os9err get_dirid      ( short *volID_P, long *dirID_P, char* pathname);
+os9err get_dirid      ( short* volID_P,                long* dirID_P, char* pathname );
+os9err check_vod      ( short* volID_P, long* objID_P, long* dirid_P, char* pathname );
 
 /* eof */
 

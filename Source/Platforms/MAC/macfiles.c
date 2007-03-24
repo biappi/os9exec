@@ -279,6 +279,7 @@ os9err Resolved_FSSpec( short volID, long dirID, char* pathname,
 } /* Resolved_FSSpec */
 
 
+
 os9err getFSSpec( ushort pid, char* pathname, defdir_typ defdir, FSSpec *fsP )
 /* make FSSpec from mac path / exe flag */
 {
@@ -296,7 +297,7 @@ os9err getFSSpec( ushort pid, char* pathname, defdir_typ defdir, FSSpec *fsP )
         case _exe  : volID= procs[pid].x.volID; dirID= procs[pid].x.dirID; break;
         case _mdir : volID=         mdir.volID; dirID=         mdir.dirID; break;
         default :    return os9error(E_FNA);
-    }
+    } // switch
 
     return Resolved_FSSpec( volID,dirID, pathname, &isFolder,fsP,&afs );    
 } /* getFSSpec */
@@ -327,7 +328,46 @@ os9err get_dirid( short *volID_P, long *dirID_P, char* pathname)
     *dirID_P= cipb.dirInfo.ioDrDirID; /* copy the sucker */
     debugprintf(dbgFiles,dbgDetail,("# get_dirid: VolId=%d, DirId=%ld\n",fs.vRefNum,fs.parID));
     return 0;
-} /* get_dirid */
+} /* get_dirid */ 
+
+
+
+os9err check_vod( short* volID_P, long* objID_P, long* dirID_P, char* pathname )
+// get back the real <volID> and <objID> and name for Mac file system
+{
+  os9err    err= E_PNNF;
+  direntry* m;
+  char*     a;
+  char*     b;
+  char      v[ 20 ];
+  long      fdID= *objID_P;
+  
+  #ifdef LINKED_HASH
+    ulong liCnt= fdID / MAXDIRS;
+          fdID = fdID % MAXDIRS;
+  #endif
+    
+  if (*volID_P==0  &&  fdID<MAXDIRS) { // if the range is correct
+         m= &dirtable[ fdID ];         // get the entry directly
+    if  (m->ident!=NULL) {
+      a= m->ident;
+      b= strstr( a," " ); b++;         // abd divide it into its pieces
+        
+      memset( v, 0, 20    );
+      memcpy( v, a, b-a-1 ); 
+        
+      *volID_P= -atoi( v );            // convert them back to numers
+      *objID_P=  atoi( b );
+      *dirID_P=         m->dirid;
+      strcpy( pathname, m->fName );                       
+     
+      err= 0;                          // yes, it's fine
+    } // if
+  } // if
+    
+  return err;
+} // check_vod
+
 
 
 /* eof */
