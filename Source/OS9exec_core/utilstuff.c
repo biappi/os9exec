@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2007/03/10 12:41:13  bfo
+ *    Use "malloc" instead "get_mem" here (avoid memory scattering)
+ *
  *    Revision 1.55  2007/02/24 14:06:57  bfo
  *    - FD_ID: Additional params <dirid> and <fName>
  *    - MacOSX no longer based on Inodes (same as Linux)
@@ -1293,82 +1296,44 @@ void EatBack( char* pathname )
 } /* EatBack */
 
 
+// Take the CRC algorithm as hash function
+static int HashF( char* name )
+{
+  const ulong AccStart= 0xffffffff;
+  ulong rslt;
+  
+  int  i,      len= strlen( name );  
+  for (i= 0; i<len; i++) {
+    name[ i ]= toupper( name[ i ] ); // make comparisons more "the same"
+  } // for
+  
+         rslt = calc_crc( (byte*)name, len, AccStart );
+         rslt^= AccStart;
+  return rslt % MAXDIRS;
+} // HashF
+
 
 os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt, 
               ulong *id, long dirid, char* fName, Boolean isFirst, Boolean useInodes )
 {
-    #ifdef MACOS9
-      #pragma unused(spP,dEnt,isFirst,useInodes)
-    #endif
+  #ifdef MACOS9
+    #pragma unused(spP,dEnt,isFirst,useInodes)
+  #endif
 
-    #if defined windows32 || defined MACOS9 || defined linux || defined __MACH__
-      #define ATTR_DIR 0x0010
-      char      tmp[MAX_PATH];
-      int       ii;
-      direntry* m;
-      Boolean   isNew= false;
+  #define ATTR_DIR 0x0010
+  char      tmp[MAX_PATH];
+  int       ii, hh, n;
+  direntry* m;
+  Boolean   doit;
+  
+  #ifdef LINKED_HASH
+    ulong liCnt= 0;
+  #endif
     
-      #if defined linux || defined __MACH__
-        // .. when using Inodes
-        if (useInodes) {
-          if (spP!=NULL) {
-            while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
-                   dEnt= ReadTDir( spP->dDsc ); 
-            } // while
-          } // if
-      
-          if (dEnt==NULL) *id= 0;
-          else            *id= dEnt->d_ino;
-    
-          #if defined __MACH__
-            if (*id==1) *id= 2; // adapt for top dir searching
-          #endif
-          
-          return 0;
-        }
-      #endif
-
-      strcpy( tmp,pathname );
-    //printf( "tmp='%s'\n", tmp );
-      
-      #if defined windows32 || defined linux || defined __MACH__
-        if      (tmp[strlen(tmp)-1]!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
-        strcat ( tmp, dEnt->d_name );
-        EatBack( tmp );
-      #endif
-                
-//    if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
-      
-      *id= (ulong)-1; /* undefined */
-      for (ii=0;ii<MAXDIRS-1;ii++) {
-              m= &dirtable[ii];
-          if (m->ident==NULL) {
-                      m->ident= malloc( strlen( tmp )+1 );
-              strcpy( m->ident,                 tmp );
-              //      m->dirid= dirid;
-                      m->fName= malloc( strlen( fName )+1 );
-              strcpy( m->fName,                 fName );
-             
-          //  dirtable[ii+1]= NULL; /* prepare the next undefined field */
-              
-              isNew= true;
-          } /* if */
-          
-          if (dirid!=0) m->dirid= dirid; 
-          if (ustrcmp ( m->ident, tmp )==0) {
-            *id= (ulong)ii+1;
-            break;
-          } /* if */
-      } /* for */
-      if (*id==(ulong)-1) return E_NORAM;
-          
-    //printf( "'%s' %d %s\n", tmp, *id, isNew ? "new":"exists" );
-    
-    /*  
-    #elif defined linux_INODE
+  #if defined UNIX
+    // .. when using Inodes
+    if (useInodes) {
       if (spP!=NULL) {
-      //if (dEnt!=NULL) printf( "gugus: '%s'\n", dEnt->d_name );
-      
         while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
                dEnt= ReadTDir( spP->dDsc ); 
         } // while
@@ -1376,18 +1341,117 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
       
       if (dEnt==NULL) *id= 0;
       else            *id= dEnt->d_ino;
-    */
     
-  //#elif defined __MACH__
-  //  *id= dEnt->d_ino;
-  //  if (*id==1) *id= 2; // adapt for top dir searching
+      #if defined __MACH__
+        if (*id==1) *id= 2; // adapt for top dir searching
+      #endif
+          
+      return 0;
+    }
+  #endif
+
+  strcpy( tmp,pathname );
       
+  #if defined win_unix
+    if     ( tmp[strlen( tmp )-1]!=PATHDELIM ) strcat( tmp,PATHDELIM_STR );
+    strcat ( tmp, dEnt->d_name );
+    EatBack( tmp );
+  #endif
+                
+//if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
+      
+  *id= 0; /* undefined */
+  hh= HashF( tmp ); if (hh==0) hh++;
+  ii= hh;
+      
+  n= 1; m= &dirtable[ ii ];
+  while (true) {
+    if (m->ident==NULL) {
+                m->ident= malloc( strlen( tmp )+1 );
+      strcpy  ( m->ident,                 tmp );
+              
+      #ifdef MACOS9
+                m->fName= malloc( strlen( fName )+1 );
+        strcpy( m->fName,                 fName );
+      #endif
+          
+      hittable[ 0 ]--; // adapt statistics
+      hittable[ n ]++;            
+    } /* if */
+          
+    #ifdef MACOS9
+      if (dirid!=0) m->dirid= dirid;
+    #endif
+          
+    if (ustrcmp( m->ident, tmp )==0) {
+      *id= (ulong)ii;
+      break;
+    } /* if */
+
+    #ifdef LINKED_HASH
+                liCnt++;
+          doit= liCnt>=128;
+      if (doit) liCnt= 0;
     #else
-      *id= 0;
+      doit= true;
     #endif
     
-    return 0;
+    if (doit) {    
+          ii++;
+      if (ii==MAXDIRS) ii= 1;
+      if (ii==hh) break;
+      m= &dirtable[ ii ];
+    } 
+    else {
+      #ifdef LINKED_HASH
+        if (m->next==NULL)
+            m->next= malloc( sizeof( direntry ) );
+        m=  m->next;
+      #endif
+    } // if
+    
+    if (n<MAXDIRHIT-1) n++; 
+  } /* loop */
+  if (*id==0) return E_NORAM;
+  
+  #ifdef LINKED_HASH
+    *id+= liCnt*MAXDIRS;
+  #endif
+    
+  return 0;
 } /* FD_ID */
+
+
+
+os9err FD_Name( long fdID, char** pathnameP )
+// get back the real <volID> and <objID> for Mac file system
+{
+  os9err err= 0;
+  direntry* m;
+  
+  #ifdef LINKED_HASH
+    ulong liCnt= fdID / MAXDIRS;
+          fdID = fdID % MAXDIRS;
+  #endif
+   
+  *pathnameP= NULL;
+  if (fdID>0 && fdID<MAXDIRS) {       // if the range is correct
+                m= &dirtable[ fdID ]; // get the entry directly
+    *pathnameP= m->ident;
+  } // if
+  
+  #ifdef LINKED_HASH
+    for (i= 0; i<liCnt; i++) {
+      if (m) m= m->next;
+    } // for
+
+    *pathnameP= m->ident;
+  #endif
+  
+  if (*pathnameP==NULL) err= E_PNNF;  
+//upe_printf( "id=%d => name='%s' err=%d\n", fdID, *pathnameP ? *pathnameP : "", err );
+  return err;
+} // FD_Name
 
   
   
@@ -1395,11 +1459,10 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
 os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
 /* prepare directory to read the <n>th entry */
 {   
-//dirent_typ* dEnt;
-//Boolean     first= true;
-  int         m= n;
-  int         i= 0;
-    
+//int m= n;
+  int i= 0;
+  
+  /*  
   debugprintf(dbgFiles,dbgDetail,("# DirEntry: ---\n" )); 
   seekD0( spP );
   while (m>0) {
@@ -1409,10 +1472,21 @@ os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
     m--;
   } // while
   debugprintf(dbgFiles,dbgDetail,("# DirEntry: ---\n" )); 
-    
-  seekD0( spP );  // start at the beginning
+  */
+  
   do {
-  //printf( "nn=%d\n", n );
+    if (n>2) {
+             i=            spP->svD_n;
+      if (n==i  ) { *dEnt= spP->svD_dEnt; break; } // still the same
+      if (n!=i+1) i= 0;                            // not the next one
+    } // if
+  
+  //if (i==0) { seekD0( spP ); i= 1; }  // start at the beginning
+
+    if (n<=2 || i==0) { 
+      seekD0( spP );
+      i= 1; // ignore ".." and "." entries for n>=2
+    } // if
     
     if (n==0) {     // search for ".."
       do     *dEnt= ReadTDir( spP->dDsc ); 
@@ -1425,16 +1499,19 @@ os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
       do     *dEnt= ReadTDir( spP->dDsc ); 
       while (*dEnt!=NULL && strcmp( (*dEnt)->d_name,"."  )!=0);
 
-      /*
-      #ifdef windows32
-        if  (*dEnt==NULL) return 0; // empty root directory
-      #endif
-      */
-      
       break;
     } // if
     
-    i= 1; // starting after ".." and "."
+  //#ifdef windows32 // missing top dir entry
+    /*
+    if (n==2 || i==0) { 
+      seekD0( spP );
+      i= 1; // ignore ".." and "." entries
+    } // if
+    */
+  //#endif
+    
+    // starting after ".." and "."
     do {  *dEnt= ReadTDir( spP->dDsc );
       if (*dEnt==NULL) break;
       
@@ -1445,44 +1522,11 @@ os9err DirNthEntry( syspath_typ* spP, int n, dirent_typ** dEnt )
     } while ( i<n );
   } while (false);
   
-//printf( "aha=%d\n", i );
+  spP->svD_n   =     n;
+  spP->svD_dEnt= *dEnt;
+  
   if (*dEnt==NULL) return E_EOF;
   else             return 0;
-
-  /*
-  m= n; 
-  seekD0( spP );  // start at the beginning
-  while (n>0) {   // search for the nth entry
-          dEnt= ReadTDir( spP->dDsc ); 
-      if (dEnt==NULL) {
-          #ifdef windows32
-            if (first) return 0; // empty root directory
-          #endif
-            
-          return os9error(E_SEEK);
-      } // if
-        
-      // the top directory at Windows has no "." or ".."
-      #ifdef windows32
-        if (first && ustrcmp(dEnt->d_name,".")!=0) {
-            n=  n-2;
-            if (n<=0) seekD0( spP );
-        }
-          
-        first= false;
-      #endif
-        
-      if (i<=1 && ustrcmp( dEnt->d_name,".." )!=0
-               && ustrcmp( dEnt->d_name,"."  )!=0) {
-        if (n==1) { seekD0( spP ); n= --m; i= 0; continue; }
-      } // if
-          
-      if (ustrcmp( dEnt->d_name,AppDo )!=0 ) n--; // ignore ".AppleDouble"
-      i++;
-  } // while
-    
-  return 0;
-  */
 } /* DirNthEntry */
 
 
@@ -1669,13 +1713,13 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
               //upo_printf( "name='%s'\n", dEnt->d_name );
 		                        
                 strcpy( p, pathname );
-		            strcat( p, PATHDELIM_STR );
-		            strcat( p, dEnt->d_name );
-		            strcat( p, PATHDELIM_STR );
-		            strcat( p, sv );
+                strcat( p, PATHDELIM_STR );
+                strcat( p, dEnt->d_name );
+                strcat( p, PATHDELIM_STR );
+                strcat( p, sv );
 		          
-		            // get inode and compare it
-		                 err= stat_ ( p, &pInfo );
+                // get inode and compare it
+                     err= stat_( p, &pInfo );
                 if (!err) {
                // upo_printf( "name='%s' ino=%d\n", p, pInfo.st_ino );
                   if (pInfo.st_ino==qInfo.st_ino) { 
@@ -1743,31 +1787,32 @@ ulong My_Ino( const char* pathname )
 
 void MakeOS9Path( char* pathname )
 {
-    char  tmp[OS9PATHLEN];
-    char* q= pathname;
-    int   i= 0;
+  char  tmp[OS9PATHLEN];
+  char* q= pathname;
+  int   i= 0;
     
-    if (*q!=PSEP) {
-        if (q[1]==':' &&
-            q[2]==PATHDELIM) { /* windows */
-            q[1]= q[0];        /* adapt it OS-9-like, same length */
-            q[0]= PSEP;
-        }
-        else {
-            tmp[0]= PSEP; /* start with a slash */
-            i= 1;
-        }
+  if (*q!=PSEP) {
+    if (q[ 1 ]==':' &&
+       (q[ 2 ]==PATHDELIM ||
+        q[ 2 ]=='\0')) {   /* windows */
+        q[ 1 ]= q[ 0 ];    /* adapt it OS-9-like, same length */
+        q[ 0 ]= PSEP;
     }
+    else {
+      tmp[ 0 ]= PSEP; /* start with a slash */
+      i= 1;
+    } // if
+  } // if
 
-    strcpy( &tmp[i],q ); q= tmp;
+  strcpy( &tmp[ i ],q ); q= tmp;
             
-    while  (*q!=NUL) { /* replace slashes -> ":" */
-        if (*q==PATHDELIM) *q= PSEP;
-        q++;
-    } /* while */
+  while  (*q!=NUL) { /* replace slashes */
+    if (*q==PATHDELIM) *q= PSEP;
+    q++;
+  } /* while */
     
-    q--; if (*q==PSEP) *q= NUL;
-    strcpy( pathname,tmp );
+  q--; if (*q==PSEP) *q= NUL;
+  strcpy( pathname,tmp );
 } /* MakeOS9Path */
 
 
@@ -1916,42 +1961,109 @@ Boolean SCSI_Device( const char* os9path,
 
 
 #ifdef windows32
+  static void StrReplace( char* dst, const char* src, const char* search, 
+                                                      const char* replace )
+  {
+    int  i= 0;
+    int  j= 0;
+    int  k;
+    char ch, v, w;
+    Boolean found, foundOK= false;
+    
+    while (true) {
+      ch= src[ i ]; if (ch=='\0') break;
+      
+      found= false; // <search> sequence ?
+      if (i==0 || src[ i-1 ]=='\\') { // start or separator
+        k= 0;
+        while (true) {
+          v= search[   k ]; 
+          w= src   [ i+k ];
+          
+          if (v=='\0') {
+            found= w=='\0' || 
+                   w=='.'  ||
+                   w=='\\'; // end or separator
+            break;
+          } // if
+          if (toupper( v )!=toupper( w )) break;
+          
+          k++;
+        } // loop
+      } // if
+      
+      if (found) {
+        i+= k; // skip <search> sequence
+ 
+        k= 0; // insert <replace> sequence
+        while (true) {
+          v= replace[ k ]; 
+          
+          if (v=='\0') break;
+          dst[ j ]= v;          
+          
+          j++;
+          k++;
+        } // loop
+        
+        foundOK= true;
+      }
+      else {
+        dst[ j ]= ch;
+        
+        i++;
+        j++;
+      }
+    } // loop
+    
+    dst[ j ]= '\0';
+    if (foundOK) upe_printf( "con src='%s' dst='%s'\n", src, dst );
+  } // StrReplace
+  
+  
+  
   os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
   /* do more or less nothing */
   { 
-      char* p;
+  //char* p;
       
-      if ( *pathname==NUL ) return E_BPNAM;
-      strcpy( adname,pathname );
+    if ( *pathname==NUL ) return E_BPNAM;
       
-      /* "con" is a problem in windows => convert it to ".con" */
-      if (ustrcmp( adname,   "con" )==0) 
-          strcpy ( adname,  ".con" );
+    /* "con" is a problem in windows => convert it to ".con" */
+    StrReplace( adname, pathname, "CON", ".CON" );
       
-      p= adname + strlen( adname )-strlen( "\\con" );
-      if (ustrcmp( p,      "\\con" )==0) {
-          *p= NUL;
-          strcat ( adname,"\\.con" );
-      }
+    /*
+    strcpy( adname,pathname );
+    if (ustrcmp( adname,   "con" )==0) 
+        strcpy ( adname,  ".con" );
       
-//    upe_printf( "%s\n", adname );
-      EatBack( adname );
+    p= adname + strlen( adname )-strlen( "\\con" );
+    if (ustrcmp( p,      "\\con" )==0) {
+        *p= NUL;
+        strcat ( adname,"\\.con" );
+    }
+    */
       
-      if (!creFile) { /* can't be here, if file not yet exists */
-          if (!FileFound( adname )) {
-            #ifdef windows32
+  //upe_printf( "%s\n", adname );
+    EatBack( adname );
+      
+    if (!creFile) { /* can't be here, if file not yet exists */
+      if (!FileFound( adname )) {
+        #ifdef windows32
+          if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
+        #endif
+        
+        if (!PathFound( adname )) {
+          #ifdef windows32
             if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-            #endif
-            if (!PathFound( adname )) {
-              #ifdef windows32
-              if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-              #endif
-              return E_PNNF;
-            }
-          }
-      }
+          #endif
+          
+          return E_PNNF;
+        } // if
+      } // if
+    } // if
       
-      return 0;
+    return 0;
   } /* AdjustPath */
 #endif
 
