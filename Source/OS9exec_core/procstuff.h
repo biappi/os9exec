@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/07/29 08:54:19  bfo
+ *    <allowedIntUtil> is now the pid of the int util (0 for none)
+ *
  *    Revision 1.10  2006/07/21 07:29:54  bfo
  *    Up to date
  *
@@ -79,6 +82,7 @@ os9err send_signal ( ushort pid, ushort signal );
 os9err sig_mask    ( ushort pid, int    level  );
 
 void do_arbitrate( ushort allowedIntUtil );
+void DoWait( void );
 
 void stop_os9exec(void);
 void lw_pid( ttydev_typ* mco );

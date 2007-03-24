@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.11  2006/02/19 15:43:15  bfo
+ *    Header changed to 2006
+ *
  *    Revision 1.10  2005/06/30 11:41:21  bfo
  *    Mach-O support
  *
@@ -222,6 +225,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     #elif defined win_unix
       char   adD[OS9PATHLEN];
       char   adS[OS9PATHLEN];
+      int    i;
     #endif
     
     ushort     pathS, pathD, pathX;
@@ -452,11 +456,17 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
           }
         
         #elif defined win_unix
-                    err= AdjustPath( nameD, (char*)&adD, true ); nameD= (char*)&adD;
-          if (!err) err= rename( nameS,nameD );
+               err= AdjustPath( nameD, (char*)&adD, true ); nameD= (char*)&adD;
+          if (!err) {
+            for (i= 0; i<10; i++) {
+              err= rename( nameS,nameD ); if (!err) break;
+              DoWait();
+            } // for
+          } // if
+            
           if  (err) return _errmsg( err, "can't open dest directory \"%s\".", nameD );
         #endif
-    }
+    } // if
     
     if (!quiet)
         return _errmsg( 0,"\"%s/%s\" moved to \"%s/%s\"\n", fromdir,fromname, todir,destname);

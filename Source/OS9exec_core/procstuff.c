@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.58  2007/03/10 12:39:21  bfo
+ *    Params corrected: debug_return( &sigp->os9regs, spid, true )
+ *
  *    Revision 1.57  2007/02/22 23:10:10  bfo
  *    sigp->plugElem->call_Intercept
  *
@@ -925,7 +928,7 @@ static void wait_for_signal( ushort pid )
 } /* wait_for_signal */
 
 
-static void DoWait( void )
+void DoWait( void )
 {
   #ifdef UNIX
     struct timespec wait_time;
