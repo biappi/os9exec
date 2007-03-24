@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2007/03/10 12:22:05  bfo
+ *    "Change_DbgPath" implemented here now (visible from outside)
+ *
  *    Revision 1.49  2007/02/22 23:12:04  bfo
  *     <call_Intercept> and parameter adaptions
  *
@@ -1444,6 +1447,56 @@ Boolean Plugin_Possible( Boolean hardCheck )
 
 
 
+static os9err int_hit( _pid_, _argc_, _argv_ ) 
+{
+  int i, j, hi, n, iLast;
+  int h0  = hittable[ 0 ];
+  int diff= MAXDIRS-h0;
+  char s[ 10 ];
+  char v[ 10 ];
+  const int NBlk= 4;
+  const int MaxL= MAXDIRHIT / NBlk;
+  
+  n= 0; iLast= 0;
+  for (i= 1; i<MAXDIRHIT; i++) {
+        hi= hittable[ i ];
+    n+= hi*i;
+    if (hi>0) iLast= i;
+  } // for
+  
+  if (diff==0) strcpy ( s, "" );
+  else         sprintf( s, " %5.3f", (float)n/(float)diff );
+  
+  upo_printf  ( "File name hash field hit rate:%s\n", s );
+  
+  for   (i= 0; i<MaxL; i++) {
+    for (j= 0; j<NBlk; j++) {
+      n = i + j*MaxL;
+      hi= hittable[ n ];
+      
+      if (n==0) {
+        strcpy( s, "unused" );
+      }
+      else {
+        if (hi==0) strcpy ( s, "      " );
+        else       sprintf( s, "%5.1f%%", (float)hi/(float)diff*100 );
+      } // if
+      
+      if (hi==0) sprintf( v, "-"      );
+      else       sprintf( v, "%d", hi );
+      
+      if (n<=iLast)
+        upo_printf( "%3d:%6s %s%s", n, v, s, j<NBlk-1 ? "  " : "" );
+        
+      if (j==NBlk-1 && (iLast>=MaxL || iLast>=i))
+        upo_printf( "\n" );
+    } // for
+  } // for
+  
+  return 0;
+} // int_hit
+
+
 static os9err int_crash( _pid_, _argc_, _argv_ )
 {   
   ulong* a;
@@ -1505,6 +1558,7 @@ cmdtable_typ commandtable[] =
   { "imdir",         int_mdir,       "shows OS9exec's loaded OS-9 modules" },
   { "ipaths",        int_paths,      "shows OS9exec's path list" },
   { "imem",          int_mem,        "shows OS9exec's memory block list" },
+  { "ihit",          int_hit,        "shows OS9exec's directory hash hit rate" },
     
   #ifdef REUSE_MEM
   { "iunused",       int_unused,     "shows OS9exec's unused block list" },
@@ -1674,51 +1728,77 @@ os9err prepArgs( char *arglist, ushort *argcP, char*** argP )
  *       delimiter information.
  */
 {
-    ushort argc,k;
-    char *p, *cp;
-    char **pp;
-    #define MAXARGS 20
-    char *localargv[MAXARGS];
-    int scanarg;
+  ushort argc,k;
+  char *p, *cp;
+  char **pp;
+//#define MAXARGS 20
+//char *localargv[MAXARGS];
+  int    scanarg;
+  char** localargv;
     
-    argc=0; /* none found yet */
-    p=arglist;
-    scanarg=false;
-    debugprintf(dbgUtils,dbgDeep,("# prepArgs: arglist @ $%08lX\n",(ulong)arglist));
-    while (*p >= 0x20) {
-        if (argc>MAXARGS) return os9error(E_NORAM);
-        if (!scanarg) {
-            if (*p!=0x20) {
-                localargv[argc]= p; /* remember beginning of next arg */
-                argc++;
-                scanarg=true; /* now scanning argument */
-            }
-        }
-        else {
-            if (*p==0x20) scanarg=false; /* end of arg found */
-        }
-        p++;
+  argc   = 0; /* none found yet */
+  p      = arglist;
+  scanarg= false;
+  
+  while  (*p>=0x20) {
+    if (!scanarg) {
+      if (*p!=0x20) {
+        argc++;     scanarg= true; /* now scanning argument */
+      } // if
     }
-    /* p now points behind last arg char */
-    localargv[argc]= p; /* save as end pointer */
+    else {
+      if (*p==0x20) scanarg= false; /* end of arg found */
+    }
+    
+    p++;
+  } // while
+
+  localargv= get_mem( (argc+1)*sizeof(char**) );
+
+  debugprintf( dbgUtils,dbgNorm, ("# prepArgs: arglist @ $%08lX argc=%d\n",(ulong)arglist, argc ));
+
+  argc   = 0; /* start again */
+  p      = arglist;
+  scanarg= false;
+  
+  while  (*p>=0x20) {    
+    if (!scanarg) {
+      if (*p!=0x20) {
+        localargv[ argc ]= p;      /* remember beginning of next arg */
+        argc++;     scanarg= true; /* now scanning argument */
+      } // if
+    }
+    else {
+      if (*p==0x20) scanarg= false; /* end of arg found */
+    }
+    p++;
+  } // while
+  
+  /* p now points behind last arg char */
+  localargv[ argc ]= p; /* save as end pointer */
         
-        pp= get_mem( p-arglist + (argc+1)*sizeof(char**) + 1 );
-    if (pp==NULL) return os9error(E_NORAM);
+      pp= get_mem( p-arglist + (argc+1)*sizeof(char**) + 1 );
+  if (pp==NULL) return os9error(E_NORAM);
     
-    p=(char *)(pp + argc +1);
-    debugprintf(dbgUtils,dbgDeep,("# prepArgs: argc=%d, argv[] @ $%lX, args @ $%lX\n",argc,(ulong)pp, (ulong)p));
-    /* now copy argv[] and args, leave argv[0] free */
-    for (k=0; k<argc; k++) {
-        pp[k+1]=p; /* pointer to arg, leave argv[0] free */
-        for (cp=localargv[k]; cp<localargv[k+1]; cp++) *p++=*cp;
-        if (*(p-1)==0x20) *(p-1)=0; else *p++=0; /* replace space by terminator or append it at end */
-    }
-    debugprintf(dbgUtils,dbgDeep,("# prepArgs: prepared argc=%d, params @ $%08lX\n",
-                                     argc,(ulong)pp));
-    /* return args */
-    *argP = &pp[0];
-    *argcP= argc+1; /* include argv[0] */
-    return 0;
+  p=(char *)(pp + argc +1);
+  debugprintf(dbgUtils,dbgDeep,("# prepArgs: argc=%d, argv[] @ $%lX, args @ $%lX\n",argc,(ulong)pp, (ulong)p));
+  
+  /* now copy argv[] and args, leave argv[ 0 ] free */
+  for (k=0; k<argc; k++) {
+    pp[k+1]=p; /* pointer to arg, leave argv[0] free */
+    for (cp=localargv[k]; cp<localargv[k+1]; cp++) *p++=*cp;
+    if (*(p-1)==0x20) *(p-1)=0; else *p++=0; /* replace space by terminator or append it at end */
+  } // for
+  
+  debugprintf(dbgUtils,dbgDeep,("# prepArgs: prepared argc=%d, params @ $%08lX\n",
+                                   argc,(ulong)pp));
+                                   
+  release_mem( localargv );
+  
+  /* return args */
+  *argP = &pp[ 0 ];
+  *argcP= argc+1; /* include argv[ 0 ] */
+  return 0;
 } /* prepArgs */
 
 
