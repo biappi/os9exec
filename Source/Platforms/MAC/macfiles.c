@@ -23,7 +23,7 @@
 /*  Cooperative-Multiprocess OS-9 emulation   */
 /*         for Apple Macintosh and PC         */
 /*                                            */
-/* (c) 1993-2004 by Lukas Zeller, CH-Zuerich  */
+/* (c) 1993-2007 by Lukas Zeller, CH-Zuerich  */
 /*                  Beat Forster, CH-Maur     */
 /*                                            */
 /* email: luz@synthesis.ch                    */
@@ -35,6 +35,20 @@
 /* specific mac file routines which are not available */
 /* on other systems */
 
+/*
+ *  CVS:
+ *    $Author$
+ *    $Date$
+ *    $Revision$
+ *    $Source$
+ *    $State$
+ *    $Name$ (Tag)
+ *    $Locker$ (who has reserved checkout)
+ *  Log:
+ *    $Log$
+ *
+ *
+ */
 
 
 #include "os9exec_incl.h"
