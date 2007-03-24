@@ -1755,6 +1755,28 @@
     ------------------- 
 
           07-03-11  Bfo     Version changed to V3.37
+          07-03-17  Bfo     utilstuff.h : "FD_Name" introduced
+          07-03-17  Bfo     os9main     : <isRBF> dependency introduced
+          07-03-23  Bfo     intcommand  - "ihit" introduced (hash hit rate/statistics)
+                                        - internal utilities with unlimited number of command line params
+          07-03-24  Bfo     macfiles    - "check_vod" introduced (for hash access)
+                                        - CVS statistics added
+          07-03-24  Bfo     fileaccess  - <readFlag> introduced (seek when change read -> write)
+                                        - ftruncate adaptions (still not working for CW MacOSX)
+                                        - check_vod moved to "macfiles"
+          07-03-24  Bfo     os9exec_nt  - MAXDIR is now 65536
+                                        - MAXDIRHIT = 60 and <hittable>, for "ihit" statistics
+                                        - <readflag> for RW (fileaccess)
+                                        - <svD_n> and <svD_dEnt> for fast directory access
+                                        - <next> element for linked hash list
+                                        - Improved TFS start conditions for directory searching
+          07-03-24  Bfo     utilstuff   - "HashF" hash function (using CRC) added
+                                        - Hash function prepared for LINKED_HASH
+                                        - Speedup for TFS directory reading
+                                        - "StrReplace" function for Windows "con" problem ( => ".con" )
+          07-03-24  Bfo     procstuff   : "DoWait" is visible from outside
+          07-03-24  Bfo     int_move    : "DoWait" loop for Windows "rename"
+          
     3.37  07-??-??  Bfo
     ------------------- 
 */
@@ -1782,10 +1804,8 @@
     -   RBF: do read only, if write larger than a sector
     -  (SCSI subsystem for Linux)
     -   direct line editing on Linux (over network)
-    -   Faster directory read (Windows)
     -   Implement internal command "ls" in UNIX style: "ls -la".
     -   <in_recursion> for debug load
-    -   btree optimisation
     -   termcap support for the DOS window.
     -   paging for SCF devices
     -   tab expansion for SCF devices
