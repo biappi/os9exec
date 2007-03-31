@@ -41,6 +41,14 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.79  2007/03/24 12:52:41  bfo
+ *    - MAXDIR is now 65536
+ *    - MAXDIRHIT = 60 and <hittable>, for "ihit" statistics
+ *    - <readflag> for RW (fileaccess)
+ *    - <svD_n> and <svD_dEnt> for fast directory access
+ *    - <next> element for linked hash list
+ *    - Improved TFS start conditions for directory searching
+ *
  *    Revision 1.78  2007/03/10 13:52:30  bfo
  *    MPW adaptions
  *
@@ -286,6 +294,14 @@
 #ifndef __os9exec_nt_h
 #define __os9exec_nt_h
 
+/* activate linked hash table */
+//#if !defined MACOS9 && !defined windows32
+#if defined MACOS9 && !defined powerc
+  #undef  LINKED_HASH
+#else
+  #define LINKED_HASH 1
+#endif
+
 #ifdef THREAD_SUPPORT
   #include <types.h>
 #endif
@@ -399,7 +415,11 @@
 #if defined MACOS9 && !defined powerc
   #define MAXDIRS     10000
 #else
-  #define MAXDIRS     65536
+  #ifdef LINKED_HASH
+    #define MAXDIRS   16384
+  #else
+    #define MAXDIRS   65536
+  #endif
 #endif
 
 #define MAXDIRHIT        60
@@ -1274,14 +1294,6 @@ extern int      hittable[MAXDIRHIT];
 
 /* the OS-9 statistics table */
 extern  st_typ      statistics[MAX_OS9PROGS];
-
-// the mem alloc table
-//extern memblock_typ memtable[MAX_MEMALLOC];
-
-//#ifdef REUSE_MEM
-//  extern free_typ   freeinfo;
-//#endif
-
 
 /* I/O device table */
 extern  byte        devs[0x0900];       
