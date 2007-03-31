@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2007/03/24 12:34:50  bfo
+ *    - "ihit" introduced (hash hit rate/statistics)
+ *     - internal utilities with unlimited number of command line params
+ *
  *    Revision 1.50  2007/03/10 12:22:05  bfo
  *    "Change_DbgPath" implemented here now (visible from outside)
  *
@@ -1449,21 +1453,20 @@ Boolean Plugin_Possible( Boolean hardCheck )
 
 static os9err int_hit( _pid_, _argc_, _argv_ ) 
 {
-  int i, j, hi, n, iLast;
-  int h0  = hittable[ 0 ];
-  int diff= MAXDIRS-h0;
-  char s[ 10 ];
-  char v[ 10 ];
   const int NBlk= 4;
   const int MaxL= MAXDIRHIT / NBlk;
+
+  int i, j, hi, n= 0, iLast= 0, diff= 0;
+  char s[ 10 ];
+  char v[ 10 ];
   
-  n= 0; iLast= 0;
   for (i= 1; i<MAXDIRHIT; i++) {
-        hi= hittable[ i ];
-    n+= hi*i;
+           hi= hittable[ i ];
+    diff+= hi;
+    n   += hi*i; // weighted
     if (hi>0) iLast= i;
   } // for
-  
+
   if (diff==0) strcpy ( s, "" );
   else         sprintf( s, " %5.3f", (float)n/(float)diff );
   
