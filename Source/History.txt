@@ -965,7 +965,6 @@
           02-04-01  Bfo     Child/Sibling problem of internal commands fixed.
     3.10  02-04-01  Bfo >>> FINAL RELEASE V3.10 FOR DELIVERY <<<
     ===================     
-
 	
           02-04-20  luz     Imported V3.10 source as initial CVS checkin "V3_10"
                             at os9exec.sourceforge.net.
@@ -1147,7 +1146,7 @@
           02-11-06  Bfo     OS9_F_Load <mode> problem is now really fixed !
           02-11-09  Bfo     RBF move in same directly running now correctly
     3.20  02-11-24  Bfo     Branch Tag V3_20 at Sourceforge.net / Release for Customer
-    -------------------
+    ===================
 
           02-11-24  Bfo     Changed to new version
           02-12-31  Bfo     Intercept handling improved
@@ -1777,7 +1776,14 @@
           07-03-24  Bfo     procstuff   : "DoWait" is visible from outside
           07-03-24  Bfo     int_move    : "DoWait" loop for Windows "rename"
           
-    3.37  07-??-??  Bfo
+          07-03-24  Bfo     macfiles    : Linked hash support added
+          07-03-30  Bfo     intcommand  : "ihit" extended for LINKED_HASH support
+          07-03-31  Bfo     os9exec_nt  : LINKED_HASH support with 16384 entries
+          07-03-31  Bfo     utilstuff   - LINKED_HASH support and bug fixes (NULL initialisation)
+                                        - extended <liCnt> range
+          07-03-31  Bfo     fileaccess  - LINKED_HASH support (by using <cond>)
+                                        - Set_FileDate supported now for MacOSX
+    3.37  07-04-??  Bfo
     ------------------- 
 */
 
