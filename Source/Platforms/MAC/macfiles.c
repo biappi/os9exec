@@ -46,6 +46,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.5  2007/03/24 12:38:39  bfo
+ *    CVS statistics added
+ *
  *
  *
  */
@@ -357,14 +360,24 @@ os9err check_vod( short* volID_P, long* objID_P, long* dirID_P, char* pathname )
   long      fdID= *objID_P;
   
   #ifdef LINKED_HASH
+    int   i;
     ulong liCnt= fdID / MAXDIRS;
           fdID = fdID % MAXDIRS;
+          
+    *volID_P= 0; // don't use it directly for this case
   #endif
     
-  if (*volID_P==0  &&  fdID<MAXDIRS) { // if the range is correct
-         m= &dirtable[ fdID ];         // get the entry directly
-    if  (m->ident!=NULL) {
-      a= m->ident;
+  if (*volID_P==0 && fdID<MAXDIRS) {   // if the range is correct
+    m=    &dirtable[ fdID ];           // get the entry directly
+    
+    #ifdef LINKED_HASH
+      for (i= 0; i<liCnt; i++) {
+        if (m) m= m->next;
+      } // for
+    #endif
+    
+    if (m && m->ident!=NULL) {
+      a=     m->ident;
       b= strstr( a," " ); b++;         // abd divide it into its pieces
         
       memset( v, 0, 20    );
