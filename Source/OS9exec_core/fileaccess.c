@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.46  2007/03/24 12:47:35  bfo
+ *    - <readFlag> introduced (seek when change read -> write)
+ *    - ftruncate adaptions (still not working for CW MacOSX)
+ *    - check_vod moved to "macfiles"
+ *
  *    Revision 1.45  2007/03/10 14:04:29  bfo
  *    MPW adaptions
  *
@@ -164,7 +169,7 @@
 
 #include "os9exec_incl.h"
 
-#ifdef win_linux
+#ifdef win_unix
   #include <utime.h>
 #endif
 
@@ -622,13 +627,20 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
   static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
   {
     dirent_typ* dEnt= NULL;
-    char hashV[ 80 ];
-    char fName[ OS9NAMELEN ];
+    char        hashV[ 80 ];
+    char        fName[ OS9NAMELEN ];
+    Boolean     cond;
     
-    if (volid>=       0 || 
-        volid< VOLIDMIN ||
-        objid>=  IDSIGN || 
-        objid<  -IDSIGN) {
+    #ifdef LINKED_HASH
+      cond= true;
+    #else
+      cond= volid>=       0 || 
+            volid< VOLIDMIN ||
+            objid>=  IDSIGN || 
+            objid<  -IDSIGN;
+    #endif        
+    
+    if (cond) {      
       strcpy( fName, deP->name );
       fName[ strlen(fName)-1 ] &= 0x7f;
         
@@ -640,11 +652,12 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
       debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: hashV='%s'\n", hashV ));
                       
       deP->fdsect= objid; /* assign the new value */
-      return;
-    } /* if */
-
-    deP->fdsect = (volid & VOLIDMASK) << IDSHIFT;
-    deP->fdsect|=  objid &    IDMASK;
+    }
+    else {
+      // combine them again
+      deP->fdsect = (volid & VOLIDMASK) << IDSHIFT;
+      deP->fdsect|=  objid &    IDMASK;
+    } // if
   } /* assign_fdsect */
 #endif
 
@@ -827,9 +840,9 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       else _lclose( hh );
     //printf( "Set_FileDate raus\n" );
 
-    #elif defined linux
+    #elif defined UNIX
       struct utimbuf buf;
-      
+          
       buf.actime = t;
       buf.modtime= t;
       utime( spP->fullName, &buf );
