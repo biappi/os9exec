@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.57  2007/03/24 13:02:45  bfo
+ *    - "HashF" hash function (using CRC) added
+ *    - Hash function prepared for LINKED_HASH
+ *    - Speedup for TFS directory reading
+ *    - "StrReplace" function for Windows "con" problem ( => ".con" )
+ *
  *    Revision 1.56  2007/03/10 12:41:13  bfo
  *    Use "malloc" instead "get_mem" here (avoid memory scattering)
  *
@@ -1297,19 +1303,44 @@ void EatBack( char* pathname )
 
 
 // Take the CRC algorithm as hash function
+//static int HashF( char* name, char* fName )
 static int HashF( char* name )
 {
   const ulong AccStart= 0xffffffff;
   ulong rslt;
+  int  i, len;  
   
-  int  i,      len= strlen( name );  
+  /*
+  #ifdef MACOS9
+    char v[MAX_PATH];
+    int  len2;
+                 len2= strlen( fName );  
+    for (i= 0; i<len2; i++) {
+      v[ i ]= toupper( fName[ i ] ); // make comparisons more "the same"
+    } // for
+  #endif
+  */
+               len= strlen( name );  
   for (i= 0; i<len; i++) {
     name[ i ]= toupper( name[ i ] ); // make comparisons more "the same"
   } // for
   
-         rslt = calc_crc( (byte*)name, len, AccStart );
-         rslt^= AccStart;
-  return rslt % MAXDIRS;
+  
+  rslt = AccStart;
+  
+  /*
+  #ifdef MACOS9
+  rslt = calc_crc( (byte*)&v,   len2, rslt );
+  rslt^= AccStart;
+  #endif
+  */
+
+  rslt = calc_crc( (byte*)name, len,  rslt );
+  rslt^= AccStart;
+  rslt = rslt % MAXDIRS;
+  
+  if    (rslt==0) rslt++; // do not allow 0
+  return rslt;
 } // HashF
 
 
@@ -1325,11 +1356,11 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
   int       ii, hh, n;
   direntry* m;
   Boolean   doit;
+  ulong     liCnt= 0;
   
-  #ifdef LINKED_HASH
-    ulong liCnt= 0;
-  #endif
+  #define MAXLICNT ( 0x00800000 / MAXDIRS )
     
+//upe_printf( "REIN name='%s'\n", pathname );
   #if defined UNIX
     // .. when using Inodes
     if (useInodes) {
@@ -1357,15 +1388,19 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
     strcat ( tmp, dEnt->d_name );
     EatBack( tmp );
   #endif
+//upe_printf( "REIN name='%s'\n", tmp );
                 
 //if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
       
   *id= 0; /* undefined */
-  hh= HashF( tmp ); if (hh==0) hh++;
+    //hh= HashF( tmp, fName );
+      hh= HashF( tmp );
   ii= hh;
+//upe_printf( "id=%08X <= name='%s' START\n", ii, tmp );
       
   n= 1; m= &dirtable[ ii ];
   while (true) {
+  //upe_printf( "m->ident=%08X\n", m->ident );
     if (m->ident==NULL) {
                 m->ident= malloc( strlen( tmp )+1 );
       strcpy  ( m->ident,                 tmp );
@@ -1375,8 +1410,8 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
         strcpy( m->fName,                 fName );
       #endif
           
-      hittable[ 0 ]--; // adapt statistics
-      hittable[ n ]++;            
+      if (liCnt==0) hittable[ 0 ]--; // adapt statistics
+                    hittable[ n ]++;            
     } /* if */
           
     #ifdef MACOS9
@@ -1390,11 +1425,12 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
 
     #ifdef LINKED_HASH
                 liCnt++;
-          doit= liCnt>=128;
+          doit= liCnt>=MAXLICNT;
       if (doit) liCnt= 0;
     #else
       doit= true;
     #endif
+  //upe_printf( "liCnt=%d\n", liCnt );
     
     if (doit) {    
           ii++;
@@ -1404,9 +1440,19 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
     } 
     else {
       #ifdef LINKED_HASH
-        if (m->next==NULL)
-            m->next= malloc( sizeof( direntry ) );
-        m=  m->next;
+            doit= m->next==NULL;
+        if (doit) m->next= malloc( sizeof( direntry ) );
+        m=        m->next;
+        
+        if (doit) {
+          m->ident= NULL;
+
+          #ifdef MACOS9
+          m->fName= NULL;
+          #endif
+
+          m->next = NULL;
+        } // if
       #endif
     } // if
     
@@ -1414,10 +1460,9 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
   } /* loop */
   if (*id==0) return E_NORAM;
   
-  #ifdef LINKED_HASH
-    *id+= liCnt*MAXDIRS;
-  #endif
+  *id+= liCnt*MAXDIRS;
     
+//upe_printf( "id=%08X <= name='%s'\n", *id, tmp );
   return 0;
 } /* FD_ID */
 
@@ -1426,30 +1471,35 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
 os9err FD_Name( long fdID, char** pathnameP )
 // get back the real <volID> and <objID> for Mac file system
 {
-  os9err err= 0;
+  os9err    err= 0;
   direntry* m;
+  long      id= fdID;
   
   #ifdef LINKED_HASH
+    int   i;
     ulong liCnt= fdID / MAXDIRS;
           fdID = fdID % MAXDIRS;
   #endif
+
+//upe_printf( "REIN id=%08X, liCnt=%d fdID=%08X\n", id, liCnt, fdID );
    
   *pathnameP= NULL;
-  if (fdID>0 && fdID<MAXDIRS) {       // if the range is correct
-                m= &dirtable[ fdID ]; // get the entry directly
-    *pathnameP= m->ident;
+  if   (fdID>0 && fdID<MAXDIRS) {       // if the range is correct
+    m= &dirtable[ fdID ]; // get the entry directly
+  
+    #ifdef LINKED_HASH
+      for (i= 0; i<liCnt; i++) {
+        if (m) m= m->next;
+      } // for
+    #endif
+    
+    if      (m && m->ident!=NULL) {
+      *pathnameP= m->ident;
+    } // if
   } // if
   
-  #ifdef LINKED_HASH
-    for (i= 0; i<liCnt; i++) {
-      if (m) m= m->next;
-    } // for
-
-    *pathnameP= m->ident;
-  #endif
-  
   if (*pathnameP==NULL) err= E_PNNF;  
-//upe_printf( "id=%d => name='%s' err=%d\n", fdID, *pathnameP ? *pathnameP : "", err );
+//upe_printf( "id=%08X => name='%s' err=%d\n", fdID, *pathnameP ? *pathnameP : "", err );
   return err;
 } // FD_Name
 
@@ -2017,7 +2067,7 @@ Boolean SCSI_Device( const char* os9path,
     } // loop
     
     dst[ j ]= '\0';
-    if (foundOK) upe_printf( "con src='%s' dst='%s'\n", src, dst );
+  //if (foundOK) upe_printf( "con src='%s' dst='%s'\n", src, dst );
   } // StrReplace
   
   
