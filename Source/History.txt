@@ -1783,6 +1783,9 @@
                                         - extended <liCnt> range
           07-03-31  Bfo     fileaccess  - LINKED_HASH support (by using <cond>)
                                         - Set_FileDate supported now for MacOSX
+          07-04-01  Bfo     os9main_incl_precompile => ftruncate might be wrong because of wrong .h files
+          07-04-01  Bfo     fileaccess  : workaround for MACH ftruncate: copy the file
+          
     3.37  07-04-??  Bfo
     ------------------- 
 */

@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.47  2007/03/31 12:21:07  bfo
+ *    - LINKED_HASH support (by using <cond>)
+ *    - Set_FileDate supported now for MacOSX
+ *
  *    Revision 1.46  2007/03/24 12:47:35  bfo
  *    - <readFlag> introduced (seek when change read -> write)
  *    - ftruncate adaptions (still not working for CW MacOSX)
@@ -164,7 +168,6 @@
  *
  *
  */
-
 
 
 #include "os9exec_incl.h"
@@ -1455,8 +1458,12 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
         curSize= *sizeP;
         
       #elif defined UNIX
-        int  fd;
+        int  fd, i, cnt;
         OSErr oserr= 0;
+        char tmpName[ OS9PATHLEN ];
+        FILE* tmp__stream;
+        #define      BUFFSIZE 1024
+        byte buffer[ BUFFSIZE ];
         
         tmp_pos= ftell( spP->stream );                 /* make it compatible for gcc >= 3.2 */
         err= fseek    ( spP->stream,0,SEEK_END ); if (err) return err;         /* go to EOF */
@@ -1466,10 +1473,66 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       //upe_printf( "pos=%d size=%d newSize=%d\n", tmp_pos, curSize, *sizeP );
         
         if (*sizeP<curSize) {
-          err= fseek    ( spP->stream,0,SEEK_SET ); if (err) return err; /* go to beginning */
-        //fflush        ( spP->stream );                             /* unbuffer everything */
-          fd = fileno   ( spP->stream );                       /* <fd> used for "ftruncate" */
-          if (fd!=0) err= ftruncate( fd, *sizeP  );             /* cut the file at <*sizeP> */
+          err= fseek ( spP->stream,0,SEEK_SET ); if (err) return err; // go to beginning
+          fd = fileno( spP->stream );                                 // <fd> used for "ftruncate"
+          
+          if (fd!=0) err= ftruncate( fd, *sizeP  );                   // cut the file at <*sizeP>
+          else {
+            // problems with Mach ...
+          //upe_printf( "problems_with_mach\n" );
+            strcpy          ( tmpName, spP->fullName );
+                   i= strlen( tmpName );
+            while (i>=0  &&   tmpName[ i ]!='/') i--;
+            tmpName[ i+1 ]= NUL;
+            sprintf( tmpName, "%s.tmpfile.%d", tmpName, pid );
+            
+            err= fclose( spP->stream );
+            err= remove               ( tmpName );
+          //upe_printf( "remove '%s' err=%d\n", tmpName, err );
+            err= rename( spP->fullName, tmpName );
+          //upe_printf( "rename err=%d\n", err );
+           
+            spP->stream= fopen( spP->fullName, "wb+" );
+            tmp__stream= fopen(       tmpName, "rb+" );
+           
+            err= E_FNA;
+            if  (spP->stream && tmp__stream) {
+              err= 0;
+              
+                     i= *sizeP;
+              while (i>0) {
+                if  (i>BUFFSIZE) i= BUFFSIZE;
+                cnt= fread ( (void*)buffer, 1,i,   tmp__stream );
+                cnt= fwrite( (void*)buffer, 1,cnt, spP->stream );
+                i -= cnt;
+              } // while
+              
+              err= fclose( tmp__stream );
+              err= remove( tmpName );
+            } // if
+          } // if
+        }  // if
+        
+        /*  
+        //fflush     ( spP->stream );                             // unbuffer everything
+          fd = fileno( spP->stream );                       // <fd> used for "ftruncate"
+          upe_printf( "fd=%d errno=%d fdGOOD=%d\n", fd, errno, spP->stream->_file );
+ 
+          err= fclose( spP->stream );
+          upe_printf( "close err=%d\n", err );
+ 
+        //upe_printf( "name='%s' fd=%d\n", spP->fullName, fd );
+          upe_printf( "name='%s' size=%d\n", spP->fullName, *sizeP );
+          err= truncate( spP->fullName, *sizeP  );              // cut the file at <*sizeP>
+        //err= SetEOF( spP->stream->handle );
+          upe_printf( "err=%d errno=%d\n", err, errno );
+          
+              spP->stream= fopen( spP->fullName,"rb+" ); // open for update, use binary mode
+          if (spP->stream) err= 0;
+          else             err= E_FNA;
+          upe_printf( "stream=%08X err=%d\n", spP->stream, err );
+          
+        //if (fd!=0) err= ftruncate( fd, *sizeP  );             // cut the file at <*sizeP>
           // problems with Mach ...
           
         //upe_printf( "TRUncate=%d fd=%d err=%d\n", *sizeP, fd, err );
@@ -1479,13 +1542,14 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
         //upe_printf( "NOW=%d\n", ftell( spP->stream ) ); 
         
         //             fclose( spP->stream );
-        //spP->stream= fopen ( spP->fullName,"rb+" ); /* create for update, use binary mode (bfo) ! */
+        //spP->stream= fopen ( spP->fullName,"rb+" ); // create for update, use binary mode (bfo) !
         //fseek              ( spP->stream, *sizeP,SEEK_SET );
         }  // if
           
       //            curSize= *sizeP;
       //if (tmp_pos>curSize)            tmp_pos= curSize;
-      //fsetpos         ( spP->stream, &tmp_pos );   /* restore position */
+      //fsetpos         ( spP->stream, &tmp_pos );   // restore position
+        */
       #endif
     #endif
 
