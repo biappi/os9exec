@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.26  2007/01/28 21:36:21  bfo
+ *    __GLOBDEF definitions added
+ *
  *    Revision 1.25  2007/01/06 01:13:44  bfo
  *    "MACOSX" defined as equivalent of __MACH__
  *
@@ -317,8 +320,9 @@ typedef struct dirent dirent_typ;
   #include <stddef.h>
   
   #ifdef __MWERKS__
+    #include <stdio.h>
 	#include <mw_stdarg.h>    // N.B. Not cdstarg!
-    #include <cstdio>
+  //#include <cstdio>
     #include <stat.h>
   #endif
 #endif
