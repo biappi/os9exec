@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.80  2007/03/31 12:15:07  bfo
+ *    LINKED_HASH support with 16384 entries
+ *
  *    Revision 1.79  2007/03/24 12:52:41  bfo
  *    - MAXDIR is now 65536
  *    - MAXDIRHIT = 60 and <hittable>, for "ihit" statistics
@@ -1015,7 +1018,8 @@ typedef struct {
 
 /* a "process" */
 typedef enum { 
-            pUnused, 
+            pUnused,
+            pStart,
             pActive, 
             pDead, 
             pSleeping, 
