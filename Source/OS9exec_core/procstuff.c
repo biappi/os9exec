@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.59  2007/03/24 13:04:33  bfo
+ *    "DoWait" is visible from outside
+ *
  *    Revision 1.58  2007/03/10 12:39:21  bfo
  *    Params corrected: debug_return( &sigp->os9regs, spid, true )
  *
@@ -344,7 +347,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
     for (npid=1;  npid<MAXPROCESSES; npid++) {
         if (procs[npid].state==pUnused) {
             /* this process descriptor is free, use it */
-            cp= &procs[npid];
+            cp= &procs[ npid ];
           //memset( cp,0, sizeof(procid) ); /* cleanup the whole proc descriptor */
             
             /* initialize link to traphandler table, first entry=TRAP 1 */
@@ -386,7 +389,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             
             strcpy( cp->intProcName, "" ); /* used for internal utilities only */
             cp->exiterr    = E_PRCABT;     /* process aborted if no other code is set (through F$Exit e.g.) */
-            cp->pd._pid    = os9_word(parentid); /* remember parent */
+            cp->pd._pid    = os9_word( parentid ); /* remember parent */
             cp->pd._sid    = 0;            /* has not yet siblings */
             cp->pd._cid    = 0;            /* has not yet children */
             cp->mid        = MAXMODULES;   /* no main module yet */
@@ -489,7 +492,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
             debugprintf(dbgProcess,dbgNorm,("# new_process: created pid=%d\n",npid));
             /* --- its only here where we activate the process */
             /* correct state must be set afterwards, or process will be dead from start */
-            set_os9_state( npid, pDead, "new_process" );
+            set_os9_state( npid, pStart, "new_process" );
           //printf( "toedlich %d\n", npid );
             *newpid=npid; /* return new PID */
             return 0;
@@ -501,7 +504,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
 
 
 
-static void AssignNewChild( ushort parentid, ushort pid )
+void AssignNewChild( ushort parentid, ushort pid )
 {
   ushort  idp_sv;
   ushort* idp= &procs[parentid].pd._cid;
@@ -519,7 +522,8 @@ static void AssignNewChild( ushort parentid, ushort pid )
         
     idp= &procs[ idp_sv ].pd._sid;
     if ( os9_word( *idp )==idp_sv ) break; // no change
-    n++;
+    
+        n++;
     if (n>MAXPROCESSES) break;
   } // loop
 } /* AssignNewChild */
@@ -574,7 +578,9 @@ os9err kill_process( ushort pid )
       /* there is a parent process */
       set_os9_state( pid, pDead, "kill_process" ); /* keep it there until parent recognizes */
       if (pid==interactivepid) interactivepid= parentid; /* direct Cmd-'.' to parent now */
-      if (!cp->isIntUtil) AssignNewChild( parentid,pid );
+    //if (!cp->isIntUtil ||
+    //     cp->isNative)  AssignNewChild( parentid,pid );
+//    if (!cp->isIntUtil) AssignNewChild( parentid,pid );
     }
     else {
     //upe_printf( "unused id=%d\n", pid );
@@ -1221,8 +1227,10 @@ void do_arbitrate( ushort allowedIntUtil )
         cp= &procs[currentpid];
     if (cp->state==pWaiting && deadpid<MAXPROCESSES) {
       /* -- we need to terminate waiting first */
-      retword(cp->os9regs.d[0])=       deadpid;          /* ID of dead child */
-      retword(cp->os9regs.d[1])= procs[deadpid].exiterr; /* exit error of child */
+      retword(cp->os9regs.d[0])=        deadpid;          /* ID of dead child */
+      retword(cp->os9regs.d[1])= procs[ deadpid ].exiterr; /* exit error of child */
+      AssignNewChild      ( currentpid, deadpid );
+
       debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate: waiting pid=%d gets active because child pid=%d is dead (exiterr=%d)\n",currentpid,deadpid,procs[deadpid].exiterr));
       set_os9_state( deadpid,    pUnused, "do_arbitrate" );
       set_os9_state( currentpid, pActive, "do_arbitrate" ); /* process is now active */
@@ -1321,14 +1329,13 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
       char**     arguments;
     #endif  
 
-
     /* save main module ID */
     cp->mid=  mid;
     setprior( newpid,prior );
     
     /* inherit group and user */
-    cp->pd._group= os9_word(grp);
-    cp->pd._user = os9_word(usr);
+    cp->pd._group= os9_word( grp );
+    cp->pd._user = os9_word( usr );
     
     /* -- get pointer to main module */
     theModule= os9mod( mid );
@@ -1340,8 +1347,7 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
 
     /* -- copy parameter area, for internal commands as well */
     p= paramptr;        p2= mp+memsiz-paramsiz;
-  //current_a5 = (ulong)p2; /* parameter area start */
-    cp->my_args= (ulong)p2;
+    cp->my_args= (ulong)p2; /* parameter area start */
     
     regcheck( newpid,"Param writing start",(ulong)p2,           RCHK_MEM );
     regcheck( newpid,"Param writing end",  (ulong)p2+paramsiz-1,RCHK_MEM );
@@ -1358,9 +1364,12 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
         /* prepare args */
         prepArgs( (char*)paramptr, &argc,&arguments );
         arguments[0]= (char*)mpath;  /* set module name */
-                    
-        if (pp->pd._cid!=0)       /* already children available */
+        
+      //if  (!cp->isNative) {            
+        if (pp->pd._cid!=0 &&
+            pp->pd._cid!=newpid)       /* already children available */
             cp->pd._sid= pp->pd._cid;  /* take child as sibling */
+      //} // if
         
         svid= currentpid;  
         pp->pd._cid= os9_word(newpid); /* this is the child */
@@ -1376,8 +1385,10 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
           /* simulate successful F$Exit of internal command */
           
         //pp->pd._cid= cp->pd._sid; /* restore former child id */
-          cp->exiterr= 0;
+        //cp->exiterr= 0;
+          cp->exiterr= err;
           kill_process( newpid );
+          err= 0;
         } // if
          
         return err; /* internal-tool "fork" return value */
@@ -1396,32 +1407,18 @@ os9err prepFork( ushort newpid,   char*  mpath,    ushort mid,
 
     /* -- prepare registers */
     rp->sr=0; /* everything cleared, USER state */
-    rp->pc=os9_long(theModule->_mexec)+(ulong)theModule; /* entry point */
-    rp->a[3]=(ulong)theModule; /* primary module pointer */
+    rp->pc  = os9_long(theModule->_mexec)+(ulong)theModule; /* entry point */
+    rp->a[3]=   (ulong)theModule; /* primary module pointer */
     rp->d[0]= newpid;    /* assign process ID */
     rp->d[1]= os9_word(cp->pd._group)<<(2*BpB)|
               os9_word(cp->pd._user ); /* inherited group/user */
     rp->d[2]= prior;     /* priority */
     rp->d[3]= numpaths;  /* number of paths inherited */
    
-    /*
-    // -- prepare data area
-    debugprintf(dbgProcess,dbgDetail,("# prepFork: extra memory=%ld (= paramsiz:%ld + memplus:%ld)\n",memplus+paramsiz,paramsiz,memplus));
-    err= prepData( newpid,theModule,memplus+paramsiz,&memsiz,&mp ); if (err) return err; // no room for data
-    */
-    
-    cp->memstart=(ulong)mp; /* save static storage start address */
-    rp->a[6]=(ulong)mp+0x8000; /* biased A6 */
-    rp->membase=mp; /* unbiased static storage pointer */
+    cp->memstart= (ulong)mp;        /* save static storage start address */
+    rp->a[6]    = (ulong)mp+0x8000; /* biased A6 */
+    rp->membase =        mp;        /* unbiased static storage pointer */
 
-    /*
-    // -- copy parameter area
-    p=paramptr; p2=mp+memsiz-paramsiz;
-    regcheck( newpid,"Param writing start",(ulong)p2,           RCHK_MEM );
-    regcheck( newpid,"Param writing end",  (ulong)p2+paramsiz-1,RCHK_MEM );
-    for (cnt=0; cnt<paramsiz; cnt++) *(p2++)=*(p++);
-    */
-    
     /* set up parameter area regs */
     rp->a[5]= cp->my_args;
     rp->a[7]= rp->a[5];                        /* top of stack */
