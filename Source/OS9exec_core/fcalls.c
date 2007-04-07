@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.54  2007/02/04 20:10:14  bfo
+ *    "Plugin_Possible"/"Native_Possible" are more orthogonal now
+ *
  *    Revision 1.53  2007/01/28 21:16:02  bfo
  *    'Native_Possible()' added as condition for <nativeActive>
  *
@@ -214,6 +217,7 @@ os9err OS9_F_Exit( regs_type* rp, ushort cpid )
   unsigned short exiterr= loword( rp->d[1] );
   
   // -- kill the process
+  arbitrate= true;
   cp->exiterr= exiterr;
   sig_mask    ( cpid, 0 ); // activate queued intercepts
   kill_process( cpid    );
@@ -1376,21 +1380,24 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
 
   /* exe dir only, link style first, then load style */
   err= new_process( cpid, &newpid, numpaths ); if (err) return err;
-  retword( rp->d[0] )= newpid; /* return forked process' ID, assign early enough */
+  retword( rp->d[0] )=     newpid;   // return forked process' ID, assign early enough
+  np=              &procs[ newpid ]; // is valid, even if error
 
-            err= link_load ( cpid,mpath,&newmid );       
-  if (!err) err= prepFork( newpid,mpath, newmid,
+  do {
+    err= link_load ( cpid, mpath,&newmid );            if (err) break;
+    err= prepFork( newpid, mpath, newmid,
                            (byte*)rp->a[1],rp->d[2],rp->d[1], 
-                           numpaths, grp,usr, prior );
+                           numpaths, grp,usr, prior ); if (err) break;
 
-  np= &procs[ newpid ]; /* is valid, even if error */
-  if (!err) {
-    /* --- now actually cause process switch */
-    if  (!np->isIntUtil) {
-      if (cp->pd._cid!=0) np->pd._sid= cp->pd._cid;
-
-      cp->pd._cid= os9_word( newpid );                          /* this is the child */
+    if   (!np->isIntUtil) {
+       if (cp->pd._cid!=0 &&
+           cp->pd._cid!=newpid) np->pd._sid= cp->pd._cid;
+    } // if
+    
+    if   (!np->isIntUtil) {
+           cp->pd._cid= os9_word( newpid );                     /* this is the child */
       if (!cp->isIntUtil) 
+        /* --- now actually cause process switch */
         currentpid=  newpid;                    /* continue execution in new process */
         /* except for internal utilities, where it will be done just an moment later */
       
@@ -1399,13 +1406,52 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
         
     arbitrate= true; /* really needed ! */
     return 0;
+  } while (false);
+  
+  if (np->state!=pDead) {
+    /* -- save exit code */
+    close_usrpaths( newpid );
+    set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); /* unused again because of error */
+  //np->exiterr= err;
+  } // if
+              
+  return err;
+
+  /*
+            err= link_load ( cpid,mpath,&newmid );       
+  if (!err) err= prepFork( newpid,mpath, newmid,
+                           (byte*)rp->a[1],rp->d[2],rp->d[1], 
+                           numpaths, grp,usr, prior );
+
+  np= &procs[ newpid ]; // is valid, even if error
+  if (!err) {
+    // --- now actually cause process switch
+  //if  (!np->isIntUtil ||
+  //      np->isNative) {
+    if  (!np->isIntUtil) {
+      if (cp->pd._cid!=0 &&
+          cp->pd._cid!=newpid) np->pd._sid= cp->pd._cid;
+    } // if
+    
+    if   (!np->isIntUtil) {
+           cp->pd._cid= os9_word( newpid );                     // this is the child
+      if (!cp->isIntUtil)
+        currentpid=  newpid;                    // continue execution in new process
+        // except for internal utilities, where it will be done just an moment later
+      
+      set_os9_state( newpid, pActive, "OS9_F_Fork" );    // make this process active
+    } // if
+        
+    arbitrate= true; // really needed !
+    return 0;
   } // if
     
-  /* -- save exit code */
+  // -- save exit code
   close_usrpaths( newpid );
-  set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); /* unused again because of error */
+  set_os9_state ( newpid, pUnused, "OS9_F_Fork" ); // unused again because of error
   np->exiterr= err;            
   return       err;
+  */
 } /* OS9_F_Fork */
 
 
@@ -1508,8 +1554,10 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
 {
   ushort       k;
   ushort       activeChild;
+//process_typ* pp= &procs[ cpid ];
   process_typ* cp;
-  short        sv_pid;
+  ushort       sv_pid;
+//ushort*      chP;
 
   sig_mask( cpid,0 ); /* disable signal mask */
   
@@ -1520,14 +1568,29 @@ os9err OS9_F_Wait( regs_type *rp, ushort cpid )
     return 0;
   } // if
   
-  /* check if there are childs at all */
+  /* check if there are children at all */
   activeChild=MAXPROCESSES;
   for (k=2; k<MAXPROCESSES; k++) { // start at process 2
         cp= &procs[ k ];
     if (cp->state==pDead && os9_word( cp->pd._pid )==cpid) { // this is a child
       // child is dead, report that
-      retword( rp->d[ 0 ] )= k; // ID of dead child
-      retword( rp->d[ 1 ] )= procs[k].exiterr; // exit error of child
+      retword( rp->d[ 0 ] )= k;           // ID of dead child
+      retword( rp->d[ 1 ] )= cp->exiterr; // exit error of child
+      AssignNewChild( cpid,  k );
+   
+      /*
+   // restore former child id
+              chP= &pp->pd._cid;
+      while (*chP!=0) {
+        if  (*chP==k) { *chP= cp->pd._sid; break; }
+        
+              pp= &procs[ *chP ];
+        chP= &pp->pd._sid; // go to the next element
+      } // while
+      
+    //pp->pd._cid= cp->pd._sid; // restore former child id
+      */
+
       debugprintf(dbgProcess,dbgNorm,("# F$Wait: child pid=%d has died before parent=%d called F$Wait\n",k,cpid));
       set_os9_state( k, pUnused, "OS9_F_Wait" );
       return 0; // process already died, no need to wait
