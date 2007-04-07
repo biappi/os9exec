@@ -1786,6 +1786,16 @@
           07-04-01  Bfo     os9main_incl_precompile => ftruncate might be wrong because of wrong .h files
           07-04-01  Bfo     fileaccess  : workaround for MACH ftruncate: copy the file
           
+          07-04-06  Bfo     os9exec_nt  : pStart as new process state added
+          07-04-06  Bfo     util_stuff  : pStart will be displayed as process state "b"
+          07-04-06  Bfo     fcalls      - do while section for prcess setup
+                                        - don't remove pDead processes in F$Fork anymore
+                                        - 'AssignNewChild' called at F$Wait
+          07-04-06  Bfo     procstuff   - 'AssignNewChild' visible from outside now
+                                        - Starting new processes in pStart state
+                                        - 'AssignNewChild' now called at the 'correct' location
+                                        - Text formatting beautified
+          
     3.37  07-04-??  Bfo
     ------------------- 
 */
