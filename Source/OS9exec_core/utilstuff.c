@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.58  2007/03/31 12:18:34  bfo
+ *    - LINKED_HASH support and bug fixes (NULL initialisation)
+ *    - extended <liCnt> range
+ *
  *    Revision 1.57  2007/03/24 13:02:45  bfo
  *    - "HashF" hash function (using CRC) added
  *    - Hash function prepared for LINKED_HASH
@@ -327,17 +331,18 @@ void set_os9_state( ushort cpid, pstate_typ state, const char* callingProc )
                                            
             cp->state= state;
     switch (cp->state) {
-        case pUnused   : pd->_state = 0;                pd->_queueid = '-'; break;
-        case pActive   : pd->_state = os9_word(0x8800); pd->_queueid = 'a'; break;
-        case pDead     : pd->_state = os9_word(0x9100); pd->_queueid = '-'; break;
-        case pSleeping : pd->_state = os9_word(0xA000); pd->_queueid = 's'; break;
-        case pWaiting  : pd->_state = os9_word(0x8000); pd->_queueid = 'w'; break;
-        case pSysTask  : pd->_state = 0;                pd->_queueid = 't'; break;
-        case pWaitRead : pd->_state = os9_word(0xA000); pd->_queueid = 'r'; break;
-        default        : pd->_state = 0;                pd->_queueid = '?';
+        case pStart    : pd->_state= os9_word(0x8800); pd->_queueid= 'b'; break;
+        case pUnused   : pd->_state= 0;                pd->_queueid= '-'; break;
+        case pActive   : pd->_state= os9_word(0x8800); pd->_queueid= 'a'; break;
+        case pDead     : pd->_state= os9_word(0x9100); pd->_queueid= '-'; break;
+        case pSleeping : pd->_state= os9_word(0xA000); pd->_queueid= 's'; break;
+        case pWaiting  : pd->_state= os9_word(0x8000); pd->_queueid= 'w'; break;
+        case pSysTask  : pd->_state= 0;                pd->_queueid= 't'; break;
+        case pWaitRead : pd->_state= os9_word(0xA000); pd->_queueid= 'r'; break;
+        default        : pd->_state= 0;                pd->_queueid= '?';
     } // switch
     
-    if (cp->isIntUtil) { pd->_state = 0;                pd->_queueid = 'i'; }
+    if (cp->isIntUtil) { pd->_state = 0;               pd->_queueid = 'i'; }
 } /* set_os9_state */
 
 
