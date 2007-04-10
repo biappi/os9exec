@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.59  2007/04/07 09:05:14  bfo
+ *    pStart will be displayed as process state "b"
+ *
  *    Revision 1.58  2007/03/31 12:18:34  bfo
  *    - LINKED_HASH support and bug fixes (NULL initialisation)
  *    - extended <liCnt> range
@@ -1314,33 +1317,16 @@ static int HashF( char* name )
   const ulong AccStart= 0xffffffff;
   ulong rslt;
   int  i, len;  
+  char ups[MAX_PATH]; // let the original be case sensitive for Linux
   
-  /*
-  #ifdef MACOS9
-    char v[MAX_PATH];
-    int  len2;
-                 len2= strlen( fName );  
-    for (i= 0; i<len2; i++) {
-      v[ i ]= toupper( fName[ i ] ); // make comparisons more "the same"
-    } // for
-  #endif
-  */
                len= strlen( name );  
-  for (i= 0; i<len; i++) {
-    name[ i ]= toupper( name[ i ] ); // make comparisons more "the same"
+  for (i= 0; i<len+1; i++) {
+    ups[ i ]= toupper( name[ i ] ); // make comparisons more "the same"
   } // for
   
   
   rslt = AccStart;
-  
-  /*
-  #ifdef MACOS9
-  rslt = calc_crc( (byte*)&v,   len2, rslt );
-  rslt^= AccStart;
-  #endif
-  */
-
-  rslt = calc_crc( (byte*)name, len,  rslt );
+  rslt = calc_crc( (byte*)&ups, len,  rslt );
   rslt^= AccStart;
   rslt = rslt % MAXDIRS;
   
