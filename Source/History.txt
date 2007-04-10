@@ -1795,6 +1795,13 @@
                                         - Starting new processes in pStart state
                                         - 'AssignNewChild' now called at the 'correct' location
                                         - Text formatting beautified
+                                        
+          07-04-07  Bfo     fcalls      : retword( d[ 0 ] )= newpid added
+          07-04-08  Bfo     procstuff   : Internal utils are treated somewhat special 
+                                          => can't active nativce's father
+          07-04-08  Bfo     fileaccess  : No longer dependent on "Volumes", same treatment MacOSX/Linux
+          07-04-08  Bfo     utilstuff   : Linux file names are treated case sensitively again
+                                          (only Hash itself can't distinguish)
           
     3.37  07-04-??  Bfo
     ------------------- 
