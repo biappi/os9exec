@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.60  2007/04/07 09:14:27  bfo
+ *    - 'AssignNewChild' visible from outside now
+ *    - Starting new processes in pStart state
+ *    - 'AssignNewChild' now called at the 'correct' location
+ *    - Text formatting beautified
+ *
  *    Revision 1.59  2007/03/24 13:04:33  bfo
  *    "DoWait" is visible from outside
  *
@@ -989,6 +995,7 @@ void do_arbitrate( ushort allowedIntUtil )
   Boolean      chkAll     = false;        /* 2nd run when all sleeping */
   Boolean      atLeast1;                  /* at least one process is sleeping */
   Boolean      pDone;
+  Boolean      cOK;
 
   debugprintf(dbgTaskSwitch,dbgDetail,("# arbitrate: current pid=%d, arbitrate=%d\n",
                                           currentpid, arbitrate));
@@ -1129,17 +1136,32 @@ void do_arbitrate( ushort allowedIntUtil )
         
     /* --- test if process can be run */
     if (sprocess->state==pWaiting /* && spid!=allowedIntUtil */) {
-      /* --- search if there is a dead child of that process */
-      for (pid=0; pid<MAXPROCESSES; pid++) {
-                     cpw= &procs[ pid ];
-        if (os9_word(cpw->pd._pid)==spid) {          
-          if        (cpw->state==pDead) {
+      // internal utilities are treated somewhat special
+      cOK= true;
+      for (pid=0; pid<MAXPROCESSES;  pid++) {
+                     cpw=    &procs[ pid ];
+        if (os9_word(cpw->pd._pid)==spid &&     
+                     cpw->isNative       &&
+                     cpw->state!=pDead   &&
+                     cpw->state!=pUnused) {
+          cOK= false;
+          break;
+        } // if
+      } // for
+    
+      if (cOK) {
+        // --- search if there is a dead child of that process
+        for (pid=0; pid<MAXPROCESSES;  pid++) {
+                       cpw=    &procs[ pid ];
+          if (os9_word(cpw->pd._pid)==spid &&      
+                       cpw->state==pDead) {
             deadpid= pid; 
             break;
           } // if
-        } /* if */
-      } /* for */
-      if (pid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
+        } // for
+        
+        if (deadpid<MAXPROCESSES) break; /* yes, there is a dead child, we can unwait */
+      } // if
     } /* if */
     
     if (sprocess->isIntUtil && spid!=allowedIntUtil) {
