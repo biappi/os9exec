@@ -41,6 +41,11 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2007/04/07 09:10:18  bfo
+ *    - do while section for prcess setup
+ *    - don't remove pDead processes in F$Fork anymore
+ *    - 'AssignNewChild' called at F$Wait
+ *
  *    Revision 1.54  2007/02/04 20:10:14  bfo
  *    "Plugin_Possible"/"Native_Possible" are more orthogonal now
  *
@@ -1365,7 +1370,7 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
     fflush(stdout);
     
     /* --- fake return values */  
-    retword(rp->d[0])= cpid+1; /* next process ID */
+    retword( rp->d[0] )= cpid+1; /* next process ID */
     return 0;
   } /* if dummyfork */
     
@@ -1404,6 +1409,7 @@ os9err OS9_F_Fork( regs_type *rp, ushort cpid )
       set_os9_state( newpid, pActive, "OS9_F_Fork" );    /* make this process active */
     } // if
         
+    retword( rp->d[0] )= newpid; // return forked process' ID, in case it has been changed
     arbitrate= true; /* really needed ! */
     return 0;
   } while (false);
