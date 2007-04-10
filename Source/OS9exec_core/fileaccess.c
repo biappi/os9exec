@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.48  2007/04/01 15:04:28  bfo
+ *    workaround for MACH ftruncate: copy the file
+ *
  *    Revision 1.47  2007/03/31 12:21:07  bfo
  *    - LINKED_HASH support (by using <cond>)
  *    - Set_FileDate supported now for MacOSX
@@ -737,7 +740,7 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       volname[ 0 ]= toupper( spP->fullName[ 0 ] ); /* first char only */       
       volname[ 1 ]= NUL;     
     
-    #elif defined linux
+    #elif defined UNIX
       int  ii; // get the current top path as name
       for (ii= 0; ii<strlen( spP->fullName ); ii++) {
         volname[ ii ]= spP->fullName[ ii+1 ];
@@ -746,9 +749,9 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
       
     //strcpy( volname,spP->fullName ); /* none for Linux, top directory structure is different */
       
-    #elif defined MACOSX
+//  #elif defined MACOSX
       /* MacOSX has a very special structure */
-      strcpy( volname, "Volumes" );
+//    strcpy( volname, "Volumes" );
       
       /*
       #define VVP "Volumes"
@@ -1773,6 +1776,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
         isFolder= PathFound( pathname ); /* don't call stat_ for directories under Windows */
       #endif
       
+    //upe_printf( "'%s' %s\n", pathname, isFolder ? "folder":"file" );
       *att= 0x00; 
       if (!isFolder) {
           stat_( pathname, &info );
@@ -2129,7 +2133,7 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
       fdl= &pbu.cipb;
     
     #elif defined win_unix
-      err= FD_Name( *fdinf, &fdl ); if (err) return err;
+      err= FD_Name( *fdinf, (char**)&fdl ); if (err) return err;
       
       /*
       if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
