@@ -1802,6 +1802,7 @@
           07-04-08  Bfo     fileaccess  : No longer dependent on "Volumes", same treatment MacOSX/Linux
           07-04-08  Bfo     utilstuff   : Linux file names are treated case sensitively again
                                           (only Hash itself can't distinguish)
+          07-04-13  Bfo     fileaccess  : File copy correctly done for ftruncate workaround (MacOSX CW)
           
     3.37  07-04-??  Bfo
     ------------------- 

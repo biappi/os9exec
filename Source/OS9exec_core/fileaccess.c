@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.49  2007/04/10 22:13:19  bfo
+ *    No longer dependent on "Volumes", same treatment MacOSX/Linux
+ *
  *    Revision 1.48  2007/04/01 15:04:28  bfo
  *    workaround for MACH ftruncate: copy the file
  *
@@ -1461,7 +1464,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
         curSize= *sizeP;
         
       #elif defined UNIX
-        int  fd, i, cnt;
+        int  fd, i, j, cnt;
         OSErr oserr= 0;
         char tmpName[ OS9PATHLEN ];
         FILE* tmp__stream;
@@ -1504,8 +1507,9 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
               
                      i= *sizeP;
               while (i>0) {
-                if  (i>BUFFSIZE) i= BUFFSIZE;
-                cnt= fread ( (void*)buffer, 1,i,   tmp__stream );
+                j=   i;
+                if  (j>BUFFSIZE) j= BUFFSIZE;
+                cnt= fread ( (void*)buffer, 1,  j, tmp__stream );
                 cnt= fwrite( (void*)buffer, 1,cnt, spP->stream );
                 i -= cnt;
               } // while
