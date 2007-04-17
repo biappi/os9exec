@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.37  2007/03/10 12:33:04  bfo
+ *    Invalidate correctly at "syspath_close"
+ *
  *    Revision 1.36  2007/02/24 14:22:37  bfo
  *    Missing %s (data/exec) added in debugprintf
  *
@@ -370,8 +373,8 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
                   memcpy( &theName,     spP->u.disk.spec.name, OS9NAMELEN );
                   p2cstr(  theName );
       
-                #elif defined linux
-                  upo_printf(" %12X",My_Ino( spP->fullName ) ); /* path has inode to show */
+                #elif defined UNIX
+                  upo_printf(" %12X",My_FD( spP->fullName ) ); /* path has fd sector to show */
 
                 #else
                   upo_printf(" %8s %3s","","" ); /* no name */
