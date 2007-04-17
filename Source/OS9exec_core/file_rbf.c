@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.55  2007/01/07 13:53:23  bfo
+ *    Up to date
+ *
  *    Revision 1.54  2007/01/04 20:37:22  bfo
  *    Some unused vars eliminated
  *    Boolean return type for 'IsSCSI'
@@ -146,6 +149,7 @@
  *
  */
 
+// #define RBF_CACHE
 
 
 /* This file contains the RBF Emulator */
@@ -191,7 +195,7 @@ typedef struct {
   byte*    ramBase;              /* start address of RAM disk */
       
   scsi_dev scsi;                 /* SCSI device variables */
-  Boolean  installed;			       /* true, if device is already installed */
+  Boolean  installed;            /* true, if device is already installed */
 } rbfdev_typ;
 
 /* the RBF devices */
@@ -301,16 +305,16 @@ void init_RBF( fmgr_typ* f )
 void init_RBF_devs()
 /* initialize them all to not installed */
 {
-    rbfdev_typ *dev;
-    int  ii;
-    for (ii=1; ii<MAXRBFDEV; ii++) {
-        dev= &rbfdev[ ii ];
-        dev->installed= false;
-    }
+  rbfdev_typ *dev;
+  int  ii;
+  for (ii=1; ii<MAXRBFDEV; ii++) {
+    dev= &rbfdev[ ii ];
+    dev->installed= false;
+  } // for
 
-    for (ii=0; ii<MAXSCSI; ii++) {
-        strcpy( scsi[ ii ].name,"" );
-    }
+  for (ii=0; ii<MAXSCSI; ii++) {
+    strcpy( scsi[ ii ].name,"" );
+  } // for
 } /* init_RBF_devs */
 
 
@@ -318,7 +322,7 @@ void init_RBF_devs()
 // -----------------------------------------------------------------------
 
 static Boolean IsSCSI( rbfdev_typ* dev )
-{   return dev->scsi.ID!=NO_SCSI;
+{ return dev->scsi.ID!=NO_SCSI;
 } /* IsSCSI */
 
 
@@ -1304,9 +1308,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     *my_dev= dev;                      /* activate RBF device */
     strcpy ( dev->alias,ali );         /* can change all the time */
     if     (!dev->installed) {
-        v= strstr( cmp,"@" ); if (v!=NULL) *v= NUL;
-        strcpy( dev->name,cmp );
-    }
+      v= strstr( cmp,"@" ); if (v!=NULL) *v= NUL;
+      strcpy( dev->name,cmp );
+    } // if
     
              q= dev->name; /* compare with mnt_name, if available */
     if (fum) q= mnt_name;
@@ -1392,6 +1396,9 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     do {
         err= 0;                 /* set it as default   */
         dev->installed= true;   /* now it is installed */
+        #ifdef RBF_CACHE
+          Flush_FDCache( dev->name );
+        #endif
 
      // #ifdef RAM_SUPPORT
         if (isRAMDisk) { 
@@ -2764,8 +2771,13 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     char*           fo    = isFile ? "file"  :"dir";
     char*           curpath;
     Boolean         new_inst;
-
-
+    Boolean         isAbs;
+    
+    #ifdef RBF_CACHE
+  //char            vvv[OS9PATHLEN];
+    ulong           fd_hash;   
+    dirtable_entry* mP= NULL;
+    #endif
 
     strncpy ( tmp,name, OS9PATHLEN );
     pathname= tmp;
@@ -2773,8 +2785,9 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
     
     rbf->currPos= 0; /* initialize position to 0 */
     rbf->lastPos= 0;
+    rbf->flushFDCache= false;
 
-        root= IsRoot(pathname); /* root path must be a directory */
+        root= IsRoot( pathname ); /* root path must be a directory */
     if (root && isFile) return E_FNA;
 
     /* get pointers to execution/current path */
@@ -2793,7 +2806,7 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         strcpy( pathname,  PSEP_STR );
         strcat( pathname,  mnt_name ); /* the mount name can be different */
         strcpy( dev->name, mnt_name );           /* to the root path name */
-    }
+    } // if
     
     debugprintf(dbgFiles,dbgNorm,("# RBF mount  adapt '%s' '%s' %d %d\n" , pathname,mnt_name, root,new_inst ));
     
@@ -2808,27 +2821,47 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         /* take care of write protection */     
         if (cre && dev->wProtected) { err= E_WP; break; }
 
-                  p= pathname; /* that's it for raw mode */   
-        if (IsRaw(p)) { 
-        	        spP->rawMode= true;
-            strcpy( spP->name,pathname ); if (cre) { err= E_CEF; break; }
-            return 0; 
-        } /* if (IsRaw) */
+                   p= pathname; /* that's it for raw mode */   
+        if (IsRaw( p )) {
+          if (rbf->wMode) {
+              rbf->flushFDCache= true; // flush it in fact when closing the path
+          // main_printf( "Flush RBF cache: pathname='%s' id=%d\n", pathname, pid );
+          } // if
+          
+        	      spP->rawMode= true;
+          strcpy( spP->name,pathname ); if (cre) { err= E_CEF; break; }
+          return 0; 
+        } // if (IsRaw)
 
-        if (AbsPath(p)) { /* if abs path -> search from the root */                     
-            err= RootLSN( pid, dev, spP, false );
+        isAbs= AbsPath( p ); /* if abs path -> search from the root */
+
+        #ifdef RBF_CACHE
+          if (isAbs || strcmp( curpath,"" )==0) {
+            strcpy( spP->fullName, pathname );
+          }
+          else {
+            strcpy( spP->fullName, curpath  );
+            strcat( spP->fullName, PSEP_STR );
+            strcat( spP->fullName, pathname );
+          } // if
+          
+          err= FD_ID( spP->fullName, NULL, &fd_hash, &mP ); if (err) break;
+        //main_printf( "'%s' hash=%d fd=%06X\n", vvv, fd_rbf, mP->dirid );
+        #endif
+
+        if (isAbs) {               
+                err= RootLSN( pid, dev, spP, false );
             if (err==E_DIDC) err= 0;       /* changes recognized */
             if (err) break;       /* for all other errors: break */
             
             err= ReadFD( spP ); if (err) break;
-            if (root)   { 
+            if (root) { 
                 strcpy( spP->name,pathname+1 );
                 err= FD_Segment( spP, &attr,&size,&totsize,&sect,&slim, &pref ); if (err) break;
                 rbf->lastPos= size;                   /* last pos is the filesize */
                 rbf->att    = attr;                   /* save attributes */
                 return 0; 
-            }
-                           
+            } // if
                               p++; /* cut root path */
             err= CutOS9Path( &p, (char*)&cmp_entry ); if (err) break;
         }
@@ -2918,6 +2951,17 @@ os9err pRopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* name )
         } /* if entry found */
     } /* while (true) */    
     
+    #ifdef RBF_CACHE
+    if (!err) {
+      if ((mP->dirid!=0 && 
+           mP->dirid!=rbf->fd_nr) || strcmp( spP->fullName,"" )==0) {
+        main_printf( "wrong '%s' %06X <> %06X\n", spP->fullName, mP->dirid, rbf->fd_nr );
+      } // if
+      
+      mP->dirid= rbf->fd_nr;
+    } // if
+    #endif
+    
 //  printf( "RelBuffers %08X %08X %d\n", spP->fd_sct, spP->rw_sct, err );
     if    (err) ReleaseBuffers( spP );
     return err;
@@ -2960,6 +3004,10 @@ os9err pRclose( ushort pid, syspath_typ* spP )
             err= ReleaseBlocks( spP,crp );
         }
     } while (false);
+    
+    #ifdef RBF_CACHE
+      if (rbf->flushFDCache) Flush_FDCache( dev->name );
+    #endif
     
     ReleaseBuffers( spP );
     return err;
@@ -3039,7 +3087,7 @@ os9err pRchd( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
         strcat( curpath,dev->name );
         strcat( curpath,&tmp[n]   );
     }
-    EatBack( curpath );
+                   ( curpath );
     
     err= usrpath_close( pid, path ); if (err) return err;
 
@@ -3053,24 +3101,38 @@ os9err pRchd( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
 
 os9err pRdelete( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
 {
-    os9err      err;
+    os9err      err, cer;
     rbfdev_typ* dev;
     ushort      path;
     ulong       dfd;
     
+    #ifdef RBF_CACHE
+    ulong           fd_hash;
+    dirtable_entry* mP= NULL;
+    #endif
+    
         err= usrpath_open( pid,&path, fRBF, pathname,*modeP ); 
     if (err) return err;
-        spP= get_syspath ( pid, procs[pid].usrpaths[path] ); /* get spP for fd sects */
+        spP= get_syspath ( pid, procs[ pid ].usrpaths[ path ] ); /* get spP for fd sects */
     if (spP==NULL) return os9error(E_BPNUM);
     
     dev= &rbfdev[spP->u.rbf.devnr]; /* can't be assigned earlier */
     dfd=         spP->u.rbf.fddir;
 
-    err= Delete_DirEntry ( dev, dfd, (char*)&spP->name ); if (err) return err;
-    err= DeallocateBlocks( spP );                         if (err) return err;
-    spP->u.rbf.currPos= 0;   /* seek back to zero, avoid release remaining part */
-
-    err= usrpath_close( pid, path ); return err;
+    do {
+      err= Delete_DirEntry ( dev, dfd, (char*)&spP->name ); if (err) break;
+      err= DeallocateBlocks( spP );                         if (err) break;
+      
+      #ifdef RBF_CACHE
+        err=   FD_ID( spP->fullName, NULL, &fd_hash, &mP ); if (err) break;
+        mP->dirid= 0; // invalidate;
+      #endif
+      
+      spP->u.rbf.currPos= 0;   /* seek back to zero, avoid release remaining part */
+    } while (false);
+    
+    cer= usrpath_close( pid, path ); if (!err) err= cer; 
+    return err;
 } /* pRdelete */
 
 
