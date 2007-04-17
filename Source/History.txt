@@ -1804,7 +1804,23 @@
                                           (only Hash itself can't distinguish)
           07-04-13  Bfo     fileaccess  : File copy correctly done for ftruncate workaround (MacOSX CW)
           
-    3.37  07-04-??  Bfo
+          07-04-13  Bfo     filestuff   : Renamed: My_Ino => My_FD
+          07-04-14  Bfo     procstuff   : Several sleep tick things fixed, especially also for int commands
+          07-04-14  Bfo     os9exec_nt  - FD_ID (hash) fName always visible
+                                        - renamed to "dirtable_entry"
+          07-04-15  Bfo     fileaccess  : FD_ID calling args changed and adapted
+          07-04-15  Bfo     utilstuff   - My_Ino => My_FD
+                                        - Flush_Dir, Flush_Entry, Flush_FDCache added (not yet active)
+                                        - Several bug fixes for "CutUp"
+                                        - FD Cache adaptions for RBF (not yet active)
+          07-04-16  Bfo     file_rbf    : FD Cache things added (not yet active)
+          07-04-16  Bfo     int_rename /
+                            int_move    : FD Cache flush prepared
+          07-04-17  Bfo     os9main     : <isRBF> and <isWin> adaption (eventually wrong for TFS ?)
+          07-04-17  Bfo     fcalls      : <native> and <plugin> flags moved from d.b1 to d.b2 (V5.50 problem)
+          07-04-18  Bfo     intcommand  : Improved plugin searching method
+          07-04-18  Bfo     macfiles    : Hash access adaptions (new notation)
+    3.37  07-04-18  Bfo     V3.37 released
     ------------------- 
 */
 
