@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.31  2007/03/24 12:26:26  bfo
+ *    "FD_Name" introduced
+ *
  *    Revision 1.30  2007/02/24 14:06:57  bfo
  *    - FD_ID: Additional params <dirid> and <fName>
  *    - MacOSX no longer based on Inodes (same as Linux)
@@ -176,11 +179,14 @@ Boolean FileFound    ( const char* pathname );
 
 void    CutUp              ( char* pathname, const char* prev );
 void    EatBack            ( char* pathname );
-os9err  FD_ID       ( syspath_typ* spP, 
-                       const char* pathname, 
-                       dirent_typ* dEnt, ulong *id, long dirid, char* fName, 
-                           Boolean isFirst, Boolean useInodes );
-os9err  FD_Name( long fdID, char** pathnameP );
+
+os9err  FD_ID        ( const char* pathname, dirent_typ* dEnt, 
+                       ulong      *fdID,     dirtable_entry** mH );
+os9err  FD_Name      ( ulong       fdID,     char* *pathnameP );
+
+os9err  Flush_Dir    ( ushort cpid, ushort* pathP, const char* nmS );
+os9err  Flush_Entry  ( ushort cpid,                const char* nmS );
+void    Flush_FDCache( const char* pathname );
 
 #ifdef win_unix
   os9err DirNthEntry       ( syspath_typ*, int n, dirent_typ** dEnt );
@@ -192,7 +198,7 @@ os9err  FD_Name( long fdID, char** pathnameP );
 
 int     stat_        ( const char* pathname, struct stat *buf );
 Boolean DirName      ( const char* pathname, ulong fdsect, char* result, Boolean useInodes );
-ulong   My_Ino       ( const char* pathname );
+ulong   My_FD        ( const char* pathname );
 void    MakeOS9Path  (       char* pathname );
 
 Boolean SamePathBegin( const char* pathname, const char* cmp );

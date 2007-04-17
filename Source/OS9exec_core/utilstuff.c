@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.60  2007/04/10 22:15:16  bfo
+ *     Linux file names are treated case sensitively again
+ *    (only Hash itself can't distinguish)
+ *
  *    Revision 1.59  2007/04/07 09:05:14  bfo
  *    pStart will be displayed as process state "b"
  *
@@ -1213,7 +1217,8 @@ void CutUp( char* pathname, const char* prev )
 {
     char *v, *q, *qs;
     Boolean inc;
-
+    int     i;
+    
     v= pathname;
     while (true) {
         q =   strstr( v,prev ); if (q==NULL) break; /* search the string */
@@ -1230,7 +1235,8 @@ void CutUp( char* pathname, const char* prev )
             case PSEP     : *q= NUL; strcat( pathname,qs ); break; /* cut "/./" anywhere */
 
             case '.'      : v= qs;
-                            while  (*(++v)=='.') {};
+                            i= 0;
+                            while  (*(++v)=='.') i++;
                             switch (*v) {
                                 case NUL:
 
@@ -1238,13 +1244,20 @@ void CutUp( char* pathname, const char* prev )
                                 #ifndef UNIX
                                 case PATHDELIM:
                                 #endif
-                                case PSEP     : while   (q>pathname) {
-                                                         q--;
-                                                    if (*q==PATHDELIM || *q==PSEP) break;
-                                                } /* while */
+                                case PSEP     : while  (q>pathname) {
+                                                        q--;
+                                                  if  (*q==PATHDELIM || 
+                                                       *q==PSEP) {
+                                                    if (q==pathname) { q= qs-1; break; }
+                                                        q++;
+                                                  //if (i>0) q++;
+                                                    break;
+                                                  } // if
+                                                } // while
 
                                                 *q= NUL; /* concatenate at the new position */
-                                                strcat( pathname,++qs );
+                                                strcat( pathname, qs );
+                                                q--;
                                                 break;
 
                                 default:        q++; inc= true;
@@ -1335,31 +1348,41 @@ static int HashF( char* name )
 } // HashF
 
 
-os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt, 
-              ulong *id, long dirid, char* fName, Boolean isFirst, Boolean useInodes )
+os9err FD_ID( const char* pathname, dirent_typ* dEnt, 
+              ulong      *fdID,     dirtable_entry** mH )
+            //ulong *id, long dirid,  char* fName )
 {
   #ifdef MACOS9
-    #pragma unused(spP,dEnt,isFirst,useInodes)
+    #pragma unused(dEnt)
   #endif
 
   #define ATTR_DIR 0x0010
   char      tmp[MAX_PATH];
   int       ii, hh, n;
-  direntry* m;
+//direntry* m;
   Boolean   doit;
   ulong     liCnt= 0;
+  ulong     dirid;
   
   #define MAXLICNT ( 0x00800000 / MAXDIRS )
-    
+
+  #ifdef MACOS9
+  char*    fName= "";
+  if (*mH) fName= (*mH)->fName;
+  #endif
+           dirid= 0;
+  if (*mH) dirid= (*mH)->dirid;
+
+  /* 
 //upe_printf( "REIN name='%s'\n", pathname );
   #if defined UNIX
     // .. when using Inodes
     if (useInodes) {
-      if (spP!=NULL) {
-        while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
-               dEnt= ReadTDir( spP->dDsc ); 
-        } // while
-      } // if
+    //if (spP!=NULL) {
+    //  while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
+    //         dEnt= ReadTDir( spP->dDsc ); 
+    //  } // while
+    //} // if
       
       if (dEnt==NULL) *id= 0;
       else            *id= dEnt->d_ino;
@@ -1371,46 +1394,47 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
       return 0;
     }
   #endif
-
-  strcpy( tmp,pathname );
+  */
+  
+  strcpy( tmp, pathname );
       
   #if defined win_unix
-    if     ( tmp[strlen( tmp )-1]!=PATHDELIM ) strcat( tmp,PATHDELIM_STR );
-    strcat ( tmp, dEnt->d_name );
-    EatBack( tmp );
+    if (dEnt!=NULL) {
+      if     ( tmp[ strlen( tmp )-1 ]!=PATHDELIM ) strcat( tmp,PATHDELIM_STR );
+      strcat ( tmp, dEnt->d_name );
+    } // if
   #endif
+  
+  EatBack( tmp );
 //upe_printf( "REIN name='%s'\n", tmp );
                 
 //if (dEnt->data.dwFileAttributes!=ATTR_DIR) return id;
       
-  *id= 0; /* undefined */
+  *fdID= 0; /* undefined */
     //hh= HashF( tmp, fName );
       hh= HashF( tmp );
   ii= hh;
 //upe_printf( "id=%08X <= name='%s' START\n", ii, tmp );
       
-  n= 1; m= &dirtable[ ii ];
+  n= 1; *mH= &dirtable[ ii ];
   while (true) {
   //upe_printf( "m->ident=%08X\n", m->ident );
-    if (m->ident==NULL) {
-                m->ident= malloc( strlen( tmp )+1 );
-      strcpy  ( m->ident,                 tmp );
+    if ((*mH)->ident==NULL) {
+                (*mH)->ident= malloc( strlen( tmp )+1 );
+      strcpy  ( (*mH)->ident,                 tmp );
               
       #ifdef MACOS9
-                m->fName= malloc( strlen( fName )+1 );
-        strcpy( m->fName,                 fName );
+                (*mH)->fName= malloc( strlen( fName )+1 );
+        strcpy( (*mH)->fName,                 fName );
       #endif
           
       if (liCnt==0) hittable[ 0 ]--; // adapt statistics
                     hittable[ n ]++;            
     } /* if */
           
-    #ifdef MACOS9
-      if (dirid!=0) m->dirid= dirid;
-    #endif
-          
-    if (ustrcmp( m->ident, tmp )==0) {
-      *id= (ulong)ii;
+    if (dirid!=0) (*mH)->dirid= dirid;
+    if (ustrcmp(  (*mH)->ident, tmp )==0) {
+      *fdID= (ulong)ii;
       break;
     } /* if */
 
@@ -1427,31 +1451,31 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
           ii++;
       if (ii==MAXDIRS) ii= 1;
       if (ii==hh) break;
-      m= &dirtable[ ii ];
+      *mH= &dirtable[ ii ];
     } 
     else {
       #ifdef LINKED_HASH
-            doit= m->next==NULL;
-        if (doit) m->next= malloc( sizeof( direntry ) );
-        m=        m->next;
+            doit= (*mH)->next==NULL;
+        if (doit) (*mH)->next= malloc( sizeof( dirtable_entry ) );
+        *mH=      (*mH)->next;
         
         if (doit) {
-          m->ident= NULL;
+          (*mH)->ident= NULL;
 
           #ifdef MACOS9
-          m->fName= NULL;
+          (*mH)->fName= NULL;
           #endif
 
-          m->next = NULL;
+          (*mH)->next = NULL;
         } // if
       #endif
     } // if
     
     if (n<MAXDIRHIT-1) n++; 
   } /* loop */
-  if (*id==0) return E_NORAM;
+  if (*fdID==0) return E_NORAM;
   
-  *id+= liCnt*MAXDIRS;
+  *fdID+= liCnt*MAXDIRS;
     
 //upe_printf( "id=%08X <= name='%s'\n", *id, tmp );
   return 0;
@@ -1459,12 +1483,12 @@ os9err FD_ID( syspath_typ* spP, const char* pathname, dirent_typ* dEnt,
 
 
 
-os9err FD_Name( long fdID, char** pathnameP )
+os9err FD_Name( ulong fdID, char* *pathnameP )
 // get back the real <volID> and <objID> for Mac file system
 {
-  os9err    err= 0;
-  direntry* m;
-  long      id= fdID;
+  os9err          err= 0;
+  dirtable_entry* m;
+  ulong           id= fdID;
   
   #ifdef LINKED_HASH
     int   i;
@@ -1493,6 +1517,114 @@ os9err FD_Name( long fdID, char** pathnameP )
 //upe_printf( "id=%08X => name='%s' err=%d\n", fdID, *pathnameP ? *pathnameP : "", err );
   return err;
 } // FD_Name
+
+
+
+os9err Flush_Dir( ushort cpid, ushort* pathP, const char* nmS )
+{
+  os9err          err;
+  os9direntry_typ d;
+  size_t          dir_size;
+  syspath_typ*    spP;
+  char            fullName[OS9PATHLEN];
+  int             oLen;
+  dirtable_entry* mP= NULL;
+  ulong           fd_hash;
+    
+  err=   usrpath_open( cpid,  pathP, fRBF, nmS, 0x81 ); if (err) return err;
+  spP=   get_syspath ( cpid, procs[ cpid ].usrpaths[ *pathP ] ); // get spP for fd sects
+
+  do {                                dir_size= sizeof( d );
+    err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break; // ".."
+                                      dir_size= sizeof( d );
+    err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break; // "."
+
+    strcpy      ( fullName, spP->fullName );
+    strcat      ( fullName, PSEP_STR      );
+    oLen= strlen( fullName );
+  
+    while (true) {                      dir_size= sizeof( d );
+      err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break;
+      
+      if           ( d.name[ 0 ]!=NUL ) {
+        LastCh_Bit7( d.name, false );
+        
+                    fullName[ oLen ]= NUL; // restore
+        strcat    ( fullName, d.name );        mP= NULL;
+        err= FD_ID( fullName, NULL, &fd_hash, &mP ); if (err) break;
+      
+        if (mP->dirid!=0 &&
+            mP->dirid!=d.fdsect)
+          main_printf( "name='%s' fdsect=%06X %06X\n", fullName, d.fdsect, mP->dirid );
+
+        mP->dirid= 0;
+      } // if
+    } // while
+    
+    if (err==E_EOF) err= 0;
+  } while (false);
+
+  return err;
+} // Flush_Dir
+
+
+// cache flush of this file or directory
+os9err Flush_Entry( ushort cpid, const char* name )
+{
+  os9err          err, cer;
+  ushort          path;
+  syspath_typ*    spP;
+  char            tmp[ OS9PATHLEN ];
+  ulong           fd_hash;
+  dirtable_entry* mP= NULL;
+  
+  if (name[ 0 ]=='/'  || 
+      strcmp( procs[ cpid ].d.path,"" )==0) {
+    strcpy( tmp, name );
+  }
+  else {
+    strcpy( tmp, procs[ cpid ].d.path );
+    strcat( tmp, PSEP_STR );
+    strcat( tmp, name );
+  } // if
+  
+       err= FD_ID( tmp, NULL, &fd_hash, &mP ); 
+  if (!err) mP->dirid= 0;
+  
+       err= Flush_Dir( cpid, &path, name );
+  if (!err) {   
+    spP= get_syspath( cpid, procs[ cpid ].usrpaths[ path ] ); // get spP for fd sects
+
+         err= FD_ID( spP->fullName, NULL, &fd_hash, &mP ); 
+    if (!err) mP->dirid= 0;
+  
+    cer= usrpath_close( cpid, path ); if (!err) err= cer;
+  } // if
+  
+  return 0;
+  
+  
+  /*
+           err= usrpath_open( cpid, &path, fRBF, name, 0x01 );
+  if (err) err= Flush_Dir   ( cpid, &path,       name       );
+        
+  spP= get_syspath( cpid, procs[ cpid ].usrpaths[ path ] ); // get spP for fd sects
+
+       err= FD_ID( spP->fullName, NULL, &fd_hash, &mP ); 
+  if (!err) mP->dirid= 0;
+  
+  cer= usrpath_close( cpid, path ); if (!err) err= cer;
+  return err;
+  */
+} // Flush_Entry
+
+
+
+void Flush_FDCache( const char* pathname )
+{
+  const char* p= pathname;
+//main_printf( "flush for '%s'\n", pathname );
+} // Flush_FD_Cache
 
   
   
@@ -1699,9 +1831,11 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
   #endif
     
   #ifdef win_unix
-    DIR*        d;
-    dirent_typ* dEnt;
-    ulong       fd;
+    DIR*            d;
+    dirent_typ*     dEnt;
+    dirtable_entry* mP= NULL;
+    ulong           fd;
+    Boolean         okINO;
 
     #ifdef __MACH__
       char   p [OS9PATHLEN];
@@ -1719,8 +1853,24 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
       while (true) {
             dEnt= ReadTDir( d );
         if (dEnt==NULL) break;
-      //printf( "DirName='%s'\n", pathname );
-        FD_ID( NULL,pathname,dEnt, &fd, 0, "", false,useInodes );
+      
+        okINO= false;
+        #if defined UNIX
+          // .. when using Inodes
+          if (useInodes) {
+            okINO= true;
+            
+          //if (dEnt==NULL) fd= 0;
+          //else            
+            fd= dEnt->d_ino;
+    
+            #if defined __MACH__
+              if (fd==1) fd= 2; // adapt for top dir searching
+            #endif
+          } // if
+        #endif
+
+        if (!okINO) FD_ID( pathname, dEnt, &fd, &mP );
               
       //upo_printf( "fd/fdsect=%d/%d '%s'\n", fd, fdsect, dEnt->d_name );
         if (fd==fdsect && strcmp( dEnt->d_name,".." )!=0) { /* this is it */
@@ -1786,43 +1936,43 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
 
 
 
-ulong My_Ino( const char* pathname )
+ulong My_FD( const char* pathname )
 {
-    ulong ino= 0;
+  ulong fd= 0;
 
-    #ifdef macintosh
-      #pragma unused(pathname)
-    #endif
+  #ifdef MACOS9
+    #pragma unused(pathname)
+  #endif
     
-    #ifdef win_linux
-      char        p[OS9PATHLEN];
-      char*       q;
-      DIR*        d;
-      dirent_typ* dEnt;
+  #ifdef win_linux
+    char            p[OS9PATHLEN];
+    char*           q;
+    DIR*            d;
+    dirent_typ*     dEnt;
+    dirtable_entry* mP= NULL;
 
-      strcpy( p,pathname );
-      q= p+strlen(p)-1;
-      while (q>p && *q!=PATHDELIM) q--;
-      *q++= NUL;
+    strcpy( p,pathname );
+    q= p+strlen(p)-1;
+    while (q>p && *q!=PATHDELIM) q--;
+    *q++= NUL;
 
-          d= opendir( p ); /* search for the current inode */
-      if (d!=NULL) {
-          while (true) {
-                  dEnt= ReadTDir( d );
-              if (dEnt==NULL) break;
-              if (ustrcmp(dEnt->d_name,q)==0) {
-              //printf( "MyIno='%s'\n", p );
-                FD_ID( NULL, p,dEnt, &ino, 0, "", false,false );
-                break;
-              }
-          } /* while */
+        d= opendir( p ); /* search for the current inode */
+    if (d!=NULL) {
+      while (true) {
+            dEnt= ReadTDir( d );
+        if (dEnt==NULL) break;
+        if (ustrcmp( dEnt->d_name, q )==0) {
+           FD_ID( p, dEnt, &fd, &mP );
+           break;
+        } // if
+      } // while
           
-          closedir( d );
-      } /* if */
-    #endif
+      closedir( d );
+    } // if
+  #endif
   
-    return ino;
-} /* MyIno */
+  return fd;
+} /* My_FD */
 
 
 
