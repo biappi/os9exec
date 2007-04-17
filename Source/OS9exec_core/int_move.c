@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.12  2007/03/24 13:05:45  bfo
+ *    "DoWait" is visible from outside
+ *
  *    Revision 1.11  2006/02/19 15:43:15  bfo
  *    Header changed to 2006
  *
@@ -371,13 +374,17 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     }
     
     
-    if (isRBF) {                                          /* access to source directory */
+    if (isRBF) {
+        // cache flush of this file
+        err= Flush_Entry( cpid, nmS ); if (err) return err;
+
+                                                          // access to source directory
         err= usrpath_open   ( cpid,&pathS, typeS, fromdir, 0x83 ); if (err) return err;
         a0 = (ulong) dvS;
         err= usrpath_getstat( cpid, pathS, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
                                                                    if (err) return err;
                                                           
-                                                          /* access to dest   directory */
+                                                          // access to dest   directory
         err= usrpath_open   ( cpid,&pathD, typeD, todir,   0x83 ); if (err) return err;
         a0 = (ulong) dvD;
         err= usrpath_getstat( cpid, pathD, SS_DevNm, &a0, NULL,NULL,NULL,NULL ); 
@@ -429,6 +436,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         cer= usrpath_close    ( cpid, pathS ); if (!err) err= cer;
         cer= usrpath_close    ( cpid, pathD ); if (!err) err= cer;  if (err) return err;
 
+        err= Flush_Entry      ( cpid,       nmD );                  if (err) return err;
         err= delete_file      ( cpid, fRBF, nmS, 0x01 );            if (err) return err;
     }
     else {

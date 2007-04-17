@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.14  2007/01/04 20:39:19  bfo
+ *    Rearranged (unused) vars
+ *
  *    Revision 1.13  2006/02/19 15:43:15  bfo
  *    Header changed to 2006
  *
@@ -92,9 +95,58 @@ static void usage( char* name, _pid_ )
 } /* usage */
 
 
+/*
+static os9err Flush_Dir( ushort cpid, ushort* pathP, const char* nmS )
+{
+  os9err          err;
+  os9direntry_typ d;
+  size_t          dir_size;
+  syspath_typ*    spP;
+  char            fullName[OS9PATHLEN];
+  int             oLen;
+  dirtable_entry* mP= NULL;
+  ulong           fd_hash;
+    
+  err=   usrpath_open( cpid,  pathP, fRBF, nmS, 0x81 ); if (err) return err;
+  spP=   get_syspath ( cpid, procs[ cpid ].usrpaths[ *pathP ] ); // get spP for fd sects
+
+  do {                                dir_size= sizeof( d );
+    err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break; // ".."
+                                      dir_size= sizeof( d );
+    err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break; // "."
+
+    strcpy      ( fullName, spP->fullName );
+    strcat      ( fullName, PSEP_STR      );
+    oLen= strlen( fullName );
+  
+    while (true) {                      dir_size= sizeof( d );
+      err= usrpath_read( cpid, *pathP, &dir_size, &d, false ); if (err) break;
+      
+      if           ( d.name[ 0 ]!=NUL ) {
+        LastCh_Bit7( d.name, false );
+        
+                    fullName[ oLen ]= NUL; // restore
+        strcat    ( fullName, d.name );        mP= NULL;
+        err= FD_ID( fullName, NULL, &fd_hash, &mP ); if (err) break;
+      
+        if (mP->dirid!=0 &&
+            mP->dirid!=d.fdsect)
+          main_printf( "name='%s' fdsect=%06X %06X\n", fullName, d.fdsect, mP->dirid );
+
+        mP->dirid= 0;
+      } // if
+    } // while
+    
+    if (err==E_EOF) err= 0;
+  } while (false);
+
+  return err;
+} // Flush_Dir
+*/
+
 
 /* internal "rename" command for OS9exec/nt */
-os9err int_rename(ushort cpid, int argc, char **argv)
+os9err int_rename( ushort cpid, int argc, char **argv )
 {
     #ifdef MACOS9
       /* special mac includes */
@@ -108,7 +160,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     #define     MAXARGS 2
     char *nargv[MAXARGS];
     
-    os9err     err;
+    os9err     err, cer;
     int        exedir= 0;
     ushort     path;
     ptype_typ  type;
@@ -119,6 +171,10 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     ulong      fd, dfd, dcp, dcpD, sSct, len;
     Boolean    asDir;
     char       oldPath [OS9PATHLEN];
+
+  //syspath_typ*    spP;
+  //dirtable_entry* mP= NULL;
+  //ulong           fd_hash;
 
     #if defined win_unix
       char*    pp;
@@ -176,6 +232,19 @@ os9err int_rename(ushort cpid, int argc, char **argv)
             err= get_locations( cpid,type, nmS,false, &asDir, &fd,&dfd,&dcp,&sSct );
         if (err) return err;
         
+        // cache flush of this file
+        err= Flush_Entry( cpid, nmS );
+        
+        /*
+                 err= usrpath_open( cpid, &path, type, nmS, 0x01 );
+        if (err) err= Flush_Dir   ( cpid, &path,       nmS       );
+        
+        spP= get_syspath( cpid, procs[ cpid ].usrpaths[ path ] ); // get spP for fd sects
+             err= FD_ID( spP->fullName, NULL, &fd_hash, &mP ); 
+        if (!err) mP->dirid= 0;
+        cer= usrpath_close( cpid, path ); if (!err) err= cer;
+        */
+        
         p = (char*)&nmS;
         sv= p; sv--;
         
@@ -195,11 +264,15 @@ os9err int_rename(ushort cpid, int argc, char **argv)
         if (!err && dcp!=dcpD) return E_CEF;   /* file already exists with different name ? */
                                      /* case sensitive changes of the same name are allowed */
         
-        err= usrpath_open   ( cpid,&path, type, nmS,     0x83);   if (err) return err;
-        err= usrpath_seek   ( cpid, path, dcp );                  if (err) return err;
-        LastCh_Bit7( newName, true );      len++;              /* write also NUL terminator */
-        err= usrpath_write  ( cpid, path, &len, newName, false ); if (err) return err;
-        err= usrpath_close  ( cpid, path );                       if (err) return err;
+        err=   usrpath_open ( cpid,&path, type, nmS,     0x83);   if (err) return err;
+        
+        do {
+          err= usrpath_seek ( cpid, path, dcp );                  if (err) break;
+          LastCh_Bit7( newName, true );    len++; // write also NUL terminator
+          err= usrpath_write( cpid, path, &len, newName, false ); if (err) break;
+        } while (false);
+        
+        cer=   usrpath_close( cpid, path ); if (!err) err= cer;
     }
     else {
         #if defined MACOS9
