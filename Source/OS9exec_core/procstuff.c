@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.61  2007/04/10 22:11:51  bfo
+ *    Internal utils are treated somewhat special
+ *    => can't active nativce's father
+ *
  *    Revision 1.60  2007/04/07 09:14:27  bfo
  *    - 'AssignNewChild' visible from outside now
  *    - Starting new processes in pStart state
@@ -717,25 +721,28 @@ os9err send_signal( ushort spid, ushort signal )
   cp->icpt_signal= signal;
   
   /* first, wakeup process, if sleeping */
-  if (sigp->state==pSleeping &&
-     !sigp->isIntUtil) {
+  if (sigp->state==pSleeping) {
+//if (sigp->state==pSleeping &&
+//   !sigp->isIntUtil) {
     debugprintf(dbgProcess,dbgNorm,("# send_signal: waking pid=%d from sleep\n",spid));
     set_os9_state( spid, pActive, "send_signal" );
     sigp->os9regs.d[0]= 0;      /* %%% return # of remaining ticks! */
     sigp->os9regs.sr &= ~CARRY; /* error-free return */
     
-    sigp->way_to_icpt = true;   /* activate both */
-      cp->way_to_icpt = true;
+    if (!sigp->isIntUtil) {
+      sigp->way_to_icpt = true;   /* activate both */
+        cp->way_to_icpt = true;
     
-    arbitrate= false;           /* don't arbitrate, continue with woken-up process */
+      arbitrate= false;           /* don't arbitrate, continue with woken-up process */
     
-    if (currentpid==0 && signal==S_Wake) {
-    //if (sigp->isIntUtil) { 
-    //  cp->way_to_icpt= false; return 0; /* don't switch */
-    //} // if
+      if (currentpid==0 && signal==S_Wake) {
+      //if (sigp->isIntUtil) { 
+      //  cp->way_to_icpt= false; return 0; /* don't switch */
+      //} // if
       
-      currentpid= spid;
-      arbitrate = true;
+        currentpid= spid;
+        arbitrate = true;
+      } // if
     } // if
   } // if
 
@@ -942,23 +949,25 @@ static void wait_for_signal( ushort pid )
 
 void DoWait( void )
 {
+  ulong ticks= GetSystemTick();
+  
   #ifdef UNIX
     struct timespec wait_time;
     
     wait_time.tv_sec =       0;
     wait_time.tv_nsec= 1000000; // = 1 millisecond 
     nanosleep( &wait_time, NULL );
-    slp_idleticks++;
+  //slp_idleticks++;
                 
   #elif defined windows32
-    ulong ticks= GetSystemTick();
+  //ulong ticks= GetSystemTick();
     Sleep( 1 ); // sleep for a short time
     HandleEvent();
-    slp_idleticks+= GetSystemTick()-ticks;
+  //slp_idleticks+= GetSystemTick()-ticks;
                 
   #elif defined MACOS9
     int   sWait;
-    ulong ticks= GetSystemTick();
+  //ulong ticks= GetSystemTick();
 
     #ifndef MPW // is not available there
     //ulong len= 13;
@@ -970,10 +979,12 @@ void DoWait( void )
     //syspath_write( currentpid, 1, &len, &s, true );
     #endif
                 
-    slp_idleticks+= GetSystemTick()-ticks;
+  //slp_idleticks+= GetSystemTick()-ticks;
   #else
     #error architecture not supported
   #endif
+  
+  slp_idleticks+= GetSystemTick()-ticks;
 } // DoWait
 
 
@@ -1206,8 +1217,8 @@ void do_arbitrate( ushort allowedIntUtil )
         // asynchronous signals are no longer allowed
         // --------------------------------------------
                         
-        if (sprocess->wakeUpTick==MAX_SLEEP ||
-            sprocess->wakeUpTick<=GetSystemTick()) {
+      //if (sprocess->wakeUpTick!=MAX_SLEEP &&
+        if (sprocess->wakeUpTick<=GetSystemTick()) {
             sprocess->os9regs.d[0]= 0;      /* no remaining ticks */
             sprocess->os9regs.sr &= ~CARRY; /* error-free return */
           set_os9_state( spid, pActive, "do_arbitrate" ); break;
