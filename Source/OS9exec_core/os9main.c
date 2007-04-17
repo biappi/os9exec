@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.30  2007/03/24 12:30:24  bfo
+ *    <isRBF> dependency introduced
+ *
  *    Revision 1.29  2007/01/28 21:27:21  bfo
  *    -k: use '*_dbg' plugin dlls / closing the last path correctly
  *
@@ -296,7 +299,8 @@ char* egetenv( const char* name )
             sv= rslt;
             
             isRBF= isWin && cm && IO_Type( 1, startPath, 0 )==fRBF;
-            if (!F_Avail(rslt) || isRBF /* isWin */) {
+          //if (!F_Avail(rslt) || isWin) some problems, mix is best of both worlds ??
+            if (!F_Avail(rslt) || isRBF || ( isWin && !cm )) {
               //upe_printf( "ty=%d fRBf=%d\n", IO_Type( 1, startPath, 0 ), fRBF ); // get device type: Mac/PC or RBF
 
                 if (cm) rslt= "/dd/CMDS"; /* make it suitable for RBF devices */
