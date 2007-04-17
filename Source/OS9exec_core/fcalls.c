@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2007/04/10 22:09:05  bfo
+ *    retword( d[ 0 ] )= newpid added
+ *
  *    Revision 1.55  2007/04/07 09:10:18  bfo
  *    - do while section for prcess setup
  *    - don't remove pDead processes in F$Fork anymore
@@ -874,6 +877,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
     
   pd._scall =            os9_byte( cp->lastsyscall );
   pd._pmodul= (mod_exec*)os9_long( (ulong)os9mod(cp->mid) );
+//upe_printf( "pmodul1=%08X\n", os9_long( (ulong)pd._pmodul ) );
 
   // get the list of the currently connected trap handlers (bfo)
   for (k=0; k<NUMTRAPHANDLERS; k++) {
@@ -908,6 +912,7 @@ os9err OS9_F_GPrDsc( regs_type *rp, ushort cpid )
   pd._blksiz[ 0 ]= os9_long( memsz );
           
   memcpy( (byte*)rp->a[ 0 ], &pd, loword( rp->d[ 1 ] ) );
+//upe_printf( "pmodul2=%08X\n", os9_long( (ulong)pd._pmodul ) );
   return 0;
 } // OS9_F_GPrDsc
 
@@ -1065,10 +1070,10 @@ os9err OS9_F_SetSys( regs_type *rp, ushort cpid )
         break;
         
       case D_IPID    : v= 42; // allow programs to identify as os9exec/nt environment
-                       if (cp->isIntUtil)            v+= 0x0100; // special modes for internal utilities
-                       if (Native_Possible( false )) v+= 0x0200;
-                       if (cp->isPlugin )            v+= 0x0400;
-                       if (Plugin_Possible( false )) v+= 0x0800;
+                       if (cp->isIntUtil)            v+= 0x00010000; // special modes for internal utilities
+                       if (Native_Possible( false )) v+= 0x00020000; // b2: not to disturb SPOT V5.50
+                       if (cp->isPlugin )            v+= 0x00040000;
+                       if (Plugin_Possible( false )) v+= 0x00080000;
                        break;
       
       case D_ScreenW : v= GetScreen( 'w' ); break; // not according to OS-9
