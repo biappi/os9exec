@@ -46,6 +46,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.6  2007/03/31 12:07:38  bfo
+ *    Linked hash support added
+ *
  *    Revision 1.5  2007/03/24 12:38:39  bfo
  *    CVS statistics added
  *
@@ -352,12 +355,12 @@ os9err get_dirid( short *volID_P, long *dirID_P, char* pathname)
 os9err check_vod( short* volID_P, long* objID_P, long* dirID_P, char* pathname )
 // get back the real <volID> and <objID> and name for Mac file system
 {
-  os9err    err= E_PNNF;
-  direntry* m;
-  char*     a;
-  char*     b;
-  char      v[ 20 ];
-  long      fdID= *objID_P;
+  os9err          err= E_PNNF;
+  dirtable_entry* mP;
+  char*           a;
+  char*           b;
+  char            v[ 20 ];
+  ulong           fdID= *objID_P;
   
   #ifdef LINKED_HASH
     int   i;
@@ -368,16 +371,16 @@ os9err check_vod( short* volID_P, long* objID_P, long* dirID_P, char* pathname )
   #endif
     
   if (*volID_P==0 && fdID<MAXDIRS) {   // if the range is correct
-    m=    &dirtable[ fdID ];           // get the entry directly
+    mP=   &dirtable[ fdID ];           // get the entry directly
     
     #ifdef LINKED_HASH
       for (i= 0; i<liCnt; i++) {
-        if (m) m= m->next;
+        if (mP) mP= mP->next;
       } // for
     #endif
     
-    if (m && m->ident!=NULL) {
-      a=     m->ident;
+    if (mP && mP->ident!=NULL) {
+      a=      mP->ident;
       b= strstr( a," " ); b++;         // abd divide it into its pieces
         
       memset( v, 0, 20    );
@@ -385,8 +388,8 @@ os9err check_vod( short* volID_P, long* objID_P, long* dirID_P, char* pathname )
         
       *volID_P= -atoi( v );            // convert them back to numers
       *objID_P=  atoi( b );
-      *dirID_P=         m->dirid;
-      strcpy( pathname, m->fName );                       
+      *dirID_P=         mP->dirid;
+      strcpy( pathname, mP->fName );                       
      
       err= 0;                          // yes, it's fine
     } // if
