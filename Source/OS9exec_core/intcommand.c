@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.52  2007/03/31 12:09:40  bfo
+ *    "ihit" extended for LINKED_HASH support
+ *
  *    Revision 1.51  2007/03/24 12:34:50  bfo
  *    - "ihit" introduced (hash hit rate/statistics)
  *     - internal utilities with unlimited number of command line params
@@ -776,7 +779,8 @@ static os9err int_devs( _pid_, int argc, char** argv )
   os9err ConnectDLL( plug_typ* p )
   {
     os9err  err;
-    Boolean first= true;
+  //Boolean first= true;
+    int     i;
     
     typedef long (*VersionProc)( void );
                    VersionProc fModVersion;
@@ -784,16 +788,19 @@ static os9err int_devs( _pid_, int argc, char** argv )
     // Get the full path where to search for plugins
     char fullName[ OS9PATHLEN ];
     
+    i= 1;
     while (true) {
-      strcpy( fullName, strtUPath );
+      if (i<=2) strcpy( fullName, startPath );
+      else      strcpy( fullName, strtUPath );
       
-      if (first) {
+      if (i==1 || i==3) {
         strcat( fullName, PATHDELIM_STR ); // search at "PLUGINS" first
         strcat( fullName,"PLUGINS"      );
       } // if
             
       strcat( fullName, PATHDELIM_STR );
       strcat( fullName, p->name       );
+    //upe_printf( "connectDLL='%s'\n", fullName );
       // now we have the complete path name
     
       #ifdef windows32
@@ -816,8 +823,11 @@ static os9err int_devs( _pid_, int argc, char** argv )
     
       if (p->fDLL) break; // found
       
-      if (!first) return E_PNNF; // not found on both paths
-      first= false;
+      if (i>=4) return E_PNNF;
+      i++;
+      
+    //if (!first) return E_PNNF; // not found on both paths
+    //first= false;
     } // loop
 
 
