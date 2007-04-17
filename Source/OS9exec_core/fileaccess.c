@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.50  2007/04/13 10:08:43  bfo
+ *    File copy correctly done for ftruncate workaround (MacOSX CW)
+ *
  *    Revision 1.49  2007/04/10 22:13:19  bfo
  *    No longer dependent on "Volumes", same treatment MacOSX/Linux
  *
@@ -635,10 +638,11 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
   // Get deP->fdSect from <volid>,<objid>,<dirid>
   static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
   {
-    dirent_typ* dEnt= NULL;
-    char        hashV[ 80 ];
-    char        fName[ OS9NAMELEN ];
-    Boolean     cond;
+    char            hashV[ 80 ];
+    char            fName[ OS9NAMELEN ];
+    Boolean         cond;
+    dirtable_entry       m; // exists "physically" here
+    dirtable_entry* mP= &m; // the reference to it
     
     #ifdef LINKED_HASH
       cond= true;
@@ -651,11 +655,13 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     
     if (cond) {      
       strcpy( fName, deP->name );
-      fName[ strlen(fName)-1 ] &= 0x7f;
-        
-    //sprintf    ( hashV, "%d %d %d %s", -volid,objid,dirid, fName );
-      sprintf    ( hashV, "%d %d", -volid, objid );
-      FD_ID( NULL, hashV, dEnt, &objid, dirid, &fName, false,false );
+              fName[ strlen(fName)-1 ] &= 0x7f; // back to "normal"
+      
+      mP->fName= fName;
+      mP->dirid= dirid;
+       
+      sprintf( hashV, "%d %d", -volid, objid ); 
+      FD_ID  ( hashV, NULL,           &objid,  &mP );
       debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
                                            objid, -IDSIGN,IDSIGN-1, deP->name ));
       debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: hashV='%s'\n", hashV ));
@@ -675,7 +681,7 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
 {
   os9err err= pRBFopt( pid,spP, buffer );
-  ulong  fd;
+  ulong  fdID;
   ulong* l;
     
   #ifdef MACOS9
@@ -693,7 +699,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
  
     strcpy        ( dEnt.name, spP->name );
     assign_fdsect( &dEnt, volid, objid, 0 );
-    fd=             dEnt.fdsect;
+    fdID=           dEnt.fdsect;
     
     /*
           volid= spc->vRefNum; // get volume ID
@@ -703,14 +709,14 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
     */
     
   #elif defined win_unix
-    dirent_typ  dEnt;
-
-    strcpy( dEnt.d_name, spP->name );
-    FD_ID ( spP, spP->fullName, &dEnt, &fd, 0, "", false,false );
+    dirtable_entry* mP= NULL;
+    dirent_typ      dEnt;
+    strcpy        ( dEnt.d_name, spP->name );
+    FD_ID                      ( spP->fullName, &dEnt, &fdID, &mP );
   //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
   #endif
     
-  l= (ulong*)&buffer[ PD_FD ]; *l= os9_long( fd )<<BpB; /* LSN of file */
+  l= (ulong*)&buffer[ PD_FD ]; *l= os9_long( fdID )<<BpB; /* LSN of file */
   return err;
 } /* pFopt */
 
@@ -2398,10 +2404,11 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
   os9direntry_typ os9dirent;
   
   #ifdef win_unix
-    dirent_typ*  dEnt;
-    int          len;
-    ulong        fdpos;
-    Boolean      topFlag= false;
+    dirent_typ*     dEnt;
+    dirtable_entry* mP= NULL;
+    int             len;
+    ulong           fdpos;
+    Boolean         topFlag= false;
       
     #ifdef windows32
       dirent_typ dField;
@@ -2458,7 +2465,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
             
       if (dEnt!=NULL) {
         GetEntry( dEnt, os9dirent.name, true );
-        FD_ID( spP, spP->fullName, dEnt, &fdpos, 0, "", false,false );                      
+        FD_ID          ( spP->fullName, dEnt, &fdpos, &mP );                      
         if (topFlag) { seekD0( spP ); topFlag= false; }
       }
       else err= E_EOF;
