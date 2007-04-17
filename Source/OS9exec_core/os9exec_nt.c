@@ -41,6 +41,14 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.104  2007/03/24 12:52:41  bfo
+ *    - MAXDIR is now 65536
+ *    - MAXDIRHIT = 60 and <hittable>, for "ihit" statistics
+ *    - <readflag> for RW (fileaccess)
+ *    - <svD_n> and <svD_dEnt> for fast directory access
+ *    - <next> element for linked hash list
+ *    - Improved TFS start conditions for directory searching
+ *
  *    Revision 1.103  2007/03/10 13:52:30  bfo
  *    MPW adaptions
  *
@@ -431,8 +439,8 @@ alarm_typ   alarms     [MAXALARMS];
 alarm_typ*  alarm_queue[MAXALARMS];
 
 /* the dir table */
-direntry    dirtable[MAXDIRS];
-int         hittable[MAXDIRHIT];
+dirtable_entry dirtable[MAXDIRS];
+int            hittable[MAXDIRHIT];
 
 #if defined MACOS9 && defined powerc && !defined MPW
   pending_typ dPending[ PENDING_MAX ];
@@ -952,7 +960,7 @@ static os9err GetStartPath( char* pathname )
 
 	#elif defined windows32
 	  /* determine path to current directory */
-	  if (!GetCurrentDirectory(MAX_PATH,pathname))
+	  if (!GetCurrentDirectory( MAX_PATH,pathname ))
 		  strcpy( pathname,"" ); // no default path for some reason
 
 	//	/* make sure it ends with slash */
@@ -960,8 +968,9 @@ static os9err GetStartPath( char* pathname )
 
 	#elif defined UNIX
 	  StartDir( pathname );
+	  
 	#else
-	  strcpy  ( pathname,"" );
+	  strcpy( pathname,"" );
 	#endif
 	return 0;
 } /* GetStartPath */
@@ -1159,11 +1168,12 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
         err= usrpath_open( pid, &path, fDir, pathName, 0x81 ); 
     debugprintf( dbgFiles, dbgNorm,( "# DLL path='%s' err=%d\n", pathName, err ));
     if (err) return err;
+  //upe_printf( "ePATH='%s'\n", pathName );
   
     while (true) {                    size= sizeof( dEnt );
       err= usrpath_read( pid,  path, &size, &dEnt,      false ); if (err) break;
       LastCh_Bit7                          ( dEnt.name, false );
-
+    //upe_printf( "eName='%s'\n", dEnt.name );
                      cond= DbgSuff( dEnt.name, suff );
       if (!withDLLs) cond= !cond;
       
@@ -1172,6 +1182,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
           SameEnd  ( dEnt.name,  suff )) {
          if (avoidDup && OtherThere( dEnt.name, suff )) continue;
          
+      //upe_printf( "hello='%s'\n", dEnt.name );
          m= &pluginList[ *i ].name;
         *m= get_mem( strlen( dEnt.name )+1 );
         strcpy         ( *m, dEnt.name );
@@ -1327,6 +1338,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     int         i;
 
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
+  //upe_printf( "startPath='%s'\n", startPath );
+  //upe_printf( "strtUPath='%s'\n", strtUPath );
     
     /*                      i= 0;
     err= SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;

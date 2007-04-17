@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.81  2007/04/07 09:03:49  bfo
+ *    pStart as new process state added
+ *
  *    Revision 1.80  2007/03/31 12:15:07  bfo
  *    LINKED_HASH support with 16384 entries
  *
@@ -766,15 +769,16 @@ typedef struct {
 
 /* variant for RBF objects */
 typedef struct {
-            ulong     devnr;   /* current device number                 */
-            byte      att;     /* file's atttributes                    */
-            ulong     currPos; /* current file position                 */
-            ulong     lastPos; /* current file last position (seek<end) */
-            Boolean   wMode;   /* opened in write mode                  */
-            ushort    diskID;  /* disk ID for comparison reasons        */
-            ulong     fd_nr;   /* current FD logical sector number      */
-            ulong     fddir;   /* current FD logical sector of the dir  */
-            ulong     deptr;   /* dir entry ptr                         */
+            ulong     devnr;        // current device number
+            byte      att;          // file's atttributes
+            ulong     currPos;      // current file position
+            ulong     lastPos;      // current file last position (seek<end)
+            Boolean   wMode;        // opened in write mode
+            Boolean   flushFDCache; // flush FD cache
+            ushort    diskID;       // disk ID for comparison reasons
+            ulong     fd_nr;        // current FD logical sector number
+            ulong     fddir;        // current FD logical sector of the dir
+            ulong     deptr;        // dir entry ptr
         } rbf_typ;
 
 /* variant for SCF objects */
@@ -1264,19 +1268,19 @@ extern  alarm_typ*  alarm_queue[MAXALARMS];
 /* the dir table */
 typedef struct {
   char* ident;
+  long  dirid;
   
   #ifdef MACOS9
-    long  dirid;
-    char* fName;
+  char* fName;
   #endif
   
   #ifdef LINKED_HASH
-    void* next;
+  void* next;
   #endif
-} direntry;
+} dirtable_entry;
 
-extern direntry dirtable[MAXDIRS];
-extern int      hittable[MAXDIRHIT];
+extern dirtable_entry dirtable[MAXDIRS];
+extern int            hittable[MAXDIRHIT];
 
 #if defined MACOS9 && defined powerc && !defined MPW
   typedef struct {
