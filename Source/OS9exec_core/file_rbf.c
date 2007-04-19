@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.56  2007/04/17 23:12:36  bfo
+ *    FD Cache things added (not yet active)
+ *
  *    Revision 1.55  2007/01/07 13:53:23  bfo
  *    Up to date
  *
@@ -3086,8 +3089,8 @@ os9err pRchd( ushort pid, syspath_typ* spP, ushort *modeP, char* pathname )
         strcpy( curpath,PSEP_STR  ); /* get a str staring with dev->name instead of dev->img_name */
         strcat( curpath,dev->name );
         strcat( curpath,&tmp[n]   );
-    }
-                   ( curpath );
+    } // if
+    EatBack( curpath );
     
     err= usrpath_close( pid, path ); if (err) return err;
 

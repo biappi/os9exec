@@ -1821,7 +1821,13 @@
           07-04-18  Bfo     intcommand  : Improved plugin searching method
           07-04-18  Bfo     macfiles    : Hash access adaptions (new notation)
     3.37  07-04-18  Bfo     V3.37 released
-    ------------------- 
+    -------------------
+    
+          07-04-19  Bfo     Version changed to V3.38
+          07-04-19  Bfo     file_rbf    : BUGFIX: Missing "EatBack" re-introduced
+    3.38  07-04-19  Bfo     V3.38 released
+    -------------------
+    
 */
 
 
