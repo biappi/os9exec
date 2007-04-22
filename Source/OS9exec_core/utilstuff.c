@@ -41,6 +41,12 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.61  2007/04/17 23:10:57  bfo
+ *    - My_Ino => My_FD
+ *    - Flush_Dir, Flush_Entry, Flush_FDCache added (not yet active)
+ *    - Several bug fixes for "CutUp"
+ *    - FD Cache adaptions for RBF (not yet active)
+ *
  *    Revision 1.60  2007/04/10 22:15:16  bfo
  *     Linux file names are treated case sensitively again
  *    (only Hash itself can't distinguish)
@@ -1553,9 +1559,9 @@ os9err Flush_Dir( ushort cpid, ushort* pathP, const char* nmS )
         strcat    ( fullName, d.name );        mP= NULL;
         err= FD_ID( fullName, NULL, &fd_hash, &mP ); if (err) break;
       
-        if (mP->dirid!=0 &&
-            mP->dirid!=d.fdsect)
-          main_printf( "name='%s' fdsect=%06X %06X\n", fullName, d.fdsect, mP->dirid );
+      //if (mP->dirid!=0 &&
+      //    mP->dirid!=d.fdsect)
+      //  main_printf( "name='%s' fdsect=%06X %06X\n", fullName, os9_long( d.fdsect ), mP->dirid );
 
         mP->dirid= 0;
       } // if
