@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.8  2007/04/19 21:00:56  bfo
+ *    Version changed to V3.38
+ *
  *    Revision 1.7  2007/03/11 17:17:37  bfo
  *    Version changed to V3.37
  *
@@ -105,7 +108,7 @@ void getversion( unsigned short *ver,
   #else
     // simply hardwired for all other platforms
     *ver=    3;
-    *rev= 0x38; /* V3.38 */
+    *rev= 0x39; /* V3.39 */
   #endif
 } // getversion
 
