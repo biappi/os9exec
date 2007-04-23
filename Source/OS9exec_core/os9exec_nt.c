@@ -41,6 +41,10 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.105  2007/04/17 23:04:05  bfo
+ *    - FD_ID (hash) fName always visible
+ *    - renamed to "dirtable_entry"
+ *
  *    Revision 1.104  2007/03/24 12:52:41  bfo
  *    - MAXDIR is now 65536
  *    - MAXDIRHIT = 60 and <hittable>, for "ihit" statistics
@@ -1338,8 +1342,8 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
     int         i;
 
     debugprintf( dbgStartup,dbgNorm,( "# Plugin Loader\n" ) );
-  //upe_printf( "startPath='%s'\n", startPath );
-  //upe_printf( "strtUPath='%s'\n", strtUPath );
+    debugprintf( dbgStartup,dbgNorm,( "# startPath='%s'\n", startPath ) );
+    debugprintf( dbgStartup,dbgNorm,( "# strtUPath='%s'\n", strtUPath ) );
     
     /*                      i= 0;
     err= SearchDLLs( cpid, &i,  with_dbgDLLs, true,  false ); if (err) return;

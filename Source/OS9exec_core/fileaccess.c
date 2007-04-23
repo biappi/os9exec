@@ -41,6 +41,9 @@
  *    $Locker$ (who has reserved checkout)
  *  Log:
  *    $Log$
+ *    Revision 1.51  2007/04/17 23:06:10  bfo
+ *    FD_ID calling args changed and adapted
+ *
  *    Revision 1.50  2007/04/13 10:08:43  bfo
  *    File copy correctly done for ftruncate workaround (MacOSX CW)
  *
@@ -2196,8 +2199,10 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     strcpy  ( ploc,pathname );
     if      (*ploc==NUL) return E_BPNAM;
     pastpath= ploc;
-    err     = parsepath( pid, &pastpath,hostpath, exedir ); if (err) return err;
+    err     = parsepath( pid, &pastpath,hostpath, exedir );
     pp      = hostpath;
+    debugprintf( dbgFiles,dbgNorm,( "# parsepath='%s' err=%d\n", pp, err ) );
+    if (err) return err;
     
     #if defined MACOS9
       /* make an FSSpec for the directory */
@@ -2217,9 +2222,10 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
       debugprintf( dbgFiles,dbgNorm,( "# pDopen: MakeFSSpec '%s' returned err=%d\n", pp, err ) );
 
     #elif defined win_unix
+      debugprintf( dbgFiles,dbgNorm,( "# pp (v)='%s'\n", pp ) );
       err= AdjustPath( pp,adapted, false ); if (err) return err;
-    //printf( "adapted='%s'\n" );
       pp = adapted;
+      debugprintf( dbgFiles,dbgNorm,( "# pp (n)='%s'\n", pp ) );
 
            ok= OpenTDir( pp, &d );
       if (!ok) {

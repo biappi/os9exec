@@ -1788,7 +1788,7 @@
           
           07-04-06  Bfo     os9exec_nt  : pStart as new process state added
           07-04-06  Bfo     util_stuff  : pStart will be displayed as process state "b"
-          07-04-06  Bfo     fcalls      - do while section for prcess setup
+          07-04-06  Bfo     fcalls      - do while section for process setup
                                         - don't remove pDead processes in F$Fork anymore
                                         - 'AssignNewChild' called at F$Wait
           07-04-06  Bfo     procstuff   - 'AssignNewChild' visible from outside now
@@ -1798,7 +1798,7 @@
                                         
           07-04-07  Bfo     fcalls      : retword( d[ 0 ] )= newpid added
           07-04-08  Bfo     procstuff   : Internal utils are treated somewhat special 
-                                          => can't active nativce's father
+                                          => can't active native's father
           07-04-08  Bfo     fileaccess  : No longer dependent on "Volumes", same treatment MacOSX/Linux
           07-04-08  Bfo     utilstuff   : Linux file names are treated case sensitively again
                                           (only Hash itself can't distinguish)
@@ -1830,6 +1830,8 @@
 
           07-04-22  Bfo     Version changed to V3.39
           07-04-22  Bfo     main_printf message avoided
+          07-04-23  Bfo     os9exec_nt /
+                            fileaccess  : More debug output added
 
     3.39  07-??-??  Bfo
     -------------------
