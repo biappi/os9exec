@@ -1832,8 +1832,7 @@
           07-04-22  Bfo     main_printf message avoided
           07-04-23  Bfo     os9exec_nt /
                             fileaccess  : More debug output added
-
-    3.39  07-??-??  Bfo
+    3.39  07-05-01  Bfo     V3.39 released
     -------------------
     
 */
