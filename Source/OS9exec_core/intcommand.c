@@ -190,6 +190,7 @@
  *
  */
 
+#include <ctype.h>
 
 /* OS9exec/nt 2.0 internal commands */
 /* ================================ */

@@ -71,6 +71,7 @@
  *
  */
 
+#include <ctype.h>
 
 /* OS9exec/nt internal move */
 /* ======================== */

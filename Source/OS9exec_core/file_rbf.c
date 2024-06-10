@@ -154,6 +154,7 @@
 
 // #define RBF_CACHE
 
+#include <ctype.h>
 
 /* This file contains the RBF Emulator */
 #include "os9exec_incl.h"

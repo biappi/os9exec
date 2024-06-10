@@ -147,6 +147,7 @@
  *
  */
 
+#include <ctype.h>
 
 /* "filestuff.c"
  * Interface to the different output systems

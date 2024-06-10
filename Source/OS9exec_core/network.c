@@ -169,11 +169,15 @@
   #include <netdb.h>
   #include <netinet/in.h>
   #include <sys/socket.h>
-  
-  #ifdef linux
-    #include <asm/ioctls.h>
-  #endif
-  
+
+// WIL
+//  #ifdef linux
+//    #include <asm/ioctls.h>
+//  #endif
+
+  #include <arpa/inet.h>
+  #include <sys/ioctl.h>
+
   #define INVALID_SOCKET (-1)
   #define SOCKET_ERROR   (-1)
 

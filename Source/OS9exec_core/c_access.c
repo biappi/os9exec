@@ -81,6 +81,8 @@
 
 #include "c_access.h"
 
+#include <ctype.h>
+#include <stdio.h>
 
 // the callback structure reference
 callback_typ* cbP;

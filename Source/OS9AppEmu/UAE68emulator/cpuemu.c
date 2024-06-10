@@ -9,6 +9,8 @@
 #include "compiler.h"
 #include "cputbl.h"
 
+#include "luzstuff.h" // WIL
+
 #if !defined(PART_1) && !defined(PART_2) && !defined(PART_3) && !defined(PART_4) && !defined(PART_5) && !defined(PART_6) && !defined(PART_7) && !defined(PART_8)
 #define PART_1 1
 #define PART_2 1

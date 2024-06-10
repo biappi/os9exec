@@ -69,7 +69,7 @@
 
 
 
-static netInstalled= false;
+static int netInstalled= false; // WIL
 /* Connection from Internet Support Package (ISP) */
 /* to the host system's network connection */
 

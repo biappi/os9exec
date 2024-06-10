@@ -29,6 +29,6 @@ void                upe_printf( const char* format, ... );
 #define write_log   upe_printf
 
 extern struct uae_prefs currprefs;
-extern void   custom_reset(void);
+extern void   customreset(void); // WIL
 extern void   *xmalloc(size_t n);
 

@@ -205,6 +205,7 @@
 
 
 
+#include <ctype.h>
 
 #include "os9exec_incl.h"
 

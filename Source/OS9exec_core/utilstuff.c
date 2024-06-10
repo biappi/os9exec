@@ -232,7 +232,8 @@
 
 #include <utime.h>
 
-                
+#include <ctype.h>
+
 
 char* nullterm( char* s1, const char* s2, ushort max )
 /* create null terminated version of s2. All chars<=SPACE will terminate s2

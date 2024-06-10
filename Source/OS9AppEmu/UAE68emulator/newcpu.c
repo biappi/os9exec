@@ -26,6 +26,8 @@
 
 #include "luzstuff.h"
 
+#include <sys/types.h>
+
 #ifdef __GNUC__
   typedef short Boolean;
   #define true  1
@@ -712,6 +714,8 @@ void MakeFromSR (void)
 	#endif
 }
 
+void handle_os9exec_exception(int nr, uaecptr oldpc); // WIL
+
 void Exception(int nr, uaecptr oldpc)
 {
     compiler_flush_jsr_stack();
@@ -1364,6 +1368,7 @@ int m68k_disp= 0;
 
 #undef PROBLEM
 
+ushort debugwait( void ); // WIL
 
 // special emulator call, runs up to next os9_running=0 assignment
 unsigned long m68k_os9go(void)

@@ -134,6 +134,8 @@
   #include "compiler.h"
 #endif
 
+#include <ctype.h>
+
 
 
 /* debugging support */

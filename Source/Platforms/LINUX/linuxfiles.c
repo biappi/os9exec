@@ -60,8 +60,7 @@
 /* Linux specific file handling */
 #include "os9exec_incl.h"
 #include <utime.h>
-
-
+#include <ctype.h>
 
 void Conv_to_2e( char* pathname, char** qP, char** qsP )
 /* ":2e" must be treated as "." and vice versa */

@@ -106,6 +106,7 @@
  *
  */
 
+#include <ctype.h>
 
 /* Console I/O routines */
 /* ==================== */

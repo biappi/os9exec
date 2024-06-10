@@ -121,6 +121,8 @@
  *
  */
 
+#include <ctype.h>
+
 
 /* includes */
 /* ======== */
