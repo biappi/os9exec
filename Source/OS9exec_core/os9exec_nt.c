@@ -1044,8 +1044,10 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 		  doRep= true;
 	  }  
 	#endif
-		      
-	strcpy( tmp, p );
+
+    if (tmp != p)
+        strcpy( tmp, p );
+
 	p=      tmp;
 
 	if (doRep) {

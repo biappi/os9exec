@@ -1008,6 +1008,9 @@ os9err pSCFnam( _pid_, syspath_typ* spP, char* volname )
         default      : p= spP->name; break;
     } /* switch */
     
+    if (volname == p)
+        return 0;
+    
     strcpy( volname,p );
     return 0;
 } /* pSCFnam */
