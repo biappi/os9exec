@@ -89,7 +89,7 @@ typedef struct pdsc {
 	mod_exec
 		*_pmodul;			/* primary module */
 	unsigned char
-		*_except[10],		/* program error exception vectors */
+		*except[10],		/* program error exception vectors */
 		*_exstk[10],		/* program error exception stack frame ptrs */
 		*_traps[15],		/* user's trap vector table */
 		*_trpmem[15];		/* user's trap static memory block ptrs */
