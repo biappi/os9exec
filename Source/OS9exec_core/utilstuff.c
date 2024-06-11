@@ -1683,7 +1683,6 @@ ulong My_FD( const char* pathname )
   ulong fd= 0;
 
     
-  #ifdef win_linux
     char            p[OS9PATHLEN];
     char*           q;
     DIR*            d;
@@ -1708,7 +1707,6 @@ ulong My_FD( const char* pathname )
           
       closedir( d );
     } // if
-  #endif
   
   return fd;
 } /* My_FD */

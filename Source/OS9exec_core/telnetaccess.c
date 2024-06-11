@@ -223,7 +223,7 @@ void WindowTitle( char* title, Boolean vmod )
 {
   const char* p;
     
-  #if defined TERMINAL_CONSOLE && !defined windows32
+  #if defined TERMINAL_CONSOLE
     char cons[ 40 ];
   #endif
     

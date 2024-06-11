@@ -210,9 +210,7 @@ Boolean SCSI_Device  ( const char* os9path,
 // #endif
 
 
-#ifdef win_linux
   void   GetEntry( dirent_typ* dEnt, char* name, Boolean do_2e_conv );
-#endif
 
 Boolean RBF_ImgSize( long size );
 /* Returns true, if it is a valid RBF Image size */

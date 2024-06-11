@@ -772,7 +772,6 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
   os9err err= 0;
     
-  #if   defined win_linux
     int    fd= fileno( spP->stream );
     struct stat info;
 
@@ -780,15 +779,6 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
     if (err) return E_SEEK;
     *sizeP= info.st_size; // for MACOSX <st_size> is unfortunately 0
       
-  #else
-    fpos_t tmp_pos;
-     
-    fgetpos( spP->stream,  &tmp_pos );   /* save current position */
-    fseek  ( spP->stream,0,SEEK_END );   /* go to EOF */
-    *sizeP= (ulong)ftell( spP->stream ); /* get position now = file size */
-  //fgetpos( spP->stream,  sizeP    );   /* get position now = file size */
-    fsetpos( spP->stream,  &tmp_pos );   /* restore position */
-  #endif
       
   return err;
 } /* pFsize */

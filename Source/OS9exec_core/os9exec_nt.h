@@ -1288,9 +1288,7 @@ extern dir_type mdir;                  /* current module dir */
 
 /* stdin and out for console */
 
-#ifdef win_linux
   extern  ttydev_typ main_mco;
-#endif
 
 
 /* flag which allows empty read functionality for multiple terminal support */

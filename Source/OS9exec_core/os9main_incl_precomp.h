@@ -151,9 +151,7 @@
   #define win_linux
 
 /* all modern systems combined */
-#if defined win_linux || defined UNIX
   #define win_unix
-#endif
 
 
 // Decide about the system

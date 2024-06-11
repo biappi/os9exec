@@ -340,9 +340,7 @@ void init_mem(ushort pid)
           	svsize = f->size;
             MoveBlk( f,&freeinfo.f[k+1], (freeinfo.freeN-k)*sizeof(memblock_typ) );
 
-            #ifdef win_linux
               totalMem-= svsize; /* free memory is not really released */
-            #endif
                   
             freeinfo.freeN--;
             freeinfo.freeMem-= svsize;
@@ -360,9 +358,7 @@ void init_mem(ushort pid)
         	svsize=  f->size;
             MoveBlk( f,&freeinfo.f[k+1], (freeinfo.freeN-k)*sizeof(memblock_typ) );
 
-            #ifdef win_linux
               totalMem-= svsize; /* free memory is not really released */
-            #endif
                   
             freeinfo.freeN--;
             freeinfo.freeMem-= svsize;
@@ -379,9 +375,7 @@ void init_mem(ushort pid)
         	f->base= membase;
         	f->size= memsz;
               
-            #ifdef win_linux
               totalMem+= memsz; /* free memory is not really released */
-            #endif
                   
             freeinfo.freeN++;
             freeinfo.freeMem+= memsz;
@@ -450,9 +444,7 @@ void release_mem( void* membase )
         if (m->base==membase) { /* search for a segment to be released */
             memsz= m->size;
        
-            #ifdef win_linux
               totalMem-= memsz;
-            #endif
             
             m->base= NULL; /* and release the segment */
             m->size= 0;
@@ -564,9 +556,7 @@ void* get_mem( ulong memsz )
               release_ok( qq,   sv_size - memsz );
             } // if
                   
-            #ifdef win_linux
               totalMem-= sv_size; /* memory was not really free */
-            #endif
 
             freeinfo.freeN--;
             freeinfo.freeMem-= sv_size;                                    
@@ -606,9 +596,7 @@ void* get_mem( ulong memsz )
     if (pp!=NULL) {
         for (k=0;k<MAX_MEMALLOC;k++) {
             if (memtable[k].base==NULL) { /* search for a free segment */
-                #ifdef win_linux
                   totalMem+= memsz;
-                #endif
             
                 memtable[k].base= pp;
                 memtable[k].size= memsz;

@@ -291,12 +291,8 @@ char* egetenv( const char* name )
 /* advance cursor and force time slicing */
 void eAdvanceCursor(void)
 {
-    #if   defined win_linux
       // sleep(1);
       
-    #else
-      #error not implemented
-    #endif
 } /* eAdvanceCursor */
 
 
