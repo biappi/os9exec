@@ -428,63 +428,6 @@ extern void closedir(DIR *);
 
 
 
-#ifdef DONT_HAVE_POSIX
-#define access posixemu_access
-extern int posixemu_access (const char *, int);
-#define open posixemu_open
-#define creat(a,b) posixemu_open(a,O_RDWR|O_CREAT,0)
-extern int posixemu_open (const char *, int, int);
-#define close posixemu_close
-extern void posixemu_close (int);
-#define read posixemu_read
-extern int posixemu_read (int, char *, int);
-#define write posixemu_write
-extern int posixemu_write (int, const char *, int);
-#undef lseek
-#define lseek posixemu_seek
-extern int posixemu_seek (int, int, int);
-#define stat(a,b) posixemu_stat ((a), (b))
-extern int posixemu_stat (const char *, struct stat *);
-#define mkdir posixemu_mkdir
-extern int posixemu_mkdir (const char *, int);
-#define rmdir posixemu_rmdir
-extern int posixemu_rmdir (const char *);
-#define unlink posixemu_unlink
-extern int posixemu_unlink (const char *);
-#define truncate posixemu_truncate
-extern int posixemu_truncate (const char *, long int);
-#define rename posixemu_rename
-extern int posixemu_rename (const char *, const char *);
-#define chmod posixemu_chmod
-extern int posixemu_chmod (const char *, int);
-#define tmpnam posixemu_tmpnam
-extern void posixemu_tmpnam (char *);
-#define utime posixemu_utime
-extern int posixemu_utime (const char *, struct utimbuf *);
-#define opendir posixemu_opendir
-extern DIR * posixemu_opendir (const char *);
-#define readdir posixemu_readdir
-extern struct dirent* readdir (DIR *);
-#define closedir posixemu_closedir
-extern void closedir (DIR *);
-
-#if defined( SUPPORT_PENGUINS ) || defined( UAE_FILESYS_THREADS )
-/* We need posixemu prototypes for the semaphore stuff */
-typedef HANDLE  uae_sem_t;
-typedef DWORD   penguin_id;
-void sem_init( uae_sem_t*, int, int );
-void sem_wait( uae_sem_t* );
-void sem_post( uae_sem_t* );
-int sem_trywait( uae_sem_t* );
-int start_penguin( void *(*f)(void *), void *, penguin_id* );
-#endif
-
-/* This isn't the best place for this, but it fits reasonably well. The logic
- * is that you probably don't have POSIX errnos if you don't have the above
- * functions. */
-extern long dos_errno (void);
-
-#endif
 
 #ifdef DONT_HAVE_STDIO
 
