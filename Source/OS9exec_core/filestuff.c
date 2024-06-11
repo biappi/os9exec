@@ -1537,7 +1537,7 @@ void usrpath_printf( ushort pid, ushort up, const char* format, ... )
 /* printf to OS9 user path */
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1549,7 +1549,7 @@ void usrpath_printf( ushort pid, ushort up, const char* format, ... )
 void upo_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1565,7 +1565,7 @@ void upho_printf( const char* format, ... )
     char  buffer[MAXPRINTFLEN];
     char* b= &buffer[ 2 ];
     
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(b,     format,vp);
     va_end                (vp);
@@ -1579,7 +1579,7 @@ void upho_printf( const char* format, ... )
 void upe_printf( const char* format, ... )
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);
@@ -1594,7 +1594,7 @@ void uphe_printf( const char* format, ... )
     char  buffer[MAXPRINTFLEN];
     char* b= &buffer[ 2 ];
     
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(b,     format,vp);
     va_end                (vp);
@@ -1610,7 +1610,7 @@ void main_printf( const char* format, ... )
 /* main path error output printing */
 {
     char buffer[MAXPRINTFLEN];
-    va_list vp= NULL;
+    va_list vp;
     va_start    (vp,format);
     vsprintf(buffer,format,vp);
     va_end                (vp);

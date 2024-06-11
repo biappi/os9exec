@@ -258,7 +258,7 @@ void _debugprintf(char *format, ...)
 {
     char buffer[MAXPRINTFLEN];
     process_typ* cp= &procs[ currentpid ];
-    va_list vp= NULL;
+    va_list vp;
     
     /* message enabled for that level */
     va_start    (vp,format);

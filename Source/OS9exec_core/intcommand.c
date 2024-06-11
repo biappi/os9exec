@@ -1723,7 +1723,7 @@ int isintcommand( const char* name, Boolean *isNative, void** modBaseP )
 os9err _errmsg(os9err err, char* format, ...)
 {
     char obuf[300];
-    va_list vp= NULL;
+    va_list vp;
     va_start(vp,format);
     upe_printf("%s: ",icmname);
     vsprintf(obuf,format,vp);
