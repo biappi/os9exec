@@ -44,9 +44,6 @@
   #ifdef MACOS9
     //
     
-    #ifdef USE_CLASSIC       // MacOS9
-    //
-    #endif
 
     #ifdef USE_CARBON        // Carbon
     //

@@ -247,42 +247,7 @@ static os9err SCSIcall( short scsiAdapt, ushort scsiBus, ushort scsiID, ushort s
     os9err err;
     char*  s;
 
-    #if defined USE_CLASSIC
-      #pragma unused(scsiAdapt,scsiBus,scsiLUN)
-      
-      OSErr  oserr, ocerr= 0;
-      ushort tib[10];
-      ulong  *l;
-      short  stat, message= 0;
-      int    wait= 200;
-
-          tib[0]=     os9_word( scInc  ); /* fill the tibPtr structure */
-      l= &tib[1]; *l= os9_long( (ulong)dat_buf );
-      l= &tib[3]; *l= os9_long( len            );
-          tib[5]=     os9_word( scStop );
-      l= &tib[6]; *l= os9_long( NULL   );
-      l= &tib[8]; *l= os9_long( NULL   );
-
-      do {            oserr= SCSIGet(); /* go through the SCSI commands */
-          if (!oserr) oserr= SCSISelect( scsiID );
-          if  (oserr) { err= host2os9err(oserr,E_UNIT); break; }
-
-               oserr= SCSICmd( cb,cb_size );
-          if (!oserr) {
-              if (doWrite) oserr= SCSIWrite( tib );
-              else         oserr= SCSIRead ( tib );
-          }
-
-          if (oserr==5 && *cb==CmdCapacity && dat_buf[1]!=0) oserr= 0; /* workaround */
-
-                      /* it's done */
-                      ocerr= SCSIComplete( &stat,&message, wait );
-          if (!oserr) oserr= ocerr;
-          
-	      err= host2os9err(oserr,E_NOTRDY);
-	  } while (false);
-
-    #elif defined windows32  
+    #if   defined windows32  
       HANDLE fileHandle;
 
       DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;  // default

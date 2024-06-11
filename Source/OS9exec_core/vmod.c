@@ -65,79 +65,13 @@
 #include "os9exec_incl.h"
 
 
-#if defined USE_CLASSIC && !defined MPW
-  #include "TermWindow.h"
-  
-  /* /VMod access  */
-  /* ============= */
-
-
-  typedef struct {
-            TermWindowPtr wPtr;
-            TermWindowPtr wStore;
-            Rect          r;
-            char          title[81]; /* Pascal size */
-            ulong         wSize;
-            ushort        wIndex;        
-            ushort        wTot;        
-  } newwin_type;
-#endif
 
 
 os9err pVMod( ushort pid, _spP_, ulong *d1,ulong *d2 )
 /* These routine makes the direct jump into the Macintosh Toolbox */
 /* It emulates the "/vmod" driver of the Spectrapot system */
 {
-    #if defined USE_CLASSIC && !defined MPW
-      ushort       func;
-      newwin_type* nw;
-      GrafPtr      my_port;
-      ushort       sp;
-      syspath_typ* spS;
-      PicHandle    ph;
-    
-      func=        loword(*d1); /* get the parameters */
-      nw  = (newwin_type*)*d2;
-    
-      switch (func) {
-          case 0xA874: sp = procs[pid].usrpaths[usrStdout]; /* GetPort */
-                       spS= get_syspathd( pid,sp );   /* this is really my window */
-                       nw->wPtr= (TermWindowPtr)SysPathWindow( spS );
-                       break;
-
-          case 0xA8F6: ph= (PicHandle)nw->wStore;  /* DrawPicture */
-                       GetPort    ( &my_port    ); /* save current port */
-                       SetPort    (  nw->wPtr   );
-                       EraseRect  (      &nw->r ); /* erase all */
-                       DrawPicture(  ph, &nw->r ); /* draw PCT */
-
-                       UpdatePrms ( (ulong)nw->wPtr, /* give it to update handler */
-                                    (ulong)ph, nw->wSize, nw->wIndex,nw->wTot );
-                       SetPort    (  my_port  );   /* and restore previous window */
-                       break;
-
-          case 0xA913: gConsoleID= VModBase; /* NewWindow */
-                       gRect     = &nw->r;
-                       memcpy( gTitle,&nw->title, OS9NAMELEN );   /* convert to C */
-                       p2cstr( gTitle );
-                     
-                       ConsPutc(NUL); /* open it */
-                       nw->wPtr  = (TermWindowPtr)CurrentWindow();
-                       nw->wStore= nw->wPtr;
-                       break;
-        
-          case 0xA92D: gConsoleID= VModBase; /* CloseWindow */
-                       memcpy( gTitle,&nw->title, OS9NAMELEN );   /* convert to C */
-                       p2cstr( gTitle );
-
-                       RemoveConsole();
-                       break;
-        
-          case 0xA9C8: SysBeep( 1 ); break;  /* also here, as in the real vmod drv */
-          default    : ; /* do nothing */
-      }
-
-    #elif defined windows32 || defined MACOSX
+    #if   defined windows32 || defined MACOSX
       #pragma unused(pid,d1,d2)
     #endif
     

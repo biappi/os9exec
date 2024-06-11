@@ -870,14 +870,7 @@ void get_hw()
       #else
         platform= "ppc";
         
-        #if   defined USE_CLASSIC
-          #ifdef MPW
-            hw_name= "PowerMac MPW";
-          #else
-            hw_name= "PowerMac Classic";
-          #endif
-          
-        #elif defined USE_CARBON
+        #if   defined USE_CARBON
           hw_name= "PowerMac Carbon";
           
         #elif defined MACOSX
@@ -1526,9 +1519,6 @@ static void titles( void )
    
    #ifdef TERMINAL_CONSOLE
      #ifdef macintosh
-       #if defined USE_CLASSIC && !defined SERIAL_INTERFACE
-         upho_printf("- CTB Console Version, 'Termconsole' (c) 1996 by Joseph J. Strout\n");
-       #endif
        
        #ifdef MACOS9
          upho_printf("- Mac Serial Interface Version       (c) 2000 by B. Forster\n");
