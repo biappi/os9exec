@@ -172,12 +172,10 @@ extern const char *gameport_state (int n);
 
 extern struct uae_prefs currprefs, changed_prefs;
 
-#ifndef _WIN32
 #if __GNUC__ - 1 > 1 || __GNUC_MINOR__ - 1 > 6
 extern void write_log (const char *, ...) __attribute__ ((format (printf, 1, 2)));
 #else
 extern void write_log (const char *, ...);
-#endif
 #endif
 
 extern void console_out (const char *, ...);

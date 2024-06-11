@@ -22,10 +22,8 @@
   #define __INTEL__
 #endif
 
-#ifndef _WIN32
 #ifndef __STDC__
 #error "Your compiler is not ANSI. Get a real one."
-#endif
 #endif
 
 #include <stdarg.h>
@@ -244,145 +242,6 @@ extern int   in_m68k_go;
 #undef DONT_HAVE_STDIO
 #undef DONT_HAVE_MALLOC
 
-#if defined _WIN32
-#include <windows.h>
-#define O_NDELAY 0
-
-//#define DONT_HAVE_POSIX /* I want Mathias' posixemu_ functions! */
-
-#ifdef _CONSOLE
-#define write_log printf
-#define gui_message printf
-#else
-extern void write_log( const char *, ... );
-extern void gui_message( const char *, ...);
-#endif
-
-#if defined __WATCOMC__
-
-#include <direct.h>
-#define dirent direct
-#define mkdir(a,b) mkdir(a)
-#define strcasecmp stricmp
-
-#elif defined __GNUC__
-#define abort() do { write_log( "Internal error in module %s at line %d\n", __FILE__, __LINE__ );exit(1); } while (0)
-
-#define DIR struct DIR
-extern DIR* opendir(char *);
-struct direct
-{
-    char d_name[1];
-};
-struct dirent *readdir (DIR * dir);
-extern void closedir(DIR *);
-#undef S_ISDIR
-#define S_ISDIR(a) (a&0x100)
-
-#define __int64 long long
-
-#elif defined _MSC_VER
-#include <io.h>
-#include <direct.h>
-
-#ifndef _WIN32
-#define O_BINARY _O_BINARY
-#define O_WRONLY _O_WRONLY
-#define O_RDONLY _O_RDONLY
-#define O_RDWR   _O_RDWR
-#define O_CREAT  _O_CREAT
-#define O_TRUNC  _O_TRUNC
-#endif
-
-#define strcasecmp _stricmp
-#define REGPARAM
-#define REGPARAM2
-#define __inline__ __inline
-#define __volatile__ volatile
-#define __asm__(a) ;
-#undef my_strdup
-#define my_strdup _strdup
-#define stricmp _stricmp
-#define off_t  int
-#define utimbuf _utimbuf
-#define fdopen _fdopen
-#define fileno _fileno
-#define DIR struct DIR
-
-#ifndef USE_DIRENT_PORT
-  extern DIR* opendir(char *);
-  struct direct
-  {
-    char d_name[1];
-  };
-  struct dirent *readdir (DIR * dir);
-  extern void closedir(DIR *);
-#endif
-
-#define W_OK 0x2
-#define R_OK 0x4
-
-// %%% LuZ: definitions to make UAE work with CW 5 Win
-#elif defined __MWERKS__
-
-//#include <io.h>
-//#include <direct.h>
-//#define O_BINARY _O_BINARY
-//#define O_WRONLY _O_WRONLY
-//#define O_RDONLY _O_RDONLY
-//#define O_RDWR   _O_RDWR
-//#define O_CREAT  _O_CREAT
-//#define O_TRUNC  _O_TRUNC
-//#define strcasecmp _stricmp
-#define REGPARAM
-#define REGPARAM2
-#define __inline__ __inline
-#define __volatile__ volatile
-//#define __asm__(a) ;
-//#undef my_strdup
-//#define my_strdup _strdup
-//#define stricmp _stricmp
-//#define off_t  int
-//#define utimbuf _utimbuf
-//#define fdopen _fdopen
-//#define fileno _fileno
-//#define DIR struct DIR
-//extern DIR* opendir(char *);
-//struct direct
-//{
-//    char d_name[1];
-//};
-//struct dirent *readdir (DIR * dir);
-//extern void closedir(DIR *);
-//#define W_OK 0x2
-//#define R_OK 0x4
-
-// %%% end MetroWerks
-#endif
-
-#define FILEFLAG_DIR     0x1
-#define FILEFLAG_ARCHIVE 0x2
-#define FILEFLAG_WRITE   0x4
-#define FILEFLAG_READ    0x8
-#define FILEFLAG_EXECUTE 0x10
-#define FILEFLAG_SCRIPT  0x20
-#define FILEFLAG_PURE    0x40
-#undef S_ISDIR
-#undef S_IWUSR
-#undef S_IRUSR
-#undef S_IXUSR
-#define S_ISDIR(a) (a&FILEFLAG_DIR)
-#define S_ISARC(a) (a&FILEFLAG_ARCHIVE)
-#define S_IWUSR FILEFLAG_WRITE
-#define S_IRUSR FILEFLAG_READ
-#define S_IXUSR FILEFLAG_EXECUTE
-
-#undef L_tmpname
-#define L_tmpname MAX_PATH /* For posixemu_tmpnam() */
-
-#define HAVE_GETTICKCOUNT
-
-#endif /* _WIN32 */ 
 
 
 /* %%% LuZ: definitions to make UAE work with CW 5 Mac */
