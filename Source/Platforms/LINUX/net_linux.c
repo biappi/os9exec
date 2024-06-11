@@ -119,6 +119,8 @@ os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
       hostPtr = gethostbyname(  sysname.nodename );
   if (hostPtr==NULL) return OS9_ENETDOWN;
 
+#define h_addr h_addr_list[0] /* for backward compatibility */
+
   memset( &serverName, 0, sizeof(serverName));
   memcpy( &serverName.sin_addr, hostPtr->h_addr,
                                 hostPtr->h_length );
