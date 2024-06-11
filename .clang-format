@@ -1,0 +1,11 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+BreakBeforeBraces: Stroustrup
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+PointerAlignment: Right
+BinPackParameters: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
+SortIncludes: false
