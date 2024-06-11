@@ -834,9 +834,9 @@ ulong GetSystemTick(void)
 
     #elif defined UNIX
       struct timeval  tv;
-      struct timezone tz;
+      //struct timezone tz;
       
-      gettimeofday( &tv, &tz );
+      gettimeofday( &tv, NULL );
       if (sec0==0) sec0= tv.tv_sec;
       t=         tv.tv_sec - sec0;
       t= 100*t + tv.tv_usec/10000;
