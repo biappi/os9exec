@@ -61,10 +61,8 @@ int fpp_movem_next[256];
 cpuop_func *cpufunctbl[65536];
 
 // flag to exit out of emulator on OS9 related occasions (Traps etc.)
-#ifdef NO_AMIGA
 int os9_running=0;
 unsigned long m68_os9go_result;
-#endif
 
 #define COUNT_INSTRS 0
 
@@ -189,19 +187,6 @@ static void update_68k_cycles (void)
 
 void check_prefs_changed_cpu (void)
 {
-    #ifndef NO_AMIGA
-    if (currprefs.cpu_level != changed_prefs.cpu_level
-	|| currprefs.cpu_compatible != changed_prefs.cpu_compatible) {
-	currprefs.cpu_level = changed_prefs.cpu_level;
-	currprefs.cpu_compatible = changed_prefs.cpu_compatible;
-	build_cpufunctbl ();
-    }
-    if (currprefs.m68k_speed != changed_prefs.m68k_speed) {
-	currprefs.m68k_speed = changed_prefs.m68k_speed;
-	reset_frame_rate_hack ();
-	update_68k_cycles ();
-    }
-    #endif
 }
 
 void init_m68k (void)
@@ -705,13 +690,6 @@ void MakeFromSR (void)
 		}
     }
 
-    #ifndef NO_AMIGA
-    regs.spcflags |= SPCFLAG_INT;
-    if (regs.t1 || regs.t0)
-	regs.spcflags |= SPCFLAG_TRACE;
-    else
-	regs.spcflags &= ~(SPCFLAG_TRACE | SPCFLAG_DOTRACE);
-	#endif
 }
 
 void handle_os9exec_exception(int nr, uaecptr oldpc); // WIL
@@ -720,73 +698,7 @@ void Exception(int nr, uaecptr oldpc)
 {
     compiler_flush_jsr_stack();
     MakeSR();
-    #ifdef NO_AMIGA
     handle_os9exec_exception(nr,m68k_getpc());
-	#else	
-    if (!regs.s) {
-		regs.usp = m68k_areg(regs, 7);
-
-		if (currprefs.cpu_level >= 2)
-		    m68k_areg(regs, 7) = regs.m ? regs.msp : regs.isp;
-		else
-		    m68k_areg(regs, 7) = regs.isp;
-		regs.s = 1;
-    }
-    if (currprefs.cpu_level > 0) {
-		if (nr == 2 || nr == 3) {
-		    int i;
-		    /* @@@ this is probably wrong (?) */
-		    for (i = 0 ; i < 12 ; i++) {
-			m68k_areg(regs, 7) -= 2;
-			put_word (m68k_areg(regs, 7), 0);
-		    }
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), 0xa000 + nr * 4);
-		} else if (nr ==5 || nr == 6 || nr == 7 || nr == 9) {
-		    m68k_areg(regs, 7) -= 4;
-		    put_long (m68k_areg(regs, 7), oldpc);
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), 0x2000 + nr * 4);
-		} else if (regs.m && nr >= 24 && nr < 32) {
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), nr * 4);
-		    m68k_areg(regs, 7) -= 4;
-		    put_long (m68k_areg(regs, 7), m68k_getpc ());
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), regs.sr);
-		    regs.sr |= (1 << 13);
-		    regs.msp = m68k_areg(regs, 7);
-		    m68k_areg(regs, 7) = regs.isp;
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), 0x1000 + nr * 4);
-		} else {
-		    m68k_areg(regs, 7) -= 2;
-		    put_word (m68k_areg(regs, 7), nr * 4);
-		}
-    } else {
-		if (nr == 2 || nr == 3) {
-		    m68k_areg(regs, 7) -= 12;
-		    /* ??????? */
-		    if (nr == 3) {
-			put_long (m68k_areg(regs, 7), last_fault_for_exception_3);
-			put_word (m68k_areg(regs, 7)+4, last_op_for_exception_3);
-			put_long (m68k_areg(regs, 7)+8, last_addr_for_exception_3);
-		    }
-		    write_log ("Exception!\n");
-		    goto kludge_me_do;
-		}
-    }
-    m68k_areg(regs, 7) -= 4;
-    put_long (m68k_areg(regs, 7), m68k_getpc ());
-kludge_me_do:
-    // save status reg as last reg
-    m68k_areg(regs, 7) -= 2;
-    put_word (m68k_areg(regs, 7), regs.sr);	    
-    m68k_setpc (get_long (regs.vbr + 4*nr));    
-    fill_prefetch_0 ();
-    regs.t1 = regs.t0 = regs.m = 0;
-    regs.spcflags &= ~(SPCFLAG_TRACE | SPCFLAG_DOTRACE);
-	#endif
 }
 
 static void Interrupt(int nr)
@@ -797,9 +709,6 @@ static void Interrupt(int nr)
     Exception(nr+24, 0);
 
     regs.intmask = nr;
-    #ifndef NO_AMIGA
-    regs.spcflags |= SPCFLAG_INT;
-	#endif
 }
 
 static int caar, cacr;
@@ -1101,10 +1010,6 @@ static char* ccnames[] =
 
 void m68k_reset (void)
 {
-    #ifndef NO_AMIGA
-    regs.kick_mask = 0xF80000;
-    regs.spcflags = 0;
-	#endif
     if(savestate_wanted) {
         m68k_setpc (regs.pc);
 	/* MakeFromSR() must not swap stack pointer */
@@ -1137,59 +1042,14 @@ unsigned long REGPARAM2 op_illg (uae_u32 opcode)
 {
     uaecptr pc = m68k_getpc ();
     
-    #ifndef NO_AMIGA
-    if (cloanto_rom && (opcode & 0xF100) == 0x7100) {
-		m68k_dreg (regs, (opcode >> 9) & 7) = (uae_s8)(opcode & 0xFF);
-		m68k_incpc (2);
-		fill_prefetch_0 ();
-		return 4;
-    }
-	#endif
 	
     compiler_flush_jsr_stack ();
-    #ifndef NO_AMIGA
-    if (opcode == 0x4E7B && get_long (0x10) == 0 && (pc & 0xF80000) == 0xF80000) {
-	write_log ("Your Kickstart requires a 68020 CPU. Giving up.\n");
-    gui_message ("Your Kickstart requires a 68020 CPU. Giving up.\n");
-	broken_in = 1;
-	regs.spcflags |= SPCFLAG_BRK;
-	quit_program = 1;
-    }
-    if (opcode == 0xFF0D) {
-	if ((pc & 0xF80000) == 0xF80000) {
-	    /* This is from the dummy Kickstart replacement */
-	    uae_u16 arg = get_iword (2);
-	    m68k_incpc (4);
-	    ersatz_perform (arg);
-	    fill_prefetch_0 ();
-	    return 4;
-	} else if ((pc & 0xF80000) == 0xF00000) {
-	    /* User-mode STOP replacement */
-	    m68k_setstopped (1);
-	    return 4;
-	}
-    }
-
-    if ((opcode & 0xF000) == 0xA000 && (pc & 0xF80000) == 0xF00000) {
-		/* Calltrap. */
-		m68k_incpc(2);
-		call_calltrap (opcode & 0xFFF);
-		fill_prefetch_0 ();
-		return 4;
-    }
-	#endif
 
     if ((opcode & 0xF000) == 0xF000) {
 		Exception(0xB,0);
 		return 4;
     }
     if ((opcode & 0xF000) == 0xA000) {
-	    #ifndef NO_AMIGA
-		if ((pc & 0xF80000) == 0xF00000) {
-		    /* Calltrap. */
-		    call_calltrap (opcode & 0xFFF);
-		}
-		#endif
 		Exception(0xA,0);
 		return 4;
     }
@@ -1214,94 +1074,13 @@ static uaecptr last_trace_ad = 0;
 
 static __inline__ void do_trace (void)
 {
-    #ifndef NO_AMIGA
-    if (regs.spcflags & SPCFLAG_TRACE) {		/* 6 */
-		if (regs.t0) {
-		    uae_u16 opcode;
-		    /* should also include TRAP, CHK, SR modification FPcc */
-		    /* probably never used so why bother */
-		    /* We can afford this to be inefficient... */
-		    m68k_setpc (m68k_getpc ());
-		    fill_prefetch_0 ();
-		    opcode = get_word (regs.pc);
-		    if (opcode == 0x4e72 		/* RTE */
-			|| opcode == 0x4e74 		/* RTD */
-			|| opcode == 0x4e75 		/* RTS */
-			|| opcode == 0x4e77 		/* RTR */
-			|| opcode == 0x4e76 		/* TRAPV */
-			|| (opcode & 0xffc0) == 0x4e80 	/* JSR */
-			|| (opcode & 0xffc0) == 0x4ec0 	/* JMP */
-			|| (opcode & 0xff00) == 0x6100  /* BSR */
-			|| ((opcode & 0xf000) == 0x6000	/* Bcc */
-			    && cctrue((opcode >> 8) & 0xf))
-			|| ((opcode & 0xf0f0) == 0x5050 /* DBcc */
-			    && !cctrue((opcode >> 8) & 0xf)
-			    && (uae_s16)m68k_dreg(regs, opcode & 7) != 0))
-		    {
-				last_trace_ad = m68k_getpc ();
-				regs.spcflags &= ~SPCFLAG_TRACE;
-				regs.spcflags |= SPCFLAG_DOTRACE;
-		    }
-		} else if (regs.t1) {
-		    last_trace_ad = m68k_getpc ();
-		    regs.spcflags &= ~SPCFLAG_TRACE;
-		    regs.spcflags |= SPCFLAG_DOTRACE;
-		}
-    }
-	#endif
 }
 
 static int do_specialties (void)
 {
     /*n_spcinsns++;*/
-    #ifndef NO_AMIGA
-    while (regs.spcflags & SPCFLAG_BLTNASTY) {
-		do_cycles (4);
-		if (regs.spcflags & SPCFLAG_DISK)
-		    do_disk ();
-	    }
-	    run_compiled_code();
-	    if (regs.spcflags & SPCFLAG_DOTRACE) {
-		Exception (9,last_trace_ad);
-    }
-    while (regs.spcflags & SPCFLAG_STOP) {
-		do_cycles (4);
-		if (regs.spcflags & SPCFLAG_DISK)
-		    do_disk ();
-		if (regs.spcflags & (SPCFLAG_INT | SPCFLAG_DOINT)){
-		    int intr = intlev ();
-		    regs.spcflags &= ~(SPCFLAG_INT | SPCFLAG_DOINT);
-		    if (intr != -1 && intr > regs.intmask) {
-			Interrupt (intr);
-			regs.stopped = 0;
-			regs.spcflags &= ~SPCFLAG_STOP;
-		    }
-		}
-    }
-	#endif
     do_trace ();
 
-    #ifndef NO_AMIGA
-    if (regs.spcflags & SPCFLAG_DISK)
-	do_disk ();
-
-    if (regs.spcflags & SPCFLAG_DOINT) {
-		int intr = intlev ();
-		regs.spcflags &= ~SPCFLAG_DOINT;
-		if (intr != -1 && intr > regs.intmask) {
-		    Interrupt (intr);
-		    regs.stopped = 0;
-		}
-    }
-    if (regs.spcflags & SPCFLAG_INT) {
-		regs.spcflags &= ~SPCFLAG_INT;
-		regs.spcflags |= SPCFLAG_DOINT;
-    }
-    if (regs.spcflags & (SPCFLAG_BRK | SPCFLAG_MODE_CHANGE)) {
-		regs.spcflags &= ~(SPCFLAG_BRK | SPCFLAG_MODE_CHANGE);
-		return 1;
-    }
-	#endif
     return 0;
 }
 
@@ -1326,18 +1105,7 @@ static void m68k_run_1 (void)
 		#endif
 		cycles = (*cpufunctbl[opcode])(opcode);
 		/*n_insns++;*/
-	    #ifdef NO_AMIGA
 	    if (quit_program) break;
-	    #else
-		cycles &= cycles_mask;
-		cycles |= cycles_val;
-	        do_cycles( cycles );
-
-		if (regs.spcflags) {
-		    if (do_specialties ())
-				return;
-		}
-		#endif
     }
 }
 
@@ -1346,7 +1114,6 @@ static void m68k_run_1 (void)
 
 //int in_m68k_go = 0;
 
-#ifdef NO_AMIGA
 
 int m68k_os9trace;
 int m68k_disp= 0;
@@ -1387,7 +1154,6 @@ unsigned long m68k_os9go(void)
     m68k_setpc(m68k_getpc());
     return m68_os9go_result;
 }
-#endif
 
 
 void m68k_go (int may_quit)
@@ -1397,10 +1163,6 @@ void m68k_go (int may_quit)
 		abort ();
     }
 
-	#ifndef NO_AMIGA
-    reset_frame_rate_hack ();
-    update_68k_cycles ();
-    #endif
 
     in_m68k_go++;
     for (;;) {
@@ -1409,15 +1171,7 @@ void m68k_go (int may_quit)
 				break;
 		    quit_program = 0;
 		    m68k_reset ();
-		    #ifndef NO_AMIGA
-		    reset_all_systems ();
-		    customreset ();
-		    #endif
 		}
-	    #ifndef NO_AMIGA
-			if (debugging)
-			    debug ();
-		#endif
 		m68k_run1 ();
     }
     in_m68k_go--;
@@ -1543,10 +1297,6 @@ void m68k_dumpstate (uaecptr *nextpc, int to_logfile)
 		(regs.fpsr & 0x4000000) != 0,
 		(regs.fpsr & 0x2000000) != 0,
 		(regs.fpsr & 0x1000000) != 0);
-	#ifndef NO_AMIGA
-    if (currprefs.cpu_compatible)
-	(*debug_out) ("prefetch %08lx\n", (unsigned long)do_get_mem_long(&regs.prefetch));
-	#endif
 
     m68k_disasm(m68k_getpc (), nextpc, 1, debug_out);
     if (nextpc)

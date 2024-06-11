@@ -45,10 +45,8 @@ extern int fpp_movem_next[256];
 
 extern int broken_in;
 
-#ifdef NO_AMIGA
 extern int os9_running;
 extern unsigned long m68_os9go_result;
-#endif
 
 
 typedef unsigned long cpuop_func (uae_u32) REGPARAM;
@@ -92,10 +90,6 @@ extern struct regstruct
     double fp[8];
     uae_u32 fpcr,fpsr,fpiar;
 
-    #ifndef NO_AMIGA
-    uae_u32 spcflags;
-    uae_u32 kick_mask;
-    #endif
 
     /* Fellow sources say this is 4 longwords. That's impossible. It needs
      * to be at least a longword. The HRM has some cryptic comment about two
@@ -232,9 +226,7 @@ extern void m68k_movec2 (int, uae_u32 *);
 extern void m68k_divl (uae_u32, uae_u32, uae_u16, uaecptr);
 extern void m68k_mull (uae_u32, uae_u32, uae_u16);
 extern void init_m68k (void);
-#ifdef NO_AMIGA
 extern unsigned long m68k_os9go (void); // special emulator call for os9exec
-#endif
 extern void m68k_go (int);
 extern void m68k_dumpstate (uaecptr *, int);
 extern void m68k_disasm (uaecptr, uaecptr *, int, void (*debug_out)());
