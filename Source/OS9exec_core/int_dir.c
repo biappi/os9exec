@@ -73,13 +73,8 @@
   {
       os9err err;
 
-      #if   defined linux
         err= call_hostcmd( "ls",  pid,argc-1,&argv[1] );
 
-      #else
-        upe_printf( "internal dir not yet implemented %%%\n" );
-        err= 1; /* SIGWAKE */
-      #endif
       
       return err;
   } /* int_dir */

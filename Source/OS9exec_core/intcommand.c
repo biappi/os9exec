@@ -703,10 +703,8 @@ static os9err int_devs( _pid_, int argc, char** argv )
     
     #if   defined MACOSX
       suff= ".dylib";
-    #elif defined linux
-      suff= ".so";
     #else
-      suff= "";
+      suff= ".so";
     #endif
     
     return suff;
@@ -786,10 +784,8 @@ static os9err int_devs( _pid_, int argc, char** argv )
       #if   defined UNIX
         #if   defined MACOSX
           #define mode RTLD_NOW + RTLD_GLOBAL
-        #elif defined linux
-          #define mode RTLD_LAZY
         #else
-          #define mode 0
+          #define mode RTLD_LAZY
         #endif
     
         p->fDLL= dlopen( fullName, mode );
@@ -1818,9 +1814,6 @@ static void large_pipe_connect( ushort pid, syspath_typ* spC )
       } /* if */
     
     #else
-      #ifndef linux
-      #pragma unused(pid)
-      #endif
     #endif
 } /* large_pipe_connect */
 
@@ -2000,9 +1993,6 @@ os9err call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv )
       return host2os9err( err,E_IFORKP );
     
     #else
-      #ifndef linux
-      #pragma unused(cmdline,pid,moreargs,argv)
-      #endif
 
       // Call MPW command???
       // Launch program???

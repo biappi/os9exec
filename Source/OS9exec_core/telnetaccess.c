@@ -151,9 +151,6 @@ ulong WriteCharsToPTY( char* buffer, ulong n, int consoleID, Boolean do_lf )
       return n;
 
     #else
-      #ifndef linux
-      #pragma unused( buffer,n,consoleID,do_lf )
-      #endif
       
       return 0;   
     #endif
@@ -284,9 +281,7 @@ Boolean DevReady( long *count )
 {   
     HandleEvent();
 
-    #ifdef linux
       *count= 1; return true; /* %%% not yet as it should be */
-    #endif
 
     #ifdef MACOSX
       *count= 1; return true; /* %%% not yet as it should be */

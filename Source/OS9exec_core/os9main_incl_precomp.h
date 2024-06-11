@@ -142,19 +142,13 @@
 
 /* Support only for Linux on PC */
 /* makes life easier for them moment ... */
-#ifdef linux
   #define __INTEL__
-#endif 
 
 /* the UNIX systems */
-#if defined linux || defined MACOSX
   #define UNIX
-#endif
 
 /* either windows or linux */
-#if defined windows32 || defined linux
   #define win_linux
-#endif
 
 /* all modern systems combined */
 #if defined win_linux || defined UNIX

@@ -701,11 +701,7 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
 
       debugprintf(dbgFiles,dbgDetail,("# pFseek: tried to seek to $%08lX, got errno=%d\n",*posP,errno));
 
-      #if !defined(__MWERKS__) && !defined(linux)
-      if (errno==ESPIPE || errno==ENXIO)
-      #else
       if (errno!=0) /* %%% rude version, if seek fails, assume that we must enlarge the file */
-      #endif
       {
           /* try extending file */
           debugprintf(dbgFiles,dbgDetail,("# pFseek: Trying to extend file to size=$%08lX\n",*posP));
@@ -1115,9 +1111,6 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     struct tm tim;
     time_t u;
     
-      #ifndef linux
-      #pragma unused(fdl)
-      #endif
     
     memcpy(fdbeg,buffer,16);  /* the size IS 16 */  
     tim.tm_year= fdbeg[ 3]; 
@@ -1567,9 +1560,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
 {
     os9err err= 0;
 
-    #if defined MACOS9 || defined linux
       OSErr  oserr= 0;
-    #endif
       
     #if   defined win_unix
      ushort mode;
@@ -1602,7 +1593,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       sprintf( cmd, "rmdir %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 
-    #elif defined linux
+    #else
   //#elif defined UNIX
       oserr= remove( pp ); if (oserr) err= host2os9err( oserr,E_DNE );
     #endif

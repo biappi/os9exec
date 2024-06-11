@@ -232,9 +232,7 @@
 #include "vmod.h"
 #include "utilstuff.h"
 
-#if   defined linux
   #include "linuxfiles.h"
-#endif
 
 #include "filestuff.h"
 #include "fcalls.h"

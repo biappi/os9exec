@@ -813,15 +813,9 @@ static void cleanup(void)
 /* and this will be done earlier now */
 void get_hw()
 {
-  #if   defined linux
     hw_site= "PC";
 	hw_name= "Linux - PC";   platform= "x86";
        
-  #else
-  /* unknown */
-    hw_site= "?";
-	hw_name= "?";            platform= "?";
-  #endif
 } /* get_hw */
 
 
@@ -1364,11 +1358,7 @@ static void titles( void )
    upho_printf( "Platform: '%s' (%s)\n", hw_name, platform );
    
    #ifdef TERMINAL_CONSOLE
-     #if   defined linux
        upho_printf("- Linux XTerm Version\n");
-     #else
-       upho_printf("- Unknown System\n"); /* unknown */
-     #endif
      
    #else
      upho_printf("- Macintosh programmer's Workshop (MPW) Tool Version \n");
@@ -1378,13 +1368,7 @@ static void titles( void )
    #ifdef USE_UAEMU
        upho_printf("- Using 68k-Emulator from UAE - Un*x Amiga Emulator (c) 1995 B. Schmidt\n");
    #else
-     #if defined linux
        upho_printf("- Using currently no 68k-Emulator\n");
-	 #elif defined powerc
-       upho_printf("- Using built-in Macintosh 68k-Emulator from PPC code\n");
-	 #else
-       upho_printf("- Running as 68k application on 68k Mac\n");
-	 #endif
    #endif
    
    

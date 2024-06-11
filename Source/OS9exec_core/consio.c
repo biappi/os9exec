@@ -339,16 +339,10 @@ Boolean ConsGetc( char* c )
       *c= n;
       
     #else
-      #ifdef linux
         n= read( 0, c, 1 );
 
         // printf( "nn=%d  c=0x%02X\n", n, (unsigned int)c[0] );
         // fflush(0);
-      #else
-        n= fread( c,1,1, stdin );
- 
-        //if (n!=1 || !devIsReady) return false;
-      #endif
              
            devIsReady= n>0;
       if (!devIsReady) return false;

@@ -482,9 +482,6 @@ static void CheckH0( char* name, char* p, char** p3 )
       strcpy( name,"/h0" ); *p3= name;
 
     #else
-       #ifndef linux
-       #pragma unused(name,p,p3)
-       #endif
     #endif
 } /* CheckH0 */
 
@@ -600,9 +597,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     if (!absolute) {
         /* --- it is a relative path: copy in default dir first (must end with PATHDELIM) */
                 p2= defDir_s;
-        #if   defined linux  
           if  (*p2==NUL) p2= "./";  /* special condition, if undefined */
-        #endif
           
         while (*p2!=NUL) *op++= *p2++; /* do it until end of string (not including NUL) */
 
@@ -620,9 +615,7 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         firstElemChar=false; /* parent dirs of absolute paths (devices) are not allowed */
 
         p++; /* skip slash at beginning */
-        #ifdef linux
           if (*(p+1)=='/') p++; /* eat Linux specific double slash at the beginning */
-        #endif
         p--;
 
         debugprintf(dbgFiles,dbgNorm,( "# parsepathext  (abs): '%s'\n", p ));

@@ -41,7 +41,5 @@
 // Windows
 
 // Linux
-#ifdef linux
 //#define PRINTER_SUPPORT    // LPT printers
   #define NATIVE_SUPPORT     // allows native DLLs
-#endif

@@ -50,7 +50,6 @@
 
 /* this is required to allow the use of original */
 /* "module.h" with its ulong definition on Linux */
-#ifdef linux
   #undef  __USE_MISC
   typedef unsigned long int ulong;
   typedef unsigned int uint;
@@ -60,7 +59,6 @@
   #endif
   
   #define USE_UAEMU
-#endif
 
 /* XCode does not know about macintosh */
 #if !defined macintosh && defined __MACH__
@@ -88,22 +86,16 @@
    #include <time.h>
 #endif
 
-#ifdef linux
   #include <sys/types.h>   /* according to Martin Gregorie's proposal */
   #include <stdio.h>
   #include <stdarg.h>
   #include <time.h>
-#endif
 
 
 #define CARRY      0x0001
 #define SUPERVISOR 0x2000
 
 
-#if !defined(USE_UAEMU) && !defined(linux)
-  /* struct alignment must be 68k for these structs! */
-  #pragma push
-#endif
 
 
 #ifdef __INTEL__
@@ -295,9 +287,6 @@ void  lowlevel_release (void);
 #undef extern
 #endif
 
-#if !defined(USE_UAEMU) && !defined(linux)
-#pragma pop
-#endif
 
 
 #endif

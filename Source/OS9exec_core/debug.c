@@ -599,9 +599,6 @@ static void dumpmem(ulong *memptrP,int numlines)
 /* show regs in debugger */
 static void regs_in_debugger( regs_type *rp )
 {
-      #ifndef linux
-      #pragma unused(rp)
-      #endif
     
       uphe_printf("Non-Macintosh: No low level debugger\n");  
 } /* regs_in_debugger */

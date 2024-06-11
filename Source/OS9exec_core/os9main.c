@@ -307,11 +307,9 @@ void eSpinCursor (short incr)
       #if defined MACOSX
         // sleep(1);
          
-      #elif defined linux
+      #else
         // sleep(1);
         
-      #else
-        #error not implemented
       #endif
 } /* eSpinCursor */
 

@@ -74,10 +74,6 @@
 
 
 
-#if   defined(windows32) || defined macintosh || defined linux
   void init_Printer( _fmgr_ ) { } /* do nothing */
-#else
-  #error "not yet implemented for other platforms than win32"
-#endif
 
 /* eof */

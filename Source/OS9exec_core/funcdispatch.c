@@ -176,9 +176,7 @@
 
 #include "os9exec_incl.h"
 
-#ifdef linux
   #include <time.h>
-#endif
 
 #ifdef MACOSX
   #include <unistd.h>

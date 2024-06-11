@@ -9,9 +9,7 @@
 /* %%% Bfo: Linux is Intel for the moment */
 /* Note: It is not sufficient to define this in os9main_incl.h */
 /* because this SW does not import this file */
-#ifdef linux
 	#define __INTEL__
-#endif
 
 
 /* %%% LuZ: changed to work with x86 as well as PPC */

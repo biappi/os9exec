@@ -973,10 +973,8 @@ os9err pNGNam( _pid_, syspath_typ* spP, ulong* d1, ulong* d2, byte* ispP )
   	c= (char*)ispP; /* type casting */
     #ifdef powerc
       strcpy( c,"bfomac" );
-    #elif defined linux
-      strcpy( c,"bfolinux" );
     #else
-      strcpy( c,"unknown" );
+      strcpy( c,"bfolinux" );
     #endif
 
 //  upe_printf( "gnam '%s'\n", c );
@@ -1187,9 +1185,7 @@ os9err pNgPCmd( _pid_, syspath_typ *spP, ulong *a0 )
                    }
               } /* if */
               
-              #ifdef linux
                  usleep( 1000000 ); /* sleep in microseconds */
-              #endif
           } while (GetSystemTick() < start_time+5*60);
           
         #else

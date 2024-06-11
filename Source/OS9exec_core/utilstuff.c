@@ -416,13 +416,6 @@ os9err c2os9err(int cliberr,ushort suggestion)
    
    if (!cliberr) return 0;
    switch (cliberr) {
-      #if !defined(__MWERKS__) && !defined(linux)
-        /* %%% seems not to have ANY usable error codes ! */
-        case EPERM  : err=E_FNA;      break;
-        case ENOENT : err=E_PNNF;     break;
-        case ENOSPC : err=E_FULL;     break;
-        case EIO    : err=E_HARDWARE; break;
-      #endif
 
       default       : err=suggestion; break;
    }
@@ -938,10 +931,8 @@ Boolean VolInfo( const char* pathname, char* volname )
 {
     Boolean ok= true;
 
-    #if   defined linux
       strcpy( volname,"/" );
 
-    #endif
     
     return ok;
 } /* VolInfo */
@@ -1005,7 +996,6 @@ Boolean FileFound( const char* pathname )
 
 
 
-#ifdef linux    
   void include_2e( char* filename, char* pos )
   {
       char  tmp[OS9PATHLEN];
@@ -1015,7 +1005,6 @@ Boolean FileFound( const char* pathname )
       strcat( filename,L_P );
       strcat( filename,tmp );
   } /* include_2e */
-#endif
 
 
 
@@ -1074,9 +1063,7 @@ void CutUp( char* pathname, const char* prev )
             default:        q++; inc= true;
         } /* switch */
       
-        #ifdef linux
           if (inc) include_2e( pathname, q );
-        #endif
         
         debugprintf( dbgFiles,dbgNorm,("# AdjustPath REDU '%s'\n", pathname ));
         v= q;
@@ -1544,9 +1531,7 @@ ulong DirSize( syspath_typ* spP )
     int         cnt= 0;
     dirent_typ* dEnt;
     
-    #ifdef linux
       int sv= telldir( spP->dDsc );
-    #endif
     
     seekD0( spP );       /* start at the beginning */
     while (true) {       /* search for the nth entry */
@@ -1555,9 +1540,7 @@ ulong DirSize( syspath_typ* spP )
         if (ustrcmp( dEnt->d_name,AppDo )!=0) cnt++; /* ignore ".AppleDouble" */
     } /* loop */
 
-    #ifdef linux
       seekdir( spP->dDsc,sv );
-    #endif
     
                                       /* avoid also 1 entry !!! */
     if    (cnt<2) cnt= 2; /* at least two entries are there !!! */
@@ -2203,12 +2186,6 @@ ptype_typ IO_Type(ushort pid, char* os9path, ushort mode)
            || ustrcmp(os9path,SerialLineA)==0 /* ts1 */
            || ustrcmp(os9path,SerialLineB)==0 /* ts2 */
           
-            #ifndef linux
-           || (ustrcmp (os9path,"/t0") == 0)
-           || (os9path[0]==PSEP &&
-               os9path[1]=='t'  && atoi(&os9path[2])>= 1 && /* /t1 ../t49 */
-                                   atoi(&os9path[2])<VModBase)
-            #endif
           #endif
           ) { type= fCons; break; }
 
