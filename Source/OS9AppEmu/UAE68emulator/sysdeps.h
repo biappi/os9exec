@@ -314,11 +314,7 @@ extern void mallocemu_free (void *ptr);
 
 #endif
 
-#ifdef X86_ASSEMBLY
-#define ASM_SYM_FOR_FUNC(a) __asm__(a)
-#else
 #define ASM_SYM_FOR_FUNC(a)
-#endif
 
 #if defined USE_COMPILER
 #undef NO_PREFETCH_BUFFER

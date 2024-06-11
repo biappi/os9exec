@@ -1324,14 +1324,7 @@ static void m68k_run_1 (void)
 		#elif COUNT_INSTRS == 1
 		instrcount[opcode]++;
 		#endif
-		#if defined(X86_ASSEMBLY)
-		__asm__ __volatile__("\tcall *%%ebx"
-				     : "=&a" (cycles) : "b" (cpufunctbl[opcode]), "0" (opcode)
-				     : "%edx", "%ecx",
-				     "%esi", "%edi", "%ebp", "memory", "cc");
-		#else
 		cycles = (*cpufunctbl[opcode])(opcode);
-		#endif
 		/*n_insns++;*/
 	    #ifdef NO_AMIGA
 	    if (quit_program) break;
@@ -1348,15 +1341,7 @@ static void m68k_run_1 (void)
     }
 }
 
-#ifdef X86_ASSEMBLY
-static __inline__ void m68k_run1 (void)
-{
-    /* Work around compiler bug: GCC doesn't push %ebp in m68k_run_1. */
-    __asm__ __volatile__ ("pushl %%ebp\n\tcall *%0\n\tpopl %%ebp" : : "r" (m68k_run_1) : "%eax", "%edx", "%ecx", "memory", "cc");
-}
-#else
 #define m68k_run1 m68k_run_1
-#endif
 
 
 //int in_m68k_go = 0;
@@ -1386,14 +1371,7 @@ unsigned long m68k_os9go(void)
     os9_running=1;
     while (os9_running) {
 		uae_u32 opcode = GET_OPCODE;
-		#if defined(X86_ASSEMBLY)
-		__asm__ __volatile__("\tcall *%%ebx"
-				     : "=&a" (cycles) : "b" (cpufunctbl[opcode]), "0" (opcode)
-				     : "%edx", "%ecx",
-				     "%esi", "%edi", "%ebp", "memory", "cc");
-		#else
 		(*cpufunctbl[opcode])(opcode);
-		#endif
 		if (m68k_disp)
 			upe_printf( "%8x %4x\n", regs.pc_p,opcode );
 		if (m68k_os9trace) {

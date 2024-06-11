@@ -26,11 +26,7 @@ struct flag_struct {
 #define CLEAR_CZNV (regflags.cznv = 0)
 #define COPY_CARRY (regflags.x = regflags.cznv)
 
-#ifdef X86_ASSEMBLY
-extern struct flag_struct regflags __asm__ ("regflags");
-#else
 extern struct flag_struct regflags;
-#endif
 
 static __inline__ int cctrue(int cc)
 {
@@ -61,89 +57,4 @@ static __inline__ int cctrue(int cc)
     return 0;
 }
 
-#ifdef X86_ASSEMBLY
-
-#define x86_flag_testl(v) \
-  __asm__ __volatile__ ("testl %1,%1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "r" (v) : "cc")
-
-#define x86_flag_testw(v) \
-  __asm__ __volatile__ ("testw %w1,%w1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "r" (v) : "cc")
-
-#define x86_flag_testb(v) \
-  __asm__ __volatile__ ("testb %b1,%b1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "q" (v) : "cc")
-
-#define x86_flag_addl(v, s, d) do {\
-  __asm__ __volatile__ ("addl %k2,%k1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=r" (v) : "rmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-#define x86_flag_addw(v, s, d) do { \
-  __asm__ __volatile__ ("addw %w2,%w1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=r" (v) : "rmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-
-#define x86_flag_addb(v, s, d) do { \
-  __asm__ __volatile__ ("addb %b2,%b1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=q" (v) : "qmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-
-#define x86_flag_subl(v, s, d) do { \
-  __asm__ __volatile__ ("subl %k2,%k1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=r" (v) : "rmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-
-#define x86_flag_subw(v, s, d) do { \
-  __asm__ __volatile__ ("subw %w2,%w1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=r" (v) : "rmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-
-#define x86_flag_subb(v, s, d) do { \
-  __asm__ __volatile__ ("subb %b2,%b1\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv), "=q" (v) : "qmi" (s), "1" (d) : "cc"); \
-    COPY_CARRY; \
-    } while (0)
-
-#define x86_flag_cmpl(s, d) \
-  __asm__ __volatile__ ("cmpl %k1,%k2\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "rmi" (s), "r" (d) : "cc")
-
-#define x86_flag_cmpw(s, d) \
-  __asm__ __volatile__ ("cmpw %w1,%w2\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "rmi" (s), "r" (d) : "cc")
-
-#define x86_flag_cmpb(s, d) \
-  __asm__ __volatile__ ("cmpb %b1,%b2\n\t" \
-			"pushfl\n\t" \
-			"popl %0\n\t" \
-			: "=r" (regflags.cznv) : "rmi" (s), "r" (d) : "cc")
-#endif
 
