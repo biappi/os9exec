@@ -1148,9 +1148,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
     Boolean      fum   = fu && mock;
     Boolean      opened= false;
         
-    #ifdef MACFILES
-      FSSpec fs, afs;
-    #elif defined win_unix
+    #if   defined win_unix
       char rbfname[OS9PATHLEN];
     #endif
 
@@ -1196,9 +1194,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             #endif
                  
             if (!isRAMDisk) {
-                #ifdef MACFILES
-                  err= GetRBFName( pathname,mode, &isFolder, &fs,&afs );
-                #elif defined win_unix
+                #if   defined win_unix
                   err= GetRBFName( pathname,mode, &isFolder, (char*)&rbfname );
                 #endif
                 
@@ -1225,23 +1221,7 @@ static os9err DeviceInit( ushort pid, rbfdev_typ** my_dev, syspath_typ* spP,
             else {
                 if (fu) CutPath( cmp );
                 else {
-                    #ifdef MACFILES
-                      /* this is the correct way to get pascal strings back */
-                      if (!err) { /* GetRBFName called earlier already */
-                          memcpy( &ali, &afs.name, sizeof(ali) );
-                          p2cstr ( ali );
-                      }
-                      else {
-                          GetOS9Dev( pathname, (char*)&cmp );
-                              err= getFSSpec( 0,cmp, _start, &fs );
-                          if (err) return err;
-                      }
-                  
-                      memcpy   ( &cmp, &fs.name, sizeof(cmp) );
-                      p2cstr    ( cmp );
-                      if (strcmp( cmp,ali )==0) strcpy( ali,"" );
-            
-                    #elif defined win_unix
+                    #if   defined win_unix
                       if (err) return E_UNIT; /* GetRBFName called earlier */
                       strcpy( cmp,rbfname );
               

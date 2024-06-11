@@ -855,9 +855,7 @@ void init_syspaths()
     spP->nr     =  sysStdin;
     spP->type   =     fCons;
 
-    #if !defined MACFILES  || defined MPW
       spP->stream=    stdin;
-    #endif
 
     spP->term_id= 0;
     err= pSCFnam( 0, spP,         spP->name );

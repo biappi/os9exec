@@ -2055,13 +2055,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   char*		   my_toolname= (char*)toolname; /* do not change <toolname> directly */
   int          ii;
 	
-  #ifdef MACFILES
-    FSSpec     fs;
-    CInfoPBRec cipb;
-  #else
     char* p;
   
-  #endif
 
   #ifdef UNIX
     struct sigaction ia;

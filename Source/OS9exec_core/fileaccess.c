@@ -325,10 +325,6 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     long cnt, k;
     file_typ* f= &spP->u.disk.u.file;
     
-    #ifdef MACFILES
-      long  effpos;
-      OSErr oserr;
-    #endif
     
     assert( buffer!=NULL );
 
@@ -343,27 +339,10 @@ os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
   
     cnt= *n; if (cnt==0) return 0; /* null read returns w/o error */
     
-    #ifdef MACFILES
-      oserr= FSRead( f->refnum, &cnt, (void*)buffer );
-      f->readFlag= true;
-
-      debugprintf(dbgFiles,dbgDeep,("# pFread: FSRead requested=%ld, returned=%ld, oserr=%d\n",
-                                       *n, cnt, oserr));
-      if (oserr && oserr!=eofErr) return host2os9err(oserr,E_READ);
-      if (cnt==0) return os9error(E_EOF); /* if nothing read, this is EOF */
-
-      /* show read for debug */
-      if (debugcheck(dbgFiles,dbgDeep)) {
-          effpos=0x12345678; /* um Himmels willen Lukas, was soll denn das ? */
-          GetFPos( f->refnum, &effpos);
-          uphe_printf("pFread: read $%lX bytes, ending pos now=$%lX: ",cnt,effpos);
-      }
-    #else     
       cnt= fread( (void*)buffer, 1,cnt, spP->stream );
       f->readFlag= true;
       
       if (cnt==0 && feof(spP->stream)) return os9error(E_EOF);
-    #endif
   
     /* show read for debug */
     if (debugcheck(dbgFiles,dbgDetail)) {
@@ -387,69 +366,11 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     long      cnt;
     file_typ* f= &spP->u.disk.u.file;
 
-    #ifdef MACFILES
-      long      bytes,chunkbytes, cht, k;
-      OSErr     oserr;
-      #define   READCHUNKSZ 200
-    #else
       char* p;
       char  c;
-    #endif
      
     assert( buffer!=NULL );
 
-    #ifdef MACFILES
-      /* input not more than one line from a FILE */
-      bytes= *n; if (bytes==0) return 0; /* null read returns w/o error */
-
-      /* read in chunks */
-      cnt= 0;
-      cht= 0; /* new variable */
-      while  (bytes>0) {
-          if (bytes>READCHUNKSZ)     chunkbytes= READCHUNKSZ; 
-          else                       chunkbytes= bytes;
-          oserr= FSRead( f->refnum, &chunkbytes, (void*)buffer);
-          f->readFlag= true;
-
-          if (debugcheck(dbgFiles,dbgDeep)) {
-              int k;
-              uphe_printf("pFreadLn: chunkread: FSRead returned=%ld, oserr=%d: '",chunkbytes,oserr);
-              for (k=0; k<chunkbytes; k++) putc(buffer[k],stderr);
-              debugprintf(dbgFiles,dbgDeep,("'\n"));            
-          } // if
-          if (oserr!=0 && oserr!=eofErr) return host2os9err(oserr,E_READ);
-        
-          /* now check what we've got */
-          if (chunkbytes==0) break; /* nothing more to read */
-        
-          /* search for a CR */
-          cht+=chunkbytes;              /* total bytes (bfo) */
-          for (k=0; ++k<=chunkbytes;) { /* don't forget to read the whole buffer <= (bfo) */
-              if (*buffer++==CR) {
-                  cnt+= k; /* update total number of bytes actually read */
-                  /* now pull back file pointer (if required) */
-                  if (chunkbytes>k) {
-                      /* seek back */
-                          oserr= SetFPos( f->refnum, fsFromMark, k-chunkbytes );
-                      if (oserr) return host2os9err(oserr,E_SEEK);
-                  }
-                  goto readlnok; /* exit both loops, cnt is updated */
-              } // if
-          } // for
-        
-          bytes-=k;
-          cnt  +=k;
-          if (oserr==eofErr) goto readlnok; /* don't try to read more, because this is EOF, even if there's no CR */
-      } // while
-    
-      if (cnt==0) return os9error(E_EOF);
-      /* on exit from while: cnt=# of chars actually read */
-      
-    readlnok:
-      /* cnt is always >0 here, so no EOF check is needed */
-      if (cnt>cht) cnt=cht;  /* this must be adapted also (bfo) */
- 
-    #else
       /* input not more than one line from a FILE */
         /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
         /* single char for now */
@@ -469,7 +390,6 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
         } // while
     
         f->readFlag= true;
-    #endif
     
     debugprintf( dbgFiles,dbgDetail,("# pFreadLn: requested=%ld, returned=%ld\n", *n, cnt ));
     
@@ -484,40 +404,6 @@ os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
   file_typ*  f= &spP->u.disk.u.file;
   
-  #ifdef MACFILES
-    OSErr      oserr;
-    long  cnt, effpos, k;
-
-    assert( buffer!=NULL );
-    
-    /* output to a file */
-    if ((cnt=*n)==0) return 0; /* null read returns w/o error */
-    
-    /* show what we write for debug */
-    if (debugcheck(dbgFiles,dbgDeep)) {
-                           effpos= 0x12345678;
-      GetFPos( f->refnum, &effpos );
-      uphe_printf("pFwrite: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
-      for (k=0; k<8 && k<cnt; k++) {
-        upe_printf("$%02X ",(byte) buffer[k]);
-      } // for
-        
-      upe_printf("...\n");
-    } // if
-
-    /* actual write */
-    if (f->readFlag) {
-      GetFPos( f->refnum,             &effpos );
-      SetFPos( f->refnum, fsFromStart, effpos );
-      f->readFlag= false;
-    } // if
-    
-        oserr= FSWrite( f->refnum, &cnt, (void*)buffer );
-    if (oserr) return host2os9err(oserr,E_WRITE);
-    
-    debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, oserr=%d\n",*n,cnt,oserr));   
-
-  #else
     long   cnt;
     fpos_t tmp_pos;
 
@@ -535,7 +421,6 @@ os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
     debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, ferror=%d, errno=%d\n",*n,cnt,ferror(spP->stream),errno));
     if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-  #endif
   
   *n= cnt;
   return 0;
@@ -548,44 +433,6 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 {
   file_typ* f= &spP->u.disk.u.file;
   
-  #ifdef MACFILES
-    long      cnt, effpos, k;
-    OSErr     oserr;
-
-    assert( buffer!=NULL );
-
-    /* output line to a file */
-    cnt= *n; if (cnt==0) return 0; /* null read returns w/o error */
-
-    /* limit number of bytes to one line, max */
-    for (cnt=0; cnt<*n; cnt++) if (buffer[cnt]==CR) { ++cnt; break; }
-
-    /* show what we write for debug */
-    if (debugcheck(dbgFiles,dbgDeep)) {
-                           effpos=0x12345678;
-      GetFPos( f->refnum, &effpos );
-      uphe_printf("pFwriteln: writing $%lX bytes at pos=$%lX: ",cnt,effpos);
-      for (k=0; k<8 && k<cnt; k++) {
-        upe_printf("$%02X ",(byte) buffer[k]);
-      } // for
-      
-      upe_printf("...\n");
-    } // if
-
-    /* actual write */
-    if (f->readFlag) {
-      GetFPos( f->refnum,             &effpos );
-      SetFPos( f->refnum, fsFromStart, effpos );
-      f->readFlag= false;
-    } // if
-    
-    /* actual write */
-        oserr= FSWrite( f->refnum, &cnt, (void*)buffer );
-    if (oserr) return host2os9err(oserr,E_WRITE);
-    
-    debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, oserr=%d\n",*n,cnt,oserr));   
-
-  #else
     long   cnt, ii;
     fpos_t tmp_pos;
 
@@ -603,7 +450,6 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
     fflush( spP->stream ); /* don't forget this */
     
     if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-  #endif
   
   *n= cnt; 
   return 0;
@@ -711,126 +557,6 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 #endif
 
 
-#ifdef MACFILES
-  static os9err touchfile( ushort pid, syspath_typ* spP )
-  {
-    struct tm tim;       // Important Note: internal use of <tm> as done in OS-9
-    byte      fdbeg[16]; // buffer for preparing FD
-    int       k;
-    
-    for (k=0; k<16; k++) fdbeg[ k]= 0; // initialize it
-    
-    GetTim   ( &tim );
-    fdbeg[ 3 ]= tim.tm_year;
-    fdbeg[ 4 ]= tim.tm_mon+1; // somewhat different month notation
-    fdbeg[ 5 ]= tim.tm_mday;
-    fdbeg[ 6 ]= tim.tm_hour;
-    fdbeg[ 7 ]= tim.tm_min;
-    
-    return pHsetFD( pid,spP, fdbeg );
-  } /* touchfile */
-
-
-  typedef struct {
-      char*   p;
-      OSType* creator;
-      OSType* type;
-  } VType;
-  
-
-  static Boolean TCSuff( VType* v, char* suffix, OSType creator, OSType type )
-  {
-	  if (ustrcmp( suffix,v->p )==0 ||
-	  	  ustrcmp( suffix,""   )==0) {
-	  	  *v->creator= creator;
-	      *v->type   = type; return true;
-	  }
-	            
-  	  return false;
-  } /* TCSuff */
-
-
-  static Boolean TCCWIE( VType* v, char* suffix )
-  {   return TCSuff( v,suffix, 'CWIE','TEXT' ); /* CodeWarrior text */
-  } /* TCCWIE */
-  
-  
-  static Boolean TCRBFi( VType* v, char* suffix )
-  {   return TCSuff( v,suffix, 'os9a','RBFi' ); /* CodeWarrior text */
-  } /* TCRBFi */
-
-
-  static void Get_Creator_And_Type( FSSpec* spc, OSType *creator, OSType *type )
-  {
-
-	  VType   v;
- 	  char*   q;
-	  char    fName[32];
-      memcpy( fName, spc->name,32 );
-	  p2cstr( fName );
-
-	  v.creator= creator; /* basic assignment */
-	  v.type   = type;
-	  
-	  /* get the suffix */
-	  v.p= &fName;
-	  while (true) {
-	  	  q  = strstr( v.p,"." ); if (q==NULL) break;
-	  	  v.p= q+1;
-	  } /* loop */
-
-	  if (v.p==&fName) { /* no suffix */
-	      if (TCSuff( &v, "Read_Me",  'MPS ','TEXT' )) return;
-	      if (TCSuff( &v, "makefile", 'MPS ','TEXT' )) return;
-	  }
-	  else {
-	  	      v.p--; /* making e.g. ".c" */
-	  	  if (v.p==&fName) { /* starting with "." */
-	          TCSuff( &v, "",         'os9a','PROG' ); return; // ".*"
-	      } // if
-	                           
-	      if (TCCWIE( &v, ".h"   ))                    return; // include files
-	      if (TCCWIE( &v, ".c"   ) ||
-	          TCCWIE( &v, ".cp"  ) ||
-	          TCCWIE( &v, ".cpp" ) ||
-	          TCCWIE( &v, ".r"   ) ||
-	          TCCWIE( &v, ".pch" ))                    return; // C/C++ source
-	      if (TCCWIE( &v, ".p"   ) ||
-	          TCCWIE( &v, ".m"   ) ||
-	          TCCWIE( &v, ".x"   ))                    return; // Pascal source
-	      if (TCCWIE( &v, ".f"   ))                    return; // Pascal include files
-	      if (TCCWIE( &v, ".a"   ))                    return; // Assembler
-	      if (TCCWIE( &v, ".d"   ))                    return; // Assembler include files
-	      if (TCSuff( &v, ".tm",      'CWIE','MPLF' )) return;
-
-								  /* creator type */
-	      if (TCSuff( &v, ".exe",     'CWIE','DEXE' )) return; // executables
-
-	      if (TCSuff( &v, ".pic",     '8BIM','PICT' )) return; // PICT
-	      if (TCSuff( &v, ".psd",     '8BIM','8BPS' )) return; // Photoshop
-	      if (TCSuff( &v, ".jpg",     '8BIM','JPEG' )) return; // JPEG
-	      if (TCSuff( &v, ".tif",     '8BIM','TIFF' )) return; // TIFF
-	      if (TCSuff( &v, ".gif",     '8BIM','GIFf' )) return; // GIF
-	      if (TCSuff( &v, ".pdf",     'CARO','PDF ' )) return; // PDF
-	      if (TCSuff( &v, ".rm",      'PNst','PNRM' )) return; // RealMovie
-
-	      if (TCSuff( &v, ".lzh",     'LARC','LHA ' )) return; // lzh
-	      if (TCSuff( &v, ".sit",     'SIT!','SITD' )) return; // StuffIt
-	      if (TCSuff( &v, ".zip",     'ZIP ','ZIP ' )) return; // zip
-
-	      if (TCSuff( &v, ".doc",     'MSWD','W8BN' )) return; // MS Word
-	      if (TCSuff( &v, ".xls",     'XCEL','XLS8' )) return; // MS Excel
-	      if (TCSuff( &v, ".ppt",     'PPT3','SLD8' )) return; // MS Powerpoint
-
-	      if (TCSuff( &v, ".Me",      'MPS ','TEXT' )) return; // text file
-	      if (TCSuff( &v, ".txt",     'ttxt','TEXT' ) ||
-	          TCSuff( &v, ".log",     'ttxt','TEXT' )) return; // text file
-      }
-
-      if   ( RBF_Rsc( spc ) && TCRBFi( &v, "" ) )      return; // RBF images
-   			  TCSuff( &v, "",         'os9a','PROG' );         // default
-  } /* Get_Creator_And_Type */
-#endif 
 
 
 os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname )
@@ -849,20 +575,11 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     char*     vn;
     int       len;
     
-    #ifdef MACFILES
-      OSErr      oserr;
-      CInfoPBRec cipb;
-      defdir_typ defdir;
-      FSSpec*    spc= &spP->u.disk.spec;
-      OSType     creator, type;
-
-    #else
       FILE* stream;
       
       #ifdef win_unix
         char adapted[OS9PATHLEN];
       #endif
-    #endif
 
           strcpy( ploc,pathname );
     if          (*ploc==NUL) return E_BPNAM;
@@ -883,75 +600,12 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
                      vn= (char*)&spP->rw_sct[31];
         VolInfo( pp, vn );    /* this is the correct position */      
         
-        #ifdef MACFILES
-          if (*vn==NUL) {             defdir= exedir ?_exe:_data;   
-              err= getFSSpec( pid,pp, defdir, spc );
-              pHvolnam      ( pid,spP, vn );
-          }
-        #endif
 
         return 0;
     } /* if IsRaw */
 
     f->readFlag= false;
 
-    #ifdef MACFILES
-    //if (strlen(loc)>DIRNAMSZ) return os9error(E_BPNAM);
-    
-      /* Get FSSpec for requested file */
-                               defdir= exedir ? _exe:_data;
-      err= getFSSpec( pid, pp, defdir, spc );
-      debugprintf( dbgFiles,dbgNorm, ("# pFopen: getFSSpec returned err=%d\n", err ) );
-      if (err==E_FNA) return err; /* seems to be a file instead of a sub-directory */
-
-      /* now see if create or open */
-      if (cre) {
-          /* --- create it */
-          debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' err=%d\n", pp, err ) );
-          /* check if file exists */
-          if (err==0)      return os9error( E_CEF ); /* no error on MakeFSSpec -> object already exists */
-          if (err!=E_PNNF) return err;
-        
-          /* file does not exist yet, create it first */
-          Get_Creator_And_Type ( spc, &creator, &type );
-               oserr= FSpCreate( spc,  creator,  type, smSystemScript);
-          if  (oserr) {
-           debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' oserr=%d\n", pp, oserr ) );
-           if (oserr==dupFNErr) return E_PNNF; // special case handling
-           return  host2os9err( oserr, E_ILLARG );
-          } // if
-          
-          /* now open it */     
-              oserr= FSpOpenDF( spc, fsRdWrPerm, &f->refnum );
-          if (oserr) {
-            debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to create '%s' oserr=%d\n", pp, oserr ) );
-            return host2os9err( oserr, E_PNNF );
-          } // if
-      }
-      else {
-          /* --- open it */
-          debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to open '%s', mode=$%04hX err=%d\n", pp, *modeP, err ) );
-          if (!err) {
-               /* object exists, but make sure it is not a directory */
-            getCipb( &cipb, spc ); /* it's a directory, return error */ 
-            if      ( cipb.hFileInfo.ioFlAttrib & ioDirMask ) return os9error( E_FNA );
-          } // if
-          
-          if (err) return err;
-                 
-              oserr= FSpOpenDF( spc, isW ? fsRdWrPerm:fsRdPerm, &f->refnum );
-          if (oserr) {
-            debugprintf( dbgFiles,dbgNorm, ( "# pFopen: trying to open '%s' oserr=%d\n", pp, oserr ) );
-            return host2os9err( oserr,E_PNNF );
-          } // if
-           
-          /* and adapt file date if open for writing */
-          if (isW) { err= touchfile( pid, spP ); if (err) return err; }
-      } // if
-      
-      debugprintf( dbgFiles,dbgNorm, ("# pFopen: open/create successful, refnum=%d\n", f->refnum ) );
-
-    #else
       debugprintf(dbgFiles,dbgNorm,("# pFopen: trying to %s '%s', mode=$%04hX\n",
                                      cre ? "create":"open", pp,*modeP));
 
@@ -995,7 +649,6 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
                 spP->dDsc= NULL; /* this is not a directory */
         strcpy( spP->fullName, pp );
       #endif
-    #endif
     
     p= (char*)ploc+strlen(ploc)-1; /* only the filename itself, no path name */
     while (p>=ploc && *p!=PSEP) p--;
@@ -1013,11 +666,6 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 /* close a file */
 os9err pFclose( _pid_, syspath_typ* spP )
 {
-    #ifdef MACFILES
-      OSErr      oserr;
-      FSSpec*    spc= &spP->u.disk.spec;
-      CInfoPBRec cipb;
-    #endif 
       
     file_typ* f= &spP->u.disk.u.file;
       
@@ -1028,30 +676,11 @@ os9err pFclose( _pid_, syspath_typ* spP )
         return 0;
     }
     
-    #ifdef MACFILES
-            oserr=FSClose( f->refnum );
-      if   (oserr) return host2os9err(oserr,E_WRITE);
-      
-      if (f->moddate_changed) {
-              oserr= getCipb( &cipb, spc );
-          if (oserr) return host2os9err(oserr,E_WRITE);
-      
-          cipb.hFileInfo.ioFlMdDat= (ulong)f->moddate-OFFS_1904;
-      
-              oserr= setCipb( &cipb, spc ); /* and write it back */
-          if (oserr) return host2os9err(oserr,E_WRITE);
-      } /* if */
-
-            oserr=FlushVol( NULL, spc->vRefNum );
-      if   (oserr) return host2os9err(oserr,E_UNIT);
-      
-    #else
       if (fclose(spP->stream)<0) return c2os9err( errno, E_WRITE );    
       if (f->moddate_changed) Set_FileDate( spP, f->moddate );
       
     //release_mem( spP->rw_sct ); // don't use I/O buffer anymore
     //             spP->rw_sct= NULL;
-    #endif
     
     return 0;
 } /* pFclose */
@@ -1060,13 +689,7 @@ os9err pFclose( _pid_, syspath_typ* spP )
 os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
 /* seek within a file */
 {
-    #ifdef MACFILES
-      OSErr oserr;
-      ulong effpos;
-      file_typ* f= &spP->u.disk.u.file;
-    #else
       int   fildes;
-    #endif
 
     if (spP->rawMode) {
         if (*posP>STD_SECTSIZE) return E_SEEK;
@@ -1074,42 +697,6 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
         return 0;
     } /* if */
 
-    #ifdef MACFILES
-      /* try to set position */
-      oserr= SetFPos( f->refnum, fsFromStart, (long) *posP );
-      debugprintf(dbgFiles,dbgNorm,("# pFseek: tried to seek to $%08lX, oserr=%d\n",*posP,oserr));
-      if (oserr==eofErr) {
-          /* tried to seek beyond currend EOF -> try to extend file */
-          oserr= SetEOF( f->refnum, (long) *posP );
-          debugprintf(dbgFiles,dbgNorm,("# pFseek: Tried to extend file to size=$%08lX, oserr=%d\n",*posP,oserr));
-          if (oserr==wrPermErr) {
-              debugprintf(dbgFiles,dbgNorm,("# pFseek: File not writable, oserr=wrPermErr\n"));
-              oserr=0; /* file not open for write, can't extend, simply ignore */
-          }
-          if (!oserr) {
-              /* now as file is extended, seek to new LEOF */
-              oserr= SetFPos( f->refnum, fsFromLEOF, 0 );
-              debugprintf(dbgFiles,dbgNorm,("# pFseek: Extended file to size $%08lX (setting pos -> oserr=%d\n",*posP,oserr));
-          } // if
-      } // if
-      
-      /* show result of seek */
-      if (debugcheck(dbgFiles,dbgNorm)) {
-          effpos=0x12345678;
-          GetFPos( f->refnum, &effpos );
-          uphe_printf("pFseek: Actual pos (GetFPos)=$%lX\n",effpos);
-          if (effpos!=*posP) {
-              uphe_printf("pFseek: FATAL: seek did not reach desired position ($%lX)\n",*posP);
-              debugwait();
-          }
-          effpos=0x12345678;
-          GetEOF( f->refnum, &effpos );
-          uphe_printf("pFseek: Actual EOF (GetEOF)=$%lX\n",effpos);
-      }
-      /* now seek should be done or failed definitely */
-      return host2os9err(oserr,E_SEEK);
-
-    #else
       if (fseek( spP->stream, (long)*posP, SEEK_SET )==0) return 0;
 
       debugprintf(dbgFiles,dbgDetail,("# pFseek: tried to seek to $%08lX, got errno=%d\n",*posP,errno));
@@ -1138,7 +725,6 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
     
       fflush( spP->stream );  
       return 0;
-    #endif
 } /* pFseek */
 
 
@@ -1151,12 +737,6 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
     char    pp[OS9PATHLEN];
     Boolean exedir= IsExec(*modeP);
     
-    #ifdef MACFILES
-      FSSpec     delSpec;
-      CInfoPBRec cipb;
-      Boolean    isDir;
-      int        kk;
-    #endif
     
         
     #ifdef win_unix
@@ -1171,22 +751,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
     debugprintf( dbgFiles,dbgNorm,( "# I$Delete: pathname=%s, err=%d\n", pathname,err ));
     if (err) return err;
 
-    #ifdef MACFILES
-          err= getFSSpec( pid,pathname, exedir ?_exe:_data, &delSpec );
-      if (err) return err;
-                  
-      getCipb( &cipb,&delSpec);
-      isDir=  ( cipb.hFileInfo.ioFlAttrib & ioDirMask ); if (isDir) return E_FNA;
-
-      /* unfortunately the Mac system needs some time to be ready   */
-      /* for deleting an empty directory => make some timeout loops */
-      for (kk=0; kk<MAXTRIES_DEL; kk++) {
-             oserr= FSpDelete( &delSpec );
-        if (!oserr) break;
-        HandleEvent();
-      } // for
-    
-    #elif defined win_unix
+    #if   defined win_unix
       err     = AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname= adapted;
       
@@ -1204,14 +769,9 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
 /* get file position */
 os9err pFpos( _pid_, syspath_typ* spP, ulong *posP )
 {   
-  #ifdef MACFILES
-    file_typ* f= &spP->u.disk.u.file;
-    return host2os9err( GetFPos( f->refnum, (long *)posP),E_SEEK );
-  #else
     *posP= (ulong) ftell( spP->stream );
   //fgetpos( spP->stream,  posP );   /* save current position */
     return 0;
-  #endif
 } /* pFpos */
 
 
@@ -1221,13 +781,7 @@ os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
 {
   os9err err= 0;
     
-  #if defined MACFILES
-    file_typ* f= &spP->u.disk.u.file;
-
-    OSErr oserr= GetEOF( f->refnum, (long*)sizeP );
-    err= host2os9err( oserr,E_SEEK );
-
-  #elif defined win_linux
+  #if   defined win_linux
     int    fd= fileno( spP->stream );
     struct stat info;
 
@@ -1263,18 +817,6 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       long curSize;
     #endif
 
-    #ifdef MACFILES
-      OSErr     oserr;
-      file_typ* f= &spP->u.disk.u.file;
-      
-      oserr= GetFPos( f->refnum, (long*)&tmp_pos );
-      err= host2os9err( oserr,E_SEEK ); if (err) return err;
-     
-             GetEOF ( f->refnum, &curSize     );
-      oserr= SetEOF ( f->refnum, (long)*sizeP );
-      err= host2os9err( oserr,E_SEEK ); if (err) return err;
-      
-    #else
       #if   defined UNIX
         int  fd, i, j, cnt;
         OSErr oserr= 0;
@@ -1370,7 +912,6 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       //fsetpos         ( spP->stream, &tmp_pos );   // restore position
         */
       #endif
-    #endif
 
     /* just read and write back one char at the end to get the correct size */
     do {           // do not change the content if smaller -> read it first
@@ -1421,22 +962,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
 os9err pFeof( _pid_, syspath_typ* spP )
 /* check for EOF */
 {
-  #ifdef MACFILES
-    long  curpos, curend;
-    OSErr oserr;
-    file_typ* f= &spP->u.disk.u.file;
-    
-        oserr= GetEOF ( f->refnum, &curend );
-    if (oserr) return host2os9err(oserr,E_SEEK);
-
-        oserr= GetFPos( f->refnum, &curpos );
-    if (oserr) return host2os9err(oserr,E_SEEK);
-    
-    if (curpos>=curend)    return os9error(E_EOF);
-
-  #else   
     if (feof(spP->stream)) return os9error(E_EOF);
-  #endif
 
   return 0;
 } /* pFeof */
@@ -1594,13 +1120,9 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     struct tm tim;
     time_t u;
     
-    #ifdef MACFILES  
-      CInfoPBRec* cipbP= fdl;
-    #else
       #ifndef linux
       #pragma unused(fdl)
       #endif
-    #endif
     
     memcpy(fdbeg,buffer,16);  /* the size IS 16 */  
     tim.tm_year= fdbeg[ 3]; 
@@ -1615,9 +1137,7 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
     spP->u.disk.u.file.moddate        = u;
     spP->u.disk.u.file.moddate_changed= true;
 
-    #ifdef MACFILES
-      cipbP->hFileInfo.ioFlMdDat= (ulong)u-OFFS_1904; /* fill it into Mac's record */
-    #elif defined win_unix
+    #if   defined win_unix
       Set_FileDate( spP, u );
     #endif
 
@@ -1635,9 +1155,6 @@ static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
   //printf( "Set_FileDate was2\n" );
     u= UConv( &tim );
 	
-    #ifdef MACFILES
-      cipbP->hFileInfo.ioFlCrDat= (ulong)u-OFFS_1904; /* fill it into Mac's record */
-    #endif
 } /* setFD */
 
 
@@ -1668,17 +1185,7 @@ os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
     os9err err= 0;
     void*  fdl;
     
-    #ifdef MACFILES
-      OSErr       oserr;
-      CInfoPBRec  cipb;  
-      FSSpec*     spc= &spP->u.disk.spec;
-      FInfo       f;
-
-      /* get the cipb */
-                    fdl= &cipb;
-      err= getCipb( fdl, spc ); if (err) return err;
-
-    #elif defined win_unix
+    #if   defined win_unix
       fdl= NULL;
 
     #else
@@ -1690,15 +1197,6 @@ os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
     setFD( spP, fdl, buffer);
 
 
-    #ifdef MACFILES
-      err= setCipb( fdl, spc ); /* and write it back */
-
-           oserr= FSpGetFInfo  ( spc, &f );
-      if (!oserr) {           
-           Get_Creator_And_Type( spc, &f.fdCreator, &f.fdType );
-           oserr= FSpSetFInfo  ( spc, &f );
-      }
-    #endif
 
     return err;
 } /* pHsetFD */
@@ -1713,80 +1211,8 @@ os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
     void*  fdl;
     os9err err= 0;
     
-    #ifdef MACFILES
-      #pragma unused(spP)
-      
-      union {
-          CInfoPBRec    cipb;
-          HParamBlockRec hpb;
-      } pbu;
     
-      Str255      fName, fN;
-      short       volid;
-      long        objid, dirid;
-      byte        isdir;
-      OSErr       oserr;
-    //Boolean     conv;
-    
-  //#elif defined win_unix
-  //  char        name  [OS9PATHLEN];
-  //  char        result[OS9PATHLEN];
-    #endif
-    
-    #ifdef MACFILES
-      /* extract volid and file/dirid */    /* if (volid & VOLIDSIGN) volid |= VOLIDEXT; */
-      volid= (*fdinf >> IDSHIFT) & VOLIDMASK; if (volid != 0    ) volid |= VOLIDEXT;
-      objid=  *fdinf &  IDMASK;               if (objid & IDSIGN) objid |= IDEXT;
-
-      err= check_vod( &volid, &objid, &dirid, &fN );
-      
-      /* try to locate the file/dir */
-      /* --- first assume that it is a file and try to resolve ID */
-      pbu.hpb.fidParam.ioVRefNum= volid;
-      pbu.hpb.fidParam.ioFileID = objid;
-      fName[0]=0; /* make sure PBResolveFileIDRef uses VRefNum, not a volume name */
-      pbu.hpb.fidParam.ioNamePtr=fName;
-      oserr = PBResolveFileIDRefSync(&pbu.hpb);
-      debugprintf(dbgFiles,dbgDetail,("# pHgetFDsect: resolving volid=%d, fileid=$%lX returned oserr=%d\n",volid,objid,oserr));
-
-      if (oserr==paramErr) {
-              isdir= err!=0; /* netatalk handling */
-          if (isdir) dirid= objid;
-          else {
-              strcpy( fName,fN );
-              c2pstr( fName );
-          }
-      }
-      else {
-          if (oserr==notAFileErr) {
-              /* it must be a directory */
-              dirid= objid;
-              isdir= true;
-          }
-          else {
-              /* it is a file */
-              if (oserr) return host2os9err(oserr,E_SEEK); /* probably because no file ID ref has been created */
-              dirid= pbu.hpb.fidParam.ioSrcDirID; /* get dir ID */
-              isdir= false;
-          }
-      } // if
-      
-      /* parent ID, vRefNum and (if not isdir, fName) are now set */
-      /* --- now get cipb */
-      pbu.cipb.hFileInfo.ioCompletion   = 0L;
-      pbu.cipb.hFileInfo.ioNamePtr      = fName;
-      pbu.cipb.hFileInfo.ioVRefNum      = volid;
-      pbu.cipb.hFileInfo.ioFDirIndex    = isdir ? -1 : 0;   /* use the dir & vRefNum (and fName if file) */
-      pbu.cipb.hFileInfo.ioDirID        = dirid;
-
-      oserr = PBGetCatInfoSync(&pbu.cipb);
-      debugprintf(dbgFiles,dbgDetail,("# pHgetFDsect: getting info for '%#s' returned oserr=%d\n",fName,oserr));
-      if (oserr) return host2os9err(oserr,E_PNNF);
-
-      /* prepare an FD from it */
-      fdl= &pbu.cipb;
-    
-    #elif defined win_unix
+    #if   defined win_unix
       err= FD_Name( *fdinf, (char**)&fdl ); if (err) return err;
       
       /*
@@ -1824,12 +1250,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     char*   p;
     char*   pp;
     
-    #if defined MACFILES
-      CInfoPBRec cipb;
-      defdir_typ defdir;
-      FSSpec*    spc= &spP->u.disk.spec;
-      
-    #elif defined win_unix
+    #if   defined win_unix
       DIR*    d;
       char    adapted[OS9PATHLEN];
       Boolean ok;
@@ -1929,10 +1350,7 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
   /* now copy remaining entries (if any) */
   /* now do it in one single step (bfo)  */
   while (cnt>0) {
-    #ifdef MACFILES
-      err= get_dir_entry( index, &os9dirent, spP );
-          
-    #elif defined win_unix
+    #if   defined win_unix
       memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
           
       err= DirNthEntry( spP,index, &dEnt );
@@ -2015,14 +1433,7 @@ os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
 {
     os9err err= 0;
     
-    #ifdef MACFILES
-      CInfoPBRec cipb;
-
-      err= getCipb(&cipb, &spP->u.disk.spec); if (err) return err;
-      *sizeP=(cipb.dirInfo.ioDrNmFls + 2) * DIRENTRYSZ; /* calc size (don't forget two more for . and .. */
-      debugprintf(dbgFiles,dbgDetail,("# pDsize: number of files=%ld\n",cipb.dirInfo.ioDrNmFls));
-
-    #elif defined win_unix
+    #if   defined win_unix
       *sizeP= DirSize( spP );
       
     #else
@@ -2080,13 +1491,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
     process_typ* cp= &procs[pid];
     char*        defDir_s;
     
-    #ifdef MACFILES
-      short   vref;
-      long    dirID;
-      long*   xD;
-      short*  xV;
-
-    #elif defined win_unix
+    #if   defined win_unix
       char    adapted[OS9PATHLEN];
       
     #else
@@ -2106,19 +1511,7 @@ os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
     if (exedir) defDir_s= cp->x.path;
     else        defDir_s= cp->d.path;
         
-    #ifdef MACFILES
-      /* change based on default execution/data dir */
-      if (exedir) { xV= &cp->x.volID; xD= &cp->x.dirID; }
-      else        { xV= &cp->d.volID; xD= &cp->d.dirID; }
-    
-      vref= *xV;  dirID= *xD;
-      err =get_dirid( &vref,&dirID,pathname ); if (err) return err;
-      *xV = vref; *xD= dirID; /* now save these params as new default directory */
-
-      debugprintf( dbgFiles,dbgNorm,("# I$ChgDir: ch%c: volID=%d, dirID=%ld (of new defdir)\n",
-                   exedir ? 'x':'d', *xV,*xD ));
-    
-    #elif defined win_unix
+    #if   defined win_unix
       /* now do a OS changedir to "resolve" (and verify) location */
       err= AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname=                 adapted;

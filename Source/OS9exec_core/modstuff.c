@@ -857,13 +857,7 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     char*   pn;
     void*   pp;
     
-    #ifdef MACFILES
-      OSErr  oserr;
-      FSSpec modSpec;
-      short  refNum;
-    #else
       FILE   *stream;
-    #endif
     
     ulong  dsize, loadbytes;
     os9err err;
@@ -1058,27 +1052,13 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
                   
 
 // this section is only used because of "goto streamload"
-        #ifdef MACFILES
-             err= getFSSpec( pid,datapath, exedir ?_exe:_data, &modSpec);
-        if (!err) { /* ok, file is there */
-        #else
             stream=fopen(datapath,"rb"); /* open for read, binary mode (bfo) */
         if (stream!=NULL) {
-        #endif
         
     streamload:
-            #ifdef MACFILES
-              /* open file for read */
-                  oserr= FSpOpenDF(&modSpec, fsRdPerm, &refNum);
-              if (oserr) return host2os9err(oserr,E_PNNF);
-              /* get  file size */
-                  oserr= GetEOF(refNum, (long *)&dsize); 
-              if (oserr) return host2os9err(oserr,E_SEEK);
-            #else
               fseek(stream,0,SEEK_END);     /* go to EOF */
               dsize= (ulong) ftell(stream); /* get position now = file size */
               fseek(stream,0,SEEK_SET);     /* back to beginning */
-            #endif
 
             
             /* allocate memory for the module */
@@ -1087,11 +1067,7 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
 
                 pp= get_mem( dsize );
             if (pp==NULL) {
-                #ifdef MACFILES
-                  FSClose(refNum);
-                #else
                   fclose (stream);
-                #endif
                 return os9error(E_NORAM); /* not enough memory */
             }
             
@@ -1099,30 +1075,17 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: allocated memory %ld @ $%08lX\n", dsize, theModuleP));
                 
-            #ifdef MACFILES
-              loadbytes= dsize; /* now read module */
-                  oserr= FSRead( refNum, &loadbytes, theModuleP );
-              if (oserr) {
-                  FSClose(refNum);
-                  return host2os9err(oserr,E_READ);
-              }
-            #else
                   loadbytes= fread( theModuleP, 1,dsize, stream );
               if (loadbytes==0) {
                   fclose(stream);
                   return c2os9err(errno,E_READ);
               }
-            #endif
 
             
             debugprintf(dbgModules,dbgNorm,
               ("# load_module: loaded %ld bytes from file\n", loadbytes));
               
-            #ifdef MACFILES
-              FSClose(refNum);
-            #else
               fclose (stream);
-            #endif
             
             break; /* module data loaded */
         }

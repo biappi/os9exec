@@ -719,9 +719,6 @@ typedef struct {
             time_t  moddate;
             Boolean readFlag;           /* keep track for r/w changes */
             
-            #ifdef MACFILES
-              short refnum;             /* the path's refNum if it is a MACFILES fFile */
-            #endif
         } file_typ;
 
 
@@ -859,9 +856,7 @@ typedef struct {
     Boolean   fullsearch;       /* recursive mode for "babushka" */
 
     // %%%luz: many of these should be in the union below...
-    #if !defined MACFILES || defined MPW
       FILE*   stream;           /* the associated stream */
-    #endif
         
     char      fullName[OS9PATHLEN]; /* direct access makes life easier */
 
