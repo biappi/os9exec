@@ -1301,9 +1301,6 @@ extern dir_type mdir;                  /* current module dir */
   extern  ttydev_typ main_mco;
 #endif
 
-#ifdef MPW
-  extern  int mpwsignal; /* the MPW signal flag */
-#endif
 
 /* flag which allows empty read functionality for multiple terminal support */
 extern Boolean devIsReady;       /* it is true by default or if char has been read */

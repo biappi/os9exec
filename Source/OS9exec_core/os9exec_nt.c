@@ -504,9 +504,6 @@ dir_type mdir;	                  /* current module dir */
   char         gTitle[OS9NAMELEN];
 #endif
 
-#ifdef MPW
-  int  mpwsignal; /* the MPW signal flag */
-#endif
 
 // the currently executing process, MAXPROCESSES if none
 ushort  currentpid    = MAXPROCESSES; // id of current process
@@ -746,11 +743,7 @@ static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulo
   ushort  mid;
   ushort  numpaths;
 	
-  #ifdef MPW
-    numpaths=3; /* use the 3 standard paths for MPW */
-  #else
 	numpaths=1; /* use only 1 path at the beginning with TERMINAL_CONSOLE */
-  #endif        
 	
   /* father of first process is now 0 (bfo) */
   err= new_process( 0, &newpid,numpaths      ); if (err) return err;
@@ -776,17 +769,6 @@ static os9err prepLaunch(char *toolname, char **argv, int argc, char **envp, ulo
 
 /*typedef void (*SignalHandler)(int);*/
 
-#ifdef MPW
-  #pragma push
-  #pragma mpwc
-  #pragma d0_pointers on
-
-  /* MPW signal handler */
-  static void mpwSignalHandler(int signum)
-  {   mpwsignal= signum;
-	/* signal(signum,SIG_IGN); %%% *//* de-activate */
-  } /* mpwSignalHandler */
-#endif
 
 
 /* clean up exit-handler */
@@ -825,9 +807,6 @@ static void cleanup(void)
 	lowlevel_release(); /* release low-level stuff */
 } /* cleanup */
 
-#ifdef MPW
-  #pragma pop
-#endif
 
 
 /* must be done before linking "init" module */
@@ -1930,28 +1909,6 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
       } // if
     } // if
 		
-    #ifdef MPW
-      // handle MPW signals, if any
-      if (mpwsignal) {
-        mpwsignal=0;     // we've seen it now
-        clearerr(stdin); // prevent input from causing troubles
-        signal(SIGINT,&mpwSignalHandler); // install handler again
-			  
-        if (debugcheck(dbgAllInfo,dbgNorm)) {
-          // give user opportunity to just enter debug menu
-          uphe_printf("main loop: MPW Cmd-'.' signal received, [c] to continue, [x] to send S_Abort to pid=%d\n",interactivepid);
-
-          if (debugwait()) {
-            // kill process only if special continue from debug_halt
-            send_signal( interactivepid, S_Abort ); // send keyboard abort to process
-          } // if
-        }
-        else {
-          // w/o debug, always send abort signal
-          send_signal  ( interactivepid, S_Abort ); // send keyboard abort to process
-        } // if
-      } // if
-    #endif
 
     if (debugcheck(dbgTaskSwitch,dbgDetail) &&
         cp->state==pWaitRead) {
@@ -2262,10 +2219,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   //lastsyscall=0;
 	
 	/* set-up MPW signal handling */
-  #ifdef MPW
-    mpwsignal=0; /* no signal received yet */
-    signal( SIGINT, &mpwSignalHandler ); /* install handler */
-  #endif
     
   /* prepare initial process */
   // NOTE: An internal command can crash here, because segv_handler is not yet up

@@ -273,9 +273,6 @@ typedef struct dirent dirent_typ;
       #include <Strings.h>
       #include "FCntl.h"
       
-      #ifdef MPW
-        #include "IntEnv.h"
-      #endif
       
       #ifdef NET_SUPPORT
         #include <OpenTransport.h>

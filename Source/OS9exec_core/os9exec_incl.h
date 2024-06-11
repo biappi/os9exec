@@ -114,19 +114,11 @@
 #undef E_ABORT
 
 /* OS-9 include files */
-#ifdef MPW
-/* search path for MPW is different */
-  #include ":os9defs:module.h"         /* must be before "procid.h" */
-  #include ":os9defs:procid_adapted.h" /* _except -> except */
-  #include ":os9defs:sgstat.h"
-  #include ":os9defs:errno_adapted.h"  /* errno_adapted.h: errno -> errno2 */
-#else
   #include <string.h>  /* according to Martin Gregorie's proposal */
   #include "module.h"
   #include "procid_adapted.h"
   #include "sgstat.h"
   #include "errno_adapted.h"
-#endif
 
 
 // these should definitely not be defined here, as MSL

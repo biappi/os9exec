@@ -803,15 +803,8 @@ os9err pSCFnam( _pid_, syspath_typ* spP, char* volname )
         case   fNIL  : p="nil";  break;
         case   fVMod : p="vmod"; break;
         
-        #ifdef MPW
-          case fCons:                           p="Dev:stdin" ;
-                 if (spP==&syspaths[sysStdout]) p="Dev:stdout"; 
-                 if (spP==&syspaths[sysStderr]) p="Dev:stderr"; 
-                 break;
-        #else
           case fCons : p= volname;
                        Console_Name( spP->term_id, p ); break;
-        #endif
                                 
         case fPipe   : p="pipe";     break;
         default      : p= spP->name; break;
@@ -870,11 +863,7 @@ void init_syspaths()
     err= pSCFnam( 0, spP,         spP->name );
     err= pSCFopt( 0, spP, (byte*)&spP->opt  );
     
-    #ifdef MPW
-      spP->linkcount= 1;
-    #else
       spP->linkcount= 3; /* do not close at the end !! */
-    #endif
     
     
     #ifdef win_unix
@@ -885,27 +874,6 @@ void init_syspaths()
       mco->holdScreen= false;
     #endif
     
-    #ifdef MPW
-      /* stdout */
-      spP= &syspaths[sysStdout];
-      spP->nr     =  sysStdout;
-      spP->type   =      fCons;
-      spP->stream =     stdout;
-      spP->term_id= 0;
-      err= pSCFnam( 0, spP,         spP->name );
-      err= pSCFopt( 0, spP, (byte*)&spP->opt  );
-      spP->linkcount= 1;
-
-      /* stderr */
-      spP= &syspaths[sysStderr];
-      spP->nr     =  sysStderr;
-      spP->type   =      fCons;
-      spP->stream =     stderr;
-      spP->term_id= 0;
-      err= pSCFnam( 0, spP,         spP->name );
-      err= pSCFopt( 0, spP, (byte*)&spP->opt  );
-      spP->linkcount= 1;
-    #endif
     
     /* stdnil */
     spP= &syspaths[sysStdnil];
@@ -923,15 +891,9 @@ void init_syspaths()
 
 
     /* title output thru process 0 */
-    #ifdef MPW
-      cp->usrpaths[usrStdin ]= sysStdin;
-      cp->usrpaths[usrStdout]= sysStdout;
-      cp->usrpaths[usrStderr]= sysStderr;
-    #else
       cp->usrpaths[usrStdin ]= sysStdin;
       cp->usrpaths[usrStdout]= sysStdin;
       cp->usrpaths[usrStderr]= sysStdin;
-    #endif
 } /* init_syspaths */
 
 
@@ -1255,11 +1217,7 @@ os9err syspath_write( ushort pid,ushort spnum, ulong *len, void* buffer, Boolean
     
     if (spP==NULL) {
             if (in_recursion) {
-                #ifdef MPW
-                  spnum= 3;
-                #else
                   spnum= 1;             
-                #endif
                 
                 spP= get_syspathd( pid,spnum ); 
             }
