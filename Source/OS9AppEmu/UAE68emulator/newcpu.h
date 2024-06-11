@@ -191,15 +191,11 @@ static __inline__ uae_u32 next_ilong (void)
     return r;
 }
 
-#if !defined USE_COMPILER
 static __inline__ void m68k_setpc (uaecptr newpc)
 {
     regs.pc_p = regs.pc_oldp = get_real_address(newpc);
     regs.pc = newpc;
 }
-#else
-extern void m68k_setpc (uaecptr newpc);
-#endif
 
 static __inline__ uaecptr m68k_getpc (void)
 {
@@ -211,15 +207,9 @@ static __inline__ uaecptr m68k_getpc_p (uae_u8 *p)
     return regs.pc + ((char *)p - (char *)regs.pc_oldp);
 }
 
-#ifdef USE_COMPILER
-extern void m68k_setpc_fast (uaecptr newpc);
-extern void m68k_setpc_bcc (uaecptr newpc);
-extern void m68k_setpc_rte (uaecptr newpc);
-#else
 #define m68k_setpc_fast m68k_setpc
 #define m68k_setpc_bcc  m68k_setpc
 #define m68k_setpc_rte  m68k_setpc
-#endif
 
 static __inline__ void m68k_setstopped (int stop)
 {

@@ -316,12 +316,6 @@ extern void mallocemu_free (void *ptr);
 
 #define ASM_SYM_FOR_FUNC(a)
 
-#if defined USE_COMPILER
-#undef NO_PREFETCH_BUFFER
-#undef NO_EXCEPTION_3
-#define NO_EXCEPTION_3
-#define NO_PREFETCH_BUFFER
-#endif
 
 #include "target.h"
 
