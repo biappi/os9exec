@@ -79,4 +79,5 @@ add_executable(os9exec
 )
 
 target_compile_definitions(os9exec PUBLIC linux)
+target_link_libraries(os9exec m dl)
 
