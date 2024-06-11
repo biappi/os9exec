@@ -724,11 +724,7 @@ void os9_main( int argc, char **argv, char **envp )
     screenH= 0;
   } // if
 
-  #ifdef USE_CARBON
-    userOpt= true; // currently misused for Spectrapot software, as long as BusyRead is not working
-  #else
     if (userOpt) catch_ctrlC= false;
-  #endif
     
   #ifdef UNIX
     // Set the terminal modes and hook mode restoration to the exit function.

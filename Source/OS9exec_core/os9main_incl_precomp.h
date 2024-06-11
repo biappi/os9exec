@@ -180,9 +180,7 @@
 #if defined macintosh && !defined MACOSX
   #define MACOS9
   
-  #ifndef USE_CARBON
     #define USE_CLASSIC
-  #endif
 #endif
 
 
@@ -331,9 +329,6 @@ typedef struct dirent dirent_typ;
   /* C library include files */
   #include <CType.h>
   
-  #ifdef USE_CARBON
-	  #include <Carbon.h>
-  #else
     #include <Types.h>
     #include <stdarg.h>
     #include <stddef.h> // %%% added luz 2002-02-04
@@ -356,7 +351,6 @@ typedef struct dirent dirent_typ;
         #include <OpenTptInternet.h>
       #endif
     #endif
-  #endif
 
   #include <Signal.h>
 #endif

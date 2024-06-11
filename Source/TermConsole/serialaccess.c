@@ -275,9 +275,7 @@ void CheckInBufferSerial( int serialID )
          mco= &mac_serial[serialID];
     if (!mco->installed) return;
    
-    #ifndef USE_CARBON
       oserr= SerGetBuf( mco->rIn, &cnt );
-    #endif
     
     if (cnt==0) return; /* currently nothing to read from serial line */
     

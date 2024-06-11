@@ -768,35 +768,6 @@ ulong GetScreen( char mode )
 
 
 /* ------------------------------------------------------------------------ */
-#ifdef USE_CARBON
-  char* p2cstr( unsigned char* s )
-  {
-      int ii;
-      int n= (int)s[0];
-      
-      for  (ii=0;  ii<n; ii++) {
-          s[ii]= s[ii+1];
-      }
-      s[n]= 0;
-      
-      return s;
-  } /* p2cstr */
-
-
-  unsigned char* c2pstr( char* s )
-  {
-      int ii;
-      int n= 0;
-      
-      while (s[n]!=0) n++;
-      for  (ii=n;  ii>0; ii--) {
-          s[ii]= s[ii-1];
-      }
-      s[0]= (char)n;
-      
-      return s;
-  } /* c2pstr */
-#endif
 
 
 

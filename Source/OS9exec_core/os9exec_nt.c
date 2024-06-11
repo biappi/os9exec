@@ -870,10 +870,7 @@ void get_hw()
       #else
         platform= "ppc";
         
-        #if   defined USE_CARBON
-          hw_name= "PowerMac Carbon";
-          
-        #elif defined MACOSX
+        #if   defined MACOSX
           #ifdef __GNUC__ 
             hw_name= "PowerMac XCode";
           #else
@@ -1549,9 +1546,6 @@ static void titles( void )
 	 #endif
    #endif
    
-   #ifdef USE_CARBON
-       upho_printf("- With CarbonLib Interface\n");
-   #endif
    
    fflush( stderr );
    fflush( stdout );

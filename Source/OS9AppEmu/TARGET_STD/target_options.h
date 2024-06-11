@@ -45,9 +45,6 @@
     //
     
 
-    #ifdef USE_CARBON        // Carbon
-    //
-    #endif
   #endif
   
   #ifdef MACOSX

@@ -141,10 +141,6 @@ void   Get_Time( ulong *cTime, ulong *cDate, int *dayOfWk, int *currentTick,
 ulong GetScreen( char mode );
 
 
-#ifdef USE_CARBON
-  char* p2cstr( unsigned char* s );
-  unsigned char* c2pstr( char* s );
-#endif
 
 ulong Min( ulong a, ulong b );
 ulong Max( ulong a, ulong b );

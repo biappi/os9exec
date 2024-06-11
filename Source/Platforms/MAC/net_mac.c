@@ -84,33 +84,21 @@ EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
                              TEndpointInfo*     info, /* can be NULL */
                              OSStatus*          err )
 {
-  #ifdef USE_CARBON
-    return OTOpenEndpointInContext( config, oflag, info, err, nil );
-  #else
     return OTOpenEndpoint         ( config, oflag, info, err );
-  #endif
 } // OTOpenEndpoint_
 
 
 
 void* OTAllocMem_( OTByteCount size )
 {
-  #ifdef USE_CARBON
-    return OTAllocMemInContext( size, nil );
-  #else
     return OTAllocMem         ( size );
-  #endif
 } // OTAllocMem_    
 
 
 
 static OSStatus InitOpenTransport_()
 {
-  #ifdef USE_CARBON
-    return InitOpenTransportInContext( kInitOTForApplicationMask, nil );
-  #else
     return InitOpenTransport();
-  #endif
 } // InitOpenTransport_
 
 
@@ -119,22 +107,14 @@ static InetSvcRef OTOpenInternetServices_( OTConfigurationRef   cfig,
                                            OTOpenFlags          oflag,
                                            OSStatus *           err )
 {
-  #ifdef USE_CARBON
-    return OTOpenInternetServicesInContext( cfig, oflag, err, nil );
-  #else
     return OTOpenInternetServices         ( cfig, oflag, err );
-  #endif
 } // OTOpenInternetServices_
 
 
 
 static void CloseOpenTransport_()
 {
-  #ifdef USE_CARBON
-    CloseOpenTransportInContext( nil );
-  #else
     CloseOpenTransport();
-  #endif
 } // CloseOpenTransport_
 
 

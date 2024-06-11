@@ -151,12 +151,8 @@
 
 /* specific network definitions */
 #ifdef MACOS9
-  #ifdef USE_CARBON
-    OTNotifyUPP gYieldingNotifierUPP= NULL;
-  #else
     #include <OTDebug.h>
     #include <Threads.h>
-  #endif
 #endif
 
 #ifdef windows32
@@ -417,11 +413,6 @@ static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuse
 
 
 
-#ifdef USE_CARBON
-static void OTAssert( _txt_, Boolean cond ) 
-{   if (!cond) DebugStr( "\pOT: Assertion failure." );
-} 
-#endif
 
 
 #ifdef MACOS9
@@ -469,9 +460,6 @@ static void SetDefaultEndpointModes( SOCKET s )
       OSStatus junk;
       
       /* %%% workaround for the moment */
-      #ifdef USE_CARBON
-        return;
-      #endif
       
       junk= OTSetNonBlocking   ( s );
 //    junk= OTSetBlocking      ( s );
@@ -480,14 +468,7 @@ static void SetDefaultEndpointModes( SOCKET s )
       junk= OTSetSynchronous   ( s );
       OTAssert("SetDefaultEndpointModes: Could not set synchronous",      junk==noErr);
       
-      #ifdef USE_CARBON
-   		if (gYieldingNotifierUPP==NULL)
-            gYieldingNotifierUPP= NewOTNotifyUPP( (OTNotifyProcPtr)YieldingNotifier );
-  
-        junk= OTInstallNotifier( s, gYieldingNotifierUPP, s );
-      #else 
         junk= OTInstallNotifier( s, &YieldingNotifier, nil );
-      #endif
       OTAssert("SetDefaultEndpointModes: Could not install notifier",     junk==noErr);
       
       junk= OTUseSyncIdleEvents( s, true );

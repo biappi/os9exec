@@ -83,12 +83,10 @@
     };
 
     /* set terminal options */
-    #if !defined USE_CARBON
       TermWinScrolls     = 1;      // use scroll bars
       gConsoleQuickInput = true;   // get single chars
       gConsoleEcho       = false;  // no echo
       gConsoleNLExpand   = false;  // no NL expand
-    #endif
     
     os9_main( argc,argv, envp );
   }
