@@ -214,11 +214,7 @@ char* egetenv( const char* name )
       Boolean cm= false;
       Boolean isRBF;
       
-      #ifdef windows32
-        Boolean isWin= true;
-      #else
         Boolean isWin= false;
-      #endif
 
 
       /* getenv for use under MPW and for PC/Linux version */
@@ -265,9 +261,6 @@ char* egetenv( const char* name )
                     strcpy( tmp,startPath );
                     if (*rslt!=PATHDELIM) strcat( tmp,PATHDELIM_STR );
                     
-                    #ifdef windows32
-                      if (*rslt==PATHDELIM && tmp[ strlen(tmp)-1 ]==PATHDELIM) rslt++;
-                    #endif
                     
                     strcat( tmp,rslt );
                     rslt=   tmp;
@@ -321,10 +314,6 @@ void eSpinCursor (short incr)
       #elif defined macintosh
         SpinCursor(incr);
         
-      #elif defined windows32
-        #pragma unused(incr)
-        // sleep(1);
-        
       #elif defined linux
         // sleep(1);
         
@@ -365,17 +354,8 @@ static void os9_usage(char *name)
     upho_printf("          <os9program> must be present within the tool's 'OS9C' resources,\n");
     upho_printf("          in the {OS9MDIR} directory or in the {OS9CMDS} directory\n");
 
-    #if defined(windows32)
-    upho_printf("Note:     Options can also be entered using the /-char instead of the hyphen\n");
-    #endif
 
     upho_printf("Options:\n");
-    #if defined(windows32)
-    upho_printf("   -a num      Use SCSI adapter <num>. (IDE interfaces also count as SCSI)\n");
-    upho_printf("   -b num      Use Bus <num> on specified SCSI adapter.\n");
-    upho_printf("   -ah         Show all devices on all SCSI (and IDE) adapters\n");
-    upho_printf("               Note that devices in use by Windows cannot be used by OS9exec\n");
-    #endif
     upho_printf("   -c          comment output to MPW window (preceede lines with #)\n");
     upho_printf("   -i          disable internal commands\n");
     upho_printf("   -k          use '*_dbg' plugin dlls\n");      
@@ -553,11 +533,7 @@ void os9_main( int argc, char **argv, char **envp )
   for (k=1; k<argc; k++) {
     p= argv[k];
 
-    #ifdef windows32
-      if (*p=='-' || *p=='/')
-    #else       
       if (*p=='-')
-    #endif
       {
         switch (tolower(*++p)) {
           case '?' :
@@ -592,29 +568,6 @@ void os9_main( int argc, char **argv, char **envp )
 
           case 's' :  usp=&debughalt; goto getmask;
 
-          #if defined RBF_SUPPORT && defined windows32
-            case 'a' :  defSCSIAdaptNo = -1; // default to none
-                        if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
-                        k++; /* next arg */
-                        if (k>=argc) { printf("# Error: missing SCSI Adapter Number for '%c' option!\n",*p); exit(1); }
-                        p=argv[k];
-                        if (sscanf(p,"%hd", &defSCSIAdaptNo)!=1) {
-                          printf("# Error in SCSI Adapter number '%s'\n",p);
-                          exit( 1 );
-                        }
-                        break;
-                        
-            case 'b' :  defSCSIBusNo = 0; // default to first bus
-                        if (*(p+1)=='h') { scsiadaptor_help(); exit(0); }
-                        k++; /* next arg */
-                        if (k>=argc) { printf("# Error: missing SCSI Bus Number for '%c' option!\n",*p); exit(1); }
-                        p=argv[k];
-                        if (sscanf(p,"%hd", &defSCSIBusNo)!=1) {
-                          printf("# Error in SCSI Bus number '%s'\n",p);
-                          exit( 1 );
-                        } // if
-                        break;
-          #endif
                 
           case 'd' :  level=0; /* default to level 0 */
                       if (*(p+1)=='h') { debug_help( 0,0,NULL ); exit(0); }

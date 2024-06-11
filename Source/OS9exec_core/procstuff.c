@@ -959,12 +959,6 @@ void DoWait( void )
     nanosleep( &wait_time, NULL );
   //slp_idleticks++;
                 
-  #elif defined windows32
-  //ulong ticks= GetSystemTick();
-    Sleep( 1 ); // sleep for a short time
-    HandleEvent();
-  //slp_idleticks+= GetSystemTick()-ticks;
-                
   #else
     #error architecture not supported
   #endif

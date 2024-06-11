@@ -242,48 +242,14 @@ void WindowTitle( char* title, Boolean vmod )
     if (vmod) sprintf( title, "%s  /vmod - display for  \"%s\"", 
                        title, gTitle );
     else {    
-      #ifndef windows32
         Console_Name( gConsoleID, (char*)&cons );
         sprintf( title, "%s  /%s - terminal window", title, cons );
-      #endif
     } // if
   #endif
 } /* WindowTitle */
 
 
 
-#if defined windows32
-void HandleEvent( void )
-{
-  #define STARTVAL -200
-  static int hvv= STARTVAL;
-
-  char         c;
-  Boolean      ok;
-  INPUT_RECORD ir;
-  DWORD        n;
-    
-  if (hvv<0) hvv++;
-  else { 
-    hvv= STARTVAL; 
-    Sleep( 1 ); /* sleep in milliseconds */
-  } // if
-    
-  /* is there any event ? */
-       ok= GetNumberOfConsoleInputEvents( hStdin, &n );
-  if (!ok || n==0) return;
-
-  /* if yes, get it. If it keydown, put char into input buffer */
-       ok= ReadConsoleInput( hStdin, &ir, 1, &n );
-  if (!ok || n==0) return;
-    
-  if      (ir.EventType==KEY_EVENT && 
-           ir.Event.KeyEvent.bKeyDown) {
-        c= ir.Event.KeyEvent.uChar.AsciiChar;
-    if (c!=NUL) KeyToBuffer( &main_mco, c );
-  }
-} /* HandleEvent */
-#endif
 
 
 #if defined MPW || defined UNIX

@@ -63,9 +63,5 @@ os9err Get_DSize   ( scsi_dev* scsi, ulong *totScts );
 os9err ReadFromSCSI( scsi_dev* scsi, ulong sectorNr, ulong nSectors, ulong len, byte* buffer );
 os9err WriteToSCSI ( scsi_dev* scsi, ulong sectorNr, ulong nSectors, ulong len, byte* buffer );
 
-#ifdef windows32
-void scsiadaptor_help (void);
-void scsi_finddefaults(void);
-#endif
 /* eof */
 

@@ -643,11 +643,7 @@ os9err pFready( _pid_, _spP_, ulong *n )
 /* get device name from HFS object */
 os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 {
-    #if   defined windows32
-      volname[ 0 ]= toupper( spP->fullName[ 0 ] ); /* first char only */       
-      volname[ 1 ]= NUL;     
-    
-    #elif defined UNIX
+    #if   defined UNIX
       int  ii; // get the current top path as name
       for (ii= 0; ii<strlen( spP->fullName ); ii++) {
         volname[ ii ]= spP->fullName[ ii+1 ];
@@ -704,56 +700,7 @@ os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
   static void Set_FileDate( syspath_typ* spP, time_t t )
   /* Set (Windows/Linux) file date */
   {
-    #ifdef windows32
-      Boolean    isFolder= false;
-      int        hh;
-      HANDLE     hFile;
-      LPWIN32_FIND_DATA data;
-      FILETIME   cr, lastA, lastW, lastL;
-      SYSTEMTIME sy;
-      struct tm  tim;
-
-    //printf( "Set_FileDate '%s'\n", spP->fullName );
-      /* open as file or as current directory */
-          hh= _lopen( spP->fullName, OF_READWRITE );
-      if (hh!=-1) hFile= (HANDLE) hh;
-      else {
-        hFile= NULL;
-        if (PathFound(spP->fullName)) {
-          return; // avoid date/time adaption of directories
-          
-          isFolder= true;
-              hFile=       FindFirstFile( spP->fullName, &data );
-          if (hFile!=NULL) FindNextFile ( hFile,         &data );
-        }
-      }
-    //printf( "Set_FileDate %d %08X'\n", hh, hFile );
-      if (hFile==NULL) return;
-        
-      GetFileTime( hFile, &cr, &lastA, &lastW );
-      FileTimeToLocalFileTime( &lastW, &lastL );
-      FileTimeToSystemTime   ( &lastL, &sy );
-        
-      if (t==0) GetTim  ( &tim );
-      else      TConv( t, &tim );
-        
-      sy.wYear  = tim.tm_year+1900;
-      sy.wMonth = tim.tm_mon+1;
-      sy.wDay   = tim.tm_mday;
-      sy.wHour  = tim.tm_hour;
-      sy.wMinute= tim.tm_min;
-      sy.wSecond= tim.tm_sec;
-        
-      SystemTimeToFileTime   ( &sy,    &lastL );
-      LocalFileTimeToFileTime( &lastL, &lastW );
-      SetFileTime( hFile, &cr, &lastA, &lastW );
-    //printf( "Set_FileDate DONE\n" );
-
-      if (isFolder) FindClose( hFile );
-      else _lclose( hh );
-    //printf( "Set_FileDate raus\n" );
-
-    #elif defined UNIX
+    #if   defined UNIX
       struct utimbuf buf;
           
       buf.actime = t;
@@ -1015,9 +962,6 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
           /* --- create */
           /* check if file exists */
           if (FileFound( pp )) return os9error(E_CEF); /* create existing file not allowed */
-          #ifdef windows32
-          if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-          #endif
 
               stream= fopen( pp,"wb+" ); /* create for update, use binary mode (bfo) ! */
           if (stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
@@ -1026,15 +970,9 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
           /* --- open */
           #ifdef win_unix
             /* object exists, but make sure it is not a directory */
-            #ifdef windows32
-              SetLastError(ERROR_SUCCESS);
-            #endif
             
             if (PathFound( pp )) return os9error(E_FNA);
 
-            #ifdef windows32
-              if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-            #endif
           #endif
         
               stream= fopen( pp,"rb" ); /* try to open for read, use binary mode */
@@ -1066,12 +1004,6 @@ os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     strcpy( spP->name,p );
     
     f->moddate_changed= false;
-    #ifdef windows32
-      if (isW) {
-          f->moddate        = 0;
-          f->moddate_changed= true;
-      }
-    #endif
     
     return 0;
 } /* pFopen */
@@ -1226,9 +1158,6 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       int        kk;
     #endif
     
-    #ifdef windows32
-      char cmd[OS9PATHLEN];
-    #endif
         
     #ifdef win_unix
       char adapted[OS9PATHLEN];
@@ -1261,14 +1190,7 @@ os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
       err     = AdjustPath( pathname,adapted, false ); if (err) return err;
       pathname= adapted;
       
-      #ifdef windows32
-//      if (!DeleteFile( adapted )) oserr= GetLastError();
-        sprintf( cmd, "del %s /A", pathname );
-        err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
-
-      #else
         oserr= remove( pathname );
-      #endif  
 
     #else
       #error I_Delete not yet implemented
@@ -1353,21 +1275,7 @@ os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
       err= host2os9err( oserr,E_SEEK ); if (err) return err;
       
     #else
-      #ifdef windows32
-        int    fno;
-        HANDLE hFile;
-        DWORD  pos;
- 
-        fgetpos( spP->stream, &tmp_pos );  // save current position
-        fflush ( spP->stream );
-        
-                                       fno= _fileno( spP->stream ); 
-        hFile= (HANDLE)_get_osfhandle( fno );
-        pos  = SetFilePointer( hFile, *sizeP,NULL, FILE_BEGIN );
-        SetEndOfFile         ( hFile );
-        curSize= *sizeP;
-        
-      #elif defined UNIX
+      #if   defined UNIX
         int  fd, i, j, cnt;
         OSErr oserr= 0;
         char tmpName[ OS9PATHLEN ];
@@ -1554,17 +1462,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
       syspath_typ spRec;
       Boolean     ok;
       
-      #ifdef windows32
-        HANDLE hFile;
-        SYSTEMTIME sy;
-        // This was the bad thing: declared pointer instead of data structure !
-        // LPWIN32_FIND_DATA data;
-        WIN32_FIND_DATA data;
-        FILETIME cr, lastA, lastW, lastL;
-        Boolean uDir= false;
-              
-          mode_t v;
-      #elif defined MACOSX
+      #if   defined MACOSX
           mode_t v;
       #else
         __mode_t v;
@@ -1578,92 +1476,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     memset( buffer,0, maxbyt );
     memset( fdbeg, 0, FDS    );
     
-    #if defined NEW_LUZ_FD_IMPL && defined windows32
-      #pragma unused(v,lastA,tim)
-      // use FindFirstFile for everything
-      pathname= (char*)fdl;
-      
-          ok= (pathname!=NULL && ustrcmp( pathname,"" )!=0);
-      if (ok) {
-          hFile= FindFirstFile( pathname, &data );
-          ok= ( (int)hFile>0 ); /* is -1, if error -> compare on >= !! */
-      }
-        
-      if (ok) { 
-          FindClose( hFile );
-          // now extract all the data from WIN32_FIND_DATA structure
-          // - is it a folder?
-        //isFolder= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!=0;
-          isFolder= PathFound( pathname ); /* don't call stat_ for directories under Windows */
-        //printf( "%d '%s'\n", isFolder, pathname );
-          
-          // - basic r or rw
-          *att=poRead | (poRead<<3); // always readable
-          if ((data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)==0)
-              *att |= poWrite | poWrite<<3; // if not write protected, also writeable
-          // - always executable
-          *att |= poExec | (poExec<<3);
-          
-          // - dirs are special
-          if (isFolder) {
-              *att |= 0x3F; // all permissions
-              *att |= 0x80; // and dir bit
-          } // if
-          
-          // - owner
-          fdbeg[1] =0;
-          fdbeg[2] =0; /* owner = superuser */
-          
-          // - get moification dates
-          lastW = data.ftLastWriteTime;  
-          // - convert to systemtime
-          FileTimeToLocalFileTime ( &lastW, &lastL );
-          FileTimeToSystemTime    ( &lastL, &sy );
-          fdbeg[3]= sy.wYear-1900;
-          fdbeg[4]= sy.wMonth;
-          fdbeg[5]= sy.wDay;
-          fdbeg[6]= sy.wHour;
-          fdbeg[7]= sy.wMinute;
-
-          // link count
-          fdbeg[8]= 1; /* link count = 1 */
-          
-          // creation date
-          cr = data.ftCreationTime;
-          FileTimeToLocalFileTime ( &cr, &lastL );
-          FileTimeToSystemTime    ( &lastL, &sy );
-          fdbeg[13]= sy.wYear-1900;
-          fdbeg[14]= sy.wMonth;
-          fdbeg[15]= sy.wDay;
-          
-          // size of file
-          // NOTE: only lower 32 bits are used. NT returns 64bits here...
-          // NOTE: this is still a little hacky, as we use the info record only for size
-          //       by now.
-          info.st_size = data.nFileSizeLow; 
-      }
-      else {
-          isFolder= true; /* assuming it is the top directory */
-          *att    = 0xBF; /* dir bit and all permissions */
-
-          /*
-          if (isFolder) {
-              *att |= 0x3F; // all permissions
-              *att |= 0x80; // and dir bit
-          } // if
-          */
-
-//     // file does not exist (any more)
-//        *att= 0; // not accessible
-      }
-    
-//    printf( "fd: " );
-//    for (ii=0; ii<FDS; ii++) {
-//        printf( "%02X ", fdbeg[ii] );
-//    }
-//    printf( "- %d '%s'\n", hFile, pathname );
-    
-    #else
     // conventional ifdef haystack :-)
 
     /* fill in constants */
@@ -1672,9 +1484,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #if   defined win_unix
       pathname= (char*)fdl;
             
-      #ifdef windows32
-        isFolder= PathFound( pathname ); /* don't call stat_ for directories under Windows */
-      #endif
       
     //upe_printf( "'%s' %s\n", pathname, isFolder ? "folder":"file" );
       *att= 0x00; 
@@ -1690,9 +1499,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
           if (v & S_IWOTH)    *att|= 0x10;
        /* if (v & S_IXOTH) */ *att|= 0x20;   /* always */
       
-          #ifdef windows32
-            *att|= 0x03; /* workaround because currently not visible */
-          #endif
       
           isFolder= IsTrDir(v);
       }
@@ -1710,39 +1516,12 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #if   defined win_unix
       u= info.st_mtime;
       
-      #ifdef windows32
-        if (isFolder) {
-            // used to crash here because data was wrong type
-            hFile= FindFirstFile( pathname, &data);
-            if (hFile!=NULL) {
-                debugprintf(dbgFiles,dbgNorm,("# getFD: '%s'\n",pathname));
-                FindNextFile( hFile, &data);
-                GetFileTime ( hFile, &cr, &lastA, &lastW );
-                FileTimeToLocalFileTime ( &lastW, &lastL );
-                FileTimeToSystemTime    ( &lastL, &sy );
-                        
-                uDir= true;
-                u   = 0;
-                
-                FindClose( hFile );
-            }
-        }
-      #endif
     #endif
 
     TConv( u, &tim );
 //  tp = localtime( (time_t*)&u );
 //  tim= *tp; /* copy it, as it might be overwritten */
 
-    #ifdef windows32
-      if (uDir) {
-          tim.tm_year= sy.wYear-1900;
-          tim.tm_mon = sy.wMonth-1; /* somewhat different month notation */
-          tim.tm_mday= sy.wDay;
-          tim.tm_hour= sy.wHour;
-          tim.tm_min = sy.wMinute;
-      }
-    #endif
     
     fdbeg[3]= tim.tm_year;
     fdbeg[4]= tim.tm_mon+1; /* somewhat different month notation */
@@ -1755,9 +1534,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
                 tim.tm_year % 100,tim.tm_mon+1,tim.tm_mday, tim.tm_hour,tim.tm_min));
     
     #if   defined win_unix
-      #ifdef windows32
-        if (isFolder) info.st_ctime= 0;
-      #endif
       
       u= info.st_ctime;
     #endif
@@ -1772,7 +1548,6 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
 
     /* file length */
 //  *sizeP= 0; /* by default */
-    #endif // NEW_LUZ_FD_IMPL
 
         
     #if   defined win_unix
@@ -2078,9 +1853,6 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
 
            ok= OpenTDir( pp, &d );
       if (!ok) {
-        #ifdef windows32
-        if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-        #endif
         return E_FNA;
       } // if
       
@@ -2147,9 +1919,6 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
     ulong           fdpos;
     Boolean         topFlag= false;
       
-    #ifdef windows32
-      dirent_typ dField;
-    #endif
   #endif
     
 //printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
@@ -2167,15 +1936,6 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
       memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
           
       err= DirNthEntry( spP,index, &dEnt );
-      #ifdef windows32
-        if (dEnt==NULL && err==E_EOF && index<=1) {
-            dEnt= &dField; /* virtual field */
-              
-          if (index==0) strcpy( dEnt->d_name,".." );
-          if (index==1) strcpy( dEnt->d_name,"."  );
-          err= 0;
-        } // if
-      #endif
           
       if      (err) {
         if    (err==E_EOF && cnt<*n) break; // EOF can be handled !!
@@ -2183,19 +1943,6 @@ os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
       } // if
           
       if (*pos-offs==0) { /* if 1st entry, ".." expected */
-        #ifdef windows32
-          if (dEnt==NULL) {
-              dEnt= &dField;
-              strcpy( dEnt->d_name,"" ); /* virtual field */
-          } // if
-                    
-          if (dEnt!=NULL &&
-            ustrcmp( (char*)dEnt->d_name, "." )!=0 ) {
-            strcpy        ( dEnt->d_name, "." );
-            topFlag= true;
-         // printf( "top '%s' '%s'\n", spP->fullName,dEnt->d_name );
-          }
-        #endif
                   
         if (topFlag) strcpy( dEnt->d_name,".." );
       } // if
@@ -2308,11 +2055,6 @@ os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
         spP->svD_n= 0; /* catch again */
         
         /* special handling for the root directory */
-        #ifdef windows32
-          if (n==0 && (dEnt==NULL || ustrcmp( dEnt->d_name,"." )!=0)) {
-              seekD0( spP ); break;
-          }
-        #endif
          
         if (dEnt==NULL) return os9error(E_SEEK);
         if (ustrcmp( dEnt->d_name,AppDo )!=0 ) cnt--; /* ignore ".AppleDouble" */
@@ -2410,14 +2152,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
   err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
   pathname= p;
     
-  #if   defined windows32
-    err= AdjustPath( pathname,adapted, true ); if (err) return err;
-    pathname=                 adapted;
-
-    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Win path=%s\n",pathname));
-    if (!CreateDirectory( pathname,NULL )) oserr=GetLastError();
-
-  #elif defined UNIX
+  #if   defined UNIX
     err= AdjustPath( pathname,adapted, true ); if (err) return err;
     
     debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
@@ -2475,27 +2210,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
     err= pDclose      ( pid, spP     ); if (err) return err;
   //err= syspath_close( pid, spP->nr ); if (err) return err;
       
-    #if   defined windows32 // || defined MACOSX
-//    spP->dDsc= opendir( spP->fullName );
-//    while (true) {
-//        dEnt= readdir( spP->dDsc ); if (dEnt==NULL) break;
-//        printf( "'%s'\n", dEnt->d_name );
-//    }
-//    closedir( spP->dDsc );
-    
-      /* can't be removed at the moment */
-//    if (!RemoveDirectory(pp)) err= E_DNE;
-//    if (err) { 
-//      spP->dDsc= opendir( spP->fullName );
-//      printf( "%04X\n", GetFileAttributes( pp ) );
-//      SetFileAttributes( pp, 0x0001 ); /* it's a little bit a bad joke */
-//      return 0; 
-//    }
-
-      sprintf( cmd, "rmdir /S /Q %s", pp );
-      err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
-
-    #elif defined MACOSX
+    #if   defined MACOSX
       sprintf( cmd, "rmdir %s", pp );
       err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
 

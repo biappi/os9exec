@@ -493,9 +493,6 @@ dir_type mdir;	                  /* current module dir */
 
 
 /* the windows console definitions */
-#if defined windows32
-  HANDLE hStdin;
-#endif
 
 #if defined win_unix
   ttydev_typ   main_mco;
@@ -863,10 +860,6 @@ void get_hw()
       #endif
     #endif
       
-  #elif defined windows32
-    hw_site= "PC";
-	hw_name= "Windows - PC"; platform= "x86"; // don't change hw_name, used at ".mgr_loop"
-	  
   #elif defined linux
     hw_site= "PC";
 	hw_name= "Linux - PC";   platform= "x86";
@@ -911,15 +904,7 @@ void get_hw()
 
 static os9err GetStartPath( char* pathname )
 {
-	#if   defined windows32
-	  /* determine path to current directory */
-	  if (!GetCurrentDirectory( MAX_PATH,pathname ))
-		  strcpy( pathname,"" ); // no default path for some reason
-
-	//	/* make sure it ends with slash */
-	//	if (pathname[strlen(pathname)-1]!=PATHDELIM ) strcat(pathname,PATHDELIM_STR );
-
-	#elif defined UNIX
+	#if   defined UNIX
 	  StartDir( pathname );
 	  
 	#else
@@ -974,15 +959,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	} // if
 	*/
 	
-	#if   defined windows32
-	  if (p[ 0 ]==PSEP && 
-		 (p[ 2 ]==PSEP ||
-		  p[ 2 ]=='\0')) { /* adapt for windows notation */
-		  p[ 0 ]= p[ 1 ];
-		  p[ 1 ]= ':';
-		  doRep= true;
-	  }  
-	#endif
 
     if (tmp != p)
         strcpy( tmp, p );
@@ -1413,21 +1389,6 @@ static void CheckStartup( int cpid, char* toolname, int *argc, char **argv )
 
 
 
-#ifdef windows32
-  /* catch the Ctrl C */
-  static BOOL CtrlC_Handler( DWORD ctrlType )
-  {
-    Boolean fnd= false;
-
-    if (ctrlType==CTRL_C_EVENT) {
-      fnd=         (main_mco.spP->lastwritten_pid!=0);
-      KeyToBuffer( &main_mco, CtrlC );
-      if (fnd) return true; /* do not abort program if signalled process found */
-    }
-
-    return false; /* abort for other events */
-  } // CtrlC_Handler
-#endif
 
 #ifdef UNIX
   static void CtrlC_Handler( int sig )
@@ -1453,8 +1414,6 @@ static void titles( void )
      #ifdef macintosh
        
        
-     #elif defined windows32
-       upho_printf("- Windows Console Version\n");
      #elif defined linux
        upho_printf("- Linux XTerm Version\n");
      #else
@@ -2061,11 +2020,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
 
 
 #ifdef win_unix
-  #ifdef windows32
-    static ulong segv_handler( ulong sig )
-  #else
     static void  segv_handler( int   sig )
-  #endif
   {
   //int          sv= sig;
     process_typ* cp = &procs[currentpid]; // pointer to procs   descriptor
@@ -2085,11 +2040,7 @@ void os9exec_loop( unsigned short xErr, Boolean fromIntUtil )
     in_m68k_go= 0;                        // remove the blocker in UAE
     llm_os9_copyback( crp );              // copy registers back for BusError reporting
     
-    #ifdef windows32
-      return EXCEPTION_EXECUTE_HANDLER;
-    #else
       siglongjmp( main_env, cp->exiterr );   // go back with bus error
-    #endif
   } // segv_handler
 #endif
 
@@ -2100,9 +2051,6 @@ static void setup_exception( loop_proc lo )
   unsigned short err= 0;
   unsigned short xErr;
 
-  #ifdef windows32
-    process_typ* cp;
-  #endif
   
   // The UNIX exception handler, using sigsetjmp/siglongjmp
   #ifdef UNIX
@@ -2127,16 +2075,9 @@ static void setup_exception( loop_proc lo )
     xErr= err;
     err = 0; // preserve this in case of no exception
      
-    #ifdef windows32
-      // The Windows exception handler, using __try/__except
-      __try {
-    #endif
   
     lo( xErr, false ); // go in with the last exception error
       
-    #ifdef windows32
-      } __except( segv_handler( 0 ) ) { cp= &procs[currentpid]; err= cp->exiterr; }
-    #endif
   } while (err);
 } // setup_exception
 
@@ -2163,9 +2104,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   #else
     char* p;
   
-    #ifdef windows32
-      char title[255];
-    #endif
   #endif
 
   #ifdef UNIX
@@ -2183,10 +2121,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   
 
   /* ---- win32 specific global init ------------------------------- */
-  #ifdef windows32
-    // Avoid error popup (Retry/Abort)
-    SetErrorMode(SEM_NOOPENFILEERRORBOX + SEM_FAILCRITICALERRORS);
-  #endif
 
   /* ---- create the kernel process -------------------------------- */
   new_process( 0,&cpid, 0 ); /* get the kernel process */
@@ -2198,16 +2132,8 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   /* ---- assign startVolID/dirID ---------------------------------- */
 	
 
-  #ifdef windows32
-    hStdin= GetStdHandle( STD_INPUT_HANDLE );
-    WindowTitle    ( &title,false ); /* adapt title line of DOS window */
-    SetConsoleTitle( &title );     	  
-  #endif
 
   if (catch_ctrlC) {
-    #ifdef windows32
-      SetConsoleCtrlHandler( CtrlC_Handler, true );
-    #endif
 
     #ifdef UNIX
       ia.sa_handler= &CtrlC_Handler;
@@ -2287,13 +2213,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
 
   /* get default SCSI setting */
   #ifdef RBF_SUPPORT
-    #ifdef windows32
-      if (defSCSIAdaptNo<0) {
-          debugprintf(dbgStartup,dbgNorm,("# main startup: scanning for SCSI adapters/buses/devices\n"));
-         scsi_finddefaults();
-      }
-      debugprintf(dbgStartup,dbgNorm,("# main startup: Default SCSI adapter=%d, bus=%d\n",defSCSIAdaptNo,defSCSIBusNo));
-    #endif
   #endif
     		
   drP      = &cp->d;

@@ -367,9 +367,7 @@
 #define MAX_PICTS         8 /* max number of picts to be displayed at /vmod display */
 #define MAXTRIES_DEL    100 /* max tries to delete a file */
 
-#ifndef windows32
   #define MAX_PATH     1024
-#endif
 
 // -------------------------------------------------------------------
 /* number of "processes" OS9exec can handle. 
@@ -501,10 +499,7 @@ typedef struct {
 #define   PSEP_STR      "/"
 
 /* for the host system */
-#if   defined windows32
-  #define PATHDELIM     '\\'
-  #define PATHDELIM_STR "\\"
-#elif defined UNIX
+#if   defined UNIX
   #define PATHDELIM     '/'
   #define PATHDELIM_STR "/"
 #endif
@@ -824,9 +819,6 @@ typedef struct {
               ushort      fAddT;
                 
             
-              #ifdef windows32
-                WSAEVENT  hEventObj;
-              #endif
                 
               Boolean     bound;          /* true, if binding was successful  */
               Boolean     accepted;       /* true, if connection is accepted  */
@@ -882,9 +874,6 @@ typedef struct {
     int       term_id;          /* terminal/port id number, console|pipe|printer used together */
 
     /* no errors for mac/linux definition */
-    #ifdef windows32        
-      HANDLE    printerHandle;  /* handle for printer devices */
-    #endif
 
 
     /* variants for different types */
@@ -1307,9 +1296,6 @@ extern dir_type mdir;                  /* current module dir */
 
 
 /* stdin and out for console */
-#ifdef windows32
-  extern  HANDLE  hStdin; /* the windows console definition */
-#endif
 
 #ifdef win_linux
   extern  ttydev_typ main_mco;

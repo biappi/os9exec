@@ -1476,11 +1476,6 @@ static void mount_usage( char* name, _pid_ )
     upe_printf( "    -i           adapt for reduced image size\n" );
     upe_printf( "    -f           adapt for full    image size\n" );
     
-    #ifdef windows32
-    upe_printf( "    -ah          show all SCSI devices on all adapters and buses\n" );
-    upe_printf( "    -a=<adapter> specify  SCSI adapter\n" );
-    upe_printf( "    -b=<scsibus> specify  SCSI bus\n" );
-    #endif
     
     upe_printf( "    -s=<scsiID>  connect to SCSI ID\n" );
     upe_printf( "    -l=<lun>     connect to LUN (default=0)\n" );
@@ -1605,32 +1600,6 @@ os9err int_mount( ushort pid, int argc, char** argv )
                 case 'i' : imgMode = Img_Reduced;  break;
                 case 'f' : imgMode = Img_FullSize; break;
 
-				#ifdef windows32
-                case 'a' : if (*(p+1)=='h') {
-                             upho_printf("Current defaults: adapter=SCSI%d, bus=%d\n\n",
-                                            defSCSIAdaptNo,defSCSIBusNo);
-                             scsiadaptor_help();
-                             return 0;    
-                           } // if
-                             
-                           if (*(p+1)=='=') p+=2;
-                           else { k++; /* next arg */
-                             if  (k>=argc) break;
-                             p= argv[k];
-                           } // if
-                             
-                           sscanf( p,"%hd", &adapt );
-                           break;
-                            
-                case 'b' : if (*(p+1)=='=') p+=2;
-                           else { k++; /* next arg */
-                             if  (k>=argc) break;
-                             p= argv[k];
-                           } // if
-                             
-                           sscanf( p,"%hd", &scsibus );
-                           break;
-                #endif
                             
                 case 's' : if (*(p+1)=='=') p+=2;
                            else { k++; /* next arg */

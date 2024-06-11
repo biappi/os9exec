@@ -38,19 +38,7 @@
 /* ======== */
 #include "os9exec_incl.h"
 
-#ifdef windows32
-  #include <crtl.h>
-
-  void main( int argc, char** argv ) 
-  {
-    /* get environment pointers */
-    char** envp= environ; 
-        
-    os9_main( argc,argv,envp );
-  } /* main */
-
-
-#elif defined UNIX
+#if   defined UNIX
   int main( int argc, char* argv[] )
   {
     char *envp[] = {

@@ -596,17 +596,11 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     *ispath  = false;
     
     absolute= (*p=='/');
-    #ifdef windows32
-      if (!absolute)
-           absolute= (*p!=NUL && p[1]==':' && p[2]==PATHDELIM);
-    #endif
     
     if (!absolute) {
         /* --- it is a relative path: copy in default dir first (must end with PATHDELIM) */
                 p2= defDir_s;
-        #ifdef windows32
-          if  (*p2==NUL) p2= ".\\"; /* special condition, if undefined */
-        #elif defined linux  
+        #if   defined linux  
           if  (*p2==NUL) p2= "./";  /* special condition, if undefined */
         #endif
           
@@ -685,12 +679,6 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         #endif
     } /* if *p... */
 
-    #ifdef windows32
-      if (op>pathbuf && *p!='/') {
-          op--; if (*op!=PATHDELIM) *++op= PATHDELIM;
-          op++;
-      }
-    #endif
 
     *op= NUL; /* make it readeable */
     debugprintf(dbgFiles,dbgNorm,("# pathbuf '%s' '%s'\n", pathbuf, p ));
@@ -746,33 +734,16 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         p++; op++;
     } /* while */
 
-    #ifdef windows32
-      if (op>pathbuf) {
-          op--; if (*op==PATHDELIM) *op= NUL;
-          op++;
-      }
-    #endif
         
 
     *op = NUL; /* set terminator */
     *inp= p;   /* return updated pointer */
     
-    #ifdef windows32
-        if (pathbuf[0]==PATHDELIM &&
-           (pathbuf[2]==PATHDELIM ||
-            pathbuf[2]==NUL)) {
-            pathbuf[0]= pathbuf[1];
-            pathbuf[1]= ':';
-        }
-    #endif
     
     /* remember for error tracebacks */
     lastpathparsed= pathbuf;
     strncpy   ( out,pathbuf,OS9PATHLEN );
     
-    #ifdef windows32
-      EatBack( out );
-    #endif
 
     /* show result */
     debugprintf( dbgFiles,dbgNorm,("# parsepathext Output: '%s'\n",out) );

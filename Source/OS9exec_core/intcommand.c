@@ -670,11 +670,6 @@ static os9err int_devs( _pid_, int argc, char** argv )
     #endif
     
     if (!statistic && !rbf_devs) {
-        #ifdef windows32
-              tdev= &main_mco; 
-          if (tdev->installed && tdev->spP!=NULL)
-              devs_printf( tdev->spP, "console","scf" );
-        #endif
 
                      spP= &syspaths[sysStdnil];
         devs_printf( spP, "null",    "scf" );
@@ -706,9 +701,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
   {
     const char* suff;
     
-    #ifdef windows32
-      suff= ".dll";
-    #elif defined MACOSX
+    #if   defined MACOSX
       suff= ".dylib";
     #elif defined linux
       suff= ".so";
@@ -724,9 +717,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
   // Get <aFunc> of <aFuncName>
   static os9err DLL_Func( void* aDLL, const char* aFuncName, void** aFunc )
   {
-    #if   defined windows32
-      *aFunc= (void*)GetProcAddress( (HINSTANCE)aDLL, aFuncName );
-    #elif defined UNIX
+    #if   defined UNIX
       *aFunc= dlsym( aDLL, aFuncName );
     #else
       *aFunc= NULL;
@@ -755,9 +746,6 @@ static os9err int_devs( _pid_, int argc, char** argv )
   {
     if (!p || !p->fDLL ) return E_PNNF;
     
-    #ifdef windows32
-      FreeLibrary( p->fDLL );
-    #endif
       
     #ifdef UNIX
       dlclose( p->fDLL );
@@ -795,10 +783,7 @@ static os9err int_devs( _pid_, int argc, char** argv )
     //upe_printf( "connectDLL='%s'\n", fullName );
       // now we have the complete path name
     
-      #ifdef windows32
-        p->fDLL= LoadLibrary( fullName );
-      
-      #elif defined UNIX
+      #if   defined UNIX
         #if   defined MACOSX
           #define mode RTLD_NOW + RTLD_GLOBAL
         #elif defined linux
@@ -1554,9 +1539,6 @@ cmdtable_typ commandtable[] =
   { "unmount",       int_unmount,    "unmount (RBF) device" },
 	#endif
 	
-  #ifdef windows32
-  { "cmd",           int_wincmd,     "calls Windows Command Line / DOS command" },
-  #endif
     
   { "systime",       int_systime,    "emulation timing management/display" },
   { "iprocs",        int_procs,      "shows OS9exec's processes" },
@@ -2010,59 +1992,7 @@ os9err callcommand( char* name, ushort pid, ushort parentid, int argc, char** ar
 /* call of external Win/DOS commands for OS9exec/nt */
 os9err call_hostcmd( char* cmdline, ushort pid, int moreargs, char **argv )
 {
-    #ifdef windows32
-      PROCESS_INFORMATION procinfo;
-      STARTUPINFO      startupinfo;
-      DWORD exitcode;
-      char cl[MAX_PATH];
-      int k;
-      char* p;
-      process_typ* cp= &procs[pid];
-    
-      /* create command line */
-      strcpy( cl,"cmd /c " );
-      strcat( cl, cmdline  );
-      
-      k=0;
-      while (moreargs-- > 0) {
-          if (cl[0]!=0) strcat(cl," "); // space if not first
-          strcat(cl,argv[k++]);
-      }
-      
-      debugprintf(dbgUtils,dbgNorm,("# call_hostcmd '%s'\n", cl ));
-      
-      p=  cp->d.path;  // pointer to current directory name 
-      if (cp->d.type!=fDir) p= startPath;
-      
-      /* Now create new process */
-      GetStartupInfo( &startupinfo );
-      if (CreateProcess(
-            NULL,           // pointer to name of executable module
-            cl,             // pointer to command line string
-            NULL,           // pointer to process security attributes 
-            NULL,           // pointer to thread security attributes 
-            true,           // handle inheritance flag
-            0,              // creation flags 
-            NULL,           // pointer to new environment block (%%% implement that later?)
-            p,              // pointer to current directory name 
-            &startupinfo,   // pointer to STARTUPINFO (using that of myself)
-            &procinfo)) {   // pointer to PROCESS_INFORMATION  
-          /* process created ok */
-          WaitForSingleObject(procinfo.hProcess, INFINITE);
-
-          // Get exit code
-          exitcode= 0;
-          GetExitCodeProcess(procinfo.hProcess, &exitcode);
-
-          // Close process and thread handles. 
-          CloseHandle(procinfo.hProcess);
-          CloseHandle(procinfo.hThread);
-          return host2os9err( exitcode,E_IFORKP );
-      }
-      
-      return host2os9err( GetLastError(),E_IFORKP );
-    
-    #elif defined MACOSX
+    #if   defined MACOSX
       os9err err;
       
       #pragma unused(pid,moreargs,argv)

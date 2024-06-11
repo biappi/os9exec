@@ -26,33 +26,3 @@
 /* global includes */
 #include "os9exec_incl.h"
 
-#ifdef windows32
-
-static void usage(char *name, ushort pid)
-{
-    usrpath_printf(pid,usrStderr,"# Usage:    %s <Windows Consoler/dos command name> [args...]\n",name);
-} /* usage */
-
-
-
-/* call of external Win/DOS commands for OS9exec/nt */
-os9err int_wincmd(ushort pid, int argc, char **argv)
-{   
-    int k;
-    
-    /* show args for debug */
-    if (debugcheck(dbgUtils,dbgNorm)) {
-        upe_printf("# os9dir: argc=%d",argc);
-        for (k=0; k<argc; k++) upe_printf(", argv[%d]='%s'",k,argv[k]);
-        upe_printf("\n");
-    }
-    if (argc<2) {
-        usage(argv[0],pid);
-        return(1);
-    }
-    /* Now call windows command */
-    return call_hostcmd("",pid,argc-1,&argv[1]);
-} /* int_wincmd */
-
-
-#endif

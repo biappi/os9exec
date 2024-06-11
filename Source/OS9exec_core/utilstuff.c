@@ -396,85 +396,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
    
     known=true;
 
-    #if   defined(windows32)
-      if     (hosterr==NOERROR) return 0;
-      switch (hosterr) {
-        case ERROR_PATH_NOT_FOUND: /* same */
-
-        case ERROR_FILE_NOT_FOUND:         err=E_PNNF; break;
-
-        case ERROR_NO_MORE_FILES:
-        case ERROR_TOO_MANY_OPEN_FILES:    err=E_PTHFUL; break;
-
-        case ERROR_OPEN_FAILED:
-        case ERROR_NETWORK_ACCESS_DENIED:
-        case ERROR_INVALID_ACCESS:
-        case ERROR_SHARING_VIOLATION:
-        case ERROR_NOACCESS:
-        case ERROR_CANTOPEN:
-        case ERROR_FILE_INVALID:
-        case ERROR_ACCESS_DENIED:          err=E_FNA; break;
-
-        case ERROR_INVALID_HANDLE:         err=E_BPNUM; break;
-
-        case ERROR_INSUFFICIENT_BUFFER:
-        case ERROR_BUFFER_OVERFLOW:
-        case ERROR_STACK_OVERFLOW:
-        case ERROR_OUTOFMEMORY:
-        case ERROR_NOT_ENOUGH_MEMORY:      err=E_NORAM; break;
-
-        case ERROR_PATH_BUSY:
-        case ERROR_LOCK_VIOLATION:         err=E_SHARE; break;
-
-        case ERROR_WRITE_PROTECT:          err=E_WP; break;
-
-        case ERROR_DUP_NAME:
-        case ERROR_FILE_EXISTS:            err=E_CEF; break;
-
-        case ERROR_BAD_NETPATH:            err=E_BPNAM; break;
-
-        case ERROR_NOT_READY:              err=E_NOTRDY; break;
-
-        case ERROR_DRIVE_LOCKED:
-        case ERROR_BUSY_DRIVE:             err=E_DEVBSY; break;
-
-        case ERROR_SEEK:
-        case ERROR_NEGATIVE_SEEK:
-        case ERROR_SEEK_ON_DEVICE:
-        case ERROR_INVALID_DRIVE:
-        case ERROR_INVALID_BLOCK:
-        case ERROR_SECTOR_NOT_FOUND:
-        case ERROR_BAD_FORMAT:             err=E_SEEK; break;
-
-        case ERROR_CRC:                    err=E_CRC; break;
-
-        case ERROR_CANTWRITE:
-        case ERROR_WRITE_FAULT:            err=E_WRITE; break;
-
-        case ERROR_CANTREAD:
-        case ERROR_READ_FAULT:             err=E_READ; break;
-
-        case ERROR_HANDLE_EOF:             err=E_EOF; break;
-
-        case ERROR_DISK_FULL:
-        case ERROR_HANDLE_DISK_FULL:       err=E_FULL; break;
-
-        case ERROR_DISK_CHANGE:            err=E_DIDC; break;
-
-        case ERROR_CALL_NOT_IMPLEMENTED:   err=E_UNKSVC; break;
-
-        case ERROR_UNRECOGNIZED_VOLUME:
-        case ERROR_NO_VOLUME_LABEL:
-        case ERROR_INVALID_NAME:           err=E_BNAM; break;
-
-        case ERROR_DIR_NOT_EMPTY:          err=E_DNE; break;
-
-        default: err=suggestion; known=false; break;
-      }
-      debugprintf(dbgErrors,dbgNorm,("# ** Win32 error=%d%s\n",
-                                      hosterr,known ? "" : "(not known, using suggestion)"));
-
-    #elif defined UNIX
+    #if   defined UNIX
       if     (hosterr==0) return 0;
       err= suggestion; known=false;
     
@@ -710,22 +632,10 @@ ulong GetScreen( char mode )
 {
     int r= 0; // no information, return zero (full screen)
     
-    #ifdef windows32
-      HWND dwh = GetDesktopWindow();
-      RECT screenrec;
-
-      if (GetWindowRect(dwh,&screenrec)) {
-    	  switch (mode) {
-    		  case 'w': r= screenrec.right -screenrec.left; break; /* return width  */ 
-    		  case 'h': r= screenrec.bottom-screenrec.top;  break; /* return height */
-    	  } 
-      }
-    #else
 	  switch (mode) {
 		  case 'w': r= 1600; break; /* return width  */ 
 		  case 'h': r= 1200; break; /* return height */
 	  } 
-    #endif
     
     return (ulong)r;
 } /* GetScreen */
@@ -794,11 +704,7 @@ Boolean IsCrea( ushort mode )
 Boolean IsTrDir( ushort umode )
 /* returns true, if <mode> has dir bit set */
 {
-    #ifdef windows32
-      return umode==0x4E00;
-    #else
       return S_ISDIR( umode ); /* it is a directory ? */
-    #endif
 } /* IsTrDir */
 
 
@@ -1039,14 +945,6 @@ Boolean VolInfo( const char* pathname, char* volname )
     #elif defined linux
       strcpy( volname,"/" );
 
-    #elif defined(windows32)
-      char    sysname[OS9NAMELEN];
-      DWORD   serno,maxComp,sysFlags;
-      
-      ok= GetVolumeInformation( pathname,  volname, OS9NAMELEN, 
-               &serno,&maxComp,&sysFlags, &sysname, OS9NAMELEN );
-      if (!ok ||  *volname==NUL)
-          sprintf( volname, "%c:", toupper(pathname[0]) );  
     #endif
     
     return ok;
@@ -1060,17 +958,10 @@ Boolean OpenTDir( const char* pathname, DIR** d )
       Boolean ok= false;
       
       #ifdef TFS_SUPPORT
-        #ifdef windows32
-          char volname[OS9NAMELEN];
-        #endif
         
              *d= (DIR*)opendir( pathname ); /* try to open */
         ok= (*d!=NULL);
 
-        #ifdef windows32
-          /* special handling for empty root directory */
-          if (!ok) ok= VolInfo( pathname, &volname );
-        #endif
       #endif
       
       return ok;
@@ -1106,19 +997,10 @@ Boolean PathFound( const char* pathname )
 Boolean FileFound( const char* pathname )
 /* Check if this entry is a file */
 {
-    #ifdef windows32
-    DWORD winerr;
-    #endif
     FILE*        f= fopen( pathname,"rb" ); /* try to open for read */
     Boolean ok= (f!=NULL);
     if     (ok) fclose( f ); /* don't use it any more */
 
-    #ifdef windows32
-      if (!ok) {
-        winerr=GetLastError();
-        if (winerr==ERROR_SHARING_VIOLATION) ok= true;
-      }
-    #endif
     
     debugprintf( dbgFiles,dbgNorm,("# FileFound %s '%s'\n", 
                                       ok ?" (ok)":"(err)", pathname ));
@@ -1229,9 +1111,6 @@ void EatBack( char* pathname )
             #endif
             case PSEP     : *p= NUL; eat--; eat0= eat;  searchP=  true; break;
             
-            #ifdef windows32
-              case ':'    : p++;     eat=      0;                       break;
-            #endif
             
             default       :          eat=   eat0;       searchP= false; break;
         } /* switch */
@@ -1240,15 +1119,9 @@ void EatBack( char* pathname )
         if (eat<=0) break;
     }
     
-    #ifdef windows32
-      if (*p==':') { *++p= PATHDELIM; *++p= NUL; }
-    #endif
           
     CutUp( pathname, Prev ); /* support also for RBF OS-9 paths */
     
-    #ifdef windows32
-      CutUp( pathname, PrevW );
-    #endif
 } /* EatBack */
 
 
@@ -1707,28 +1580,6 @@ int stat_( const char* pathname, struct stat *buf )
       /* do it the "normal" way */
       err= stat( pathname, buf );
 
-    #elif defined windows32
-      /* 'stat' at windows has a bug, it does not close correctly */
-      FILE* stream;
-      int   fd, cer;
-      
-      /* is it a file ?? */
-          stream= fopen( pathname,"rb" );
-      if (stream==NULL) {
-        if (GetLastError()==ERROR_SHARING_VIOLATION) 
-            err= stat( pathname, buf ); /* if error, try normal way */
-      }
-      else {
-          /* stat seems not to close correctly under Windows */
-          /* use fstat instead of stat */
-          fd = fileno( stream );
-          err= fstat ( fd,buf ); 
-          cer= fclose( stream ); if (err==0) err= cer; /* close always */
-      
-          /* is it a dir ? then try it the "normal" way */
-          if (err && PathFound( pathname ))
-              err=        stat( pathname, buf );
-      }
     #endif 
     
     return err;
@@ -2060,112 +1911,6 @@ Boolean SCSI_Device( const char* os9path,
 
 
 
-#ifdef windows32
-  static void StrReplace( char* dst, const char* src, const char* search, 
-                                                      const char* replace )
-  {
-    int  i= 0;
-    int  j= 0;
-    int  k;
-    char ch, v, w;
-    Boolean found, foundOK= false;
-    
-    while (true) {
-      ch= src[ i ]; if (ch=='\0') break;
-      
-      found= false; // <search> sequence ?
-      if (i==0 || src[ i-1 ]=='\\') { // start or separator
-        k= 0;
-        while (true) {
-          v= search[   k ]; 
-          w= src   [ i+k ];
-          
-          if (v=='\0') {
-            found= w=='\0' || 
-                   w=='.'  ||
-                   w=='\\'; // end or separator
-            break;
-          } // if
-          if (toupper( v )!=toupper( w )) break;
-          
-          k++;
-        } // loop
-      } // if
-      
-      if (found) {
-        i+= k; // skip <search> sequence
- 
-        k= 0; // insert <replace> sequence
-        while (true) {
-          v= replace[ k ]; 
-          
-          if (v=='\0') break;
-          dst[ j ]= v;          
-          
-          j++;
-          k++;
-        } // loop
-        
-        foundOK= true;
-      }
-      else {
-        dst[ j ]= ch;
-        
-        i++;
-        j++;
-      }
-    } // loop
-    
-    dst[ j ]= '\0';
-  //if (foundOK) upe_printf( "con src='%s' dst='%s'\n", src, dst );
-  } // StrReplace
-  
-  
-  
-  os9err AdjustPath( const char* pathname, char* adname, Boolean creFile )
-  /* do more or less nothing */
-  { 
-  //char* p;
-      
-    if ( *pathname==NUL ) return E_BPNAM;
-      
-    /* "con" is a problem in windows => convert it to ".con" */
-    StrReplace( adname, pathname, "CON", ".CON" );
-      
-    /*
-    strcpy( adname,pathname );
-    if (ustrcmp( adname,   "con" )==0) 
-        strcpy ( adname,  ".con" );
-      
-    p= adname + strlen( adname )-strlen( "\\con" );
-    if (ustrcmp( p,      "\\con" )==0) {
-        *p= NUL;
-        strcat ( adname,"\\.con" );
-    }
-    */
-      
-  //upe_printf( "%s\n", adname );
-    EatBack( adname );
-      
-    if (!creFile) { /* can't be here, if file not yet exists */
-      if (!FileFound( adname )) {
-        #ifdef windows32
-          if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-        #endif
-        
-        if (!PathFound( adname )) {
-          #ifdef windows32
-            if (GetLastError()==ERROR_NOT_READY) return os9error(E_NOTRDY);
-          #endif
-          
-          return E_PNNF;
-        } // if
-      } // if
-    } // if
-      
-    return 0;
-  } /* AdjustPath */
-#endif
 
 
 

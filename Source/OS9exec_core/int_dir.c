@@ -73,11 +73,7 @@
   {
       os9err err;
 
-      #ifdef windows32
-        /* using Window's command line shell to perform this task */
-        err= call_hostcmd( "dir", pid,argc-1,&argv[1] );
-
-      #elif defined linux
+      #if   defined linux
         err= call_hostcmd( "ls",  pid,argc-1,&argv[1] );
 
       #else

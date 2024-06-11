@@ -214,12 +214,6 @@
 //#endif
 
 
-#ifdef windows32
-  // #define PARTIALRETURNREGS /* returning 16/8-bit values only affects loword/lobyte of register */
-  // #define NODEBUG /* cause all debug statements to be omitted (but debugwait() still exists) */
-  #define WINFILES /* use Mac OS Fs-calls instead of C-level f-calls for File I/O */
-  #define WINMEM      /* use Mac Memory manager calls instead of C-level calloc()/free() */
-#endif
 
 #if defined __INTEL__ || defined UNIX
   #define TICKS_PER_SEC 100 /* Number of Ticks per sec (as reported by GetTickCount()) */
@@ -234,31 +228,6 @@
 #include <math.h>
 
 #ifdef win_unix
-  #ifdef windows32
-    #if __MWERKS__ < CW7_MWERKS
-      // we need the dirent port
-      #define _WIN32
-      #define  USE_DIRENT_PORT
-      #define  MSDIR_WIN32_INTERFACE
-      #include "msdir.h"
-    #else
-      // Note: the _WIN32 and WIN32_LEAN_AND_MEAN are required 
-      // or windows.h will generate errors
-      #define _WIN32
-      #define  WIN32_LEAN_AND_MEAN 
-      // just include windows.h, so we have all the windows stuff there
-      #include <windows.h>
-      // We need sockets, so include them here as well
-      #include <ws2spi.h>
-      // We need printing support
-      #include <winspool.h>
-      
-      #if __MWERKS__ >= CW8_MWERKS
-        #include <dirent.h>
-      #endif
-    #endif
-
-  #else
   //#define  MAX_PATH 1024
     
     #ifndef __MACH__
@@ -271,7 +240,6 @@
     #ifndef __MACH__
       #include <unistd.h>
     #endif
-  #endif
 #endif
 
 typedef struct dirent dirent_typ;

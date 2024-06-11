@@ -96,9 +96,6 @@ os9err int_rename( ushort pid, int argc, char **argv );
 os9err int_move  ( ushort pid, int argc, char **argv );
 os9err int_help  ( ushort pid, int argc, char **argv );
 
-#ifdef windows32
-os9err int_wincmd( ushort pid, int argc, char **argv );
-#endif
 
 /* Native program handling */
 Boolean Native_Possible( Boolean hardCheck );

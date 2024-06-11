@@ -151,10 +151,6 @@
 
 /* specific network definitions */
 
-#ifdef windows32
-  #include <WinSock2.h>
-  #define WSA_ASYNC WM_USER+1
-#endif
 
 #ifdef UNIX
   #include <sys/utsname.h>
@@ -366,11 +362,6 @@ typedef struct _iphdr
 
 
 
-#ifdef windows32
-int ioctl( IN SOCKET s, IN long cmd, IN OUT u_long FAR * argp ) {
-  return ioctlsocket( s,cmd, argp );
-}
-#endif
 
 
 static void SetDefaultEndpointModes( SOCKET s )
@@ -464,12 +455,7 @@ os9err pNclose( _pid_, syspath_typ* spP )
  // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound, 
  //                                            net->accepted, net->ep );       
     if (net->bound && net->ep!=nil) {
-       #if   defined windows32
-       // err= shutdown   ( net->ep, SD_SEND );
-          err= closesocket( net->ep ); 
-          release_mem     ( net->transferBuffer );
-         
-        #elif defined UNIX
+        #if   defined UNIX
        // err= shutdown( net->ep, SHUT_RDWR );
           err= close   ( net->ep );
           release_mem  ( net->transferBuffer );
@@ -656,22 +642,12 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
           else break;
 
         #elif defined win_unix
-          #ifdef windows32
-            if (net->ipAddress.fAddressType==0)  /* Windows needs AF_INET info ! */
-                net->ipAddress.fAddressType= os9_word(AF_INET);
-          #endif
           
           name.sin_family     = os9_word(net->ipAddress.fAddressType); 
           name.sin_port       = os9_word(fPort);
           name.sin_addr.s_addr=          net->ipAddress.fHost;  /* my own address */
         
           err= bind( net->ep, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
-          #ifdef windows32
-            if     (err) {
-                    err= WSAGetLastError();
-                if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
-            }
-          #endif
           
         // upe_printf( "bind %d %d: %d %d %x\n", err, net->ls, 
         //                                           name.sin_family,
@@ -696,18 +672,12 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
             else fPort++;
         }
 
-        #ifdef windows32
-          if (fPort>=ALLOC_PORT &&
-              fPort< 9900) net->ipAddress.fAddressType= 0;
-        #endif
     } /* loop */
     
     #if defined powerc && !defined MACOSX   
       if (err==kEADDRNOTAVAILErr) return OS9_ENETUNREACH;
       if (err==kEACCESErr)        return E_PERMIT;
       if (err)                    return OS9_EADDRINUSE;
-    #elif defined windows32
-      SetDefaultEndpointModes(net->ep);
     #endif
     
     net->bound= true;
@@ -748,13 +718,6 @@ os9err pNlisten( ushort pid, syspath_typ* spP )
     #elif defined win_unix
       err= listen( net->ep, SOMAXCONN );
       
-      #ifdef windows32
-        if (!err) {
-             net->hEventObj= WSACreateEvent();
-             err= WSAEventSelect( net->ep, net->hEventObj, 
-                             FD_ACCEPT|FD_READ|FD_WRITE|FD_CLOSE );
-        }
-      #endif
     #endif
 
     if (err) {
@@ -865,25 +828,11 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
       err= connect( net->ep, (__CONST_SOCKADDR_ARG)&name,sizeof(name) );
 
 
-      #ifdef windows32
-        if  (err) {
-                err= WSAGetLastError();
-            if (err==WSAEWOULDBLOCK) err= 0; /* this is not an error */
-        } /* if */
-
-        if (!err) {
-            net->hEventObj= WSACreateEvent(); // create it only once
-            err= WSAEventSelect( net->ep, net->hEventObj, 
-                                 FD_CONNECT|FD_READ|FD_WRITE|FD_CLOSE );
-        } /* if */
-        
-      #else // linux
         if  (err && cp->wTimeOut>0) {
             cp->saved_state= cp->state;
             cp->state=       pWaitRead;
             return E_NOTRDY;
          } /* if */
-      #endif
     #endif
 
     debugprintf(dbgSpecialIO,dbgNorm, ( "connect err=%d %d: %d %d %x\n", 
@@ -949,10 +898,6 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     path= procs[ pid ].usrpaths[ up ]; /* this is the new syspath var */
     spN = get_syspath( pid,path );
 
-    #ifdef windows32
-      WSACloseEvent( net->hEventObj );
-      net->hEventObj= nil;
-    #endif
     
     memcpy( &spN->u.net, net, sizeof(net_typ) );            /* don't forget to inherit */
     net=    &spN->u.net;                            /* take the new struct from now on */
@@ -1028,8 +973,6 @@ os9err pNGNam( _pid_, syspath_typ* spP, ulong* d1, ulong* d2, byte* ispP )
   	c= (char*)ispP; /* type casting */
     #ifdef powerc
       strcpy( c,"bfomac" );
-    #elif defined windows32
-      strcpy( c,"bfowin" );
     #elif defined linux
       strcpy( c,"bfolinux" );
     #else

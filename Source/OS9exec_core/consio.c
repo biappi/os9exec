@@ -332,12 +332,7 @@ Boolean ConsGetc( char* c )
       return (n>0) && devIsReady;
     } // if
 
-    #if defined windows32
-      HandleEvent();
-      n= ReadCharsFromTerminal( c,1, &main_mco );
-      return (n>0) && devIsReady;
-    
-    #elif defined MACOSX
+    #if   defined MACOSX
       n= getchar(); // problems with fread
            devIsReady= (n!=-1);
       if (!devIsReady) return false;
