@@ -248,12 +248,6 @@ typedef struct dirent dirent_typ;
   #define  NULL 0L
   #include <stddef.h>
   
-  #ifdef __MWERKS__
-    #include <stdio.h>
-	#include <mw_stdarg.h>    // N.B. Not cdstarg!
-  //#include <cstdio>
-    #include <stat.h>
-  #endif
 #endif
 
 #ifndef UNIX
