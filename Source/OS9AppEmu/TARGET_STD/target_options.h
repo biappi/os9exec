@@ -37,21 +37,6 @@
 
 
 // Mac (4 different versions)
-#ifdef macintosh
-  #define REUSE_MEM          // do not deallocate memory after use
-//#define PRINTER_SUPPORT    // LPT printers
-
-  
-  #ifdef MACOSX
-    #define NATIVE_SUPPORT   // allows native DLLs
-    
-    #ifdef __GNUC__          // XCode (universal binaries)
-    //
-    #else                    // CW Mach
-    //
-    #endif
-  #endif
-#endif
 
 // Windows
 

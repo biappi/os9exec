@@ -982,10 +982,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
             }
             
                         
-            #ifdef macintosh
-            /* 3: Look for an MPW tool with that name and look if it contains an appropriate OS9C */
-            /* %%% to be implemented */
-            #endif
         }
 
         if (linkstyle && modBase!=NULL) {

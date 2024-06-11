@@ -813,33 +813,7 @@ static void cleanup(void)
 /* and this will be done earlier now */
 void get_hw()
 {
-  #ifdef macintosh
-    hw_site= "Mac";
-     
-    #ifdef __INTEL__
-      hw_name = "IntelMac XCode"; 
-      platform= "x86";
-    #else
-      #ifndef powerc
-        hw_name = "Apple Macintosh";
-        platform= "68k";
-      #else
-        platform= "ppc";
-        
-        #if   defined MACOSX
-          #ifdef __GNUC__ 
-            hw_name= "PowerMac XCode";
-          #else
-            hw_name= "PowerMac CW Mach";
-          #endif
-          
-        #else
-          hw_name= "PowerMac ???";    
-        #endif
-      #endif
-    #endif
-      
-  #elif defined linux
+  #if   defined linux
     hw_site= "PC";
 	hw_name= "Linux - PC";   platform= "x86";
        
@@ -1390,10 +1364,7 @@ static void titles( void )
    upho_printf( "Platform: '%s' (%s)\n", hw_name, platform );
    
    #ifdef TERMINAL_CONSOLE
-     #ifdef macintosh
-       
-       
-     #elif defined linux
+     #if   defined linux
        upho_printf("- Linux XTerm Version\n");
      #else
        upho_printf("- Unknown System\n"); /* unknown */

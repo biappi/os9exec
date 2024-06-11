@@ -712,12 +712,7 @@ os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
           fflush(spP->stream); /* unbuffer everything */
           fildes= fileno( spP->stream );
 
-          #ifdef macintosh
-            return c2os9err(errno,E_SEEK); /* %%% FIOSETEOF is not available in MSL on Mac: use MACFILES-Version normally !! */
-            /* if (ioctl(fildes, FIOSETEOF, (long *) (*sizeP))<0) return c2os9err(errno,E_SEEK); */
-          #else
             return c2os9err(errno,E_SEEK); /* %%% FIOSETEOF is not available in MSL !! */
-          #endif
 
           if (fseek(spP->stream, (long int) *posP, SEEK_SET)!=0) return c2os9err(errno,E_SEEK);
       } 

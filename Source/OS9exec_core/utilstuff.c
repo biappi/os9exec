@@ -938,11 +938,7 @@ Boolean VolInfo( const char* pathname, char* volname )
 {
     Boolean ok= true;
 
-    #ifdef macintosh
-      #pragma unused(pathname)
-      strcpy( volname,"" );
-      
-    #elif defined linux
+    #if   defined linux
       strcpy( volname,"/" );
 
     #endif

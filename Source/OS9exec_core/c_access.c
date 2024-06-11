@@ -73,11 +73,6 @@
 
 
 // Don't import all other things ...
-#if defined macintosh && !defined __MACH__
-  #define MACOS9
-  #include <ToolUtils.h>
-  #include <Resources.h>
-#endif
 
 #include "c_access.h"
 

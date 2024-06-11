@@ -1007,10 +1007,6 @@ typedef struct {
             ulong     lsn;              /* RBF: current lsn */
             char      path[OS9PATHLEN]; /* current dir path */
                                 
-            #ifdef macintosh
-              short volID;              /* current dir's volume id */
-              long  dirID;              /* current dir's directory id */
-            #endif
         } dir_type;
 
 

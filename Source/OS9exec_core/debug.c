@@ -749,13 +749,8 @@ ushort debugwait( void )
             case 'j' : if (sscanf(&inp[1],"%d", &justthis_pid)<1) { justthis_pid= 0; }; break;
             
             default  : 
-                          #ifdef macintosh
-                            upe_printf("[X]extra-[G]o, [T]continue in debugger (mac context), [K[xx]] Kill process [xx], [Q]uit emulation\n");
-                            upe_printf("[B[xx|B]] Call MacsBug with OS9 regs [of pid=xx]/[B] directly, [R[xx]] Regs [of pid=xx]\n");
-                          #else
                             upe_printf("[X]tra-[G]o, [K[xx]] Kill proc[xx], [Q]uit emulation\n");
                             upe_printf("[R[U][xx]] Regs[of pid=xx][of UAE]\n");
-                          #endif
 
                           upe_printf("[L[xxx]] list 8 memory lines from xxx, default=A7, [.] continue list/disasm\n");
 

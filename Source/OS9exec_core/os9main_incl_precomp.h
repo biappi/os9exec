@@ -137,9 +137,7 @@
 /* WINTEL can't be separated :-) */
 #ifdef __INTEL__
   // except for the "bright future"
-  #ifndef macintosh
     #define windows32
-  #endif
 #endif
 
 /* Support only for Linux on PC */
@@ -177,11 +175,6 @@
 
 /* define a special label for 68k/MacOS9/Carbon software */
 /* which is not compiled for the MACH kernel */
-#if defined macintosh && !defined MACOSX
-  #define MACOS9
-  
-    #define USE_CLASSIC
-#endif
 
 
 // ----------------------------------------------------------------------------
@@ -263,16 +256,6 @@ typedef struct dirent dirent_typ;
     #include <Time.h>
     #include <String.h>
 
-    #ifdef macintosh
-      #include <Strings.h>
-      #include "FCntl.h"
-      
-      
-      #ifdef NET_SUPPORT
-        #include <OpenTransport.h>
-        #include <OpenTptInternet.h>
-      #endif
-    #endif
 
   #include <Signal.h>
 #endif

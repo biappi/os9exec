@@ -291,11 +291,7 @@ char* egetenv( const char* name )
 /* advance cursor and force time slicing */
 void eAdvanceCursor(void)
 {
-    #if   defined macintosh
-      #ifndef __INTEL__
-      //RotateCursor(3*32); /* will rotate now */
-      #endif
-    #elif defined win_linux
+    #if   defined win_linux
       // sleep(1);
       
     #else
@@ -311,9 +307,6 @@ void eSpinCursor (short incr)
       #if defined MACOSX
         // sleep(1);
          
-      #elif defined macintosh
-        SpinCursor(incr);
-        
       #elif defined linux
         // sleep(1);
         

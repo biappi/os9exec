@@ -434,20 +434,12 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                 cp->d.lsn  = pap->d.lsn;
                 strncpy( cp->d.path, pap->d.path, OS9PATHLEN );
             
-                #ifdef macintosh
-                  cp->d.volID= pap->d.volID; 
-                  cp->d.dirID= pap->d.dirID;
-                #endif
             
                 cp->x.type = pap->x.type;
                 cp->x.dev  = pap->x.dev; 
                 cp->x.lsn  = pap->x.lsn;
                 strncpy( cp->x.path, pap->x.path, OS9PATHLEN );
             
-                #ifdef macintosh
-                  cp->x.volID= pap->x.volID; 
-                  cp->x.dirID= pap->x.dirID;
-                #endif
             
                 if (parentid>0 &&
                     parentid<MAXPROCESSES) {
