@@ -221,15 +221,6 @@ char *icmname; /* current internal command's name = argv[0] */
 
 
 // ---------------------------------------------------------------------
-#ifdef MACOS9
-  static os9err int_debugger( _pid_, _argc_, _argv_ )
-  /* internal debugger command */
-  {
-      uphe_printf("debugger internal command calls Mac OS debugger\n");
-      DebugStr("\pDebugger entered from OS9exec/NT's debugger command");
-      return 0;
-  } /* int_debugger */
-#endif
 
 
 
@@ -1584,9 +1575,6 @@ cmdtable_typ commandtable[] =
   { "iquit",         int_quit,       "sets flag to quit directly" },
   { "dch/diskcache", int_ignored,    "simply ignored, because not supported by OS9exec" },
 
-  #ifdef MACOS9
-  { "debugger",      int_debugger,  "directly calls Mac OS debugger" },
-  #endif
 
   #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   { "ion",           int_on,         "Switch on     native utilities (default)" },

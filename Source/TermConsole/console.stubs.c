@@ -69,9 +69,6 @@ static void InitConsoles()
     ttydev_typ* mco;
     int         k;
     
-    #ifdef MACOS9
-      int h;
-    #endif
 
     
     for (k=0; k<MAX_CONSOLE; k++) {
@@ -82,12 +79,6 @@ static void InitConsoles()
       mco->holdScreen     = false;
       mco->spP            = NULL;
         
-      #ifdef MACOS9
-        mco->pict_tot     = 0;
-        
-        for (h=0; h<MAX_PICTS; h++) 
-          mco->pict_hdl[h]=  NULL;
-      #endif
     }
 } /* InitConsoles */
 
@@ -104,10 +95,6 @@ int                 gCnt              = 0;
 short               gConsoleNLExpand  = true;
 char                gTitle[OS9NAMELEN];         /* title for   /vmod output */
 
-#ifdef MACOS9
-  Rect*             gRect             = NULL;   /* window size /vmod output */
-  FSSpec            gFS;                        /* FSSpec, if called via file */
-#endif
 
 int                 gLastwritten_pid  = 0;      /* last written character's process */
 int                 gConsoleID        = 0;      /* global console ID */
@@ -142,11 +129,6 @@ void DoMenuCommand(long menuResult);
 void HandleKey( char key );
 void EventLoop();
 
-#ifdef MACOS9
-  void DoUpdate(WindowPtr window);
-  void DoEvent       ( EventRecord*  event );
-  int  HandleOneEvent( EventRecord* pEvent, int consoleSleep );
-#endif
 
 short      InstallConsole( short fd );
 void        RemoveConsole( void );

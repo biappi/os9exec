@@ -73,9 +73,6 @@
   extern  short      gConsoleNLExpand;
   extern  char       gTitle[OS9NAMELEN];
   
-  #ifdef MACOS9
-    extern Rect*     gRect;
-  #endif
 #endif
 
 extern  int          gLastwritten_pid;
@@ -102,19 +99,6 @@ extern  ulong        gNetLast;
     extern ttydev_typ main_mco;
   #endif
    
-  #ifdef MACOS9
-    extern Boolean gDocDone; /* synchronisation for <gFS> callback */
-    extern FSSpec  gFS;
-    
-    extern void    Install_AppleEvents( void );
-    extern int     HandleOneEvent     ( EventRecord* pEvent, int consoleSleep );
-    extern long    WriteCharsToConsole( char *buffer, long n );
-    extern ulong   SysPathWindow      ( syspath_typ* );
-    extern ulong   CurrentWindow      ( void );
-    extern void    UpdatePrms         ( ulong  wPtr,   ulong  wStore, ulong wSize, 
-                                        ushort wIndex, ushort wTot );
-    extern void    RemoveConsole      ( void );
-  #endif
     
   extern   Boolean KeyToBuffer        ( ttydev_typ *mco, char key );
   extern   Boolean DevReady           ( long *count );

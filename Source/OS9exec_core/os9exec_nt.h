@@ -302,11 +302,7 @@
 
 /* activate linked hash table */
 //#if !defined MACOS9 && !defined windows32
-#if defined MACOS9 && !defined powerc
-  #undef  LINKED_HASH
-#else
   #define LINKED_HASH 1
-#endif
 
 #ifdef THREAD_SUPPORT
   #include <types.h>
@@ -418,15 +414,11 @@
 #define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
 
 /* number of dirs */
-#if defined MACOS9 && !defined powerc
-  #define MAXDIRS     10000
-#else
   #ifdef LINKED_HASH
     #define MAXDIRS   16384
   #else
     #define MAXDIRS   65536
   #endif
-#endif
 
 #define MAXDIRHIT        60
 
@@ -463,9 +455,6 @@ typedef struct {
   memblock_typ m[ MAXMEMBLOCKS ]; // the process' allocated memory blocks
 } pmem_typ;
 
-#if defined MACOS9 && defined powerc
-  #define PENDING_MAX 100
-#endif
 // 
 
 
@@ -512,10 +501,7 @@ typedef struct {
 #define   PSEP_STR      "/"
 
 /* for the host system */
-#if defined MACOS9
-  #define PATHDELIM     ':'
-  #define PATHDELIM_STR ":"
-#elif defined windows32
+#if   defined windows32
   #define PATHDELIM     '\\'
   #define PATHDELIM_STR "\\"
 #elif defined UNIX
@@ -756,9 +742,6 @@ typedef struct {
 
 /* variant for disk objects */
 typedef struct {
-            #ifdef MACOS9
-              FSSpec spec;              /* the HFS object's FSSpec */
-            #endif
 
             union {
                 file_typ file;          /* disk file */
@@ -803,9 +786,6 @@ typedef struct {
         
         
 #ifdef NET_SUPPORT
-  #ifdef MACOS9
-    typedef EndpointRef SOCKET;  /* make it a common type for all platforms */
-  #else
     #if defined UNIX
       typedef ulong     SOCKET;  /* make it visible for linux as std type */
     #endif
@@ -823,7 +803,6 @@ typedef struct {
     };
 
     typedef struct InetAddress InetAddress;
-  #endif
 
 
   #ifdef UNIX
@@ -844,9 +823,6 @@ typedef struct {
               InetAddress ipRemote;       /* the remote host's address */
               ushort      fAddT;
                 
-              #ifdef MACOS9
-                TCall     call;
-              #endif
             
               #ifdef windows32
                 WSAEVENT  hEventObj;
@@ -1087,11 +1063,6 @@ typedef struct {
             ushort       pid;
             syspath_typ* spP;
         
-            #ifdef MACOS9
-              char       pict_title[OS9NAMELEN]; /* vmod window stores this info */
-              PicHandle  pict_hdl   [MAX_PICTS];
-              ushort     pict_tot;
-            #endif
         } ttydev_typ;
 
 
@@ -1270,9 +1241,6 @@ typedef struct {
   char* ident;
   long  dirid;
   
-  #ifdef MACOS9
-  char* fName;
-  #endif
   
   #ifdef LINKED_HASH
   void* next;
@@ -1282,14 +1250,6 @@ typedef struct {
 extern dirtable_entry dirtable[MAXDIRS];
 extern int            hittable[MAXDIRHIT];
 
-#if defined MACOS9 && defined powerc && !defined MPW
-  typedef struct {
-    FSRef   newRef;
-    Boolean toBeDeleted;
-  } pending_typ;
-  
-  extern pending_typ dPending[ PENDING_MAX ];
-#endif
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
   /* the include/exclude list for internal commands */
@@ -1342,21 +1302,8 @@ extern char     startPath[OS9PATHLEN]; /* start path */
 extern char     strtUPath[OS9PATHLEN]; /* next higher than start path */
 extern dir_type mdir;                  /* current module dir */
 
-#ifdef MACOS9
-  /* the MPW-level default directory */
-  extern short    startVolID;	          // startup dir's volume    id
-  extern long     startDirID;	          // startup dir's directory id
-  extern char     callPath[OS9PATHLEN];
-  
-  extern short    applVolID;	          // app's   dir's volume    id
-  extern long     applDirID;	          // app's   dir's directory id
-  extern char     applName[OS9PATHLEN];
-  extern int      geCnt;
- 
-#else
   /* the default module load directory OS9MDIR */
   extern    char   mdirPath[MAX_PATH];    /* current mdir path */
-#endif
 
 
 /* stdin and out for console */

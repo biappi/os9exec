@@ -368,13 +368,7 @@ static void disp_line( ushort pid, ushort sp, char* ups, syspath_typ* spP,
 
         default:
             if (fsspecflag) {               
-                #ifdef MACOS9
-                  upo_printf(" %8d %3d",spP->u.disk.spec.parID, /* path has FSSpec to show */
-                                        spP->u.disk.spec.vRefNum );
-                  memcpy( &theName,     spP->u.disk.spec.name, OS9NAMELEN );
-                  p2cstr(  theName );
-      
-                #elif defined UNIX
+                #if   defined UNIX
                   upo_printf(" %12X",My_FD( spP->fullName ) ); /* path has fd sector to show */
 
                 #else
@@ -575,18 +569,10 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     process_typ* cp= &procs[pid];
     int          k;
 
-    #ifdef MACOS9
-      OSErr     oserr;
-      dir_type* r;
-      char*     ptx;
-      char      c;
-      
-    #else
       char*   defDir_s;
       Boolean absolute;
       Boolean addIt;
       char    vv[OS9PATHLEN];
-    #endif
 
 
     if (debugcheck(dbgFiles,dbgNorm)) {
@@ -594,153 +580,6 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
         uphe_printf("parsepathext  Input: '%s'\n", tmp );
     }
 
-    #ifdef MACOS9
-    /* --- first set the process' default dir */
-    if (exedir) { r= &cp->x; ptx= "exec"; c= 'x'; }
-    else        { r= &cp->d; ptx= "data"; c= 'd'; }
-                
-    debugprintf(dbgFiles,dbgNorm,("# parsepathext(%s): pid=%d, %c.volID=%d, %c.dirID=%ld\n",
-              ptx, pid, c,r->volID, c,r->dirID ));                                      
-    oserr= HSetVol( NULL, r->volID,   r->dirID ); if (oserr) return host2os9err(oserr,E_BPNAM);
-
-    /* --- now analyze the path */
-    op= pathbuf; /* intermediate buffer */
-    p = *inp;
-    trigcheck("parsepathext (full path)",p);
-    firstElem=  true;
-    *ispath  = false;
-
-    if (*p!='/') {
-        /* --- It is a file/modulename or a relative OS-9 pathlist: check which one */
-        while   (*p>' ') {
-            if  (*p == '{') *ispath= true; /* if a substitution occurs, this counts as a path, not a module */
-            if  (*p++ == '/') {
-                *op++ = ':'; /* if there are slashes, this is a relative pathlist */
-                *ispath= true;
-                break;
-            }
-        }
-        
-        p= *inp;
-        firstElemChar=true; /* next char is first char of element */
-    }
-    else {
-        /* --- absolute pathlist */
-        *ispath      = true;
-        firstElemChar= false; /* parent dirs of absolute paths (devices) are not allowed */
-        p++; /* skip slash at beginning */
-        
-        /* --- check for special device translation */
-        p3= NULL; /* no substitution found yet */
-        if ((*(p+2)=='/') || (*(p+2)<=' ')) {
-            /* --- two-char device name */
-            TwoCharDev( p,&p3, (char*)&tmp );
-            if (p3!=NULL) {
-                /* --- "/dd" or "/hx" is always relative to the startup directory */
-                HSetVol(NULL,startVolID,startDirID);
-            
-                /* --- replace /dd or /hx by OS9DISK environment variable if it is defined */
-                while (*p3!=NUL) *op++= *p3++;
-                
-                     p+= 2;       /* skip "dd" "hx" part */
-                if (*p=='/') p++; /* skip slash, too, if pathlist continues */
-                firstElem= false; /* after substitution, don't count this as "first" elem any more */
-            }
-        }  
-    }
-
-    #ifdef MPW
-      /* avoid problems in MPW version */
-      if (op>pathbuf && *p!='/') {
-          op--; if (*op!=PATHDELIM) *++op= PATHDELIM;
-          op++;
-      }
-    #endif
-    
-    *op= NUL; /* make it readeable */
-    debugprintf(dbgFiles,dbgNorm,("# pathbuf '%s' '%s'\n", pathbuf, p ));
-    
-    while (*p>' ') {
-        /* check for shell variable substitution */
-        if (*p == '{') {
-            p2=strchr(++p,'}'); /* search matching bracket */
-            if (p2==0) *op++='{';
-        else {
-            *p2=0; /* terminate variable name */
-            p3= egetenv( p ); /* get substitution */
-            debugprintf(dbgFiles,dbgNorm,("# parsepathext: Substituting {%s} by %s\n",p,p3==0 ? "<nothing>" : p3));
-            if (p3!=0) {
-               strcpy(op,p3);
-               op+=strlen(p3);
-            }
-            p=p2+1; /* continue copying behind closing } */
-         }  
-      }
-      else {
-         /* check for current and parent directories */
-         if (firstElemChar) {
-                trigcheck("parsepathext (path element)",p);
-            firstElemChar=false; /* not any more */
-            k=0; p3=p;
-            while (*p3=='.') { k++; p3++; } /* count consecutive periods */
-            if ((*p3=='/') || (*p3<=' ')) {
-               /* path element consists of periods only */
-               if (*p3=='/') {
-                        /* path continues */
-                        p=p3+1;
-                        firstElemChar=true; /* it's the first char of the next element! */
-                        firstElem=false; /* we need no more additional colons */
-                while (k-- > 1) *op++=':'; /* for each period more than 1 append one colon */
-                        continue; /* check next char */
-                    }
-               else {
-                  p=p3;
-                  if (firstElem) *op++=':'; /* first element is last and consists of periods only: this is a relative dir pathlist */
-                while (k-- > 1) *op++=':'; /* for each period more than 1 append one colon */
-               }
-            }
-                else {
-                    /* path element begins with a "." but has other chars in it */
-                    if (fetchnames) {
-                        /* Fetch FTP replaces periods at filename beginnings with a slash */
-                        if (*p == '.') {
-                            *op++='/';
-                            *p++;
-                            continue; /* next char, please */
-                        }
-                    }
-                }
-         }  
-         /* normal copy */
-         if (*p == '/') {
-            *op=':';
-            firstElem=false; /* not first element any more */
-            firstElemChar=true; /* next character is first of an element */
-         } 
-            else {
-                *op=*p;
-            }
-         p++; op++;
-      }  
-    }
-
-    /* check for special volume name case like "/vol" which must translate to "vol:" (but now is just "vol") */
-    if (firstElem && *ispath) {
-    debugprintf(dbgFiles,dbgDetail,("# parsepathext: found '/vol'-type spec, appending colon\n"));
-        /* if first element alone qualifies as a path, this is a "/vol"-type specification */
-        *op++=':'; /* make valid mac volume spec */
-    }
-    
-    *op = 0; /* set terminator */
-    *inp= p; /* return updated pointer */
-    debugprintf(dbgFiles,dbgDetail,("# parsepathext: path before alias resolution: '%s'\n",pathbuf));
-
-    /* remember for error tracebacks */
-    lastpathparsed= pathbuf;
-    strncpy(out,pathbuf,OS9PATHLEN);
-
-
-    #else
     /* NOT MACINOTSH */
     /* --- first set the process' default dir string */
     if (exedir) defDir_s= cp->x.path;
@@ -934,7 +773,6 @@ os9err parsepathext( ushort pid, char **inp, char *out, Boolean exedir, Boolean 
     #ifdef windows32
       EatBack( out );
     #endif
-    #endif /* Windows/Unix */
 
     /* show result */
     debugprintf( dbgFiles,dbgNorm,("# parsepathext Output: '%s'\n",out) );

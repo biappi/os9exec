@@ -224,10 +224,6 @@ char* egetenv( const char* name )
       /* getenv for use under MPW and for PC/Linux version */
       rslt= getenv( name );
       
-      #ifdef MACOS9
-        strcpy( tmp,rslt ); /* make a local copy !! */
-        rslt=   tmp;
-      #endif
 
       #ifdef win_unix
         u_disk= (ustrcmp( name,"OS9DISK")==0);

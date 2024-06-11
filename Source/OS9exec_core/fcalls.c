@@ -532,9 +532,6 @@ os9err OS9_F_STime( regs_type *rp, ushort cpid )
     
   secs+= SecsPerDay*days;
     
-  #ifdef MACOS9
-    SetDateTime( secs );
-  #endif
     
   return 0;
 } /* OS9_F_STime */

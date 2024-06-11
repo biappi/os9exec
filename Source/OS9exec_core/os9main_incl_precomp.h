@@ -205,29 +205,6 @@
 #define CW7_MWERKS 0x2405 // V 2.4.5 = CW Pro 7
 #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
 
-#ifdef MACOS9
-  /* global feature switches */
-  // #define PARTIALRETURNREGS /* returning 16/8-bit values only affects loword/lobyte of register */
-  // #define NODEBUG /* cause all debug statements to be omitted (but debugwait() still exists) */
-  #define MACFILES /* use Mac OS Fs-calls instead of C-level f-calls for File I/O */
-  #define MACMEM      /* use Mac Memory manager calls instead of C-level calloc()/free() */
-
-  #ifdef TERMINAL_CONSOLE
-    #define MACTERMINAL /* often used in this combination */
-  #endif
-
-  #define TRAPAVAIL_UNAVAILABLE
-
-  // #define MPW_FILTERS                /* uses filters for output of compilers */
-
-  #ifdef MPW
-    /* global pragmas */
-    /* for OS9app, mpwc_newline must be off due to SIOUX-compat, so it's only */
-    // set on the command line when compiling as MPW tool from now on.
-    // #pragma mpwc_newline on
-    #pragma fourbyteints on
-  #endif
-#endif
 
 /* these platforms are supported to use TCP/IP sockets */
 //#ifdef NET_SUPPORT
@@ -248,25 +225,11 @@
   #define TICKS_PER_SEC 100 /* Number of Ticks per sec (as reported by GetTickCount()) */
 #endif
 
-#ifdef MACOS9
-  #if __MWERKS__ >= CW7_MWERKS
-    #define TICKS_PER_SEC 60 /* CLOCKS_PER_SEC seems to buggy in CW7 */
-  #else
-    #define TICKS_PER_SEC CLOCKS_PER_SEC
-  #endif 
-#endif
 
 
 /* platform includes for all project modules */
 /* ========================================= */
 
-#ifdef MACOS9
-  /* make sure apple extensions are enabled */
-  #define __useAppleExts__ 1
-  #define __xlC__ 1
-  
-  typedef int DIR; /* just dummy definitions */
-#endif
 
 #include <math.h>
 
@@ -364,26 +327,6 @@ typedef struct dirent dirent_typ;
 /* setjmp/longjmp support */
 #include <setjmp.h>
 
-#ifdef MACOS9
-  #ifdef MPW
-    /* MPW include files */
-    #pragma push
-    #pragma align=mac68k
-    #pragma d0_pointers on
-    #pragma enumsalwaysint on
-
-    #pragma mpwc on
-    #include <CursorCtl.h>
-    #include <ErrMgr.h>
-    #pragma pop
-  #endif
-
-  #include <Memory.h>
-  #include <Resources.h>
-  #include <Errors.h>
-  #include <Script.h> /* required for smSystemScript */
-  #include <DriverServices.h>
-#endif
 
 
 // define type shortcuts

@@ -150,10 +150,6 @@
 
 
 /* specific network definitions */
-#ifdef MACOS9
-    #include <OTDebug.h>
-    #include <Threads.h>
-#endif
 
 #ifdef windows32
   #include <WinSock2.h>
@@ -361,85 +357,12 @@ typedef struct _iphdr
 
 
 
-#if defined MACOS9 && __MWERKS__ >= CW7_MWERKS
-static OSStatus DoNegotiateIPReuseAddrOption(EndpointRef ep, Boolean enableReuseIPMode)
-/* Input: ep - endpointref on which to negotiate the option
-   enableReuseIPMode - desired option setting - true/false
-   Return: kOTNoError indicates that the option was successfully negotiated
-      OSStatus is an error if < 0, otherwise, the status field is
-      returned and is > 0.
-    
-    IMPORTANT NOTE: The endpoint is assumed to be in synchronous more, otherwise
-      this code will not function as desired
-*/
-{
-	UInt8  buf[kOTFourByteOptionSize]; // define buffer for fourByte Option size
-	TOption* opt;      // option ptr to make items easier to access
-	TOptMgmt req;
-	TOptMgmt ret;
-	OSStatus err;
- 
-	if (!OTIsSynchronous(ep)) return -1;
-
-	opt= (TOption*)buf;     // set option ptr to buffer
-	req.opt.buf = buf;
-	req.opt.len = sizeof(buf);
-	req.flags = T_NEGOTIATE;    // negotiate for option
-
-	ret.opt.buf = buf;
-	ret.opt.maxlen = kOTFourByteOptionSize;
-
-	opt->level = INET_IP;     // dealing with an IP Level function
-	opt->name = kIP_REUSEADDR;
-	opt->len = kOTFourByteOptionSize;
-	opt->status = 0;
-	*(UInt32*)opt->value = enableReuseIPMode;  // set the desired option level, true or false
-
-	err= OTOptionManagement(ep, &req, &ret);
- 
-	// if no error then return the option status value
-	if (err==kOTNoError)
-	{
-  		if (opt->status != T_SUCCESS)
-   			err= opt->status;
-  		else
-   			err= kOTNoError;
- 	}
-    
-	return err;
-} /* DoNegotiateIPReuseAddrOption */
-#endif
 
 
 
 
 
 
-#ifdef MACOS9
-static pascal void YieldingNotifier( void* /* contextPtr */, OTEventCode code, 
-                                     OTResult /* result */, void* /* cookie */ )
-// This simple notifier checks for kOTSyncIdleEvent and
-// when it gets one calls the Thread Manager routine
-// YieldToAnyThread.  Open Transport sends kOTSyncIdleEvent
-// whenever it's waiting for something, eg data to arrive
-// inside a sync/blocking OTRcv call.  In such cases, we
-// yield the processor to some other thread that might
-// be doing useful work.
-{
-    OSStatus junk;
-    
-    switch (code) {
-        case kOTSyncIdleEvent:
-            junk= YieldToAnyThread();
-            OTAssert("YieldingNotifier: YieldToAnyThread failed", junk == noErr);
-            
-            break;
-        default:
-            // do nothing
-            break;
-    } /* switch */
-}
-#endif
 
 
 
@@ -488,12 +411,7 @@ static void SetDefaultEndpointModes( SOCKET s )
 static os9err GetBuffers( net_typ* net )
 /* Get the transfer buffers for the net devices */
 {
-    #ifdef MACOS9
-      /* First allocate a buffer for storing the data as we read it. */
-          net->transferBuffer= OTAllocMem_( kTransferBufferSize );
-      if (net->transferBuffer==nil)  return E_NORAM;
-
-    #elif defined win_unix
+    #if   defined win_unix
           net->transferBuffer= get_mem( kTransferBufferSize );
       if (net->transferBuffer==NULL) return E_NORAM;
     #endif
@@ -546,19 +464,7 @@ os9err pNclose( _pid_, syspath_typ* spP )
  // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound, 
  //                                            net->accepted, net->ep );       
     if (net->bound && net->ep!=nil) {
-        #ifdef MACOS9
-          #ifdef powerc
-                      err= OTSndOrderlyDisconnect(net->ep);
-            if (!err) err= OTRcvOrderlyDisconnect(net->ep);
-        
-            OTUnbind       ( net->ep );
-            OTCloseProvider( net->ep );
-            OTFreeMem      ( net->transferBuffer );
-          #else
-            return E_UNKSVC; // not supported for Classic Mac, but compileable
-          #endif
-          
-       #elif defined windows32
+       #if   defined windows32
        // err= shutdown   ( net->ep, SD_SEND );
           err= closesocket( net->ep ); 
           release_mem     ( net->transferBuffer );
@@ -696,38 +602,6 @@ os9err pNwriteln( ushort pid, syspath_typ* spP, ulong *lenP, char* buffer )
 
 
 
-#ifdef MACOS9
-static os9err reUse( _pid_, syspath_typ *spP )
-{
-    net_typ* net= &spP->u.net;
-
-    UInt8       buf[kOTFourByteOptionSize]; // define buffer for fourByte Option size
-    TOption*    opt;                        // option ptr to make items easier to access
-    TOptMgmt    req;
-    TOptMgmt    ret;
-    OSStatus    err;
-
-    opt = (TOption*)buf;                      // set option ptr to buffer
-    req.opt.buf = buf;
-    req.opt.len = sizeof(buf);
-    req.flags   = T_NEGOTIATE;                // negotiate for option
-
-    ret.opt.buf = buf;
-    ret.opt.maxlen = kOTFourByteOptionSize;
-
-    opt->level  = INET_IP;                    // dealing with an IP Level function
-    opt->name   = IP_REUSEADDR;
-    opt->len    = kOTFourByteOptionSize;
-    opt->status = 0;
-    *(UInt32*)opt->value = true; // set the desired option level, true or false
-
-    err= OTOptionManagement( net->ep, &req, &ret );
-
-    // if no error then return the option status value
-    if    (err==kOTNoError && opt->status!=T_SUCCESS) err= opt->status;
-    return err;
-} /* reUse */
-#endif
 
 
 
@@ -738,15 +612,6 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
     ushort   fPort;
     #define  ALLOC_PORT 1025
     
-    #ifdef MACOS9
-      TEndpointInfo info;
-      TBind         bindReq;
-      char*         kN;
-      
-//    #if __MWERKS__ >= CW7_MWERKS
-//      OSStatus    junk;
-//    #endif
-    #endif
     
     #ifdef win_unix
       SOCKADDR_IN name;
@@ -761,17 +626,7 @@ os9err pNbind( _pid_, syspath_typ* spP, _d2_, byte *ispP )
                      net->ipAddress.fHost= os9_long( my_inetaddr );
     fPort= os9_word( net->ipAddress.fPort ); /* little/big endian change */
 
-    #ifdef MACOS9
-      if (net->listen) kN= "tilisten,tcp";
-      else             kN=  kTCPName;
-
-      net->ep= OTOpenEndpoint_( OTCreateConfiguration(kN), 0, &info, &err );                           
-      if (err) return E_FNA;
-      
-//    #if __MWERKS__ >= CW7_MWERKS
-//      junk= DoNegotiateIPReuseAddrOption( net->ls, true );
-//    #endif    
-    #elif defined win_unix
+    #if   defined win_unix
           net->ep= socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
       if (net->ep==INVALID_SOCKET) return E_FNA;
     #endif
@@ -923,11 +778,6 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
     ushort        fPort;
     Boolean       isRaw;
     
-    #ifdef MACOS9
-      TCall sndCall;
-      char* kN;
-      OTResult lookResult;
-    #endif
     
     #ifdef win_unix
       int          af, ty, proto; 
@@ -957,28 +807,7 @@ os9err pNconnect( ushort pid, syspath_typ* spP, _d2_, byte *ispP)
         net->ipRemote.fAddressType= net->fAddT;
     }
     else {
-        #ifdef MACOS9
-          if (isRaw) kN= kRawIPName;
-          else       kN= kTCPName;
-        
-     //   if (isRaw) {
-     //       id= geteuid();        // printf( "%d\n",     id    );
-     //       u_err= seteuid( 0 );  // printf( "err=%d\n", u_err );
-     //   }
-       
-          net->ep= OTOpenEndpoint_( OTCreateConfiguration(kN), 0,nil, &err );
-
-     //   if (isRaw) {              // printf(  "ep=%d %d\n", net->ep, fPort );
-     //       u_err= seteuid( id ); // printf( "err=%d\n", u_err   );
-     //   }
-          
-          if (err==kEPERMErr) return E_PERMIT;
-          if (err)            return E_FNA;
-        
-          SetDefaultEndpointModes( net->ep );
-          err= OTBind( net->ep, nil,nil ); if (err) return OS9_ECONNREFUSED;
-          
-        #elif defined win_unix
+        #if   defined win_unix
           af= os9_word(net->ipRemote.fAddressType);
           
           if (isRaw) { ty= SOCK_RAW;    proto= IPPROTO_ICMP; }
@@ -1082,10 +911,6 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
     ulong*       cpt;
     SOCKET       epNew;
     
-    #ifdef MACOS9
-      OSStatus state;
-      OTResult lookResult;
-    #endif
         
     #ifdef win_unix
       SOCKADDR_IN name;
@@ -1099,42 +924,7 @@ os9err pNaccept( ushort pid, syspath_typ* spP, ulong *d1 )
 
     if (cp->state==pWaitRead) set_os9_state( pid, cp->saved_state, "pNaccept" );
 
-    #ifdef MACOS9
-              state= OTGetEndpointState( net->ep );
-      switch (state) {
-          case T_IDLE:      err= pNlisten( pid, spP ); 
-                        if (err) return err;
-                        break;
-          case T_INCON: break;
-          default:      return OS9_ECONNREFUSED;
-      } /* switch */
-
-      if (state!=T_INCON) {
-          cp->saved_state= cp->state;
-          set_os9_state( pid, pWaitRead, "pNaccept" );
-          return E_NOTRDY;
-      } /* if */
-    
-      epNew= OTOpenEndpoint_( OTCreateConfiguration(kTCPName), 0, nil, &err );      
-      if (err) return E_FNA;
-    
-      SetDefaultEndpointModes   ( epNew );
-          err= OTAccept( net->ep, epNew, &net->call);
-      if (err==kOTLookErr) {
-              lookResult= OTLook(net->ep);
-          if (lookResult==T_LISTEN) {
-              OTMemzero( &net->call,sizeof(TCall) );
-              net->call.addr.buf = (UInt8 *) &net->ipRemote;
-              net->call.addr.maxlen =  sizeof(net->ipRemote);
-              err= OTListen( net->ep, &net->call );
-
-              SetDefaultEndpointModes   ( epNew );
-                  err= OTAccept( net->ep, epNew, &net->call);
-              if (err) return OS9_ECONNREFUSED;
-          } /* if */
-      } /* if */
-    
-    #elif defined win_unix
+    #if   defined win_unix
       len= sizeof(name);
           epNew= accept( net->ep, (__SOCKADDR_ARG)&name, (unsigned int*)&len );
       if (epNew==INVALID_SOCKET) {

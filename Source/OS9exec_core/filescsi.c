@@ -76,9 +76,7 @@
 #include "os9exec_incl.h"
 #include "filescsi.h"
 
-#ifdef MACOS9
-  #include <Scsi.h>
-#elif defined(windows32)
+#if   defined(windows32)
   // NT DDK includes (extracted from NT4DDK)
   #include "devioctl.h"
   //#include <ntdddisk.h> // seems to be included in W2K windows.h

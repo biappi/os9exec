@@ -826,10 +826,7 @@ ulong GetSystemTick(void)
 {
     ulong t;
 
-    #ifdef MACOS9
-      t=  TickCount();
-                  
-    #elif defined windows32
+    #if   defined windows32
       t= GetTickCount()/10; /* take 100 instead of 1000 on PC */
 
     #elif defined UNIX

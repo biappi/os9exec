@@ -396,42 +396,7 @@ os9err host2os9err(OSErr hosterr,ushort suggestion)
    
     known=true;
 
-    #ifdef MACOS9
-      if (hosterr==noErr) return 0;
-    
-      switch (hosterr) {
-        case opWrErr            : /* same */
-        case fBsyErr            : err=E_SHARE;  break;
-        case fLckdErr           : err=E_FNA;    break;
-        case dirNFErr           : /* same */
-        case fnfErr             : err=E_PNNF;   break;
-        case dskFulErr          : err=E_FULL;   break;
-        case eofErr             : err=E_EOF;    break;
-        case dirFulErr          : err=E_SLF;    break;
-        case tmfoErr            : err=E_PTHFUL; break;
-        case afpAccessDenied    : /* same */
-        case permErr            : /* same */
-        case wrPermErr          : err=E_FNA;    break;
-        case vLckdErr           : /* same */
-        case wPrErr             : err=E_WP;     break;
-        case nsvErr             : err=E_UNIT;   break;
-        case ioErr              : err=E_HARDWARE; break;
-        case rfNumErr           : /* same */
-        case fnOpnErr           : err=E_BPNUM;  break;
-        case posErr             : err=E_NES;    break;
-        case bdNamErr           : err=E_BPNAM;  break;
-        case mFulErr            : err=E_NORAM;  break;
-        case afpObjectTypeErr   : /* same */
-        case dupFNErr           : err=E_CEF;    break;
-        case gfpErr             : err=E_SEEK;   break;
-        case readErr            : err=E_READ;   break;
-        case abortErr           : err=E_PRCABT; break;
-        default                 : err=suggestion; known=false;break;
-      }
-      debugprintf(dbgErrors,dbgNorm,("# ** Mac OSerr=%d%s\n",
-                                      hosterr,known ? "" : "(not known, using suggestion)"));
-
-    #elif defined(windows32)
+    #if   defined(windows32)
       if     (hosterr==NOERROR) return 0;
       switch (hosterr) {
         case ERROR_PATH_NOT_FOUND: /* same */
@@ -1092,13 +1057,6 @@ Boolean VolInfo( const char* pathname, char* volname )
 Boolean OpenTDir( const char* pathname, DIR** d )
 /* Open Directory with special treatment of empty root dir on windows */
 {
-    #ifdef MACOS9
-      struct stat info;
-
-      *d= NULL; /* not used */
-      return stat_( pathname, &info )==0 && IsTrDir(info.st_mode);
-
-    #else
       Boolean ok= false;
       
       #ifdef TFS_SUPPORT
@@ -1116,21 +1074,14 @@ Boolean OpenTDir( const char* pathname, DIR** d )
       #endif
       
       return ok;
-    #endif
 } /* OpenTDir */
 
 
 
 dirent_typ* ReadTDir( DIR* d )
 {
-    #ifdef MACOS9
-      #pragma unused(d)
-      return NULL;
-    
-    #else
       if (d==NULL) return NULL;
       return readdir( d );
-    #endif
 } /* ReadTDir */
 
 
@@ -1330,9 +1281,6 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt,
               ulong      *fdID,     dirtable_entry** mH )
             //ulong *id, long dirid,  char* fName )
 {
-  #ifdef MACOS9
-    #pragma unused(dEnt)
-  #endif
 
   #define ATTR_DIR 0x0010
   char      tmp[MAX_PATH];
@@ -1344,10 +1292,6 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt,
   
   #define MAXLICNT ( 0x00800000 / MAXDIRS )
 
-  #ifdef MACOS9
-  char*    fName= "";
-  if (*mH) fName= (*mH)->fName;
-  #endif
            dirid= 0;
   if (*mH) dirid= (*mH)->dirid;
 
@@ -1401,10 +1345,6 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt,
                 (*mH)->ident= malloc( strlen( tmp )+1 );
       strcpy  ( (*mH)->ident,                 tmp );
               
-      #ifdef MACOS9
-                (*mH)->fName= malloc( strlen( fName )+1 );
-        strcpy( (*mH)->fName,                 fName );
-      #endif
           
       if (liCnt==0) hittable[ 0 ]--; // adapt statistics
                     hittable[ n ]++;            
@@ -1440,9 +1380,6 @@ os9err FD_ID( const char* pathname, dirent_typ* dEnt,
         if (doit) {
           (*mH)->ident= NULL;
 
-          #ifdef MACOS9
-          (*mH)->fName= NULL;
-          #endif
 
           (*mH)->next = NULL;
         } // if
@@ -1804,9 +1741,6 @@ Boolean DirName( const char* pathname, ulong fdsect, char* result, Boolean useIn
 {
   Boolean ok= false;
 
-  #ifdef MACOS9
-    #pragma unused(pathname,fdsect,result,useInodes)
-  #endif
     
   #ifdef win_unix
     DIR*            d;
@@ -1918,9 +1852,6 @@ ulong My_FD( const char* pathname )
 {
   ulong fd= 0;
 
-  #ifdef MACOS9
-    #pragma unused(pathname)
-  #endif
     
   #ifdef win_linux
     char            p[OS9PATHLEN];
@@ -2272,64 +2203,7 @@ Boolean RBF_ImgSize( long size )
 } /* RBF_ImgSize */
 
 
-#if defined MACOS9
-  os9err RBF_Rsc( FSSpec *fs )
-  {
-      os9err     err;
-      OSErr      oserr;
-      CInfoPBRec cipb;
-      ulong      size;
-      short      refnum;
-      int        cnt;
-      char       bb[256]; /* one sector */
-      
-      err= getCipb( &cipb, fs ); if (err) return err;
-      size= (ulong)  cipb.hFileInfo.ioFlLgLen;
-      
-      if (!RBF_ImgSize( size )) return E_PNNF;
-            
-          oserr=FSpOpenDF( fs, fsRdPerm, &refnum );
-      if (oserr) return host2os9err(oserr,E_PNNF);
-
-                               cnt= sizeof(bb);
-      oserr= FSRead ( refnum, &cnt,       &bb );
-      oserr= FSClose( refnum );     /* is this really an OS-9 partition ? */
-      if (strcmp( &bb[CRUZ_POS],Cruz_Str )!=0) return E_PNNF; /* Cruzli check */
-      
-      return 0;
-  } /* RBF_Rsc */
-
-
-
-  os9err GetRBFName( char* os9path, ushort mode,
-                     Boolean *isFolder, FSSpec *fs, FSSpec *afs )
-  {
-      os9err     err;
-      char*      pp;
-      Str255     nMac;
-      char       sv[OS9PATHLEN];
-        
-      strcpy( sv, os9path );
-      pp=     sv; CutRaw( &pp );
-      err= parsepath( 0,  &pp, nMac, false ); if (err) return E_PNNF;
-
-      #ifdef RBF_SUPPORT
-        err= Resolved_FSSpec( startVolID,startDirID, nMac, isFolder, fs,afs );
-        if (err)          return err;
-        if (*isFolder)    return E_FNA;
-        if (!IsDir(mode)) return E_FNA;
-
-        err= RBF_Rsc( fs );
-      
-      #else
-        #pragma unused(mode,isFolder,fs,afs)
-        err= E_UNIT;
-      #endif
-      
-      return err;
-  } /* GetRBFName */
-
-#elif defined win_unix
+#if   defined win_unix
   os9err GetRBFName( char* os9path, ushort mode,
                      Boolean *isFolder, char* rbfname )
   {
@@ -2428,11 +2302,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
     ushort sas,ssize;
     byte   pdtyp;
     
-    #ifdef MACOS9
-      Boolean isFolder;
-      FSSpec  fs,afs;
-
-    #elif defined win_unix
+    #if   defined win_unix
       Boolean isFolder;
       char    rbfname[OS9PATHLEN];
     #endif
@@ -2451,11 +2321,7 @@ static Boolean OS9_Device( char* os9path, ushort mode, ptype_typ *typeP )
       #endif
     #endif
     
-    #ifdef MACOS9
-                        err= GetRBFName(  os9path,   mode, &isFolder, &fs,&afs );
-      if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, &fs,&afs );
-      
-    #elif defined win_unix
+    #if   defined win_unix
                         err= GetRBFName(  os9path,   mode, &isFolder, (char*)&rbfname );
       if  (err==E_UNIT) err= GetRBFName( &os9path[1],mode, &isFolder, (char*)&rbfname );
 

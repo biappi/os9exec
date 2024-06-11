@@ -41,11 +41,6 @@
   #define REUSE_MEM          // do not deallocate memory after use
 //#define PRINTER_SUPPORT    // LPT printers
 
-  #ifdef MACOS9
-    //
-    
-
-  #endif
   
   #ifdef MACOSX
     #define NATIVE_SUPPORT   // allows native DLLs

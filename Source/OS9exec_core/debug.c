@@ -599,21 +599,11 @@ static void dumpmem(ulong *memptrP,int numlines)
 /* show regs in debugger */
 static void regs_in_debugger( regs_type *rp )
 {
-    #ifdef MACOS9
-      Str255 message;
-    
-      sprintf( &message[1], "%s called debugger, OS9 PC=%08lX, OS9 A7=%08lX\n",
-                             OS9exec_Name(), rp->pc, rp->a[7]);
-      message[0]=strlen(&message[1]);
-      llm_os9_debug( rp, message );
-
-    #else
       #ifndef linux
       #pragma unused(rp)
       #endif
     
       uphe_printf("Non-Macintosh: No low level debugger\n");  
-    #endif
 } /* regs_in_debugger */
 
 
@@ -694,22 +684,6 @@ ushort debugwait( void )
                        kill_process(temp);
                        break;
                                          
-            #ifdef MACOS9
-              case 'b': if (tolower(inp[1])=='b') {
-                            Debugger();
-                            break;
-                        }
-                         
-                        if (sscanf(&inp[1],"%hd", &temp)<1) {
-                            temp=currentpid;
-                        }
-                         
-                        regs_in_debugger(&procs[temp].os9regs); break;
-
-              #ifndef USE_UAEMU
-                case 't': Debugger(); goto goon;
-              #endif
-            #endif
 
             case 'd' : numitems=sscanf(&inp[1],"%hx,%hx", &temp,&temp2);
                           if (numitems<1) {

@@ -220,11 +220,7 @@ Boolean SCSI_Device  ( const char* os9path,
 Boolean RBF_ImgSize( long size );
 /* Returns true, if it is a valid RBF Image size */
 
-#ifdef MACOS9
-  os9err RBF_Rsc   ( FSSpec  *fs );
-  os9err GetRBFName( char* os9path, ushort mode, Boolean *isFolder, 
-                     FSSpec  *fs, FSSpec *afs );
-#elif defined UNIX
+#if   defined UNIX
   os9err GetRBFName( char* os9path, ushort mdoe, Boolean *isFolder, 
                      char* rbfname );
 #endif

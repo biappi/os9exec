@@ -83,9 +83,6 @@
 
 
 /* special mac includes */
-#ifdef MACOS9
-#include <Finder.h>
-#endif
 
 
 /* Version/Revision (of LuZ's PD move for OS-9)
@@ -219,14 +216,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
     char    pD [OS9PATHLEN];
     char    *destname;
     
-    #if defined MACOS9
-      OSErr      oserr;
-      FSSpec     sourceSpec;
-      FSSpec     destSpec;
-      FSSpec     destDirSpec;
-      CInfoPBRec cipb;
-      
-    #elif defined win_unix
+    #if   defined win_unix
       char   adD[OS9PATHLEN];
       char   adS[OS9PATHLEN];
       int    i;
@@ -279,24 +269,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         if (err) return _errmsg( err, "can't find \"%s\". ", nmS );
     }
     else {
-        #ifdef MACOS9
-          /* make FSSpec for source */
-              err= getFSSpec( cpid,pS, exe_dir ?_exe:_data, &sourceSpec); /* find source */
-          if (err) return _errmsg(err, "can't find \"%s\". ",pS);
-          debugprintf( dbgUtils,dbgDeep,("# int_move: source vol=%d, dir=%d, name=%#s\n",
-                       sourceSpec.vRefNum,sourceSpec.parID,sourceSpec.name));
-
-          if (!dodir) {
-              /* check if it is a directory */
-              getCipb( &cipb,&sourceSpec );
-              asDirS=  (cipb.hFileInfo.ioFlAttrib & ioDirMask);
-          }
-
-//      #elif defined(windows32)
-//        /* using Window's command line shell to perform this task */
-//        return call_hostcmd("move", pid, argc-1,&argv[1]);
-
-        #elif defined win_unix
+        #if   defined win_unix
               err= AdjustPath( nameS, (char*)&adS, false );
           if (err) return _errmsg( err, "can't find \"%s\". ", adS );
 
@@ -332,30 +305,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         }
     }
     else {
-        #ifdef MACOS9
-          /* make FSSpec for destination */
-          err= getFSSpec( cpid,pD, exe_dir ?_exe:_data, &destSpec ); /* find destination */
-          debugprintf(dbgUtils,dbgNorm,("# int_move: destination err=%d vol=%d, dir=%d, name=%#s\n",
-                    err,destSpec.vRefNum,destSpec.parID,destSpec.name));
-                    
-          /* check if destination exists */
-          if (!err) {
-              /* the destination object already exists */
-              if (rewrite) {
-                  getCipb( &cipb, &destSpec );
-                      asDirD= (cipb.hFileInfo.ioFlAttrib & ioDirMask);
-                  if (asDirD) err= E_FNA;
-                  else    { oserr= FSpDelete(&destSpec);
-                              err= host2os9err(oserr,E_FNA); }
-                  if (err) return _errmsg( err,"can't delete \"%s\". ",destname );
-              }
-              else {
-                  /* already exists, can't continue */
-                  return _errmsg( 1,"\"%s\" already exists\n", destname );
-              }
-          }
-          
-        #elif defined win_unix
+        #if   defined win_unix
                err= AdjustPath( nameD, (char*)&adD, false );      
           if (!err) err= (!FileFound( adD ) && !PathFound( adD ));
           if (!err) {
@@ -441,30 +391,7 @@ static os9err move_file( ushort cpid, char *fromdir,char *fromname,
         err= delete_file      ( cpid, fRBF, nmS, 0x01 );            if (err) return err;
     }
     else {
-        #ifdef MACOS9
-          /* for FSpCatMove, we need the destination directory's FSSpec */
-          FSMakeFSSpec(destSpec.vRefNum,destSpec.parID,"\p",&destDirSpec);
-          debugprintf(dbgUtils,dbgNorm,("# int_move: dest vol=%d, dir=%d, name=%#s\n",
-                      destDirSpec.vRefNum,destDirSpec.parID,destDirSpec.name));
-                    
-          /* now source and destination are ok, do the move now */
-              oserr=FSpCatMove(&sourceSpec,&destDirSpec);
-          if (oserr) return _errmsg(host2os9err(oserr,E_FNA),"can't move file/dir \"%s/%s\". ",
-                                      fromdir,fromname);
-          if (toname[0]!=0) {
-              /* destination must be renamed, too */
-              debugprintf(dbgUtils,dbgNorm,("# int_move: renaming required, newname=%s\n",destname));
-              strcpy(pD,destname);
-              c2pstr(pD); /* new name */
-              BlockMoveData(sourceSpec.name, destSpec.name, 32); /* update destination spec to reflect actually moved item */
-
-                  oserr = FSpRename( &destSpec,pD );        
-              if (oserr) {
-                  return _errmsg(host2os9err(oserr,E_FNA),"moved ok, but can't rename to \"%s\". \n",destname);
-              }
-          }
-        
-        #elif defined win_unix
+        #if   defined win_unix
                err= AdjustPath( nameD, (char*)&adD, true ); nameD= (char*)&adD;
           if (!err) {
             for (i= 0; i<10; i++) {

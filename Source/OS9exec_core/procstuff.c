@@ -965,21 +965,6 @@ void DoWait( void )
     HandleEvent();
   //slp_idleticks+= GetSystemTick()-ticks;
                 
-  #elif defined MACOS9
-    int   sWait;
-  //ulong ticks= GetSystemTick();
-
-    #ifndef MPW // is not available there
-    //ulong len= 13;
-    //char  s[ 14 ];
-      sWait= ( geCnt / 20 )+1; if (sWait>10) sWait= 10;
-      geCnt= HandleOneEvent( nil,  sWait );
-      
-    //sprintf( s, "%5d %5d\r\n", geCnt, sWait );
-    //syspath_write( currentpid, 1, &len, &s, true );
-    #endif
-                
-  //slp_idleticks+= GetSystemTick()-ticks;
   #else
     #error architecture not supported
   #endif

@@ -173,12 +173,6 @@ void llm_os9_copyback( regs_type *rp )
 static void llm_cache_rf( _bufferV_, _size_ ) { }
 
 
-#ifdef MACOS9
-/* enter debugger with (most of) OS9 context in registers */
-void llm_os9_debug( regs_type*, ConstStr255Param /* debuggerMsg */ )
-{   upe_printf("# Using UAE-68k-emulator, can't go to debugger\n" );
-} /* llm_os9_debug */
-#endif
 
 
 /* returns if FPU present */

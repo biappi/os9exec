@@ -194,9 +194,6 @@ void show_mem( ushort npid, Boolean mem_unused, Boolean mem_fulldisp )
       int diff, i;
     #endif
       
-    #ifdef MACOS9
-      upo_printf("Macintosh Heap: MemFree=%ld, MaxBlock=%ld\n\n",FreeMem(),MaxBlock());
-    #endif
     
     if (mem_unused) {
     	if (mem_fulldisp) {
@@ -402,10 +399,7 @@ ulong max_mem()
 {
     ulong memsz;
     
-    #if defined MACOS9
-      memsz= MaxBlock();
-      
-    #elif defined win_unix
+    #if   defined win_unix
       memsz= 0;
       
     #else

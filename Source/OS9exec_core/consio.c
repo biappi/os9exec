@@ -337,10 +337,6 @@ Boolean ConsGetc( char* c )
       n= ReadCharsFromTerminal( c,1, &main_mco );
       return (n>0) && devIsReady;
     
-    #elif defined MACOS9
-          n= fread( c,1,1, stdin );
-      if (n!=1 || !devIsReady) return false;
-    
     #elif defined MACOSX
       n= getchar(); // problems with fread
            devIsReady= (n!=-1);

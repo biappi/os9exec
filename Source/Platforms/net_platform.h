@@ -75,20 +75,6 @@ static int netInstalled= false; // WIL
 
 
 
-#ifdef MACOS9
-  #ifdef MPW // not defined here
-    typedef struct OTConfiguration* OTConfigurationRef;
-    typedef UInt32                  OTOpenFlags;
-    typedef ByteCount               OTByteCount;
-  #endif
-  
-  EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
-                               OTOpenFlags        oflag,
-                               TEndpointInfo*     info,
-                               OSStatus*          err );
-
-  void* OTAllocMem_( OTByteCount size );
-#endif
 
 
 

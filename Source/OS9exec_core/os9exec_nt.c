@@ -446,9 +446,6 @@ alarm_typ*  alarm_queue[MAXALARMS];
 dirtable_entry dirtable[MAXDIRS];
 int            hittable[MAXDIRHIT];
 
-#if defined MACOS9 && defined powerc && !defined MPW
-  pending_typ dPending[ PENDING_MAX ];
-#endif
 
 
 /* the include/exclude/dll list for internal commands */
@@ -491,21 +488,8 @@ char     startPath[OS9PATHLEN];   /* start path */
 char     strtUPath[OS9PATHLEN];   /* next higher than start path */
 dir_type mdir;	                  /* current module dir */
 
-#ifdef MACOS9
-  /* the MPW-level default directory */
-  short    startVolID;	          // startup dir's volume    id
-  long     startDirID;	          // startup dir's directory id
-  char     callPath[OS9PATHLEN];
-  
-  short    applVolID;	          // app's   dir's volume    id
-  long     applDirID;	          // app's   dir's directory id
-  char     applName[OS9PATHLEN];
-  int      geCnt;
-  
-#else
   /* the default module load directory OS9MDIR */
   char    mdirPath[MAX_PATH];	  /* current mdir path */
-#endif
 
 
 /* the windows console definitions */
@@ -839,10 +823,6 @@ static void cleanup(void)
     free_modules(); /* unlink the OS9 module resources */
 	fflush(stdout);
 
-	#ifdef MACOS9
-	  debugprintf(dbgStartup,dbgNorm,("# cleanup: restoring MPW current directory\n"));
-	  HSetVol(NULL,startVolID,startDirID); /* restore the original directory */
-	#endif
 	
 	debugprintf(dbgStartup,dbgNorm,("# cleanup: releasing low-level magic\n"));
 	lowlevel_release(); /* release low-level stuff */
@@ -931,28 +911,7 @@ void get_hw()
 
 static os9err GetStartPath( char* pathname )
 {
-	#ifdef MACOS9
-	  os9err err;
-	  Str255 rel, tmp;
-	  FSSpec spec; /* the HFS object's FSSpec */
-	
-	  strcpy( pathname,"" ); /* initialize */
-	  strcpy( rel,     "" );
-
-	  while (true) {
-		  strcat( rel,":" ); /* next higher path */ 
-		      err= getFSSpec( 0,rel, _start, &spec );
-		  if (err) return err;
-		
-		  p2cstr    ( spec.name );
-		  strcpy( tmp,spec.name );
-		  strcat( tmp,":" );
-		  strcat( tmp,pathname );
-		  strcpy    ( pathname,tmp );
-		  if (spec.parID==1) return 0;
-	  } /* while */
-
-	#elif defined windows32
+	#if   defined windows32
 	  /* determine path to current directory */
 	  if (!GetCurrentDirectory( MAX_PATH,pathname ))
 		  strcpy( pathname,"" ); // no default path for some reason
@@ -976,9 +935,6 @@ static void PathUp( char* p )
   char*  q= p+strlen(p)-2;
   while (q>p) {
     if (*q==PATHDELIM) {
-      #ifdef MACOS9
-        q++;
-      #endif
 			   
       *q= NUL; 
       break; 
@@ -996,9 +952,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	char   tmp[OS9PATHLEN];
     Boolean doRep= false;
     
-	#ifdef MACOS9
-	  char svPath[OS9PATHLEN];
-	#endif
 	
 	char*  p= egetenv( envname ); /* get path for default module loading dir */
 	if    (p==NULL) return;
@@ -1021,11 +974,7 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	} // if
 	*/
 	
-	#ifdef MACOS9
-	  p++;
-	  doRep= true;
-	  
-	#elif defined windows32
+	#if   defined windows32
 	  if (p[ 0 ]==PSEP && 
 		 (p[ 2 ]==PSEP ||
 		  p[ 2 ]=='\0')) { /* adapt for windows notation */
@@ -1052,20 +1001,6 @@ static void GetCurPaths( char* envname, ushort mode, dir_type *drP, Boolean recu
 	/* do this before the recursive loop */
 	strncpy( drP->path,p, OS9PATHLEN );
 			
-	#ifdef MACOS9
-	  get_dirid( &drP->volID, &drP->dirID, tmp );
-	  
-	  if (recursive && drP->volID==0 &&
-	                   drP->dirID==0) {
-		  strcpy(    svPath,startPath );
-		  strcpy( startPath, callPath );
-		  PathUp( startPath );
-		
-		  GetCurPaths( envname, mode, drP, false );
-		
-		  strcpy( startPath,svPath );
-	  } // if
-	#endif
 } /* GetCurPaths */
 
 
@@ -1517,9 +1452,6 @@ static void titles( void )
    #ifdef TERMINAL_CONSOLE
      #ifdef macintosh
        
-       #ifdef MACOS9
-         upho_printf("- Mac Serial Interface Version       (c) 2000 by B. Forster\n");
-       #endif
        
      #elif defined windows32
        upho_printf("- Windows Console Version\n");
@@ -2264,15 +2196,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   cp->mid      = 0;                      /* take "OS9exec" as the kernel module */
 
   /* ---- assign startVolID/dirID ---------------------------------- */
-  #ifdef MACOS9
-            fs.vRefNum= 0; /* default path is my own path */
-            fs.parID  = 0;
-    strcpy( fs.name,"" );
-    c2pstr( fs.name );     /* it is pascal notation */
-
-    startVolID= fs.vRefNum;
-    startDirID= fs.parID; /* get default dir */
-  #endif
 	
 
   #ifdef windows32
@@ -2313,22 +2236,10 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   for (ii= 0; ii<MAXDIRHIT; ii++) hittable[ ii ]= 0;
                                   hittable[  0 ]= MAXDIRS;
   
-  #if defined MACOS9 && defined powerc && !defined MPW
-  for (ii= 0; ii<PENDING_MAX; ii++) dPending[ ii ].toBeDeleted= false;
-  #endif
 
   debug_prep();
   debugprintf(dbgStartup,dbgNorm,("# os9exec_nt: entered routine, no op yet\n")); 
     
-  #ifdef MACOS9
-    GetStartPath( callPath );
-
-    applVolID= 0;
-    applDirID= 0;
-    strcpy( applName,"" );
-
-    /* must be synchronized to OpenDocument Apple Event */
-  #endif
 
   /* include 'startup' as default parameter */
   /* will be eliminated again later, if no 'startup' file is available */
@@ -2373,15 +2284,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   PathUp( strtUPath );
 //upo_printf( "'%s' '%s'\n", startPath, strtUPath ); 
 	
-  #ifdef MACOS9	
-    /* save current default directory */
-    startVolID= fs.vRefNum;
-    startDirID= fs.parID; /* get default dir */
-
-    get_dirid( &startVolID,&startDirID, startPath );
-    debugprintf(dbgStartup,dbgNorm,("# main startup: (start) startVolID=%d, startDirID=%ld\n",
-	  					               startVolID,startDirID));
-  #endif
 
   /* get default SCSI setting */
   #ifdef RBF_SUPPORT
@@ -2399,10 +2301,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   drP->dev = 0;
   drP->lsn = 0;
 
-  #ifdef MACOS9
-	drP->volID= 0;
-	drP->dirID= 0;
-  #endif
 	
   GetCurPaths( "OS9DISK", 0x80, &cp->d, true );
   memcpy              ( &cp->x, &cp->d, sizeof(dir_type) ); /* at least this should be ok */
@@ -2413,17 +2311,9 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
   drP->dev = 0;
   drP->lsn = 0;
 
-  #ifdef MACOS9
-    drP->volID= 0;
-    drP->dirID= 0;
-  #endif
 	
   GetCurPaths( "OS9MDIR", 0x80, &mdir, true );
 	
-  #ifdef MACOS9
-    debugprintf(dbgStartup,dbgNorm,("# main startup: (mdir) mdir.volID=%d, mdir.dirID=%ld\n",
-                                       mdir.volID,mdir.dirID));
-  #endif
 	
   #if defined win_unix
     /* establish the virtual mdir (dir used to load modules from by default) */

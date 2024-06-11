@@ -151,12 +151,6 @@ static os9err Flush_Dir( ushort cpid, ushort* pathP, const char* nmS )
 /* internal "rename" command for OS9exec/nt */
 os9err int_rename( ushort cpid, int argc, char **argv )
 {
-    #ifdef MACOS9
-      /* special mac includes */
-      #include <Finder.h>
-      OSErr  oserr= 0;
-      FSSpec theFSSpec;
-    #endif
 
     char *p, *sv;
     int nargc=0, h;
@@ -278,18 +272,7 @@ os9err int_rename( ushort cpid, int argc, char **argv )
         cer=   usrpath_close( cpid, path ); if (!err) err= cer;
     }
     else {
-        #if defined MACOS9
-          /* now do the real stuff */
-          /* first make FSSpec for file/dir to be renamed */
-              err= getFSSpec( cpid,oldPath, exedir ?_exe:_data, &theFSSpec ); 
-          if (err) return err;
-    
-          /* now rename it */       c2pstr(newName);
-              oserr= FSpRename( &theFSSpec,newName);
-          if (oserr==dupFNErr) _errmsg(0,"can't rename to \"%#s\"",newName);
-          err= host2os9err(oserr,E_PNNF);
-    
-        #elif defined win_unix
+        #if   defined win_unix
                            pp=  oldPath;
           err= AdjustPath( pp, adaptOld, false ); 
           pp=                  adaptOld;

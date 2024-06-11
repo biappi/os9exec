@@ -847,9 +847,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     Boolean isBuiltIn;
     ulong   dns1= 0, dns2= 0;
 
-    #ifdef MACOS9
-      Handle hh;
-    #endif
 
     mod_exec* theRemainP;    
     mod_exec* theModuleP;
@@ -890,19 +887,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     mid= NextFreeModuleId( name );
    
     /* check for default loading of 'OS9C' 0 */
-    #ifdef MACOS9
-      if (name==NULL) {
-          if (mid>=MAXMODULES) return os9error(E_DIRFUL); /* module directory is full */
-
-              hh = GetResource('OS9C', 0);
-          if (hh!=NULL) {
-              isBuiltIn= true;
-              theModuleP= *hh;
-              goto modulefound;
-          }
-          return os9error( linkstyle ? E_MNF:E_PNNF );
-      }
-    #endif
                
     /* check for pathlist and default to file-load if one is found */
     mode= exedir ? 0x05 : 0x01;
@@ -992,36 +976,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
             
             /* 2: Assume loading from the {OS9MDIR} directory */
             /* %%% this part is not yet adapted for access through filestuff interface */
-            #ifdef MACOS9
-        //    upe_printf( "mdir.volID %d %s\n", mdir.volID, name );
-              if (mdir.volID!=0) {
-                  debugprintf(dbgModules,dbgNorm,("# load_module: trying to load from {OS9MDIR}\n"));
-
-                  #ifdef MACFILES
-                         err= getFSSpec(pid,datapath, _mdir, &modSpec);
-                    if (!err) goto streamload;
-                    
-                    if (ustrcmp(datapath,applName)==0) {
-                             err= getFSSpec(pid,datapath, _appl, &modSpec);
-                        if (!err) goto streamload;
-                    }
-                  
-                  #else
-                        oserr= HSetVol(NULL,mdir.volID,
-                                            mdir.dirID);
-                    if (oserr)  return host2os9err(oserr,E_BPNAM);
-                
-                        stream= fopen(datapath,"rb"); /* open for read, binary mode (bfo) */
-                    if (stream!=NULL) goto streamload;
-                
-                    /* switch back to exe dir */
-                        oserr= HSetVol(NULL,procs[pid].x.volID,
-                                            procs[pid].x.dirID);
-                    if (oserr) return host2os9err(oserr,E_BPNAM);
-                  #endif
-              }
-
-            #else
             if (*mdirPath!=0) {
                 char pathbuf[MAX_PATH]; /* temp buffer for path */
                 debugprintf(dbgModules,dbgNorm,("# load_module: trying to load from OS9MDIR: %s\n",mdirPath));
@@ -1032,7 +986,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
                     stream= fopen(pathbuf,"rb"); /* open for read, binary mode (bfo) */
                 if (stream!=NULL) goto streamload;
             }
-            #endif
             
                         
             #ifdef macintosh
@@ -1183,9 +1136,6 @@ static os9err load_module_local( ushort pid, char* name, ushort* midP, Boolean e
     /* module found, insert it into module directory */
     
     
-    #ifdef MACOS9
-      modulefound:
-    #endif
     
     mid0= mid;     /* take the first one if using module groups */
     while (true) {

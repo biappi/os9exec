@@ -451,31 +451,6 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
  
     #else
       /* input not more than one line from a FILE */
-      #ifdef MACOS9
-        if     (*n <2) {
-            if (*n!=0) {
-                /* single char only */
-                cnt= fread( (void*)buffer, 1,1, f->stream );
-            }
-            else return 0; /* nothing to read at all */
-        }
-        /* more than 1 char */
-        if (fgets((void *)buffer, *n-1, f->stream)==NULL) { /* read all but one char */
-            if (feof( f->stream)) return os9error(E_EOF);
-            return c2os9err(errno,E_READ);
-        } // if
-        
-            cnt=strlen(buffer); /* find size of string read */
-        if (cnt==*n-1) {
-            /* all read */
-            if (buffer[cnt-1]!=CR) {
-                /* not stopped by a CR, read one more, if possible */
-                cnt+= fread( (void*)&buffer[cnt], 1,1, f->stream );
-            }
-        }
-        if ((cnt==0) && feof( f->stream )) return os9error(E_EOF);
-      
-      #else
         /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
         /* single char for now */
         p= buffer;
@@ -494,7 +469,6 @@ os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
         } // while
     
         f->readFlag= true;
-      #endif
     #endif
     
     debugprintf( dbgFiles,dbgDetail,("# pFreadLn: requested=%ld, returned=%ld\n", *n, cnt ));
@@ -637,47 +611,6 @@ os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
 
 
 
-#ifdef MACOS9
-  // Get deP->fdSect from <volid>,<objid>,<dirid>
-  static void assign_fdsect( os9direntry_typ *deP, short volid, long objid, long dirid )
-  {
-    char            hashV[ 80 ];
-    char            fName[ OS9NAMELEN ];
-    Boolean         cond;
-    dirtable_entry       m; // exists "physically" here
-    dirtable_entry* mP= &m; // the reference to it
-    
-    #ifdef LINKED_HASH
-      cond= true;
-    #else
-      cond= volid>=       0 || 
-            volid< VOLIDMIN ||
-            objid>=  IDSIGN || 
-            objid<  -IDSIGN;
-    #endif        
-    
-    if (cond) {      
-      strcpy( fName, deP->name );
-              fName[ strlen(fName)-1 ] &= 0x7f; // back to "normal"
-      
-      mP->fName= fName;
-      mP->dirid= dirid;
-       
-      sprintf( hashV, "%d %d", -volid, objid ); 
-      FD_ID  ( hashV, NULL,           &objid,  &mP );
-      debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: ID=%ld is out of range %ld..%ld: '%s'\n",
-                                           objid, -IDSIGN,IDSIGN-1, deP->name ));
-      debugprintf( dbgAnomaly,dbgDetail,( "get_dir_entry: hashV='%s'\n", hashV ));
-                      
-      deP->fdsect= objid; /* assign the new value */
-    }
-    else {
-      // combine them again
-      deP->fdsect = (volid & VOLIDMASK) << IDSHIFT;
-      deP->fdsect|=  objid &    IDMASK;
-    } // if
-  } /* assign_fdsect */
-#endif
 
 
 
@@ -687,31 +620,7 @@ os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
   ulong  fdID;
   ulong* l;
     
-  #ifdef MACOS9
-    FSSpec*         spc= &spP->u.disk.spec;
-    CInfoPBRec      cipb;
-    os9direntry_typ dEnt;
-    
-    short volid;
-    long  objid;
-      
-    err= getCipb( &cipb, spc );  
-    
-    volid= spc->vRefNum;           // get volume ID
-    objid= cipb.hFileInfo.ioDirID; // get object ID
- 
-    strcpy        ( dEnt.name, spP->name );
-    assign_fdsect( &dEnt, volid, objid, 0 );
-    fdID=           dEnt.fdsect;
-    
-    /*
-          volid= spc->vRefNum; // get volume ID
-    fd=  (volid & VOLIDMASK) << IDSHIFT;
-          objid= cipb.hFileInfo.ioDirID;
-    fd |= objid & IDMASK;
-    */
-    
-  #elif defined win_unix
+  #if   defined win_unix
     dirtable_entry* mP= NULL;
     dirent_typ      dEnt;
     strcpy        ( dEnt.d_name, spP->name );
@@ -734,17 +643,7 @@ os9err pFready( _pid_, _spP_, ulong *n )
 /* get device name from HFS object */
 os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
 {
-    #ifdef MACOS9
-      long  free= 0;
-      short volid= spP->u.disk.spec.vRefNum;
-      
-        OSErr oserr= GetVInfo(0, volname, &volid, &free);
-        if   (oserr) return host2os9err(oserr,E_BPNUM);
-        p2cstr( volname );
-      
-      debugprintf(dbgFiles,dbgDetail,("# pFvolnam: name='%s', free bytes=%ld\n",volname,free));
-
-    #elif defined windows32
+    #if   defined windows32
       volname[ 0 ]= toupper( spP->fullName[ 0 ] ); /* first char only */       
       volname[ 1 ]= NUL;     
     
@@ -1649,10 +1548,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     ulong     u       = 0;
     struct tm tim;
     
-    #if defined MACOS9
-      CInfoPBRec* cipbP= (CInfoPBRec*)fdl;
-
-    #elif defined win_unix
+    #if   defined win_unix
       char*       pathname;
       struct stat info;
       syspath_typ spRec;
@@ -1773,12 +1669,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     /* fill in constants */
     *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
 
-    #if defined MACOS9
-      /* now get info from CInfoPBRec */
-      isFolder= cipbP->hFileInfo.ioFlAttrib & ioDirMask; /* is it a folder */
-      if (cipbP->hFileInfo.ioFlAttrib & 0x01) *att &= 0xED; /* clear write attrs */
-      
-    #elif defined win_unix
+    #if   defined win_unix
       pathname= (char*)fdl;
             
       #ifdef windows32
@@ -1816,10 +1707,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     fdbeg[2] =0; /* owner = superuser */
 
     /* file dates */
-    #ifdef MACOS9
-      u= cipbP->hFileInfo.ioFlMdDat + OFFS_1904; /* get modification time */
-    
-    #elif defined win_unix
+    #if   defined win_unix
       u= info.st_mtime;
       
       #ifdef windows32
@@ -1866,9 +1754,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     debugprintf(dbgFiles,dbgNorm,("# getFD: %02d/%02d/%02d %02d:%02d\n", 
                 tim.tm_year % 100,tim.tm_mon+1,tim.tm_mday, tim.tm_hour,tim.tm_min));
     
-    #if defined MACOS9
-      u= cipbP->hFileInfo.ioFlCrDat + OFFS_1904; /* get creation time */
-    #elif defined win_unix
+    #if   defined win_unix
       #ifdef windows32
         if (isFolder) info.st_ctime= 0;
       #endif
@@ -1889,15 +1775,7 @@ static void getFD( void* fdl, ushort maxbyt, byte *buffer )
     #endif // NEW_LUZ_FD_IMPL
 
         
-    #if defined MACOS9
-      if (isFolder) { /* virtual size is number of items plus 2 for . and .. */
-          *sizeP= (ulong)(cipbP->dirInfo.ioDrNmFls+2)*DIRENTRYSZ;
-      }
-      else {          /* file size is the data fork size */
-          *sizeP= (ulong) cipbP->hFileInfo.ioFlLgLen;
-      }
-
-    #elif defined win_unix
+    #if   defined win_unix
       if (isFolder) {
           *sizeP= 0; /* by default */
           
@@ -1993,15 +1871,7 @@ os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
 {
     void* fdl;
 
-    #ifdef MACOS9
-      os9err err;
-      CInfoPBRec cipb;  
-
-      /* get the cipb and prepare an FD from it */
-      err= getCipb( &cipb, &spP->u.disk.spec ); if (err) return err;
-      fdl=          &cipb;
-    
-    #elif defined win_unix
+    #if   defined win_unix
       fdl= &spP->fullName; /* use this for linux */
     
     #else
@@ -2200,24 +2070,7 @@ os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname
     debugprintf( dbgFiles,dbgNorm,( "# parsepath='%s' err=%d\n", pp, err ) );
     if (err) return err;
     
-    #if defined MACOS9
-      /* make an FSSpec for the directory */
-                                   defdir= exedir ?_exe:_data;  
-           err= getFSSpec( pid,pp, defdir, spc );
-      if (!err) {
-        /* object exists, but make sure it is a directory */
-        getCipb( &cipb, spc ); /* it's a file, return error */
-        if     (!(cipb.hFileInfo.ioFlAttrib & ioDirMask)) return os9error( E_FNA );  
-
-        /* OS9TCP/ftp requires open dir for write !?! */
-        // if (*modeP & 0x02) return os9error(E_FNA); /* can't open dir for write */
-        
-        strcpy( spP->fullName, pp );  
-      } // if
-
-      debugprintf( dbgFiles,dbgNorm,( "# pDopen: MakeFSSpec '%s' returned err=%d\n", pp, err ) );
-
-    #elif defined win_unix
+    #if   defined win_unix
       debugprintf( dbgFiles,dbgNorm,( "# pp (v)='%s'\n", pp ) );
       err= AdjustPath( pp,adapted, false ); if (err) return err;
       pp = adapted;
@@ -2271,124 +2124,6 @@ os9err pDclose( _pid_, syspath_typ* spP )
 } /* pDclose */
 
 
-#ifdef MACOS9
-  static os9err get_dir_entry( ushort index, os9direntry_typ *deP, syspath_typ *spP )
-  /* get directory entry referred to by index
-   *  index=0 returns parent     ("..")
-   *  index=1 returns dir itself (".")
-   */
-  {
-    os9err  err;
-    OSErr   oserr;
-    FSSpec* spc= &spP->u.disk.spec;
-    short   volid;
-    long    dirid, objid;
-    char*   q;
-
-    union {
-        CInfoPBRec    cipb;
-        HParamBlockRec hpb;
-    } pbu;
-
-    Str255 fName;
-    ushort n;
-
-    /* set the vrefnum of the file or dir */
-    volid= spc->vRefNum; /* get volume ID */
-                                       /* (volid>VOLIDSIGN-1 || volid<-VOLIDSIGN)) */
-  //if (debugcheck(dbgAnomaly,dbgNorm) && (volid>=0          || volid< VOLIDMIN)) {
-  //    uphe_printf("get_dir_entry: vRefnum=%hd out of 3-bit range\n",volid); 
-  //} // if
-
-    //      deP->fdsect= (volid & VOLIDMASK) << IDSHIFT;
-    memset( deP->name, 0, DIRNAMSZ ); /* clear before using */
-
-    /* now get the entry */
-    if (index==0) {
-        /* parent directory ist the FIRST entry (even if Dibble said it's the second!) */
-        strcpy(deP->name,".\xAE");
-        
-            objid= spc->parID; /* save to check range later */
-        if (objid==fsRtParID) {
-            /* this points to the (nonexistant) "root of root" */
-            objid= fsRtDirID; /* let parent entry point again to the root */
-        } // if
-                                        dirid= objid;
-        assign_fdsect( deP, volid,objid,dirid );
-        debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='..', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
-                                           index, volid, dirid, deP->fdsect ));
-    }
-    else {
-		    err= getCipb( &pbu.cipb, spc );
-        if (err) return err;
-        
-        dirid= pbu.cipb.dirInfo.ioDrDirID; /* copy the sucker */
-
-        /* now check for "." */
-        if (index==1) {
-            /* current directory is the SECOND entry */
-            strcpy(deP->name,"\xAE");
-                                      objid= dirid;
-            assign_fdsect( deP, volid,objid, dirid );
-            debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: name='.', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
-                                               index, volid, objid, deP->fdsect ));
-        }
-        else {
-            /* some entry within this dir */
-            fName[0]= 0;
-            pbu.cipb.hFileInfo.ioCompletion = 0;
-            pbu.cipb.hFileInfo.ioNamePtr    = fName;
-            pbu.cipb.hFileInfo.ioVRefNum    = volid;
-            pbu.cipb.hFileInfo.ioDirID      = dirid;
-            pbu.cipb.hFileInfo.ioFDirIndex  = index-1;  /* use index, range 1..n */
-
-                oserr = PBGetCatInfoSync(&pbu.cipb);
-            if (oserr==fnfErr) return          os9error(E_EOF); /* this is no error, but only no more items in the folder */
-            if (oserr)         return host2os9err(oserr,E_READ);
-
-            /* there is an entry for this index */
-            n=fName[0]>DIRNAMSZ ? DIRNAMSZ : fName[0];
-            strncpy(deP->name,&fName[1], n); /* copy the name */
-                
-            q= deP->name;
-            while (true) { /* convert the spaces in the file names to underlines */
-  	  	        q= strstr( q," " ); if (q==NULL) break;
-                q[ 0 ]= '_';
-            } /* loop */
-
-                
-            if (fetchnames) {
-                /* show slashes at filename beginnings as periods (that's what Fetch FTP does on OS9->mac */
-                if (deP->name[0]=='/') deP->name[0]='.';
-            }
-            
-            deP->name[n-1] |= 0x80; /* set old-style terminator */
-            if (pbu.cipb.hFileInfo.ioFlAttrib & ioDirMask) {
-                                          objid= pbu.cipb.dirInfo.ioDrDirID;
-                assign_fdsect( deP, volid,objid,dirid );
-                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: dirname='%#s', volid=%d, dirid=$%lX, fdsect=$%08lX\n",
-                                                   index, fName, volid, objid, deP->fdsect ));
-            }
-            else {
-                objid= pbu.cipb.hFileInfo.ioDirID; /* get file ID, which returned in ioDirID by PBGetCatInfo */
-                /* make sure that a file ID reference exists to find the file by pHgetFDsect later */
-                pbu.hpb.fidParam.ioNamePtr  = fName;
-                pbu.hpb.fidParam.ioVRefNum  = volid;
-                pbu.hpb.fidParam.ioSrcDirID = dirid;
-                oserr= PBCreateFileIDRefSync(&pbu.hpb);
-                
-                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: PBCreateFileIDRef returns oserr=%d\n",oserr));
-                /* now assign file id (for which a reference now should exist) */
-                assign_fdsect( deP, volid,objid,dirid );
-                debugprintf(dbgFiles,dbgDetail,("# get_dir_entry: index=%d: filename='%#s', volid=%d, fileid=$%lX, filerefid=$%lX, fdsect=$%08lX\n",
-                                                   index, fName, volid, objid, pbu.hpb.fidParam.ioFileID, deP->fdsect));
-            }
-        }
-    } /* if (index==0) */
-
-    return 0;
-  } /* get_dir_entry */
-#endif
 
 
 
@@ -2556,10 +2291,7 @@ os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
 /* set read position */
 os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
 {
-    #ifdef MACOS9
-      ulong       size;
-      os9err      err;
-    #elif defined win_unix
+    #if   defined win_unix
       int         cnt, n;
       dirent_typ* dEnt;
     #else
@@ -2567,12 +2299,7 @@ os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
     #endif
     
     
-    #ifdef MACOS9
-      err= pDsize( pid,spP, &size ); if (err) return err;
-      debugprintf(dbgFiles,dbgNorm,("# pDseek: dir size is = $%lX, seek request to $%lX\n",size,*posP));
-      if (*posP>size) return os9error(E_SEEK);
-
-    #elif defined win_unix
+    #if   defined win_unix
       seekD0( spP ); /* start at the beginning */
 
       n= 0;    cnt= *posP/DIRENTRYSZ;
@@ -2675,12 +2402,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
   Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
 //process_typ* cp= &procs[pid];
 
-  #if defined MACOS9
-    FSSpec     localFSSpec;
-    defdir_typ defdir;
-    long       newdirid;
-    
-  #elif defined win_unix
+  #if   defined win_unix
     char adapted[ OS9PATHLEN ];
   #endif
 
@@ -2688,23 +2410,7 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
   err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
   pathname= p;
     
-  #if defined MACOS9
-    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Mac path=%s\n",pathname));
-
-    // --- create FSSpec, use default volume/dir
-                                   defdir= exedir ? _exe:_data;
-    err= getFSSpec( pid, pathname, defdir, &localFSSpec );
-    
-    if (!err || err==E_PNNF) {
-      debugprintf(dbgFiles,dbgDetail,("# I$MakDir: FSSpec for new dir: OSErr=%d, vRefNum=%d, dirID=%ld\n",
-                                         err, localFSSpec.vRefNum,localFSSpec.parID));
-      // --- create the directory
-      oserr = FSpDirCreate(&localFSSpec, smSystemScript, &newdirid);
-      debugprintf(dbgFiles,dbgNorm,  ("# I$MakDir: oserr=%d, Id of new dir is %ld\n",
-                                         oserr,newdirid));
-    } // if
-
-  #elif defined windows32
+  #if   defined windows32
     err= AdjustPath( pathname,adapted, true ); if (err) return err;
     pathname=                 adapted;
 
@@ -2731,49 +2437,6 @@ os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
 
 
 
-#if defined MACOS9 && defined powerc && !defined MPW
-  static OSErr FSRename_Unique( FSRef* srcRef, FSRef* dstRef, FSRef* newRef )
-  {
-    #define DelMe ".delete_me"
-    OSErr oserr;
-    int   i, len, n= 1; 
-    char  name    [ 80 ];
-    char  unifield[ 80 ];
-    FSRef renRef, savRef;
-    
-    /*
-    const char*      p= pathName;
-    if      (strstr( p, DelMe )==p) {
-          p= strstr( p, "_" );
-      if (p==NULL)   p= pathName;
-      else           p++;
-    } // if
-    */
-    
-    while (true) {
-      sprintf    ( name, "%s_%d", DelMe, n++ );
-      len= strlen( name );
-      
-      for (i= 0; i<len; i++) {
-        unifield[ 2*i   ]= '\0'; // Create unicode field
-        unifield[ 2*i+1 ]= name[ i ];
-      } // for
-    
-            oserr= FSRenameUnicode( srcRef, len, (UniChar*)unifield, kTextEncodingMacRoman, &renRef );
-      if   (oserr!=dupFNErr) {
-        if (oserr) break;
-            
-            oserr= FSMoveObject( &renRef, dstRef, newRef );
-        if (oserr!=dupFNErr) break;
-        
-        memcpy( &savRef, &renRef, sizeof( FSRef ) ); // rename was possible, take new one already
-        srcRef= &savRef;
-      } // if
-    } // loop
-    
-    return oserr;
-  } // FSRename_Unique
-#endif
 
 
 
@@ -2785,24 +2448,7 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       OSErr  oserr= 0;
     #endif
       
-    #ifdef MACOS9
-      char*  pp= spP->name;
-      char   pathname[OS9PATHLEN]; 
-      FSSpec delSpec;
-      FSSpec spc;
-      OSType creator, type;
-
-      #if defined powerc && !defined MPW
-        FSSpec dstSpec;
-        FSRef  delRef;
-        FSRef  dstRef;
-        pending_typ* dpp;
-        int    pnd;
-      #else
-        int    k;
-      #endif
-        
-    #elif defined win_unix
+    #if   defined win_unix
      ushort mode;
      char*  pp= spP->fullName;
       
@@ -2823,82 +2469,13 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       if (err) return err;
     #endif
       
-    #ifdef MACOS9
-    //sv   = pp; /* 'parsepath' will change <pp> */
-    //err  = parsepath( pid,&pp, pathname, false ); if (err) return err;
-      strcpy                   ( pathname, spP->fullName );
-      oserr= getFSSpec( pid,     pathname, _data, &delSpec );
-    //pp   = sv;
-    #endif
     
     /* can't change attributes in Mac/Linux/Windows */
     /* But remove and recreate as file is possible */
     err= pDclose      ( pid, spP     ); if (err) return err;
   //err= syspath_close( pid, spP->nr ); if (err) return err;
       
-    #ifdef MACOS9
-      #if defined powerc && !defined MPW
-        // try to delete all of them
-        for (pnd= 0; pnd<PENDING_MAX; pnd++) {
-              dpp= &dPending[ pnd ];
-          if (dpp->toBeDeleted) {
-                 oserr= FSDeleteObject( &dpp->newRef );
-            if (!oserr) dpp->toBeDeleted= false;
-          } // if
-        } // if
-
-        for (pnd= 0; pnd<PENDING_MAX; pnd++) {
-               dpp= &dPending[ pnd ];
-          if (!dpp->toBeDeleted) break;
-        } // if
-      
-             oserr= FSpMakeFSRef( &delSpec, &delRef );
-        if (!oserr) oserr= getFSSpec( pid, "", _start, &dstSpec );
-      //upe_printf( "oserr=%d -> pathname='%s'\n", oserr, "destDir" );
-
-        if (!oserr) oserr= FSpMakeFSRef( &dstSpec, &dstRef );
-      //upe_printf( "oserr=%d dstSpec\n", oserr );
- 
-      //if (!oserr) oserr= FSRename_Unique( &delRef, &dstRef, spP->name, &dpp->newRef );
-        if (!oserr) oserr= FSRename_Unique( &delRef, &dstRef, &dpp->newRef );
-      //upe_printf( "oserr=%d =>pathname='%s'\n", oserr, "renamed to DeleteMe_XXX" );
-      
-        if (!oserr) oserr= FSDeleteObject( &dpp->newRef );
-      //upe_printf( "oserr=%d DELETED\n", oserr );
-
-        /*
-        if  (oserr) {
-          for (k=0; k<MAXTRIES_DEL; k++) {
-                 oserr= FSDeleteObject( &newRef );
-            if (!oserr) break;
-        
-            HandleEvent(); 
-          } // for
-        } // if
-        */
-        
-        if  (oserr==fBsyErr) { dpp->toBeDeleted= true; oserr= 0; }
-    
-      #else
-        for (k=0; k<MAXTRIES_DEL; k++) {
-               oserr= FSpDelete( &delSpec );
-          if (!oserr) break;
-        
-          #ifdef MPW
-            HandleEvent();
-          #else
-            if (k<20) HandleEvent();
-            else      HandleOneEvent( nil, 100 );
-          #endif
-        } // for
-
-      //upe_printf( "oserr=%d k=%d DELETED\n", oserr, k );
-      #endif
-            
-      debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove oserr=%d\n", pp, oserr )); 
-      if (oserr) err= host2os9err( oserr,E_SHARE );
-
-    #elif defined windows32 // || defined MACOSX
+    #if   defined windows32 // || defined MACOSX
 //    spP->dDsc= opendir( spP->fullName );
 //    while (true) {
 //        dEnt= readdir( spP->dDsc ); if (dEnt==NULL) break;
@@ -2932,24 +2509,8 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
       
     spP->type= fFile; /* change the file type now */
     
-    #ifdef MACOS9
-    //strcpy               ( pathname, "deleted_directory" );
-      strcpy               ( pathname, spP->fullName );
-      oserr= getFSSpec( pid, pathname, _data, &spc   );
-      debugprintf( dbgFiles,dbgNorm, ("# pDsetatt: getFSSpec returned err=%d\n", err ) );
-    
-      /* file does not exist yet, create it first */
-      Get_Creator_And_Type ( &spc, &creator, &type );
-      oserr=      FSpCreate( &spc,  creator,  type, smSystemScript);
-      debugprintf( dbgFiles,dbgNorm, ("# pDsetatt: FSpCreate returned err=%d\n", err ) );
-        
-          oserr= FSpOpenDF( &spc, fsRdWrPerm, &spP->u.disk.u.file.refnum );
-      if (oserr) err= host2os9err( oserr,E_PNNF );
-    //upe_printf( "oserr=%d err=%d OPEN_IT\n", oserr, err ); 
-    #else
                                mode= 0x03 | poCreateMask;
        err= pFopen( pid, spP, &mode, pp ); // and open it as file again on the same system path
-    #endif  
     
     /*
     #ifdef MACOS9

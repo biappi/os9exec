@@ -240,14 +240,7 @@
 #include "vmod.h"
 #include "utilstuff.h"
 
-#ifdef MACOS9
-  #ifdef MPW
-    #include "::Platforms:MAC:macfiles.h"
-  #else
-    #include "macfiles.h"
-  #endif
-  
-#elif defined linux
+#if   defined linux
   #include "linuxfiles.h"
 #endif
 

@@ -92,26 +92,13 @@ callback_typ* cbP;
 void getversion( unsigned short *ver,
                  unsigned short *rev )
 {
-  #ifdef MACOS9
-    Handle versH;
-  #endif
 	
   *ver= 0; 
   *rev= 0;
 	
-  #ifdef MACOS9
-    // obtain os9exec version
-        versH= GetResource( 'vers',2 );
-    if (versH!=NULL) {
-      *ver= *( (byte*)*versH+0 );
-      *rev= *( (byte*)*versH+1 );
-      ReleaseResource( versH );
-    } // if
-  #else
     // simply hardwired for all other platforms
     *ver=    3;
     *rev= 0x39; /* V3.39 */
-  #endif
 } // getversion
 
 
