@@ -207,17 +207,6 @@ char* egetenv( const char* name )
     static char tmp[OS9PATHLEN];
     static char ocm[OS9PATHLEN]; /* Can't use <tmp> recursively */
 
-    #ifdef MACTERMINAL     
-      int   k,i;
-      char* p;
-      char  v[OS9PATHLEN];
-    
-      #define ENVSIZE 3
-      char    *environment[ENVSIZE+1] = { "OS9DISK=dd:", 
-                                          "OS9CMDS=dd:CMDS:",
-                                          "OS9MDIR=OS9MDIR:",
-                                           NULL };
-    #else
       Boolean u_disk, u_cmds, u_mdir;
       char*   q;
       char*   sv;      
@@ -230,39 +219,8 @@ char* egetenv( const char* name )
       #else
         Boolean isWin= false;
       #endif
-    #endif
 
 
-    #ifdef MACTERMINAL
-      for (k=0; k<ENVSIZE; k++) {
-          p= environment[k];
-
-          for (i=0; *p!=0; i++) {
-              if (*p=='=' && name[i]==NUL) {
-                  p++;
-                
-                  memcpy( &v,&gFS.name, sizeof(gFS.name) );
-                  p2cstr(  v );
-
-                  if (*v!=NUL && k<2) {
-                      strcat( v, ":"); /* mac path specific */
-
-                      if (k==1) strcat( v,"CMDS:" );
-                      p= v;
-                  }
-
-                  strcpy( tmp,startPath );
-                  strcat( tmp,p );
-                  return  tmp; /* found */
-              }
-
-              if (*p++!=name[i]) break;
-          } /* for */
-      } /* for */
-
-      return NULL; /* not found */
-      
-    #else
       /* getenv for use under MPW and for PC/Linux version */
       rslt= getenv( name );
       
@@ -337,7 +295,6 @@ char* egetenv( const char* name )
       
       debugprintf(dbgStartup,dbgNorm,("# egetenv %s: '%s'\n", name,rslt));
       return rslt;
-    #endif
 } /* egetenv */
 
 
@@ -345,10 +302,7 @@ char* egetenv( const char* name )
 /* advance cursor and force time slicing */
 void eAdvanceCursor(void)
 {
-    #ifdef MACTERMINAL
-      fflush(stdout);
-    
-    #elif defined macintosh
+    #if   defined macintosh
       #ifndef __INTEL__
       //RotateCursor(3*32); /* will rotate now */
       #endif
@@ -365,15 +319,6 @@ void eAdvanceCursor(void)
 /* spin cursor (event processing) */
 void eSpinCursor (short incr)
 {
-    #ifdef MACTERMINAL
-      static short count;
-    
-      count+=incr;
-      if ((count & 0x1F)==0) {
-        fflush(stdout);
-        count=0;
-      }
-    #else
       #if defined MACOSX
         // sleep(1);
          
@@ -390,7 +335,6 @@ void eSpinCursor (short incr)
       #else
         #error not implemented
       #endif
-    #endif
 } /* eSpinCursor */
 
 

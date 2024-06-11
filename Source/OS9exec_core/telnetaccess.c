@@ -80,9 +80,6 @@
 
 #include "os9exec_incl.h"
 
-#ifdef MACTERMINAL
-#include "serialaccess.h"
-#endif
 
 
 
@@ -299,9 +296,6 @@ void HandleEvent( void )
 /* CheckInputBuffers */
 void CheckInputBuffers(void)
 {
-    #if defined MACTERMINAL && defined USE_CLASSIC
-      CheckInputBuffersSerial(); /* check characters from serial lines */
-    #endif
     
     CheckInputBuffersTTY();      /*   "        "       "  ttys         */
     HandleEvent();               /* and check also the Mac events      */

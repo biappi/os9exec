@@ -2290,9 +2290,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     startDirID= fs.parID; /* get default dir */
   #endif
 	
-  #if defined MACTERMINAL && defined USE_CLASSIC
-    Install_AppleEvents(); /* do this as early as possible */
-  #endif
 
   #ifdef windows32
     hStdin= GetStdHandle( STD_INPUT_HANDLE );
@@ -2347,33 +2344,6 @@ ushort os9exec_nt( const char* toolname, int argc, char **argv, char **envp,
     strcpy( applName,"" );
 
     /* must be synchronized to OpenDocument Apple Event */
-    #ifdef MACTERMINAL
-      #ifndef USE_CARBON
-  	    memcpy( &gFS, &fs, sizeof( FSSpec ) );
-        while (!gDocDone) HandleEvent();
-        memcpy( &fs, &gFS, sizeof( FSSpec ) );
-      #endif
-
-      // If file has correct type and creator
-      // it can be executed directly */
-      err= getCipb( &cipb, &fs );
-      if (argc==0 &&
-        cipb.hFileInfo.ioFlFndrInfo.fdCreator=='os9a' &&
-        cipb.hFileInfo.ioFlFndrInfo.fdType   =='PROG') {
-
-        applVolID= fs.vRefNum;
-        applDirID= fs.parID; /* get default dir */
-	  		
-        memcpy( applName,fs.name, 32 );
-        p2cstr( applName );
-        my_toolname= "shell"; /* currently one shell is used */
-
-        argc= 1;
-        argv_startup[0]= applName;
-        argv_startup[1]= NULL;
-        argv= (char**)&argv_startup;
-      }
- 	  #endif
   #endif
 
   /* include 'startup' as default parameter */

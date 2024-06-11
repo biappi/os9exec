@@ -639,10 +639,6 @@ os9err pCclose( ushort pid, syspath_typ* spP )
     gConsoleID= spP->term_id;
 
     if (spP->type!=fTTY) {
-        #ifdef MACTERMINAL
-          /* now it can really be de-initialized */
-          RemoveConsole();
-        #endif
           
         return 0;
     } /* if */
