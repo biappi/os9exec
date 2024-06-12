@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //    Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -234,13 +234,15 @@
  *    Max number of signals increased
  *
  *    Revision 1.24  2003/01/03 14:57:02  bfo
- *    Store the signals during read the same way as in real OS-9, add pwr_brk flag
+ *    Store the signals during read the same way as in real OS-9, add pwr_brk
+ * flag
  *
  *    Revision 1.23  2003/01/02 12:16:41  bfo
  *    "MAXEVENTS" changed from 100 to 512
  *
  *    Revision 1.22  2002/11/06 20:12:12  bfo
- *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd struct)
+ *    lastsignal->pd._signal/icptroutine->pd._sigvec (directly defined at pd
+ * struct)
  *
  *    Revision 1.21  2002/10/27 23:40:50  bfo
  *    memory and module structure definitions adapted
@@ -291,10 +293,10 @@
  *    Mac version can be compiled with "printer.c"
  *
  *    Revision 1.5  2002/06/25 20:44:33  luz
- *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *    Added /lp printer support under windows. Not tested or even compiled for
+ * Mac
  *
  */
-
 
 /* OS9exec_nt.h */
 #ifndef __os9exec_nt_h
@@ -302,25 +304,24 @@
 
 /* activate linked hash table */
 //#if !defined MACOS9 && !defined windows32
-  #define LINKED_HASH 1
+#define LINKED_HASH 1
 
 #ifdef THREAD_SUPPORT
-  #include <types.h>
+#include <types.h>
 #endif
 
 #include <setjmp.h>
 
 /* XCode does not know about macintosh */
 #if !defined macintosh && defined __MACH__
-  #define    macintosh
-  #define    powerc
+#define macintosh
+#define powerc
 #endif
 
 #ifdef __GNUC__
-  #define UNIX
+#define UNIX
 #endif
 
-             
 /* constants */
 /* ========= */
 
@@ -330,14 +331,14 @@
 /* day since 1.1.0000 + days between 1.1.0000 and 1.1.4713 B.C. */
 /* question is still open whether year 0 exists ... */
 #define DAYS_SINCE_0000 1721059L
-#define SecsPerDay      (24*60*60)
+#define SecsPerDay (24 * 60 * 60)
 
 /* 16 bit integer */
 //#define MAXINT 32767
 
 /* bytes */
-#define KByte 1024  /* one     kByte */
-#define BpB      8  /* bits per byte */
+#define KByte 1024 /* one     kByte */
+#define BpB 8      /* bits per byte */
 
 /* extra stack size: This is required because the user process'
  * stack must have room for MacOS interrupts
@@ -347,208 +348,205 @@
 /* number of ticks that must pass before SpinCursor is called */
 #define DEFAULTSPININTERVAL 15
 
-
-
 /* "system-wide" constants */
 /* ----------------------- */
 /* (that is, for all "processes" together) */
 
 /* common string lenghts */
-#define OS9NAMELEN       29 /* module,file,pipe name string */
-#define OS9PATHLEN      255 /* path length */
-#define OS9EVNAMELEN     12 /* event name length */
-#define OS9MINSYSALLOC 2048 /* min system memory alloc block, a value that makes sense (bfo) */
+#define OS9NAMELEN 29   /* module,file,pipe name string */
+#define OS9PATHLEN 255  /* path length */
+#define OS9EVNAMELEN 12 /* event name length */
+#define OS9MINSYSALLOC                                                         \
+    2048 /* min system memory alloc block, a value that makes sense (bfo) */
 
-#define RBF_MINALLOC      4 /* min sector allocation for RBF   */
-#define DD__MINALLOC     32 /* min sector allocation for "/dd" */
-#define DEFAULT_SCT      64 /* default number of sectors per track (RBF) */
-#define MAXPRINTFLEN    500
-#define ICMDPBUFF     20480 /* pipe buffer for internal commands */
-#define MAX_PICTS         8 /* max number of picts to be displayed at /vmod display */
-#define MAXTRIES_DEL    100 /* max tries to delete a file */
+#define RBF_MINALLOC 4  /* min sector allocation for RBF   */
+#define DD__MINALLOC 32 /* min sector allocation for "/dd" */
+#define DEFAULT_SCT 64  /* default number of sectors per track (RBF) */
+#define MAXPRINTFLEN 500
+#define ICMDPBUFF 20480 /* pipe buffer for internal commands */
+#define MAX_PICTS 8 /* max number of picts to be displayed at /vmod display */
+#define MAXTRIES_DEL 100 /* max tries to delete a file */
 
-  #define MAX_PATH     1024
+#define MAX_PATH 1024
 
 // -------------------------------------------------------------------
-/* number of "processes" OS9exec can handle. 
+/* number of "processes" OS9exec can handle.
  * In the first versions of OS9exec "processes" are only chaining
  * each other, and no multitasking is possible.
  * The main purpose for this is to correctly handle chained makefiles
  * (which are heavily used in standard OS9 builds).
  * In the meantime multitasking is possible.
  */
-#define MAXPROCESSES   129
+#define MAXPROCESSES 129
 /* this allows processes with id 1..128 / id=0 is not used */
 
-/* maximum number of modules that can be linked (minus one for the main module itself */
-#define MAXMODULES     1024
+/* maximum number of modules that can be linked (minus one for the main module
+ * itself */
+#define MAXMODULES 1024
 
 /* number of active events */
-#define MAXEVENTS       512
+#define MAXEVENTS 512
 
 /* max length of signal queue */
-#define MAXSIGNALS      200
+#define MAXSIGNALS 200
 
 /* max length of signal queue */
-#define MAXALARMS       512
+#define MAXALARMS 512
 
 /* number of open system paths */
-#define MAXSYSPATHS     100
+#define MAXSYSPATHS 100
 
 /* number of SCSI devices (total on all buses) */
-#define MAXSCSI          20
+#define MAXSCSI 20
 
 /* TTY definitions: will be used for telnet and MGR */
-#define MAXTTYDEV       100
+#define MAXTTYDEV 100
 
 /* max number of RBF devices */
-#define MAXRBFDEV        64
+#define MAXRBFDEV 64
 
 /* path option section size */
-#define OPTSECTSIZE     128
+#define OPTSECTSIZE 128
 
 /* constants for the process(es) that run the OS9 code */
-#define MYPRIORITY      128 /* priority for first process (defaults to IRQs enabled) */
-#define IRQBLOCKPRIOR   250 /* minimal priority to have process execute with IRQs disabled */
+#define MYPRIORITY                                                             \
+    128 /* priority for first process (defaults to IRQs enabled) */
+#define IRQBLOCKPRIOR                                                          \
+    250 /* minimal priority to have process execute with IRQs disabled */
 
 /* number of dirs */
-  #ifdef LINKED_HASH
-    #define MAXDIRS   16384
-  #else
-    #define MAXDIRS   65536
-  #endif
+#ifdef LINKED_HASH
+#define MAXDIRS 16384
+#else
+#define MAXDIRS 65536
+#endif
 
-#define MAXDIRHIT        60
+#define MAXDIRHIT 60
 
 /* number of include/exclude list elements */
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  #define MAXLIST       500
+#define MAXLIST 500
 #endif
 
 /* number of statistics entries */
-#define MAX_OS9PROGS   1000
+#define MAX_OS9PROGS 1000
 
 /* number of mem alloc entries */
-#define MAX_MEMALLOC  10000
+#define MAX_MEMALLOC 10000
 
 /* number of memory blocks than can be allocated per "process"
- * through F$SRqMem. For standard OS-9, this is limited to 32, but OS9 joins 
- * adjacent memory blocks if possible, while OS9exec does not. 
+ * through F$SRqMem. For standard OS-9, this is limited to 32, but OS9 joins
+ * adjacent memory blocks if possible, while OS9exec does not.
  * Therefore, the MAXMEMBLOCKS constant must be much larger than
  * 32 to avoid that F$SRqMem fails with E_NORAM after 32 calls.
  */
-#define MAXMEMBLOCKS   512 
+#define MAXMEMBLOCKS 512
 
 // total number of mem alloc entries
 #define MAX_MEMALLOC 10000
 
 // definition of an allocated memory block
 typedef struct {
-  void* base;
-  ulong size;
+    void *base;
+    ulong size;
 } memblock_typ;
 
 // per process memory blocks
 typedef struct {
-  memblock_typ m[ MAXMEMBLOCKS ]; // the process' allocated memory blocks
+    memblock_typ m[MAXMEMBLOCKS]; // the process' allocated memory blocks
 } pmem_typ;
 
-// 
-
+//
 
 /* "per-process" constants */
 /* ----------------------- */
 /* (that is, once for each "process") */
 
-
 /* maximum number of open paths per "process" */
-#define MAXUSRPATHS   32
+#define MAXUSRPATHS 32
 
 /* number of exceptions for which a handler can be installed */
-#define NUMEXCEPTIONS  7
+#define NUMEXCEPTIONS 7
 
 /* number of the first exception (bus error) */
 #define FIRSTEXCEPTION 2
 
 /* special hi-byte flag for "silent" errors */
-#define E_OKFLAG    0x4200
+#define E_OKFLAG 0x4200
 
 /* aging for pWaitRead state processes */
-#define NewAge      30
-#define Pwr_Signal  32      /* singals below go thru directly */
+#define NewAge 30
+#define Pwr_Signal 32 /* singals below go thru directly */
 
 /* private error code */
-#define E_PLINK     0x1234  /* returned by xOpen when *mode is the new syspath number */
-#define SIG_SCRATCH 0x20    /* sigdat scratch area */
+#define E_PLINK                                                                \
+    0x1234 /* returned by xOpen when *mode is the new syspath number */
+#define SIG_SCRATCH 0x20 /* sigdat scratch area */
 
 /* control characters */
-#define NUL       0x00
-#define CtrlA     0x01
-#define CtrlC     0x03
-#define CtrlE     0x05
-#define LF        0x0A
-#define CR        0x0D
-#define XOn       0x11
-#define XOff      0x13
+#define NUL 0x00
+#define CtrlA 0x01
+#define CtrlC 0x03
+#define CtrlE 0x05
+#define LF 0x0A
+#define CR 0x0D
+#define XOn 0x11
+#define XOff 0x13
 #define keyRETURN '\r'
- 
- 
+
 /* path delimiters */
 /* for OS-9 */
-#define   PSEP          '/'
-#define   PSEP_STR      "/"
+#define PSEP '/'
+#define PSEP_STR "/"
 
 /* for the host system */
-#if   defined UNIX
-  #define PATHDELIM     '/'
-  #define PATHDELIM_STR "/"
+#if defined UNIX
+#define PATHDELIM '/'
+#define PATHDELIM_STR "/"
 #endif
-
 
 // omitted parameters (does not really work with gcc)
 #ifdef __GNUC__
-  #define _modeP_   ushort*      modeP
-  #define _rp_      regs_type*   rp
-  #define _pid_     ushort       pid
-  #define _spP_     syspath_typ* spP
-  #define _rbf_     rbfdev_typ*  rbf
-  #define _fmgr_    fmgr_typ*    f
-  #define _maxlenP_ ulong*       maxlenP
-  #define _buffer_  char*        buffer
-  #define _bufferV_ void*        buffer
-  #define _size_    ulong        size
-  #define _txt_     char*        txt
-  #define _txt2_    char*        txt2
-  #define _argc_    int          argc
-  #define _argv_    char**       argv
-  #define _memPP_   void**       memoryPP
-  #define _a1_      ulong*       a1
-  #define _d0_      ulong*       d0
-  #define _d2_      ulong*       d2
-  #define _d3_      ulong*       d3
+#define _modeP_ ushort *modeP
+#define _rp_ regs_type *rp
+#define _pid_ ushort pid
+#define _spP_ syspath_typ *spP
+#define _rbf_ rbfdev_typ *rbf
+#define _fmgr_ fmgr_typ *f
+#define _maxlenP_ ulong *maxlenP
+#define _buffer_ char *buffer
+#define _bufferV_ void *buffer
+#define _size_ ulong size
+#define _txt_ char *txt
+#define _txt2_ char *txt2
+#define _argc_ int argc
+#define _argv_ char **argv
+#define _memPP_ void **memoryPP
+#define _a1_ ulong *a1
+#define _d0_ ulong *d0
+#define _d2_ ulong *d2
+#define _d3_ ulong *d3
 #else
-  #define _modeP_   ushort*
-  #define _rp_      regs_type*
-  #define _pid_     ushort
-  #define _spP_     syspath_typ*
-  #define _rbf_     rbfdev_typ*
-  #define _fmgr_    fmgr_typ*
-  #define _maxlenP_ ulong*
-  #define _buffer_  char*
-  #define _bufferV_ void*
-  #define _size_    ulong
-  #define _txt_     char*
-  #define _txt2_    char*
-  #define _argc_    int
-  #define _argv_    char**
-  #define _memPP_   void**
-  #define _a1_      ulong*
-  #define _d0_      ulong*
-  #define _d2_      ulong*
-  #define _d3_      ulong*
+#define _modeP_ ushort *
+#define _rp_ regs_type *
+#define _pid_ ushort
+#define _spP_ syspath_typ *
+#define _rbf_ rbfdev_typ *
+#define _fmgr_ fmgr_typ *
+#define _maxlenP_ ulong *
+#define _buffer_ char *
+#define _bufferV_ void *
+#define _size_ ulong
+#define _txt_ char *
+#define _txt2_ char *
+#define _argc_ int
+#define _argv_ char **
+#define _memPP_ void **
+#define _a1_ ulong *
+#define _d0_ ulong *
+#define _d2_ ulong *
+#define _d3_ ulong *
 #endif
-
-
 
 /* global types */
 /* ============ */
@@ -558,289 +556,293 @@ typedef struct {
 
 /* an (internal) module directory entry */
 typedef struct {
-            void*   modulebase;            
-            Boolean isBuiltIn; /* set, if module compiled into code (such as 'OS9exec' module) */
-            short   linkcount;
-         } module_typ;
-
+    void   *modulebase;
+    Boolean isBuiltIn; /* set, if module compiled into code (such as 'OS9exec'
+                          module) */
+    short linkcount;
+} module_typ;
 
 /* a standard module directory entry */
 typedef struct {
-            ulong m1;
-            ulong m2;
-            ulong size;
-            ulong lnk;
-         } mdir_entry;
-
+    ulong m1;
+    ulong m2;
+    ulong size;
+    ulong lnk;
+} mdir_entry;
 
 /* a error trap handler */
 typedef struct {
-            ulong handleraddr;
-            ulong handlerstack;
-         } errortrap_typ;
-
+    ulong handleraddr;
+    ulong handlerstack;
+} errortrap_typ;
 
 /* OS9 simulated directory file constants */
-#define IDMASK      0x001FFFFF /* one bit more because of problems ... (bfo) */
-#define IDEXT       0xFFE00000
-#define IDSIGN      0x00100000
-#define IDSHIFT     21 /* bits to shift (bfo) */
-#define VOLIDMASK   0x0007
-#define VOLIDEXT    0xFFF8
-
+#define IDMASK 0x001FFFFF /* one bit more because of problems ... (bfo) */
+#define IDEXT 0xFFE00000
+#define IDSIGN 0x00100000
+#define IDSHIFT 21 /* bits to shift (bfo) */
+#define VOLIDMASK 0x0007
+#define VOLIDEXT 0xFFF8
 
 /* #define VOLIDSIGN   0x0004 */
-#define VOLIDMIN    -7
-#define DIRENTRYSZ  32
-#define DIRNAMSZ    28
+#define VOLIDMIN -7
+#define DIRENTRYSZ 32
+#define DIRNAMSZ 28
 
 /* a OS9 directory file entry */
 typedef struct {
-            char  name[DIRNAMSZ];
-            ulong fdsect;
-        } os9direntry_typ;
+    char  name[DIRNAMSZ];
+    ulong fdsect;
+} os9direntry_typ;
 
 /* pipe */
-#define SAFETY           2
-#define DEFAULTPIPESZ 4096+SAFETY
-#define DEFAULTPTYSZ  1024
-#define MINPIPESZ       90
+#define SAFETY 2
+#define DEFAULTPIPESZ 4096 + SAFETY
+#define DEFAULTPTYSZ 1024
+#define MINPIPESZ 90
 
 #define MAX_SLEEP 0x7fffffff
 
 /* attribute definitions */
-typedef enum { poRead      =0x0001,
-               poWrite     =0x0002,
-               poUpdate    =0x0003,
-               poExec      =0x0004,
-               poDir       =0x0080,
-               poCreateMask=0x8000 } poEnum;
+typedef enum {
+    poRead       = 0x0001,
+    poWrite      = 0x0002,
+    poUpdate     = 0x0003,
+    poExec       = 0x0004,
+    poDir        = 0x0080,
+    poCreateMask = 0x8000
+} poEnum;
 
 /* sysPath 0 is reserved as nonexisting */
-typedef enum { sysNonExisting=0, sysStdin=1, sysStdout=2, 
-               sysStderr=3, sysStdnil=4, sysVMod=5  } syspathEnum;
-              
-typedef enum { usrStdin=0, usrStdout=1, usrStderr=2 } usrpathEnum;
+typedef enum {
+    sysNonExisting = 0,
+    sysStdin       = 1,
+    sysStdout      = 2,
+    sysStderr      = 3,
+    sysStdnil      = 4,
+    sysVMod        = 5
+} syspathEnum;
 
-typedef enum { fNone, fCons,fTTY,fNIL,fVMod,fSCF, fFile,fDir, 
-                      fPipe,fPTY, fRBF, fNET, fPrinter, fARRSZ } ptype_typ;
+typedef enum { usrStdin = 0, usrStdout = 1, usrStderr = 2 } usrpathEnum;
 
+typedef enum {
+    fNone,
+    fCons,
+    fTTY,
+    fNIL,
+    fVMod,
+    fSCF,
+    fFile,
+    fDir,
+    fPipe,
+    fPTY,
+    fRBF,
+    fNET,
+    fPrinter,
+    fARRSZ
+} ptype_typ;
 
-#define  TOT_POS  0x00       /* Total number of sectors */
-#define  TRK_POS  0x03       /* Number of sectors per track */
-#define  MAP_POS  0x04       /* Number of bytes in allocation map */
-#define  BIT_POS  0x06       /* Cluster size */
-#define  DIR_POS  0x08       /* Position of root dir */
-#define CRUZ_POS  0x60       /* Cruz position at RBF boot sector */
-#define SECT_POS  0x68       /* Sector size */
+#define TOT_POS 0x00  /* Total number of sectors */
+#define TRK_POS 0x03  /* Number of sectors per track */
+#define MAP_POS 0x04  /* Number of bytes in allocation map */
+#define BIT_POS 0x06  /* Cluster size */
+#define DIR_POS 0x08  /* Position of root dir */
+#define CRUZ_POS 0x60 /* Cruz position at RBF boot sector */
+#define SECT_POS 0x68 /* Sector size */
 
-#define Cruz_Str "Cruz"      /* the expected magic string at CRUZ_POS */
-#define UNDEF_POS 0xFFFFFFFF /* invalid compare position for image raw access */
+#define Cruz_Str "Cruz" /* the expected magic string at CRUZ_POS */
+#define UNDEF_POS                                                              \
+    0xFFFFFFFF /* invalid compare position for image raw access                \
+                */
 
 typedef struct {
-            char   name[OS9NAMELEN];    /* device name */
-            ushort ssize;               /* sector size */
-            ushort sas;                 /* sector allocation size */
-            byte   pdtyp;               /* PD_TYP according to descriptor */
+    char   name[OS9NAMELEN]; /* device name */
+    ushort ssize;            /* sector size */
+    ushort sas;              /* sector allocation size */
+    byte   pdtyp;            /* PD_TYP according to descriptor */
 
-            /* full SCSI Address */
-            short  adapt;
-            short  bus;
-            short  id;                
-            short  lun;
-        } scsi_typ;
-
+    /* full SCSI Address */
+    short adapt;
+    short bus;
+    short id;
+    short lun;
+} scsi_typ;
 
 /* option section constants */
-#define PthOffs    0x80           /* Offset to option section */
-    
-#define PD_TYP     0x83 - PthOffs /* RBF */
-#define PD_SCT     0x8A - PthOffs
-#define PD_SAS     0x8E - PthOffs
-#define PD_SSize   0x94 - PthOffs
-#define PD_CtrlID  0xA6 - PthOffs
-#define PD_LUN     0x99 - PthOffs
-#define PD_CtrlrID 0xA6 - PthOffs
-#define PD_ATT     0xB5 - PthOffs
-#define PD_FD      0xB6 - PthOffs
-#define PD_DFD     0xBA - PthOffs
-#define PD_DCP     0xBE - PthOffs
-#define PD_DVT     0xC2 - PthOffs
-#define PD_SctSiz  0xC8 - PthOffs
-#define PD_NAME    0xE0 - PthOffs
-    
-#define PD_INT     0x90 - PthOffs /* SCF */
-#define PD_QUT     0x91 - PthOffs
-#define PD_XON     0x98 - PthOffs
-#define PD_XOFF    0x99 - PthOffs
+#define PthOffs 0x80 /* Offset to option section */
 
+#define PD_TYP 0x83 - PthOffs /* RBF */
+#define PD_SCT 0x8A - PthOffs
+#define PD_SAS 0x8E - PthOffs
+#define PD_SSize 0x94 - PthOffs
+#define PD_CtrlID 0xA6 - PthOffs
+#define PD_LUN 0x99 - PthOffs
+#define PD_CtrlrID 0xA6 - PthOffs
+#define PD_ATT 0xB5 - PthOffs
+#define PD_FD 0xB6 - PthOffs
+#define PD_DFD 0xBA - PthOffs
+#define PD_DCP 0xBE - PthOffs
+#define PD_DVT 0xC2 - PthOffs
+#define PD_SctSiz 0xC8 - PthOffs
+#define PD_NAME 0xE0 - PthOffs
+
+#define PD_INT 0x90 - PthOffs /* SCF */
+#define PD_QUT 0x91 - PthOffs
+#define PD_XON 0x98 - PthOffs
+#define PD_XOFF 0x99 - PthOffs
 
 /* additional setstat/getstat codes */
-#define SS_LBlink  0x080 + 32
-#define SS_201     0x201
-#define SS_204     0x204
-#define SS_206     0x206
-#define SS_Etc     0x3EE
-
-
+#define SS_LBlink 0x080 + 32
+#define SS_201 0x201
+#define SS_204 0x204
+#define SS_206 0x206
+#define SS_Etc 0x3EE
 
 /* The pipe channel structure */
 /* NOTE: several system paths can use the same pipe channel */
-/* NOTE: this is structure is also used for the tty/pty system which is in fact   */
-/* a cross connected pipe (writing will be done into (each other's) sp_lock pipe) */
+/* NOTE: this is structure is also used for the tty/pty system which is in fact
+ */
+/* a cross connected pipe (writing will be done into (each other's) sp_lock
+ * pipe) */
 typedef struct {
-            ulong     size;               /* size of pipe buffer */
-            byte*     buf;                /* pointer to pipe buffer */
-            byte*     prp;                /* pipe read pointer */
-            byte*     pwp;                /* pipe write pointer */
-            ulong     bread;              /* number of bytes read so far */
-            ulong     bwritten;           /* number of bytes read so far */
-            ushort    consumers;          /* number of waiting consumers for this pipe */
-            ushort    sp_lock;            /* if <> 0, tty/pty to this system path nr */
-            Boolean   do_lf;
-            Boolean   broken;             /* broken pipe or tty/pty */
-            ushort    pipeDirCnt;         /* pipe dir count */
-            struct tm pipeTim;
-        } pipechan_typ;
-
-
+    ulong     size;      /* size of pipe buffer */
+    byte     *buf;       /* pointer to pipe buffer */
+    byte     *prp;       /* pipe read pointer */
+    byte     *pwp;       /* pipe write pointer */
+    ulong     bread;     /* number of bytes read so far */
+    ulong     bwritten;  /* number of bytes read so far */
+    ushort    consumers; /* number of waiting consumers for this pipe */
+    ushort    sp_lock;   /* if <> 0, tty/pty to this system path nr */
+    Boolean   do_lf;
+    Boolean   broken;     /* broken pipe or tty/pty */
+    ushort    pipeDirCnt; /* pipe dir count */
+    struct tm pipeTim;
+} pipechan_typ;
 
 /* variant for pipes */
 typedef struct {
-            pipechan_typ*       pchP;   /* (named or unnamed) pipe, tty/pty pairs */
-            pipechan_typ* i_svd_pchP;   /* saved pipe during internal commands */
-            Boolean       locked_open;
-        } pipe_typ;
-
+    pipechan_typ *pchP;       /* (named or unnamed) pipe, tty/pty pairs */
+    pipechan_typ *i_svd_pchP; /* saved pipe during internal commands */
+    Boolean       locked_open;
+} pipe_typ;
 
 /* sub-variant for disk files */
 typedef struct {
-            Boolean moddate_changed;
-            time_t  moddate;
-            Boolean readFlag;           /* keep track for r/w changes */
-            
-        } file_typ;
+    Boolean moddate_changed;
+    time_t  moddate;
+    Boolean readFlag; /* keep track for r/w changes */
 
+} file_typ;
 
 /* sub-variant for disk directories */
 typedef struct {
-            ulong pos;                  /* the emulated directory "file"'s position for fDir */
+    ulong pos; /* the emulated directory "file"'s position for fDir */
 
-            #ifdef win_unix
-              ulong fdcur;
-            #endif
-        } dir_typ;              
-
+#ifdef win_unix
+    ulong fdcur;
+#endif
+} dir_typ;
 
 /* variant for disk objects */
 typedef struct {
 
-            union {
-                file_typ file;          /* disk file */
-                 dir_typ dir;           /* emulated directory file */                   
-            } u;
-        } disk_typ;
-
+    union {
+        file_typ file; /* disk file */
+        dir_typ  dir;  /* emulated directory file */
+    } u;
+} disk_typ;
 
 /* variant for RBF objects */
 typedef struct {
-            ulong     devnr;        // current device number
-            byte      att;          // file's atttributes
-            ulong     currPos;      // current file position
-            ulong     lastPos;      // current file last position (seek<end)
-            Boolean   wMode;        // opened in write mode
-            Boolean   flushFDCache; // flush FD cache
-            ushort    diskID;       // disk ID for comparison reasons
-            ulong     fd_nr;        // current FD logical sector number
-            ulong     fddir;        // current FD logical sector of the dir
-            ulong     deptr;        // dir entry ptr
-        } rbf_typ;
+    ulong   devnr;        // current device number
+    byte    att;          // file's atttributes
+    ulong   currPos;      // current file position
+    ulong   lastPos;      // current file last position (seek<end)
+    Boolean wMode;        // opened in write mode
+    Boolean flushFDCache; // flush FD cache
+    ushort  diskID;       // disk ID for comparison reasons
+    ulong   fd_nr;        // current FD logical sector number
+    ulong   fddir;        // current FD logical sector of the dir
+    ulong   deptr;        // dir entry ptr
+} rbf_typ;
 
 /* variant for SCF objects */
 typedef struct {
-            int       scrline;         /* line count, for pagination    */
-        } scf_typ;
-
+    int scrline; /* line count, for pagination    */
+} scf_typ;
 
 /* Mount modes for RBF images */
-#define  Img_Unchanged 0 // as is
-#define  Img_Reduced   1 // reduced;   mount -i
-#define  Img_FullSize  2 // full size; mount -I
-
+#define Img_Unchanged 0 // as is
+#define Img_Reduced 1   // reduced;   mount -i
+#define Img_FullSize 2  // full size; mount -I
 
 /* the SCSI device variables */
 typedef struct {
-			      int	    ID;               /* SCSI ID, -1 if NO_SCSI   */
-			      short     adapt;            /* SCSI Adaptor, -1 if none */
-			      short     bus;              /* SCSI Bus, normally 0     */
-			      short     LUN;              /* SCSI LUN, normally 0     */
-        } scsi_dev;
-        
-        
+    int   ID;    /* SCSI ID, -1 if NO_SCSI   */
+    short adapt; /* SCSI Adaptor, -1 if none */
+    short bus;   /* SCSI Bus, normally 0     */
+    short LUN;   /* SCSI LUN, normally 0     */
+} scsi_dev;
+
 #ifdef NET_SUPPORT
-    #if defined UNIX
-      typedef ulong     SOCKET;  /* make it visible for linux as std type */
-    #endif
-  
-    #define nil   0
-    typedef char* Ptr;
-    typedef int   OSStatus;
-  
-    struct  InetAddress
-    {
-      ushort  fAddressType;   // always AF_INET
-      ushort  fPort;          // Port number 
-      ulong   fHost;          // Host address in net byte order
-      byte    fUnused[8];     // Traditional unused bytes
-    };
-
-    typedef struct InetAddress InetAddress;
-
-
-  #ifdef UNIX
-    #define kTransferBufferSize 256
-  #else
-    #define kTransferBufferSize 4096
-  #endif
-
-
-  /* variant for network objects */
-  typedef struct {
-              SOCKET      ep;             /* end point reference */
-              Ptr         transferBuffer; /* OpenTransport's network buffer */
-              Ptr         b_local;        /* local buffer */
-              ulong       bsize;          /* local buffer size */     
-              Ptr         bpos;           /* local buffer access */     
-              InetAddress ipAddress;      /* my  own    host's address */
-              InetAddress ipRemote;       /* the remote host's address */
-              ushort      fAddT;
-                
-            
-                
-              Boolean     bound;          /* true, if binding was successful  */
-              Boolean     accepted;       /* true, if connection is accepted  */
-              Boolean     connected;      /* true, if connection is connected */
-              Boolean     listen;         /* net listener */
-              Boolean     check;          /* check if ready */
-              Boolean     closeIt;        /* ready to be closed */
-          } net_typ;
+#if defined   UNIX
+typedef ulong SOCKET; /* make it visible for linux as std type */
 #endif
 
-                    
-/* the system path descriptor itself */         
-#define STD_SECTSIZE 256        // (old) standard sector size for OS9
+#define nil 0
+typedef char *Ptr;
+typedef int   OSStatus;
 
-#define MIN_TMP_SCT_SIZE 2048   // minimu size of temp sector buffer (to read sector 0)
+struct InetAddress {
+    ushort fAddressType; // always AF_INET
+    ushort fPort;        // Port number
+    ulong  fHost;        // Host address in net byte order
+    byte   fUnused[8];   // Traditional unused bytes
+};
+
+typedef struct InetAddress InetAddress;
+
+#ifdef UNIX
+#define kTransferBufferSize 256
+#else
+#define kTransferBufferSize 4096
+#endif
+
+/* variant for network objects */
+typedef struct {
+    SOCKET      ep;             /* end point reference */
+    Ptr         transferBuffer; /* OpenTransport's network buffer */
+    Ptr         b_local;        /* local buffer */
+    ulong       bsize;          /* local buffer size */
+    Ptr         bpos;           /* local buffer access */
+    InetAddress ipAddress;      /* my  own    host's address */
+    InetAddress ipRemote;       /* the remote host's address */
+    ushort      fAddT;
+
+    Boolean bound;     /* true, if binding was successful  */
+    Boolean accepted;  /* true, if connection is accepted  */
+    Boolean connected; /* true, if connection is connected */
+    Boolean listen;    /* net listener */
+    Boolean check;     /* check if ready */
+    Boolean closeIt;   /* ready to be closed */
+} net_typ;
+#endif
+
+/* the system path descriptor itself */
+#define STD_SECTSIZE 256 // (old) standard sector size for OS9
+
+#define MIN_TMP_SCT_SIZE                                                       \
+    2048 // minimu size of temp sector buffer (to read sector 0)
 
 typedef struct {
     /* common for all types */
     ptype_typ type;             /* the path's type */
     ushort    mode;             /* the path's mode */
     ushort    fileAtt;          /* file attributes */
-    ushort    nr;               /* the own syspath number */        
+    ushort    nr;               /* the own syspath number */
     ushort    linkcount;        /* the link count */
     char      name[OS9NAMELEN]; /* file name */
-    mod_exec* mh;				        /* according module, if available */
+    mod_exec *mh;               /* according module, if available */
     byte      opt[OPTSECTSIZE]; /* path's option section */
     ushort    signal_to_send;   /* send signal on data ready */
     ushort    signal_pid;       /* signal has to be sent to this process */
@@ -848,451 +850,387 @@ typedef struct {
     int       lastwritten_pid;  /* connection for signal handler */
     Boolean   rawMode;          /* raw mode /xx@ */
     ulong     rawPos;           /* the (emulated) sector 0 position */
-        
-    byte*     fd_sct;           /* FD  sector buffer */
-    byte*     rw_sct;           /* R/W sector buffer */
-    ulong     rw_nr;            /* current R/W sector nr */
-    ulong     mustW;            /* current sector to be written */
-    Boolean   fullsearch;       /* recursive mode for "babushka" */
+
+    byte   *fd_sct;     /* FD  sector buffer */
+    byte   *rw_sct;     /* R/W sector buffer */
+    ulong   rw_nr;      /* current R/W sector nr */
+    ulong   mustW;      /* current sector to be written */
+    Boolean fullsearch; /* recursive mode for "babushka" */
 
     // %%%luz: many of these should be in the union below...
-      FILE*   stream;           /* the associated stream */
-        
-    char      fullName[OS9PATHLEN]; /* direct access makes life easier */
+    FILE *stream; /* the associated stream */
 
-    #if defined win_unix
-      DIR*        dDsc;
-      int         svD_n;
-      dirent_typ* svD_dEnt;
-    #endif
-        
-    int       term_id;          /* terminal/port id number, console|pipe|printer used together */
+    char fullName[OS9PATHLEN]; /* direct access makes life easier */
+
+#if defined win_unix
+    DIR        *dDsc;
+    int         svD_n;
+    dirent_typ *svD_dEnt;
+#endif
+
+    int term_id; /* terminal/port id number, console|pipe|printer used together
+                  */
 
     /* no errors for mac/linux definition */
 
-
     /* variants for different types */
     union {
-      pipe_typ pipe;            /* Pipe          object */
-      disk_typ disk;            /* Disk file/dir object */
-       rbf_typ rbf;             /* RBF  file/dir object */
-       scf_typ scf;             /* SCF           object */
-         
-      #ifdef NET_SUPPORT
-        net_typ net;            /* Network       object */
-      #endif
+        pipe_typ pipe; /* Pipe          object */
+        disk_typ disk; /* Disk file/dir object */
+        rbf_typ  rbf;  /* RBF  file/dir object */
+        scf_typ  scf;  /* SCF           object */
+
+#ifdef NET_SUPPORT
+        net_typ net; /* Network       object */
+#endif
     } u;
 } syspath_typ;
 
-
-
 /* path operation function def */
-// typedef  os9err(*pathopfunc_typ)(ushort pid, syspath_typ*, ulong *n, void* b);
-typedef os9err(*pathopfunc_typ) ( ushort pid, syspath_typ*, ... );
+// typedef  os9err(*pathopfunc_typ)(ushort pid, syspath_typ*, ulong *n, void*
+// b);
+typedef os9err (*pathopfunc_typ)(ushort pid, syspath_typ *, ...);
 
-                
 /* system task function def */
-typedef os9err(*systaskfunc_typ)( ushort pid, void *dataptr, regs_type* rp );
-
+typedef os9err (*systaskfunc_typ)(ushort pid, void *dataptr, regs_type *rp);
 
 /* a output filter procedure */
-typedef void (*filterfunc)( char *linebuf, FILE *stream, void *filtermem );
-
+typedef void (*filterfunc)(char *linebuf, FILE *stream, void *filtermem);
 
 /* debug_out handling */
 typedef void (*dbg_func)(void);
 
-
-
 /* the file manager system */
 typedef struct {
-            pathopfunc_typ _SS_Size,
-                           _SS_Opt,
-                           _SS_DevNm,
-                           _SS_Pos,
-                           _SS_EOF,
-                           _SS_Ready,
-                           _SS_FD,
-                           _SS_FDInf,
-                           _SS_DSize,
-                           
-                           _SS_PCmd,   /* network specific function */
+    pathopfunc_typ _SS_Size, _SS_Opt, _SS_DevNm, _SS_Pos, _SS_EOF, _SS_Ready,
+        _SS_FD, _SS_FDInf, _SS_DSize,
 
-                           _SS_LBlink,                /* L2 support */
-                           
-                           _SS_Undef; /* any other getstat function */
-        } gs_typ;
+        _SS_PCmd, /* network specific function */
 
+        _SS_LBlink, /* L2 support */
+
+        _SS_Undef; /* any other getstat function */
+} gs_typ;
 
 typedef struct {
-            pathopfunc_typ _SS_Size,
-                           _SS_Opt,
-                           _SS_Attr,
-                           _SS_FD,
-                           _SS_Lock,
-                           _SS_WTrk,
+    pathopfunc_typ _SS_Size, _SS_Opt, _SS_Attr, _SS_FD, _SS_Lock, _SS_WTrk,
 
-                           _SS_Bind,    /* network spefic functions */
-                           _SS_Listen,
-                           _SS_Connect,
-                           _SS_Accept,
-                           _SS_Recv,
-                           _SS_Send,
-                           _SS_GNam,
-                           _SS_SOpt,
-                           _SS_SendTo,
-                           _SS_PCmd,
-                           
-                           _SS_LBlink,                /* L2 support */
-                           
-                           _SS_Undef; /* any other setstat function */
-        } ss_typ;
+        _SS_Bind, /* network spefic functions */
+        _SS_Listen, _SS_Connect, _SS_Accept, _SS_Recv, _SS_Send, _SS_GNam,
+        _SS_SOpt, _SS_SendTo, _SS_PCmd,
 
+        _SS_LBlink, /* L2 support */
+
+        _SS_Undef; /* any other setstat function */
+} ss_typ;
 
 typedef struct {
-            pathopfunc_typ open,
-                           close,
-                           write,
-                           writeln,
-                           read,
-                           readln,
-                           seek,
-                           
-                           chd,
-                           del,
-                           makdir;
-                           
-            gs_typ         gs;
-            ss_typ         ss;
-        } fmgr_typ;
+    pathopfunc_typ open, close, write, writeln, read, readln, seek,
 
+        chd, del, makdir;
+
+    gs_typ gs;
+    ss_typ ss;
+} fmgr_typ;
 
 /* an "event" */
 typedef struct {
-            ulong   id;
-            char    name[OS9EVNAMELEN];
-            int     value;
-            short   wInc;      
-            short   sInc;
-            ushort  e_linkcount;
-                
-            void*   next;
-            void*   prev;
-        } event_typ;            
+    ulong  id;
+    char   name[OS9EVNAMELEN];
+    int    value;
+    short  wInc;
+    short  sInc;
+    ushort e_linkcount;
+
+    void *next;
+    void *prev;
+} event_typ;
 
 /* a "process" */
-typedef enum { 
-            pUnused,
-            pStart,
-            pActive, 
-            pDead, 
-            pSleeping, 
-            pWaiting, 
-            pSysTask, 
-            pWaitRead 
-        } pstate_typ;
+typedef enum {
+    pUnused,
+    pStart,
+    pActive,
+    pDead,
+    pSleeping,
+    pWaiting,
+    pSysTask,
+    pWaitRead
+} pstate_typ;
 
-
-typedef struct {                /* saved structure during read */
-            regs_type r;        /* the registers */
-            ushort    vector;   /* vector */
-            ushort    func;     /* and function */
-        } save_type;
-
-
+typedef struct {      /* saved structure during read */
+    regs_type r;      /* the registers */
+    ushort    vector; /* vector */
+    ushort    func;   /* and function */
+} save_type;
 
 typedef struct {
-            ptype_typ type;             /* current dir's device type */
-            ushort    dev;              /* RBF: device */
-            ulong     lsn;              /* RBF: current lsn */
-            char      path[OS9PATHLEN]; /* current dir path */
-                                
-        } dir_type;
+    ptype_typ type;             /* current dir's device type */
+    ushort    dev;              /* RBF: device */
+    ulong     lsn;              /* RBF: current lsn */
+    char      path[OS9PATHLEN]; /* current dir path */
 
-
+} dir_type;
 
 /* signal type */
 typedef struct {
-            int    cnt;
-            ushort pid   [MAXSIGNALS];
-            ushort signal[MAXSIGNALS];
-        } sig_typ;
-
-
+    int    cnt;
+    ushort pid[MAXSIGNALS];
+    ushort signal[MAXSIGNALS];
+} sig_typ;
 
 /* alarm type */
 typedef struct {
-			ushort  pid;
-			ushort  signal;
-			ulong   ticks;
-			ulong   due;
-			Boolean cyclic;
-		} alarm_typ;
-		
-
+    ushort  pid;
+    ushort  signal;
+    ulong   ticks;
+    ulong   due;
+    Boolean cyclic;
+} alarm_typ;
 
 /* record structure for multi console access */
-#define INBUFSIZE  256
+#define INBUFSIZE 256
 typedef struct {
-            Boolean      installed;
-            ulong        consoleTermPtr;    /* used for the mac terminals */
-            short        rIn, rOut;         /* used for the serial lines */
-            char         inBuf[INBUFSIZE];
-            int          inBufUsed;
-            Boolean      holdScreen;
-            ushort       pid;
-            syspath_typ* spP;
-        
-        } ttydev_typ;
+    Boolean      installed;
+    ulong        consoleTermPtr; /* used for the mac terminals */
+    short        rIn, rOut;      /* used for the serial lines */
+    char         inBuf[INBUFSIZE];
+    int          inBufUsed;
+    Boolean      holdScreen;
+    ushort       pid;
+    syspath_typ *spP;
 
+} ttydev_typ;
 
 /* the L2 led structure */
-#define L2_Off        4
+#define L2_Off 4
 #define L2_InitRatio 10
 
 typedef struct {
-			ushort       hw_location;
-			
-			byte           col1;
-			ushort       ratio1;
-			byte           col2;
-			ushort       ratio2;
-			
-			ushort        phase;
-			ushort       lcount;
-		} l2_typ;
+    ushort hw_location;
 
+    byte   col1;
+    ushort ratio1;
+    byte   col2;
+    ushort ratio2;
 
+    ushort phase;
+    ushort lcount;
+} l2_typ;
 
 //#if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  typedef int    ( *Next_NativeProg_Typ)( int* i, char* progName, char*   callMode );
-  typedef int    (   *Is_NativeProg_Typ)(   const char* progName, void**   modBase );
-  typedef os9err (*Start_NativeProg_Typ)(   const char* progName, void* nativeinfo );
-  typedef os9err (  *Call_Intercept_Typ)( void* routine,    short code, ulong ptr  );
-    
-  // The plugin element
-  typedef struct {
-    char*   name;           // the plugin's name
-    void*   fDLL;           // the plugin's reference
-    long    pVersion;       // the plugin's version
-    int     numNativeProgs; // number of internal progs
-    
-    Boolean pEnabled;       // the plugin is explicitely  enabled
-    Boolean pDisabled;      // the plugin is explicitely disabled
-    
-     Next_NativeProg_Typ  next_NativeProg;
-       Is_NativeProg_Typ    is_NativeProg;
+typedef int (*Next_NativeProg_Typ)(int *i, char *progName, char *callMode);
+typedef int (*Is_NativeProg_Typ)(const char *progName, void **modBase);
+typedef os9err (*Start_NativeProg_Typ)(const char *progName, void *nativeinfo);
+typedef os9err (*Call_Intercept_Typ)(void *routine, short code, ulong ptr);
+
+// The plugin element
+typedef struct {
+    char *name;           // the plugin's name
+    void *fDLL;           // the plugin's reference
+    long  pVersion;       // the plugin's version
+    int   numNativeProgs; // number of internal progs
+
+    Boolean pEnabled;  // the plugin is explicitely  enabled
+    Boolean pDisabled; // the plugin is explicitely disabled
+
+    Next_NativeProg_Typ  next_NativeProg;
+    Is_NativeProg_Typ    is_NativeProg;
     Start_NativeProg_Typ start_NativeProg;
-      Call_Intercept_Typ  call_Intercept;
-  } plug_typ;
+    Call_Intercept_Typ   call_Intercept;
+} plug_typ;
 //#endif
-  
-  
 
 /* the process descriptor */
 typedef struct {
-                regs_type       os9regs;    /* the process' register stack */
-                save_type       savread;    /* saved variables during read */
+    regs_type os9regs; /* the process' register stack */
+    save_type savread; /* saved variables during read */
 
-                procid pd;                  /* this is the 1:1 process descriptor image */
-                
-                /* general state */
-                pstate_typ        state;    /* process' state */
-                Boolean       isIntUtil;    /* acting as internal utility */
-                Boolean        isNative;    /*    "   "  native program */
-                Boolean        isPlugin;    /*    "   "  plugin program */
-                plug_typ*      plugElem;    /* plugin type reference    */
-                ushort              mid;    /* the process' primary module ID */
-                
-                char intProcName[OS9NAMELEN]; /* the process' name (for internal utilities) */
+    procid pd; /* this is the 1:1 process descriptor image */
 
-                os9err          exiterr;    /* process' exit OS9 error */
-                systaskfunc_typ systask;    /* the system task function if state=pSysTask */
-                void      *systaskdataP;    /* system task data pointer */
-                ulong      systask_offs;    /* offset for rewrite call (from tty/pty) */
-                ushort      lastsyscall;    /* last system call issued by this process */
-                int            wTimeOut;    /* timeout counter for pWaitRead */
+    /* general state */
+    pstate_typ state;     /* process' state */
+    Boolean    isIntUtil; /* acting as internal utility */
+    Boolean    isNative;  /*    "   "  native program */
+    Boolean    isPlugin;  /*    "   "  plugin program */
+    plug_typ  *plugElem;  /* plugin type reference    */
+    ushort     mid;       /* the process' primary module ID */
 
-                /* statistics */
-                ulong            fticks;    /* number of ticks at fcalls */
-                ulong            iticks;    /* number of ticks at icalls */
-                                  
-                /* memory */
-                ulong memstart;             /* the process' static storage start addr (unbiased) */ 
-                ulong memtop;               /* the process' static storage top pointer (unbiased) */
-             // memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated memory blocks */
-                byte sigdat[SIG_SCRATCH];
-                
-                /* exceptions */
-                errortrap_typ     ErrorTraps[NUMEXCEPTIONS];    /* BusErr .. Privilege (Vector #2..#8) */
-                traphandler_typ TrapHandlers[NUMTRAPHANDLERS];  /* TRAP 1..15 = vector #32..#47 */
+    char intProcName[OS9NAMELEN]; /* the process' name (for internal utilities)
+                                   */
 
-                /* paths */
-                ushort usrpaths[MAXUSRPATHS]; /* system path number of user paths */
+    os9err          exiterr; /* process' exit OS9 error */
+    systaskfunc_typ systask; /* the system task function if state=pSysTask */
+    void           *systaskdataP; /* system task data pointer */
+    ulong           systask_offs; /* offset for rewrite call (from tty/pty) */
+    ushort          lastsyscall;  /* last system call issued by this process */
+    int             wTimeOut;     /* timeout counter for pWaitRead */
 
-                /* create init size */
-                ushort fileAtt;             /* here because I$Create is not able */
-                ulong  cre_initsize;        /* to call with these params */
+    /* statistics */
+    ulong fticks; /* number of ticks at fcalls */
+    ulong iticks; /* number of ticks at icalls */
 
-                dir_type d;                 /* current      directory */
-                dir_type x;                 /* current exec directory */
+    /* memory */
+    ulong memstart; /* the process' static storage start addr (unbiased) */
+    ulong memtop;   /* the process' static storage top pointer (unbiased) */
+    // memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated
+    // memory blocks */
+    byte sigdat[SIG_SCRATCH];
 
-                ushort vector;              /* current TRAP vector */
-                ushort func;                /* current function code or exception vector */
-                os9err oerr;                /* OS9 error */
-    
-                /* signal handling */
-                regs_type  rteregs;         /* saved main thread registers during intercept processing, valid if lastsignal!=0 */
-                pstate_typ rtestate;        /* saved process' state */
-                ushort     rtevector;       /* saved vector */
-                ushort     rtefunc;         /* and function */
-                
-                int     masklevel;
-                Boolean pwr_brk;            /* pWaitRead break for signals <= 32 */
-                ulong   icpta6;             /* value to pass in A6 to intercept routine */
+    /* exceptions */
+    errortrap_typ
+        ErrorTraps[NUMEXCEPTIONS]; /* BusErr .. Privilege (Vector #2..#8) */
+    traphandler_typ
+        TrapHandlers[NUMTRAPHANDLERS]; /* TRAP 1..15 = vector #32..#47 */
 
-                Boolean way_to_icpt;        /* is true on the way to icpt */
-                ushort  icpt_pid,           /* keep pid and signal save */
-                        icpt_signal;
+    /* paths */
+    ushort usrpaths[MAXUSRPATHS]; /* system path number of user paths */
 
-                ulong   wakeUpTick;
-                int		pW_age;				/* aging for pWaitRead */
+    /* create init size */
+    ushort fileAtt;      /* here because I$Create is not able */
+    ulong  cre_initsize; /* to call with these params */
 
-                ttydev_typ* last_mco;
-                /* Stdout filtering %%% needs some work... */
-                filterfunc stdoutfilter;    /* the process' filter function handle, if any */
-                void* filtermem;            /* the process' filter function's static storage */
+    dir_type d; /* current      directory */
+    dir_type x; /* current exec directory */
 
-                /* Stdin saved buffer */
-                int        saved_cnt;
-                pstate_typ saved_state;     /* saved process' state */
-                
-                ulong my_args;              /* arguments pointer */
-                int   tid;                  /* thread ID */
-            } process_typ;
-            
+    ushort vector; /* current TRAP vector */
+    ushort func;   /* current function code or exception vector */
+    os9err oerr;   /* OS9 error */
 
+    /* signal handling */
+    regs_type rteregs;    /* saved main thread registers during intercept
+                             processing, valid if lastsignal!=0 */
+    pstate_typ rtestate;  /* saved process' state */
+    ushort     rtevector; /* saved vector */
+    ushort     rtefunc;   /* and function */
 
-/* the statistics type */               
+    int     masklevel;
+    Boolean pwr_brk; /* pWaitRead break for signals <= 32 */
+    ulong   icpta6;  /* value to pass in A6 to intercept routine */
+
+    Boolean way_to_icpt; /* is true on the way to icpt */
+    ushort  icpt_pid,    /* keep pid and signal save */
+        icpt_signal;
+
+    ulong wakeUpTick;
+    int   pW_age; /* aging for pWaitRead */
+
+    ttydev_typ *last_mco;
+    /* Stdout filtering %%% needs some work... */
+    filterfunc stdoutfilter; /* the process' filter function handle, if any */
+    void      *filtermem;    /* the process' filter function's static storage */
+
+    /* Stdin saved buffer */
+    int        saved_cnt;
+    pstate_typ saved_state; /* saved process' state */
+
+    ulong my_args; /* arguments pointer */
+    int   tid;     /* thread ID */
+} process_typ;
+
+/* the statistics type */
 typedef struct {
-            char    name[OS9NAMELEN]; /* name of the program */
-            Boolean intern;           /* internal command */
-            ulong   ticks;            /* number of ticks */
-            ulong   num;              /* number of calls */
-        } st_typ;
-
+    char    name[OS9NAMELEN]; /* name of the program */
+    Boolean intern;           /* internal command */
+    ulong   ticks;            /* number of ticks */
+    ulong   num;              /* number of calls */
+} st_typ;
 
 // ---- global vars ---------------------------------------------
 // id of current process
-extern  ushort currentpid; 
+extern ushort currentpid;
 
 /* the "module directory" */
-extern  module_typ  os9modules[MAXMODULES];
-extern  mod_exec*   init_module;
-extern  ulong       totalMem;
-extern  mdir_entry  mdirField [MAXMODULES];
+extern module_typ os9modules[MAXMODULES];
+extern mod_exec  *init_module;
+extern ulong      totalMem;
+extern mdir_entry mdirField[MAXMODULES];
 
 /* the system paths */
-extern  syspath_typ syspaths [MAXSYSPATHS];
-extern  ulong       syspth   [MAXSYSPATHS];
-
+extern syspath_typ syspaths[MAXSYSPATHS];
+extern ulong       syspth[MAXSYSPATHS];
 
 /* the RBF and SCSI devices */
-extern  scsi_typ    scsi[MAXSCSI];
+extern scsi_typ scsi[MAXSCSI];
 
 /* definitions for TTY */
-extern  ttydev_typ  ttydev[MAXTTYDEV];
-
+extern ttydev_typ ttydev[MAXTTYDEV];
 
 /* the processes */
-extern  process_typ procs[MAXPROCESSES];
-extern  ulong       prDBT[MAXPROCESSES]; /* os9_long(process_typ*) */
+extern process_typ procs[MAXPROCESSES];
+extern ulong       prDBT[MAXPROCESSES]; /* os9_long(process_typ*) */
 
 /* the signal queue */
-extern  sig_typ     sig_queue;
+extern sig_typ sig_queue;
 
 /* the alarms */
-extern  alarm_typ   alarms     [MAXALARMS];
-extern  alarm_typ*  alarm_queue[MAXALARMS];
-
+extern alarm_typ  alarms[MAXALARMS];
+extern alarm_typ *alarm_queue[MAXALARMS];
 
 /* the dir table */
 typedef struct {
-  char* ident;
-  long  dirid;
-  
-  
-  #ifdef LINKED_HASH
-  void* next;
-  #endif
+    char *ident;
+    long  dirid;
+
+#ifdef LINKED_HASH
+    void *next;
+#endif
 } dirtable_entry;
 
 extern dirtable_entry dirtable[MAXDIRS];
 extern int            hittable[MAXDIRHIT];
 
-
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  /* the include/exclude list for internal commands */
-  extern char*    includeList[ MAXLIST ];
-  extern char*    excludeList[ MAXLIST ];
-  extern plug_typ  pluginList[ MAXLIST ];
-  
-  extern callback_typ g_cb;
+/* the include/exclude list for internal commands */
+extern char    *includeList[MAXLIST];
+extern char    *excludeList[MAXLIST];
+extern plug_typ pluginList[MAXLIST];
+
+extern callback_typ g_cb;
 #endif
 
 /* the OS-9 statistics table */
-extern  st_typ      statistics[MAX_OS9PROGS];
+extern st_typ statistics[MAX_OS9PROGS];
 
 /* I/O device table */
-extern  byte        devs[0x0900];       
-
+extern byte devs[0x0900];
 
 /* and the file managers routine tables */
-extern  fmgr_typ    fmgr_none,
-                    fmgr_cons,
-                    fmgr_nil,
-                    fmgr_scf,
-                    fmgr_file,
-                    fmgr_dir,
-                    fmgr_pipe,
-                    fmgr_pty,
-                    fmgr_rbf,
-                    fmgr_net,
-                    fmgr_printer;
+extern fmgr_typ fmgr_none, fmgr_cons, fmgr_nil, fmgr_scf, fmgr_file, fmgr_dir,
+    fmgr_pipe, fmgr_pty, fmgr_rbf, fmgr_net, fmgr_printer;
 
 /* the events */
-extern  event_typ   events  [MAXEVENTS];
-extern  ulong  newEventId;
+extern event_typ events[MAXEVENTS];
+extern ulong     newEventId;
 #define EvOffs 0x00010001
 
 /* the currently executing process, MAXPROCESSES if none */
 #if defined __cplusplus
-  extern "C" {
+extern "C" {
 #endif
 
-//extern ushort currentpid; // id of current process
-extern short arbitrate;  // set if arbitrate() should switch away from one running process to next
+// extern ushort currentpid; // id of current process
+extern short arbitrate; // set if arbitrate() should switch away from one
+                        // running process to next
 
 #if defined __cplusplus
-  } // end extern "C"
+} // end extern "C"
 #endif
 
-extern ushort   interactivepid;        /* process that will get keyboard abort signals */
-extern char     startPath[OS9PATHLEN]; /* start path */
-extern char     strtUPath[OS9PATHLEN]; /* next higher than start path */
-extern dir_type mdir;                  /* current module dir */
+extern ushort interactivepid; /* process that will get keyboard abort signals */
+extern char   startPath[OS9PATHLEN]; /* start path */
+extern char   strtUPath[OS9PATHLEN]; /* next higher than start path */
+extern dir_type mdir;                /* current module dir */
 
-  /* the default module load directory OS9MDIR */
-  extern    char   mdirPath[MAX_PATH];    /* current mdir path */
-
+/* the default module load directory OS9MDIR */
+extern char mdirPath[MAX_PATH]; /* current mdir path */
 
 /* stdin and out for console */
 
-  extern  ttydev_typ main_mco;
-
+extern ttydev_typ main_mco;
 
 /* flag which allows empty read functionality for multiple terminal support */
-extern Boolean devIsReady;       /* it is true by default or if char has been read */
+extern Boolean devIsReady; /* it is true by default or if char has been read */
 
 /* break the recursion loops variable */
 extern Boolean in_recursion;
@@ -1300,7 +1238,7 @@ extern Boolean in_recursion;
 /* global settings */
 extern int     dbgOut;
 extern ushort  dbgPath;
-extern int      without_pid;
+extern int     without_pid;
 extern int     justthis_pid;
 extern Boolean quitFlag;
 extern Boolean userOpt;
@@ -1325,43 +1263,44 @@ extern ulong   my_inetaddr;
 extern jmp_buf main_env;
 
 /* tickCount at start of the program */
-extern ulong   startTick;
-extern ulong    lastTick;
-extern int        syCorr;
+extern ulong startTick;
+extern ulong lastTick;
+extern int   syCorr;
 
 #ifdef UNIX
-  extern ulong sec0;
+extern ulong sec0;
 #endif
 
 /* error traceback */
-extern ushort  errpid;          /* PID of process that generated that error */
-//extern ushort  lastsyscall;   /* last system call */
-extern char*   lastpathparsed;  /* last pathstring parsed (NULL if none) */
+extern ushort errpid; /* PID of process that generated that error */
+// extern ushort  lastsyscall;   /* last system call */
+extern char *lastpathparsed; /* last pathstring parsed (NULL if none) */
 
 /* the software's version and revision */
-//extern ushort  appl_version;
-//extern ushort  appl_revision;
-extern ushort  exec_version;
-extern ushort  exec_revision;
-extern char*   hw_site;
-extern char*   hw_name;
-extern char*   sw_name;
-extern char*   platform;
+// extern ushort  appl_version;
+// extern ushort  appl_revision;
+extern ushort exec_version;
+extern ushort exec_revision;
+extern char  *hw_site;
+extern char  *hw_name;
+extern char  *sw_name;
+extern char  *platform;
 
 /* screen size */
-extern ulong   screenW;
-extern ulong   screenH;
-extern char*   g_ipAddr;
-
+extern ulong screenW;
+extern ulong screenH;
+extern char *g_ipAddr;
 
 /* external definitions */
 /* ==================== */
 
 /* fork mode */
-extern int dummyfork; /* if set, forks are done as in os9exec 1.14 (only command printout to stdout) */
+extern int dummyfork; /* if set, forks are done as in os9exec 1.14 (only command
+                         printout to stdout) */
 
 /* Fetch FTP name translation */
-extern int fetchnames; /* if set, OS9-filenames beginning with '.' will be translated to begin with '/' on the mac */
+extern int fetchnames; /* if set, OS9-filenames beginning with '.' will be
+                          translated to begin with '/' on the mac */
 
 /* output filter flag */
 extern int disablefilters; /* if set, output filters will be disabled */
@@ -1374,46 +1313,45 @@ extern Boolean with_dbgDLLs; // if set, '*_dbg' DLLs will be preferred
 extern ulong spininterval;
 
 /* mount device name and write protection */
-extern  char*   mnt_name;
-extern  int     mnt_ramSize;
-extern  int     mnt_sctSize;
-extern  int     mnt_cluSize;
-extern  char*   mnt_devCopy;
+extern char *mnt_name;
+extern int   mnt_ramSize;
+extern int   mnt_sctSize;
+extern int   mnt_cluSize;
+extern char *mnt_devCopy;
 
 #define NO_SCSI -1
-extern  int     mnt_scsiID;
-extern  short   mnt_scsiAdapt;
-extern  short   mnt_scsiBus;
-extern  short   mnt_scsiLUN;
+extern int   mnt_scsiID;
+extern short mnt_scsiAdapt;
+extern short mnt_scsiBus;
+extern short mnt_scsiLUN;
 
-extern  Boolean mnt_wProtect;
-extern  Boolean mnt_imgMode;
+extern Boolean mnt_wProtect;
+extern Boolean mnt_imgMode;
 
 /* additional memory for all processes */
 extern ulong memplusall;
 
 #ifdef THREAD_SUPPORT
-extern  pthread_mutex_t sysCallMutex;
+extern pthread_mutex_t sysCallMutex;
 #endif
 
-
 /* externally defined routines */
-void    writeline    ( char* linebuf, FILE *stream );
-char*   dgetenv( const char* name );
-char*   egetenv( const char* name );
-void    eSpinCursor  ( short incr );
-void    eAdvanceCursor(void);
+void  writeline(char *linebuf, FILE *stream);
+char *dgetenv(const char *name);
+char *egetenv(const char *name);
+void  eSpinCursor(short incr);
+void  eAdvanceCursor(void);
 
 // console names
 #define MainConsole "/term"
 #define SerialLineA "/ts1"
 #define SerialLineB "/ts2"
 
-#define Main_ID       0
-#define SerialA_ID   -1
-#define SerialB_ID   -2
-#define VModBase     50
-#define TTY_Base    100
+#define Main_ID 0
+#define SerialA_ID -1
+#define SerialB_ID -2
+#define VModBase 50
+#define TTY_Base 100
 
 #define MAX_CONSOLE 100 /* half of them are VMod windows */
 
@@ -1423,32 +1361,33 @@ void    eAdvanceCursor(void);
 
 #define MAX_PRINTER 5 /* Com0..com4 */
 
-
 #ifdef win_unix
-  #define AppDo ".AppleDouble"   /* specific netatalk file names */
-  #define AppDt ".AppleDesktop"
-  #define L_P   ":2e"            /* specific netatalk way for "." files */
-  #define DsSto ".DS_Store"      /* specific desktop info store file */
+#define AppDo ".AppleDouble" /* specific netatalk file names */
+#define AppDt ".AppleDesktop"
+#define L_P ":2e"         /* specific netatalk way for "." files */
+#define DsSto ".DS_Store" /* specific desktop info store file */
 #endif
 
 /* OS9exec builtin module definitons */
-#define OS9exec_name "OS9exec"   /* the name of the built-in OS9exec module */
-
+#define OS9exec_name "OS9exec" /* the name of the built-in OS9exec module */
 
 /* routines */
 /* ======== */
 
 // Get HW info
-void   get_hw();
+void get_hw();
 
 /* Entry into OS9 emulation */
-void   os9exec_globinit(void);
-void   os9exec_loop( unsigned short xErr, Boolean fromIntUtil );
+void os9exec_globinit(void);
+void os9exec_loop(unsigned short xErr, Boolean fromIntUtil);
 
-ushort os9exec                         ( int argc, char** argv, char** envp );
-ushort os9exec_nt( const char* toolname, int argc, char** argv, char** envp, ulong memplus, ushort prior );
-
+ushort os9exec(int argc, char **argv, char **envp);
+ushort os9exec_nt(const char *toolname,
+                  int         argc,
+                  char      **argv,
+                  char      **envp,
+                  ulong       memplus,
+                  ushort      prior);
 
 #endif
 /* eof */
-

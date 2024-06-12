@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -68,43 +68,39 @@
  *
  */
 
-
 // the mem alloc table
-extern memblock_typ memtable[ MAX_MEMALLOC ];
+extern memblock_typ memtable[MAX_MEMALLOC];
 
 // memory blocks for all processes
-extern pmem_typ pmem[ MAXPROCESSES ];
+extern pmem_typ pmem[MAXPROCESSES];
 
-        
 #ifdef REUSE_MEM
-  typedef struct {
-    memblock_typ  f[ MAX_MEMALLOC ];
-    int           freeN;   // number of free segments
-    ulong         freeMem; // total free memory
-  } free_typ;
-        
-  // the free info
-  extern free_typ freeinfo;
-#endif
+typedef struct {
+    memblock_typ f[MAX_MEMALLOC];
+    int          freeN;   // number of free segments
+    ulong        freeMem; // total free memory
+} free_typ;
 
+// the free info
+extern free_typ freeinfo;
+#endif
 
 #if defined __cplusplus
-  extern "C" {
+extern "C" {
 #endif
 
-void  init_all_mem( void );
-void      init_mem( ushort pid );
+void init_all_mem(void);
+void init_mem(ushort pid);
 
-ulong      max_mem( void );
-void      show_mem( ushort pid, Boolean mem_unused, Boolean mem_fulldisp );
-void   show_unused( void );
+ulong max_mem(void);
+void  show_mem(ushort pid, Boolean mem_unused, Boolean mem_fulldisp);
+void  show_unused(void);
 
-void*      get_mem( ulong  memsz   );
-void   release_mem( void*  membase );
-void      free_mem( ushort pid     ); // release all memory of process
+void *get_mem(ulong memsz);
+void  release_mem(void *membase);
+void  free_mem(ushort pid); // release all memory of process
 
-void*   os9malloc ( ushort pid,                ulong memsz );
-os9err  os9free   ( ushort pid, void* membase, ulong memsz );
-
+void  *os9malloc(ushort pid, ulong memsz);
+os9err os9free(ushort pid, void *membase, ulong memsz);
 
 /* eof */

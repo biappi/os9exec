@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -71,7 +71,6 @@
  *
  */
 
-
 // Don't import all other things ...
 
 #include "c_access.h"
@@ -80,166 +79,169 @@
 #include <stdio.h>
 
 // the callback structure reference
-callback_typ* cbP;
-
+callback_typ *cbP;
 
 // obtain os9exec version
-void getversion( unsigned short *ver,
-                 unsigned short *rev )
+void getversion(unsigned short *ver, unsigned short *rev)
 {
-	
-  *ver= 0; 
-  *rev= 0;
-	
-    // simply hardwired for all other platforms
-    *ver=    3;
-    *rev= 0x39; /* V3.39 */
-} // getversion
 
+    *ver = 0;
+    *rev = 0;
+
+    // simply hardwired for all other platforms
+    *ver = 3;
+    *rev = 0x39; /* V3.39 */
+} // getversion
 
 // obtain os9exec version in long format
 long lVersion()
 {
-  unsigned short ver,  rev;
-  getversion  ( &ver, &rev );
-  return   ( 256*ver + rev )*256*256;
+    unsigned short ver, rev;
+    getversion(&ver, &rev);
+    return (256 * ver + rev) * 256 * 256;
 } // lVersion
-
-
 
 // -------------------------------------------------------------------------------------------------------
 // copy the block with <size> form <src> to <dst
 // forward and backward mode supported (in case of overlapping structures
-void MoveBlk( void* dst, void* src, unsigned long size )
+void MoveBlk(void *dst, void *src, unsigned long size)
 {
-  unsigned long  n;
-  unsigned char* s;
-  unsigned char* d;
-    
-  if (src>=dst) {    // condition for forward/backward copy
-    s= (unsigned char*)src;   // normal forward copy
-    d= (unsigned char*)dst;
-    for ( n=0; n<size; n++ ) { *d= *s; s++; d++; }
-  }
-  else {             // reverse ordered copy 
-    s= (unsigned char*)( (unsigned long)src + size-1 );
-    d= (unsigned char*)( (unsigned long)dst + size-1 );
-    for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
-  } // if
+    unsigned long  n;
+    unsigned char *s;
+    unsigned char *d;
+
+    if (src >= dst) {             // condition for forward/backward copy
+        s = (unsigned char *)src; // normal forward copy
+        d = (unsigned char *)dst;
+        for (n = 0; n < size; n++) {
+            *d = *s;
+            s++;
+            d++;
+        }
+    }
+    else { // reverse ordered copy
+        s = (unsigned char *)((unsigned long)src + size - 1);
+        d = (unsigned char *)((unsigned long)dst + size - 1);
+        for (n = 0; n < size; n++) {
+            *d = *s;
+            s--;
+            d--;
+        }
+    } // if
 } // MoveBlk
-
-
 
 // case insensitive version of strcmp
 //  Input  : <s1>, <s2> = strings to be compared
 //  Result : -1: s1<s2,
 //            0: s1=s2,
 //            1: s1>s2
-int ustrcmp( const char *s1,const char *s2 )
+int ustrcmp(const char *s1, const char *s2)
 {
-  int  diff;
-  char c;
+    int  diff;
+    char c;
 
-  do {
-                   c=           *(s1++);
-    diff= toupper( c )-toupper( *(s2++) );
+    do {
+        c    = *(s1++);
+        diff = toupper(c) - toupper(*(s2++));
 
-    if (diff!=0) return diff>0 ? 1 : -1;
-  } while ( c!='\0' );
+        if (diff != 0)
+            return diff > 0 ? 1 : -1;
+    } while (c != '\0');
 
-  return 0; // strings are equal
+    return 0; // strings are equal
 } // ustrcmp
-
-
 
 // -------------------------------------------------------------------------------------------------------
 // missing "sprintf" operations for "cclib", temporary placed here
 #define MAXINTEGER 32767
 
+void IntToStr(char *s, int i) { sprintf(s, "%d", i); } // IntToStr
 
-void IntToStr( char* s, int i ) {
-  sprintf( s, "%d", i );
-} // IntToStr
-
-
-
-void IntToStrN( char* s, int i, int n )
+void IntToStrN(char *s, int i, int n)
 {
-  char form[ 20 ]; // format string
-  
-  if (n==MAXINTEGER) { IntToStr( s, i ); return; }
+    char form[20]; // format string
 
-  sprintf   ( form, "%s%dd", "%", n );
-  sprintf( s, form, i );
+    if (n == MAXINTEGER) {
+        IntToStr(s, i);
+        return;
+    }
+
+    sprintf(form, "%s%dd", "%", n);
+    sprintf(s, form, i);
 } // IntToStrN
 
+void UIntToStr(char *s, unsigned int i) { sprintf(s, "%X", i); } // UIntToStr
 
-
-void UIntToStr( char* s, unsigned int i ) {
-  sprintf( s, "%X", i );
-} // UIntToStr
-
-
-
-void UIntToStrN( char* s, unsigned int i, int n )
+void UIntToStrN(char *s, unsigned int i, int n)
 {
-  char form[ 20 ]; // format string
-  int  r= 0;
-  
-  if (n==MAXINTEGER) { UIntToStr( s, i ); return; }
-  
-  if (n>8) { r= n-8; n= 8; } // keep spaces for the remaining part of > 8 
-  sprintf   ( form, "%s%ds%s0%dX", "%", r, "%", n );
-  sprintf( s, form, "", i );
+    char form[20]; // format string
+    int  r = 0;
+
+    if (n == MAXINTEGER) {
+        UIntToStr(s, i);
+        return;
+    }
+
+    if (n > 8) {
+        r = n - 8;
+        n = 8;
+    } // keep spaces for the remaining part of > 8
+    sprintf(form, "%s%ds%s0%dX", "%", r, "%", n);
+    sprintf(s, form, "", i);
 } // UIntToStrN
 
-
-
-void BoolToStr ( char* s, int bo ) {
-  sprintf( s, "%s", bo ? "TRUE":"FALSE" );
+void BoolToStr(char *s, int bo)
+{
+    sprintf(s, "%s", bo ? "TRUE" : "FALSE");
 } // BoolToStr
 
-
-
-void BoolToStrN( char* s, int bo, int n )
+void BoolToStrN(char *s, int bo, int n)
 {
-  char form[ 20 ]; // format string
-  
-  if (n==MAXINTEGER) { BoolToStr( s, bo ); return; }
+    char form[20]; // format string
 
-  sprintf   ( form, "%s%ds", "%", n );
-  sprintf( s, form, bo ? "TRUE":"FALSE" );
+    if (n == MAXINTEGER) {
+        BoolToStr(s, bo);
+        return;
+    }
+
+    sprintf(form, "%s%ds", "%", n);
+    sprintf(s, form, bo ? "TRUE" : "FALSE");
 } // BoolToStrN
 
-
-
-void RealToStr( char* s, double d, int res )
+void RealToStr(char *s, double d, int res)
 {
-  char form[ 20 ]; // format string
-  
-  switch (res) {
-    case MAXINTEGER: sprintf( form, "%sE",    "%" ); break;
-    case 0         : sprintf( form, "%s.0f.", "%" ); break;
-    default        : sprintf( form, "%s.%df", "%", res );
-  } // switch
-  
-  sprintf( s, form, d );
+    char form[20]; // format string
+
+    switch (res) {
+    case MAXINTEGER:
+        sprintf(form, "%sE", "%");
+        break;
+    case 0:
+        sprintf(form, "%s.0f.", "%");
+        break;
+    default:
+        sprintf(form, "%s.%df", "%", res);
+    } // switch
+
+    sprintf(s, form, d);
 } // RealToStr
 
-
-
-void RealToStrN( char* s, double d, int n, int res )
+void RealToStrN(char *s, double d, int n, int res)
 {
-  char form[ 20 ]; // format string
-  
-  switch (res) {
-    case MAXINTEGER: sprintf( form, "%s%dE",    "%", n ); break;
-    case 0         : sprintf( form, "%s%d.0f.", "%", n ); break;
-    default        : sprintf( form, "%s%d.%df", "%", n, res );
-  } // switch
-  
-  sprintf( s, form, d );
-} // RealToStr
+    char form[20]; // format string
 
+    switch (res) {
+    case MAXINTEGER:
+        sprintf(form, "%s%dE", "%", n);
+        break;
+    case 0:
+        sprintf(form, "%s%d.0f.", "%", n);
+        break;
+    default:
+        sprintf(form, "%s%d.%df", "%", n, res);
+    } // switch
+
+    sprintf(s, form, d);
+} // RealToStr
 
 /* eof */

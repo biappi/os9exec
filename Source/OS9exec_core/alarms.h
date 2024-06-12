@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -50,14 +50,19 @@
  *
  */
 
-
 /* OS-9 alarms */
-void   init_alarms( void );
-void   A_Insert   ( alarm_typ* aa );
-void   A_Remove   ( alarm_typ* aa );
-os9err A_Make     ( ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic );
-void   A_Kill     ( ushort pid );
+void init_alarms(void);
+void A_Insert(alarm_typ *aa);
+void A_Remove(alarm_typ *aa);
+os9err
+     A_Make(ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic);
+void A_Kill(ushort pid);
 
-os9err Alarm( ushort pid, ulong *aId, short aFunc, ushort aCode, ulong aTime, ulong aDate );
+os9err Alarm(ushort pid,
+             ulong *aId,
+             short  aFunc,
+             ushort aCode,
+             ulong  aTime,
+             ulong  aDate);
 
 /* eof */

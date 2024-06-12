@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -38,47 +38,39 @@
 /* ======== */
 #include "os9exec_incl.h"
 
-#if   defined UNIX
-  int main( int argc, char* argv[] )
-  {
-    char *envp[] = {
-          NULL,
-          NULL
-    };
-  
-    os9_main( argc,argv, envp );
-    return 0; // no error
-  }
+#if defined UNIX
+int         main(int argc, char *argv[])
+{
+    char *envp[] = {NULL, NULL};
 
+    os9_main(argc, argv, envp);
+    return 0; // no error
+}
 
 #else
-  void main() 
-  {
-    const argc= 1;
-  //const argc= 3;
-   
-    char *argv[]= {
-         "os9app"
-     // ,"-d"
-     // ,"ffff"
-     // ,"shell"
-     // ,"startup"
+void main()
+{
+    const argc = 1;
+    // const argc= 3;
+
+    char *argv[] = {
+        "os9app"
+        // ,"-d"
+        // ,"ffff"
+        // ,"shell"
+        // ,"startup"
     };
 
-    char *envp[] = {
-          NULL,
-          NULL
-    };
+    char *envp[] = {NULL, NULL};
 
     /* set terminal options */
-      TermWinScrolls     = 1;      // use scroll bars
-      gConsoleQuickInput = true;   // get single chars
-      gConsoleEcho       = false;  // no echo
-      gConsoleNLExpand   = false;  // no NL expand
-    
-    os9_main( argc,argv, envp );
-  }
+    TermWinScrolls     = 1;     // use scroll bars
+    gConsoleQuickInput = true;  // get single chars
+    gConsoleEcho       = false; // no echo
+    gConsoleNLExpand   = false; // no NL expand
+
+    os9_main(argc, argv, envp);
+}
 #endif
 
 /* eof */
-

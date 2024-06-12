@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /*******************************************/
@@ -42,7 +42,6 @@ static Boolean vmenabled;
 static Boolean fullcache;
 static Boolean usesusermode;
 
-
 #if GENERATINGCFM
 /* PPC caller */
 /* ---------- */
@@ -52,75 +51,59 @@ static Boolean usesusermode;
 #define LLMRESTY 'O9LM'
 
 /* static low level vars */
-static Handle llmhandle=NULL;
+static Handle llmhandle = NULL;
 
 /* low level interface definition */
 enum {
-     uppOS9goProcInfo = kCStackBased 
-         | RESULT_SIZE(SIZE_CODE(sizeof(ulong))) 
-         | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong)))             /* selector */
-         | STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(regs_type*))),       /* regs ptr */
-     uppOS9debugProcInfo = kCStackBased 
-         | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong)))             /* selector */
-         | STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(regs_type*)))        /* regs ptr */
-         | STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(ulong))),            /* debugger message */
-     uppCacheRFProcInfo = kCStackBased 
-         | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong)))             /* selector */
-         | STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(void*)))             /* area pointer */
-         | STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(ulong))),            /* area size */
-     uppUMProbeProcInfo = kCStackBased 
-         | RESULT_SIZE(SIZE_CODE(sizeof(ulong))) 
-         | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong)))             /* selector */
+    uppOS9goProcInfo =
+        kCStackBased | RESULT_SIZE(SIZE_CODE(sizeof(ulong))) |
+        STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong))) /* selector */
+        |
+        STACK_ROUTINE_PARAMETER(2,
+                                SIZE_CODE(sizeof(regs_type *))), /* regs ptr */
+    uppOS9debugProcInfo =
+        kCStackBased |
+        STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong))) /* selector */
+        | STACK_ROUTINE_PARAMETER(2,
+                                  SIZE_CODE(sizeof(regs_type *))) /* regs ptr */
+        | STACK_ROUTINE_PARAMETER(
+              3,
+              SIZE_CODE(sizeof(ulong))), /* debugger message */
+    uppCacheRFProcInfo =
+        kCStackBased |
+        STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong))) /* selector */
+        |
+        STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(void *))) /* area pointer */
+        | STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(ulong))), /* area size */
+    uppUMProbeProcInfo =
+        kCStackBased | RESULT_SIZE(SIZE_CODE(sizeof(ulong))) |
+        STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(ulong))) /* selector */
 };
-#define SEL_OS9GO           0
-#define SEL_CACHERF         1
-#define SEL_OS9DEBUG        2
-#define SEL_UMPROBE         3
+#define SEL_OS9GO 0
+#define SEL_CACHERF 1
+#define SEL_OS9DEBUG 2
+#define SEL_UMPROBE 3
 #endif
-
 
 /* routines */
 
-static Boolean TrapAvailable ( short tNum)
-{
-    return false;
-}
-
-
+static Boolean TrapAvailable(short tNum) { return false; }
 
 /* enter OS9 context */
-ulong llm_os9_go(regs_type *rp)
-{
-    return 0;
-} /* llm_os9_go */
+ulong llm_os9_go(regs_type *rp) { return 0; } /* llm_os9_go */
 
-
-/* Flush code range in 68k (real one or emulator, especially DR emulator needs it!!) */
-static void llm_cache_rf(void *addr, ulong size)
-{
-} /* llm_cache_rf */
-
+/* Flush code range in 68k (real one or emulator, especially DR emulator needs
+ * it!!) */
+static void llm_cache_rf(void *addr, ulong size) {} /* llm_cache_rf */
 
 /* returns if FPU present */
-Boolean llm_has_cache(void)
-{
-    return needsflush;
-} /* llm_fpu_present */
-
+Boolean llm_has_cache(void) { return needsflush; } /* llm_fpu_present */
 
 /* returns if FPU present */
-Boolean llm_fpu_present(void)
-{
-    return hasfpu;
-} /* llm_fpu_present */
-
+Boolean llm_fpu_present(void) { return hasfpu; } /* llm_fpu_present */
 
 /* returns if virtual memory is enabled */
-Boolean llm_vm_enabled(void)
-{
-    return vmenabled;
-} /* llm_fpu_present */
-
+Boolean llm_vm_enabled(void) { return vmenabled; } /* llm_fpu_present */
 
 /* returns if 68k Mac Context runs in usermode */
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
@@ -129,35 +112,21 @@ Boolean llm_runs_in_usermode(void)
     return usesusermode;
 } /* llm_runs_in_usermode */
 
+/* flush given range so it can be executed as 68k code (by emulator or real 68k)
+ */
+void Flush68kCodeRange(void *address, ulong size) {} /* Flush68kCodeRange */
 
-/* flush given range so it can be executed as 68k code (by emulator or real 68k) */
-void Flush68kCodeRange(void *address, ulong size)
-{
-} /* Flush68kCodeRange */
-
-
-/* Ensure that specified range is held paged in memory and never paged out by VM */
-void LockMemRange(void *address, ulong size)
-{
-} /* LockMemRange */
-
+/* Ensure that specified range is held paged in memory and never paged out by VM
+ */
+void LockMemRange(void *address, ulong size) {} /* LockMemRange */
 
 /* Release specified range from VM paging lock */
-void UnlockMemRange(void *address, ulong size)
-{
-} /* UnlockMemRange */
-
+void UnlockMemRange(void *address, ulong size) {} /* UnlockMemRange */
 
 /* prepare access to low-level code */
-OSErr lowlevel_prepare(void)
-{
-    return(0);
-} /* lowlevel_prepare */
-
+OSErr lowlevel_prepare(void) { return (0); } /* lowlevel_prepare */
 
 /* uninstall low-level code */
-void lowlevel_release(void)
-{
-} /* lowlevel_release */
+void lowlevel_release(void) {} /* lowlevel_release */
 
 /* eof */

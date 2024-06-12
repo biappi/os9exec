@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -47,11 +47,8 @@
  *
  */
 
-
-
 #include "os9exec_incl.h"
 #include "net_platform.h"
-
 
 /* specific network definitions */
 // #ifdef USE_CARBON
@@ -60,7 +57,6 @@
 //  #include <OTDebug.h>
 //  #include <Threads.h>
 // #endif
-
 
 /*
 // Newer socket libraries require these types
@@ -73,148 +69,150 @@
 #endif
 */
 
-
-
 // Common function for MacOS9
-// Can't be XXXInContext for classic, because already defined in "OpenTransport.h"
-// but not linkable
+// Can't be XXXInContext for classic, because already defined in
+// "OpenTransport.h" but not linkable
 
-EndpointRef OTOpenEndpoint_( OTConfigurationRef config,
-                             OTOpenFlags        oflag,
-                             TEndpointInfo*     info, /* can be NULL */
-                             OSStatus*          err )
+EndpointRef OTOpenEndpoint_(OTConfigurationRef config,
+                            OTOpenFlags        oflag,
+                            TEndpointInfo     *info, /* can be NULL */
+                            OSStatus          *err)
 {
-    return OTOpenEndpoint         ( config, oflag, info, err );
+    return OTOpenEndpoint(config, oflag, info, err);
 } // OTOpenEndpoint_
 
-
-
-void* OTAllocMem_( OTByteCount size )
-{
-    return OTAllocMem         ( size );
-} // OTAllocMem_    
-
-
+void *OTAllocMem_(OTByteCount size) { return OTAllocMem(size); } // OTAllocMem_
 
 static OSStatus InitOpenTransport_()
 {
     return InitOpenTransport();
 } // InitOpenTransport_
 
-
-
-static InetSvcRef OTOpenInternetServices_( OTConfigurationRef   cfig,
-                                           OTOpenFlags          oflag,
-                                           OSStatus *           err )
+static InetSvcRef OTOpenInternetServices_(OTConfigurationRef cfig,
+                                          OTOpenFlags        oflag,
+                                          OSStatus          *err)
 {
-    return OTOpenInternetServices         ( cfig, oflag, err );
+    return OTOpenInternetServices(cfig, oflag, err);
 } // OTOpenInternetServices_
-
-
 
 static void CloseOpenTransport_()
 {
     CloseOpenTransport();
 } // CloseOpenTransport_
 
-
-
-
 // --------------------------------------------------------------------------------------------------------
 os9err NetInstall(void)
 {
-  OSStatus   err;
-  InetSvcRef inet_services= nil;
-    
-  if (netInstalled) return 0; /* already done, ok */
+    OSStatus   err;
+    InetSvcRef inet_services = nil;
 
-      err= InitOpenTransport_();
-  if (err)                          return E_UNIT;
-  inet_services= OTOpenInternetServices_( kDefaultInternetServicesPath, 0, &err );
-  if (err) { CloseOpenTransport_(); return E_UNIT; }
-  
-  netInstalled= true; /* it is ok now */
-  return 0;
+    if (netInstalled)
+        return 0; /* already done, ok */
+
+    err = InitOpenTransport_();
+    if (err)
+        return E_UNIT;
+    inet_services =
+        OTOpenInternetServices_(kDefaultInternetServicesPath, 0, &err);
+    if (err) {
+        CloseOpenTransport_();
+        return E_UNIT;
+    }
+
+    netInstalled = true; /* it is ok now */
+    return 0;
 } /* NetInstall */
 
-
-
-os9err MyInetAddr( ulong *inetAddr, ulong *dns1Addr,
-                                    ulong *dns2Addr, char* domainName )
+os9err
+MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
 {
-  InetInterfaceInfo iinfo;
+    InetInterfaceInfo iinfo;
 
-  OSStatus err= NetInstall(); if (err) return err;
+    OSStatus err = NetInstall();
+    if (err)
+        return err;
 
-  *inetAddr= 0; /* default values */
-  *dns1Addr= 0;
-  *dns2Addr= 0;
-  strcpy( domainName, "" );
-  err= OTInetGetInterfaceInfo( &iinfo,0 ); if (err) return OS9_ENETDOWN;
+    *inetAddr = 0; /* default values */
+    *dns1Addr = 0;
+    *dns2Addr = 0;
+    strcpy(domainName, "");
+    err = OTInetGetInterfaceInfo(&iinfo, 0);
+    if (err)
+        return OS9_ENETDOWN;
 
-  *inetAddr= iinfo.fAddress;
-  *dns1Addr= iinfo.fDNSAddr;
-//*dns2Addr= 0;
-  strcpy( domainName, &iinfo.fDomainName );
-  return 0;
+    *inetAddr = iinfo.fAddress;
+    *dns1Addr = iinfo.fDNSAddr;
+    //*dns2Addr= 0;
+    strcpy(domainName, &iinfo.fDomainName);
+    return 0;
 } /* MyInetAddr */
 
-
-
-
-OSStatus netReadBlock( _pid_, net_typ* net, ulong *nBytes  )
+OSStatus netReadBlock(_pid_, net_typ *net, ulong *nBytes)
 {
-  OSStatus err;
-  OTFlags  junkFlags;
-  OTResult lookResult;
+    OSStatus err;
+    OTFlags  junkFlags;
+    OTResult lookResult;
 
-  /* keep interface fast for at least one minute */
-  gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
-        
-  /* <err> is the number of bytes read, if >=0 */
-  /*       and error status, if negative */ 
-      err= OTRcv( net->ep, (void*)net->transferBuffer, *nBytes, &junkFlags );
-  if (err>=0) { *nBytes= err; return 0; }
-  
-  *nBytes= 0; 
-  switch (err) {
-    case kOTNoDataErr: return 0;
-    case kOTLookErr  :     lookResult= OTLook(net->ep);
-                       if (lookResult==T_ORDREL) { net->closeIt= true; return 0; }
-                       else return E_READ;
-  } /* switch */
-      
-  return err;
+    /* keep interface fast for at least one minute */
+    gNetActive = GetSystemTick() + 60 * TICKS_PER_SEC;
+
+    /* <err> is the number of bytes read, if >=0 */
+    /*       and error status, if negative */
+    err = OTRcv(net->ep, (void *)net->transferBuffer, *nBytes, &junkFlags);
+    if (err >= 0) {
+        *nBytes = err;
+        return 0;
+    }
+
+    *nBytes = 0;
+    switch (err) {
+    case kOTNoDataErr:
+        return 0;
+    case kOTLookErr:
+        lookResult = OTLook(net->ep);
+        if (lookResult == T_ORDREL) {
+            net->closeIt = true;
+            return 0;
+        }
+        else
+            return E_READ;
+    } /* switch */
+
+    return err;
 } /* netReadBlock */
 
-
-
-OSStatus netWriteBlock( _pid_, net_typ* net, ulong *nBytes )
+OSStatus netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
 {
-  OSStatus err;
-  OTResult lookResult;
+    OSStatus err;
+    OTResult lookResult;
 
-  /* keep interface fast for at least one minute */
-  gNetActive= GetSystemTick()+60*TICKS_PER_SEC;
+    /* keep interface fast for at least one minute */
+    gNetActive = GetSystemTick() + 60 * TICKS_PER_SEC;
 
-  /* <err> is the number of bytes written, if >=0 */
-  /*       and error status, if negative */ 
-      err= OTSnd( net->ep, (void*)net->transferBuffer, *nBytes, 0 );
-  if (err>=0) { *nBytes= err; return 0; }
+    /* <err> is the number of bytes written, if >=0 */
+    /*       and error status, if negative */
+    err = OTSnd(net->ep, (void *)net->transferBuffer, *nBytes, 0);
+    if (err >= 0) {
+        *nBytes = err;
+        return 0;
+    }
 
-  *nBytes= 0;
-  switch (err) {
-    case kOTNoDataErr: 
-    case kOTFlowErr  : return 0;
-    case kOTLookErr  :     lookResult= OTLook(net->ep);
-                       if (lookResult==T_ORDREL) { net->closeIt= true; return 0; }
-                       else return E_WRITE;
-  } /* switch */
+    *nBytes = 0;
+    switch (err) {
+    case kOTNoDataErr:
+    case kOTFlowErr:
+        return 0;
+    case kOTLookErr:
+        lookResult = OTLook(net->ep);
+        if (lookResult == T_ORDREL) {
+            net->closeIt = true;
+            return 0;
+        }
+        else
+            return E_WRITE;
+    } /* switch */
 
-  return err;
+    return err;
 } /* netWriteBlock */
 
-
-
 /* eof */
-

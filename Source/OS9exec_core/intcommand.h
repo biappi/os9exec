@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -82,7 +82,6 @@
  *
  */
 
-
 /* OS9exec/nt internal commands */
 #ifndef __intcommand_h
 #define __intcommand_h
@@ -91,36 +90,38 @@
 extern ushort icmpid; /* current internal command's PID */
 
 /* internal commands (in separate files) */
-os9err int_dir   ( ushort pid, int argc, char **argv );
-os9err int_rename( ushort pid, int argc, char **argv );
-os9err int_move  ( ushort pid, int argc, char **argv );
-os9err int_help  ( ushort pid, int argc, char **argv );
-
+os9err int_dir(ushort pid, int argc, char **argv);
+os9err int_rename(ushort pid, int argc, char **argv);
+os9err int_move(ushort pid, int argc, char **argv);
+os9err int_help(ushort pid, int argc, char **argv);
 
 /* Native program handling */
-Boolean Native_Possible( Boolean hardCheck );
-Boolean Plugin_Possible( Boolean hardCheck );
+Boolean Native_Possible(Boolean hardCheck);
+Boolean Plugin_Possible(Boolean hardCheck);
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-  const char* DLL_Suffix();
-  int         NumberOfNativeProgs( plug_typ* p );
-  os9err      ConnectDLL         ( plug_typ* p );
-  void        display_pluginList ( Boolean dispTitle, Boolean atStartup );
-  void        ChangeNativeElement( const char* s,     Boolean addIt     );
+const char                           *DLL_Suffix();
+int                                   NumberOfNativeProgs(plug_typ *p);
+os9err                                ConnectDLL(plug_typ *p);
+void display_pluginList(Boolean dispTitle, Boolean atStartup);
+void ChangeNativeElement(const char *s, Boolean addIt);
 #endif
 
-
 /* utility */
-void    Change_DbgPath( int argc, char** argv, char** pp, ushort* kp );
+void Change_DbgPath(int argc, char **argv, char **pp, ushort *kp);
 
-os9err  _errmsg( os9err err, char* format, ...);
+os9err _errmsg(os9err err, char *format, ...);
 
-int     isintcommand( const char* name, Boolean *isNative, void** modBaseP );
+int isintcommand(const char *name, Boolean *isNative, void **modBaseP);
 
-os9err  prepArgs    ( char* arglist, ushort *argcP, char*** argP);
-os9err  callcommand ( char* name,    ushort pid, ushort parentid,
-                                                 int argc,     char** argv, Boolean *asThread );
-os9err  call_hostcmd( char* cmdline, ushort pid, int moreargs, char** argv );
+os9err prepArgs(char *arglist, ushort *argcP, char ***argP);
+os9err callcommand(char    *name,
+                   ushort   pid,
+                   ushort   parentid,
+                   int      argc,
+                   char   **argv,
+                   Boolean *asThread);
+os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv);
 
 #endif
 

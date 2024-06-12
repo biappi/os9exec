@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -90,7 +90,8 @@
  *    E-Mail adress bfo@synthesis.ch       is updated everywhere
  *
  *    Revision 1.3  2002/06/25 20:44:33  luz
- *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *    Added /lp printer support under windows. Not tested or even compiled for
+ * Mac
  *
  */
 
@@ -104,22 +105,19 @@
 // things more clear to look at, specific for each target)
 // #include "target_options.h"
 
-
 // Note: Inclusion of all non-OS9exec includes has been moved
 //       into separate _precomp file to make them precompilable
 #include "os9main_incl_precomp.h"
-
 
 // don't define this twice
 #undef E_ABORT
 
 /* OS-9 include files */
-  #include <string.h>  /* according to Martin Gregorie's proposal */
-  #include "module.h"
-  #include "procid_adapted.h"
-  #include "sgstat.h"
-  #include "errno_adapted.h"
-
+#include <string.h> /* according to Martin Gregorie's proposal */
+#include "module.h"
+#include "procid_adapted.h"
+#include "sgstat.h"
+#include "errno_adapted.h"
 
 // these should definitely not be defined here, as MSL
 // will definitely use other intergers for the same
@@ -158,54 +156,51 @@
 
 #undef E_ABORT
 
-
 // Note: These have been renamed to OS9_Exxx to avoid potential clashes
 //       with host (MSL) codes.
-#define OS9_EWOULDBLOCK       0x701	/* I/O operation would block */
-#define OS9_EINPROGRESS       0x702	/* I/O operation now in progress */
-#define OS9_EALREADY          0x703	/* operation already in progress */
-#define OS9_EDESTADDRREQ      0x704	/* destination address required */
-#define OS9_EMSGSIZE          0x705	/* message too long */
-#define OS9_EPROTOTYPE	      0x706	/* protocol wrong type for socket */
-#define OS9_ENOPROTOOPT	      0x707	/* bad protocol option */
-#define OS9_EPROTONOSUPPORT   0x708	/* protocol not supported */
-#define OS9_ESOCKNOSUPPORT	  0x709	/* socket type not supported */
-#define OS9_EOPNOTSUPP	      0x70a	/* operation not supported on socket */
-#define OS9_EPFNOSUPPORT      0x70b	/* protocol family not supported */
-#define OS9_EAFNOSUPPORT      0x70c	/* address family not supported by protocol */
-#define OS9_EADDRINUSE	      0x70d	/* address already in use */
-#define OS9_EADDRNOTAVAIL     0x70e	/* can't assign requested address */
-#define OS9_ENETDOWN	      0x70f	/* network is down */
-#define OS9_ENETUNREACH	      0x710	/* network is unreachable */
-#define OS9_ENETRESET	      0x711	/* network dropped connection on reset */
-#define OS9_ECONNABORTED      0x712	/* software caused connection abort */
-#define OS9_ECONNRESET	      0x713	/* connection reset by peer */
-#define OS9_ENOBUFS		      0x714	/* no buffer space available */
-#define OS9_EISCONN		      0x715	/* socket is already connected */
-#define OS9_ENOTCONN	      0x716	/* socket is not connected */
-#define OS9_ESHUTDOWN	      0x717	/* can't send after socket shutdown */
-#define OS9_ETOOMANYREFS      0x718	/* too many references */
-#define OS9_ETIMEDOUT	      0x719	/* connection timed out */
-#define OS9_ECONNREFUSED      0x71a	/* connection refused by target */
-#define OS9_EBUFTOOSMALL      0x71b	/* mbuf too small for mbuf operation */
-#define OS9_ESMODEXISTS	      0x71c	/* socket module already attached */
-#define OS9_ENOTSOCK	      0x71d	/* path is not a socket	*/
+#define OS9_EWOULDBLOCK 0x701     /* I/O operation would block */
+#define OS9_EINPROGRESS 0x702     /* I/O operation now in progress */
+#define OS9_EALREADY 0x703        /* operation already in progress */
+#define OS9_EDESTADDRREQ 0x704    /* destination address required */
+#define OS9_EMSGSIZE 0x705        /* message too long */
+#define OS9_EPROTOTYPE 0x706      /* protocol wrong type for socket */
+#define OS9_ENOPROTOOPT 0x707     /* bad protocol option */
+#define OS9_EPROTONOSUPPORT 0x708 /* protocol not supported */
+#define OS9_ESOCKNOSUPPORT 0x709  /* socket type not supported */
+#define OS9_EOPNOTSUPP 0x70a      /* operation not supported on socket */
+#define OS9_EPFNOSUPPORT 0x70b    /* protocol family not supported */
+#define OS9_EAFNOSUPPORT 0x70c    /* address family not supported by protocol */
+#define OS9_EADDRINUSE 0x70d      /* address already in use */
+#define OS9_EADDRNOTAVAIL 0x70e   /* can't assign requested address */
+#define OS9_ENETDOWN 0x70f        /* network is down */
+#define OS9_ENETUNREACH 0x710     /* network is unreachable */
+#define OS9_ENETRESET 0x711       /* network dropped connection on reset */
+#define OS9_ECONNABORTED 0x712    /* software caused connection abort */
+#define OS9_ECONNRESET 0x713      /* connection reset by peer */
+#define OS9_ENOBUFS 0x714         /* no buffer space available */
+#define OS9_EISCONN 0x715         /* socket is already connected */
+#define OS9_ENOTCONN 0x716        /* socket is not connected */
+#define OS9_ESHUTDOWN 0x717       /* can't send after socket shutdown */
+#define OS9_ETOOMANYREFS 0x718    /* too many references */
+#define OS9_ETIMEDOUT 0x719       /* connection timed out */
+#define OS9_ECONNREFUSED 0x71a    /* connection refused by target */
+#define OS9_EBUFTOOSMALL 0x71b    /* mbuf too small for mbuf operation */
+#define OS9_ESMODEXISTS 0x71c     /* socket module already attached */
+#define OS9_ENOTSOCK 0x71d        /* path is not a socket	*/
 
 // this is a badie, but seemed to work for earlier CWs. For CW7 and
 // up we don't want it here any more!
 #if !defined errno
-  extern int errno;
+extern int   errno;
 #endif
-
 
 /* low_level magic */
 /* one single lowlevel include file for all types */
 /* use either UAE emulator */
 /* or  built-in interface to Mac 68k emulator */
 #ifndef __cplusplus
-  #include "os9_ll.h"
+#include "os9_ll.h"
 #endif
-
 
 /* project headers */
 /* --------------- */
@@ -232,7 +227,7 @@
 #include "vmod.h"
 #include "utilstuff.h"
 
-  #include "linuxfiles.h"
+#include "linuxfiles.h"
 
 #include "filestuff.h"
 #include "fcalls.h"
@@ -244,5 +239,3 @@
 
 #endif
 /* eof */
-
-

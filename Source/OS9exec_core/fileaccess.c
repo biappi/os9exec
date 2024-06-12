@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -176,18 +176,17 @@
  *    Make it compatible for gcc 3.2
  *
  *    Revision 1.11  2002/09/22 20:58:47  bfo
- *    Some bugs (at least 5 !!) at getFD fixed: The access to the top directory (Windows32) was seriously wrong. Now it seems to work fine with "mdt".
+ *    Some bugs (at least 5 !!) at getFD fixed: The access to the top directory
+ * (Windows32) was seriously wrong. Now it seems to work fine with "mdt".
  *
  *
  */
 
-
 #include "os9exec_incl.h"
 
 #ifdef win_unix
-  #include <utime.h>
+#include <utime.h>
 #endif
-
 
 /* Macintosh, PC and Linux File System access */
 /* ========================================== */
@@ -196,62 +195,64 @@
 /* ------------------------- */
 
 /* --- local procedure definitions for object definition ------------------- */
-void   init_File ( fmgr_typ* f );
-os9err pFopen    ( ushort pid, syspath_typ*, ushort *modeP,  const char* pathname );
-os9err pFclose   ( ushort pid, syspath_typ* );
-os9err pFread    ( ushort pid, syspath_typ*, ulong  *n,      char* buffer );
-os9err pFreadln  ( ushort pid, syspath_typ*, ulong  *n,      char* buffer );
-os9err pFwrite   ( ushort pid, syspath_typ*, ulong  *n,      char* buffer );
-os9err pFwriteln ( ushort pid, syspath_typ*, ulong  *n,      char* buffer );
-os9err pFseek    ( ushort pid, syspath_typ*, ulong   *posP );
-os9err pFdelete  ( ushort pid, syspath_typ*, ushort *modeP,  char* pathname );
+void   init_File(fmgr_typ *f);
+os9err pFopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
+os9err pFclose(ushort pid, syspath_typ *);
+os9err pFread(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pFreadln(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pFwrite(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pFwriteln(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pFseek(ushort pid, syspath_typ *, ulong *posP);
+os9err pFdelete(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 
-os9err pFsize    ( ushort pid, syspath_typ*, ulong  *sizeP );
-os9err pFopt     ( ushort pid, syspath_typ*,                 byte* buffer );
-os9err pHvolnam  ( ushort pid, syspath_typ*,                 char* volname );
-os9err pFpos     ( ushort pid, syspath_typ*, ulong   *posP );
-os9err pFeof     ( ushort pid, syspath_typ* );
-os9err pFready   ( ushort pid, syspath_typ*, ulong  *n );
-os9err pHgetFD   ( ushort pid, syspath_typ*, ulong  *maxbytP,byte* buffer );
-os9err pHgetFDInf( ushort pid, syspath_typ*, ulong  *maxbytP, 
-                                             ulong  *fdinf,  byte* buffer );
+os9err pFsize(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pFopt(ushort pid, syspath_typ *, byte *buffer);
+os9err pHvolnam(ushort pid, syspath_typ *, char *volname);
+os9err pFpos(ushort pid, syspath_typ *, ulong *posP);
+os9err pFeof(ushort pid, syspath_typ *);
+os9err pFready(ushort pid, syspath_typ *, ulong *n);
+os9err pHgetFD(ushort pid, syspath_typ *, ulong *maxbytP, byte *buffer);
+os9err pHgetFDInf(ushort pid,
+                  syspath_typ *,
+                  ulong *maxbytP,
+                  ulong *fdinf,
+                  byte  *buffer);
 
-os9err pFsetsz   ( ushort pid, syspath_typ*, ulong  *sizeP );
-os9err pHsetFD   ( ushort pid, syspath_typ*,                 byte* buffer );
+os9err pFsetsz(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pHsetFD(ushort pid, syspath_typ *, byte *buffer);
 
+void   init_Dir(fmgr_typ *f);
+os9err pDopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
+os9err pDclose(ushort pid, syspath_typ *);
+os9err pDread(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pDseek(ushort pid, syspath_typ *, ulong *posP);
+os9err pDchd(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
+os9err pDmakdir(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 
-
-void   init_Dir  ( fmgr_typ* f );
-os9err pDopen    ( ushort pid, syspath_typ*, ushort *modeP,  const char* pathname );
-os9err pDclose   ( ushort pid, syspath_typ* );
-os9err pDread    ( ushort pid, syspath_typ*, ulong  *n,      char* buffer );
-os9err pDseek    ( ushort pid, syspath_typ*, ulong   *posP );
-os9err pDchd     ( ushort pid, syspath_typ*, ushort *modeP,  char* pathname );
-os9err pDmakdir  ( ushort pid, syspath_typ*, ushort *modeP,  char* pathname );
-
-os9err pDsize    ( ushort pid, syspath_typ*, ulong  *sizeP );
-os9err pDpos     ( ushort pid, syspath_typ*, ulong   *posP );
-os9err pDeof     ( ushort pid, syspath_typ* );
-os9err pDsetatt  ( ushort pid, syspath_typ*, ulong   *attr );
+os9err pDsize(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pDpos(ushort pid, syspath_typ *, ulong *posP);
+os9err pDeof(ushort pid, syspath_typ *);
+os9err pDsetatt(ushort pid, syspath_typ *, ulong *attr);
 /* ------------------------------------------------------------------------- */
 
-void init_File( fmgr_typ* f )
+void init_File(fmgr_typ *f)
 /* install all procedures of the transparent file manager for files */
 {
-    gs_typ* gs= &f->gs;
-    ss_typ* ss= &f->ss;
-    
+    gs_typ *gs = &f->gs;
+    ss_typ *ss = &f->ss;
+
     /* main procedures */
-    f->open       = (pathopfunc_typ)pFopen;
-    f->close      = (pathopfunc_typ)pFclose;
-    f->read       = (pathopfunc_typ)pFread;
-    f->readln     = (pathopfunc_typ)pFreadln;
-    f->write      = (pathopfunc_typ)pFwrite;
-    f->writeln    = (pathopfunc_typ)pFwriteln;
-    f->seek       = (pathopfunc_typ)pFseek;
-    f->del        = (pathopfunc_typ)pFdelete;
-    f->makdir     = (pathopfunc_typ)pDmakdir; /* access to directory will be done via fFile */
-    
+    f->open    = (pathopfunc_typ)pFopen;
+    f->close   = (pathopfunc_typ)pFclose;
+    f->read    = (pathopfunc_typ)pFread;
+    f->readln  = (pathopfunc_typ)pFreadln;
+    f->write   = (pathopfunc_typ)pFwrite;
+    f->writeln = (pathopfunc_typ)pFwriteln;
+    f->seek    = (pathopfunc_typ)pFseek;
+    f->del     = (pathopfunc_typ)pFdelete;
+    f->makdir  = (pathopfunc_typ)
+        pDmakdir; /* access to directory will be done via fFile */
+
     /* getstat */
     gs->_SS_Size  = (pathopfunc_typ)pFsize;
     gs->_SS_Opt   = (pathopfunc_typ)pFopt;
@@ -263,1339 +264,1426 @@ void init_File( fmgr_typ* f )
     gs->_SS_FDInf = (pathopfunc_typ)pHgetFDInf;
 
     /* setstat */
-    ss->_SS_Size  = (pathopfunc_typ)pFsetsz;
-    ss->_SS_Opt   = (pathopfunc_typ)pNop;    /* ignored */
-    ss->_SS_Attr  = (pathopfunc_typ)pNop;
-    ss->_SS_FD    = (pathopfunc_typ)pHsetFD;
-    ss->_SS_WTrk  = (pathopfunc_typ)pUnimp; /* not used */
+    ss->_SS_Size = (pathopfunc_typ)pFsetsz;
+    ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Attr = (pathopfunc_typ)pNop;
+    ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
+    ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
 } /* init_File */
 
-
-void init_Dir( fmgr_typ* f )
+void init_Dir(fmgr_typ *f)
 /* install all procedures of the transparent file manager for directories */
 {
-    gs_typ* gs= &f->gs;
-    ss_typ* ss= &f->ss;
-    
+    gs_typ *gs = &f->gs;
+    ss_typ *ss = &f->ss;
+
     /* main procedures */
-    f->open      = (pathopfunc_typ)pDopen;
-    f->close     = (pathopfunc_typ)pDclose;
-    f->read      = (pathopfunc_typ)pDread;
-    f->readln    = (pathopfunc_typ)pDread;   /* the same as read */
-    f->write     = (pathopfunc_typ)pBadMode; /* not allowed */
-    f->writeln   = (pathopfunc_typ)pBadMode; /* not allowed */
-    f->seek      = (pathopfunc_typ)pDseek;
-    f->chd       = (pathopfunc_typ)pDchd;
-    f->makdir    = (pathopfunc_typ)pDmakdir;
-    
+    f->open    = (pathopfunc_typ)pDopen;
+    f->close   = (pathopfunc_typ)pDclose;
+    f->read    = (pathopfunc_typ)pDread;
+    f->readln  = (pathopfunc_typ)pDread;   /* the same as read */
+    f->write   = (pathopfunc_typ)pBadMode; /* not allowed */
+    f->writeln = (pathopfunc_typ)pBadMode; /* not allowed */
+    f->seek    = (pathopfunc_typ)pDseek;
+    f->chd     = (pathopfunc_typ)pDchd;
+    f->makdir  = (pathopfunc_typ)pDmakdir;
+
     /* getstat */
-    gs->_SS_Size = (pathopfunc_typ)pDsize;
-    gs->_SS_Opt  = (pathopfunc_typ)pRBFopt;
-    gs->_SS_DevNm= (pathopfunc_typ)pHvolnam;
-    gs->_SS_Pos  = (pathopfunc_typ)pDpos;
-    gs->_SS_EOF  = (pathopfunc_typ)pDeof;
-    gs->_SS_Ready= (pathopfunc_typ)pUnimp;      /* not used */
-    gs->_SS_FD   = (pathopfunc_typ)pHgetFD;
-    gs->_SS_FDInf= (pathopfunc_typ)pHgetFDInf;
+    gs->_SS_Size  = (pathopfunc_typ)pDsize;
+    gs->_SS_Opt   = (pathopfunc_typ)pRBFopt;
+    gs->_SS_DevNm = (pathopfunc_typ)pHvolnam;
+    gs->_SS_Pos   = (pathopfunc_typ)pDpos;
+    gs->_SS_EOF   = (pathopfunc_typ)pDeof;
+    gs->_SS_Ready = (pathopfunc_typ)pUnimp; /* not used */
+    gs->_SS_FD    = (pathopfunc_typ)pHgetFD;
+    gs->_SS_FDInf = (pathopfunc_typ)pHgetFDInf;
 
     /* setstat */
     ss->_SS_Size = (pathopfunc_typ)pBadMode; /* not allowed */
-    ss->_SS_Opt  = (pathopfunc_typ)pNop;         /* ignored */
+    ss->_SS_Opt  = (pathopfunc_typ)pNop;     /* ignored */
     ss->_SS_Attr = (pathopfunc_typ)pDsetatt;
     ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
-    ss->_SS_Lock = (pathopfunc_typ)pNop;         /* ignored */
-    ss->_SS_WTrk = (pathopfunc_typ)pUnimp;      /* not used */
+    ss->_SS_Lock = (pathopfunc_typ)pNop;   /* ignored */
+    ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
 } /* init_Dir */
 
 /* -------------------------------------------------------- */
 
-
-
 #ifndef USE_UAEMU
-  static void assert( Boolean b )
-  {   if (!b) printf( "Assert Error\n" ); 
-  }
+static void assert(Boolean b)
+{
+    if (!b)
+        printf("Assert Error\n");
+}
 #endif
 
-
-
 /* input from file */
-os9err pFread( _pid_, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 {
-    long cnt, k;
-    file_typ* f= &spP->u.disk.u.file;
-    
-    
-    assert( buffer!=NULL );
+    long      cnt, k;
+    file_typ *f = &spP->u.disk.u.file;
 
-    if     (spP->rawMode) {
-        if (spP->rawPos    > STD_SECTSIZE) return E_EOF; /* finished */
-        if (spP->rawPos+*n > STD_SECTSIZE) *n= STD_SECTSIZE-spP->rawPos;
-        
-        memcpy( buffer, spP->rw_sct+spP->rawPos, *n );
-        spP->rawPos+= *n;
+    assert(buffer != NULL);
+
+    if (spP->rawMode) {
+        if (spP->rawPos > STD_SECTSIZE)
+            return E_EOF; /* finished */
+        if (spP->rawPos + *n > STD_SECTSIZE)
+            *n = STD_SECTSIZE - spP->rawPos;
+
+        memcpy(buffer, spP->rw_sct + spP->rawPos, *n);
+        spP->rawPos += *n;
         return 0;
     } // if
-  
-    cnt= *n; if (cnt==0) return 0; /* null read returns w/o error */
-    
-      cnt= fread( (void*)buffer, 1,cnt, spP->stream );
-      f->readFlag= true;
-      
-      if (cnt==0 && feof(spP->stream)) return os9error(E_EOF);
-  
+
+    cnt = *n;
+    if (cnt == 0)
+        return 0; /* null read returns w/o error */
+
+    cnt         = fread((void *)buffer, 1, cnt, spP->stream);
+    f->readFlag = true;
+
+    if (cnt == 0 && feof(spP->stream))
+        return os9error(E_EOF);
+
     /* show read for debug */
-    if (debugcheck(dbgFiles,dbgDetail)) {
-        uphe_printf("%08X: ", cnt );
-        for  (k=0; k<16 && k<cnt; k=k+2) {
-                         upe_printf( "%02X" , (byte)buffer[k  ] );
-            if (k+1<cnt) upe_printf( "%02X ", (byte)buffer[k+1] );
+    if (debugcheck(dbgFiles, dbgDetail)) {
+        uphe_printf("%08X: ", cnt);
+        for (k = 0; k < 16 && k < cnt; k = k + 2) {
+            upe_printf("%02X", (byte)buffer[k]);
+            if (k + 1 < cnt)
+                upe_printf("%02X ", (byte)buffer[k + 1]);
         }
         upe_printf("...\n");
     }
-  
+
     /* ok, return # of chars read to caller */
-    *n= cnt; return 0;
+    *n = cnt;
+    return 0;
 } /* pFread */
 
-
-
 /* input line from file */
-os9err pFreadln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFreadln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 {
     long      cnt;
-    file_typ* f= &spP->u.disk.u.file;
+    file_typ *f = &spP->u.disk.u.file;
 
-      char* p;
-      char  c;
-     
-    assert( buffer!=NULL );
+    char *p;
+    char  c;
 
-      /* input not more than one line from a FILE */
-        /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
-        /* single char for now */
-        p= buffer;
+    assert(buffer != NULL);
 
-               cnt=0;
-        while( cnt<*n ) {
-              c= fgetc( spP->stream );
-          if (c==EOF) {
-            *n= cnt;
-            return cnt==0 ? os9error(E_EOF) : 0; /* return EOF only if on first char */
-          } // if
-            
-          *p++= c; /* save in the buffer */        
-          cnt++;
-          if (c==CR) break; /* abort on CR */
-        } // while
-    
-        f->readFlag= true;
-    
-    debugprintf( dbgFiles,dbgDetail,("# pFreadLn: requested=%ld, returned=%ld\n", *n, cnt ));
-    
-    *n= cnt;
+    /* input not more than one line from a FILE */
+    /* we cannot rely on fgets() to stop on 0x0D on non-Mac */
+    /* single char for now */
+    p = buffer;
+
+    cnt = 0;
+    while (cnt < *n) {
+        c = fgetc(spP->stream);
+        if (c == EOF) {
+            *n = cnt;
+            return cnt == 0 ? os9error(E_EOF)
+                            : 0; /* return EOF only if on first char */
+        }                        // if
+
+        *p++ = c; /* save in the buffer */
+        cnt++;
+        if (c == CR)
+            break; /* abort on CR */
+    }              // while
+
+    f->readFlag = true;
+
+    debugprintf(dbgFiles,
+                dbgDetail,
+                ("# pFreadLn: requested=%ld, returned=%ld\n", *n, cnt));
+
+    *n = cnt;
     return 0;
 } /* pFreadln */
 
-
-
 /* output to file */
-os9err pFwrite( _pid_, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwrite(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 {
-  file_typ*  f= &spP->u.disk.u.file;
-  
+    file_typ *f = &spP->u.disk.u.file;
+
     long   cnt;
     fpos_t tmp_pos;
 
-    assert( buffer!=NULL );
-          
-    if (f->readFlag) {
-      fgetpos( spP->stream, &tmp_pos );   /* save current position */
-      fsetpos( spP->stream, &tmp_pos );   /* restore position */
-      f->readFlag= false;
-    } // if
-    
-    /* output to a FILE */
-    cnt= fwrite( (void*)buffer, 1,*n, spP->stream );
-    fflush( spP->stream ); /* don't forget this */
+    assert(buffer != NULL);
 
-    debugprintf(dbgFiles,dbgDeep,("# pFwrite: requested=%ld, written=%ld, ferror=%d, errno=%d\n",*n,cnt,ferror(spP->stream),errno));
-    if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-  
-  *n= cnt;
-  return 0;
+    if (f->readFlag) {
+        fgetpos(spP->stream, &tmp_pos); /* save current position */
+        fsetpos(spP->stream, &tmp_pos); /* restore position */
+        f->readFlag = false;
+    } // if
+
+    /* output to a FILE */
+    cnt = fwrite((void *)buffer, 1, *n, spP->stream);
+    fflush(spP->stream); /* don't forget this */
+
+    debugprintf(dbgFiles,
+                dbgDeep,
+                ("# pFwrite: requested=%ld, written=%ld, ferror=%d, errno=%d\n",
+                 *n,
+                 cnt,
+                 ferror(spP->stream),
+                 errno));
+    if (cnt < 0)
+        return c2os9err(errno, E_WRITE); /* default: general write error */
+
+    *n = cnt;
+    return 0;
 } /* pFwrite */
 
-
-
 /* output to file */
-os9err pFwriteln( _pid_, syspath_typ* spP, ulong *n, char* buffer )
+os9err pFwriteln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 {
-  file_typ* f= &spP->u.disk.u.file;
-  
+    file_typ *f = &spP->u.disk.u.file;
+
     long   cnt, ii;
     fpos_t tmp_pos;
 
-    assert( buffer!=NULL );
+    assert(buffer != NULL);
 
     if (f->readFlag) {
-      fgetpos( spP->stream, &tmp_pos );   /* save current position */
-      fsetpos( spP->stream, &tmp_pos );   /* restore position */
-      f->readFlag= false;
+        fgetpos(spP->stream, &tmp_pos); /* save current position */
+        fsetpos(spP->stream, &tmp_pos); /* restore position */
+        f->readFlag = false;
     } // if
-    
+
     /* output line to a FILE */
-    for (ii=0; ii<*n; ii++) if (buffer[ii]==CR) { ++ii; break; }
-    cnt=fwrite((void *)buffer, 1,ii, spP->stream);
-    fflush( spP->stream ); /* don't forget this */
-    
-    if (cnt<0) return c2os9err(errno,E_WRITE); /* default: general write error */
-  
-  *n= cnt; 
-  return 0;
+    for (ii = 0; ii < *n; ii++)
+        if (buffer[ii] == CR) {
+            ++ii;
+            break;
+        }
+    cnt = fwrite((void *)buffer, 1, ii, spP->stream);
+    fflush(spP->stream); /* don't forget this */
+
+    if (cnt < 0)
+        return c2os9err(errno, E_WRITE); /* default: general write error */
+
+    *n = cnt;
+    return 0;
 } /* pFwriteln */
 
-
-
-
-
-
-os9err pFopt( ushort pid, syspath_typ* spP, byte *buffer )
+os9err pFopt(ushort pid, syspath_typ *spP, byte *buffer)
 {
-  os9err err= pRBFopt( pid,spP, buffer );
-  ulong  fdID;
-  ulong* l;
-    
-  #if   defined win_unix
-    dirtable_entry* mP= NULL;
+    os9err err = pRBFopt(pid, spP, buffer);
+    ulong  fdID;
+    ulong *l;
+
+#if defined win_unix
+    dirtable_entry *mP = NULL;
     dirent_typ      dEnt;
-    strcpy        ( dEnt.d_name, spP->name );
-    FD_ID                      ( spP->fullName, &dEnt, &fdID, &mP );
-  //upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos );                  
-  #endif
-    
-  l= (ulong*)&buffer[ PD_FD ]; *l= os9_long( fdID )<<BpB; /* LSN of file */
-  return err;
+    strcpy(dEnt.d_name, spP->name);
+    FD_ID(spP->fullName, &dEnt, &fdID, &mP);
+// upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos
+// );
+#endif
+
+    l  = (ulong *)&buffer[PD_FD];
+    *l = os9_long(fdID) << BpB; /* LSN of file */
+    return err;
 } /* pFopt */
 
-
-
 /* check ready */
-os9err pFready( _pid_, _spP_, ulong *n )
-{   *n= 1; return 0;
+os9err pFready(_pid_, _spP_, ulong *n)
+{
+    *n = 1;
+    return 0;
 } /* pFready */
 
-
 /* get device name from HFS object */
-os9err pHvolnam( _pid_, syspath_typ* spP, char* volname )
+os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
 {
-    #if   defined UNIX
-      int  ii; // get the current top path as name
-      for (ii= 0; ii<strlen( spP->fullName ); ii++) {
-        volname[ ii ]= spP->fullName[ ii+1 ];
-        if ( ii>0 && volname[ ii ]=='/' ) { volname[ ii ]= NUL; break; }
-      } // for
-      
-    //strcpy( volname,spP->fullName ); /* none for Linux, top directory structure is different */
-      
-//  #elif defined MACOSX
-      /* MacOSX has a very special structure */
-//    strcpy( volname, "Volumes" );
-      
-      /*
-      #define VVP "Volumes"
-      #define VV "/Volumes/"
-      
-      char* w= &spP->fullName;
-      char* v= w;
+#if defined UNIX
+    int ii; // get the current top path as name
+    for (ii = 0; ii < strlen(spP->fullName); ii++) {
+        volname[ii] = spP->fullName[ii + 1];
+        if (ii > 0 && volname[ii] == '/') {
+            volname[ii] = NUL;
+            break;
+        }
+    } // for
 
-      if (ustrncmp( w,VV, strlen(VV) )==0) {
-        strcpy( volname, VVP );
-        
-      //if  (*v==PATHDELIM) v++; // cut slash at the beginning
-      //strcpy( volname, v );
-      //
-      //w= volname + strlen(VV)-1;
-      //v= strstr( w, PATHDELIM_STR );
-      //if (v!=NULL) *v= NUL;   // Keep "/Volumes/XXX"
-      } // if 
-      else
-        strcpy( volname, "" );
-      */
-        
-     // v= &volname[ strlen(volname)-1 ];
-     // if (*v==PATHDELIM) *v= NUL; // cut slash at the end
-      
-      /*  
-      char* v;
+    // strcpy( volname,spP->fullName ); /* none for Linux, top directory
+    // structure is different */
+
+    //  #elif defined MACOSX
+    /* MacOSX has a very special structure */
+    //    strcpy( volname, "Volumes" );
+
+    /*
+    #define VVP "Volumes"
+    #define VV "/Volumes/"
+
+    char* w= &spP->fullName;
+    char* v= w;
+
+    if (ustrncmp( w,VV, strlen(VV) )==0) {
+      strcpy( volname, VVP );
+
+    //if  (*v==PATHDELIM) v++; // cut slash at the beginning
+    //strcpy( volname, v );
+    //
+    //w= volname + strlen(VV)-1;
+    //v= strstr( w, PATHDELIM_STR );
+    //if (v!=NULL) *v= NUL;   // Keep "/Volumes/XXX"
+    } // if
+    else
       strcpy( volname, "" );
-      v=     &volname[ strlen(volname)-1 ];
-      if (*v==PATHDELIM) *v= NUL; // cut slash at the end
-      */
-      
-    #else
-      return E_UNKSVC;
-    #endif
-    
+    */
+
+    // v= &volname[ strlen(volname)-1 ];
+    // if (*v==PATHDELIM) *v= NUL; // cut slash at the end
+
+    /*
+    char* v;
+    strcpy( volname, "" );
+    v=     &volname[ strlen(volname)-1 ];
+    if (*v==PATHDELIM) *v= NUL; // cut slash at the end
+    */
+
+#else
+    return E_UNKSVC;
+#endif
+
     return 0;
 } /* pHvolnam*/
 
-
-
 #ifdef win_unix
-  static void Set_FileDate( syspath_typ* spP, time_t t )
-  /* Set (Windows/Linux) file date */
-  {
-    #if   defined UNIX
-      struct utimbuf buf;
-          
-      buf.actime = t;
-      buf.modtime= t;
-      utime( spP->fullName, &buf );
-    #endif
-  } /* Set_FileDate */
+static void Set_FileDate(syspath_typ *spP, time_t t)
+/* Set (Windows/Linux) file date */
+{
+#if defined UNIX
+    struct utimbuf buf;
+
+    buf.actime  = t;
+    buf.modtime = t;
+    utime(spP->fullName, &buf);
+#endif
+} /* Set_FileDate */
 #endif
 
-
-
-
-os9err pFopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname )
+os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 {
-/* open/create file */
+    /* open/create file */
     os9err    err;
-    char*     pastpath;
+    char     *pastpath;
     char      hostpath[OS9PATHLEN];
-    char      ploc    [OS9PATHLEN];
-    Boolean   isW   = IsWrite(*modeP);
-    Boolean   exedir= IsExec (*modeP);
-    Boolean   cre   = IsCrea (*modeP);
-    file_typ* f= &spP->u.disk.u.file;
-    char*     p;
-    char*     pp;
-    char*     vn;
+    char      ploc[OS9PATHLEN];
+    Boolean   isW    = IsWrite(*modeP);
+    Boolean   exedir = IsExec(*modeP);
+    Boolean   cre    = IsCrea(*modeP);
+    file_typ *f      = &spP->u.disk.u.file;
+    char     *p;
+    char     *pp;
+    char     *vn;
     int       len;
-    
-      FILE* stream;
-      
-      #ifdef win_unix
-        char adapted[OS9PATHLEN];
-      #endif
 
-          strcpy( ploc,pathname );
-    if          (*ploc==NUL) return E_BPNAM;
-    while (IsRaw( ploc )) {
-        spP->rawMode= true;
-        len= strlen(ploc); 
-        ploc[len-1]= NUL;
+    FILE *stream;
+
+#ifdef win_unix
+    char adapted[OS9PATHLEN];
+#endif
+
+    strcpy(ploc, pathname);
+    if (*ploc == NUL)
+        return E_BPNAM;
+    while (IsRaw(ploc)) {
+        spP->rawMode  = true;
+        len           = strlen(ploc);
+        ploc[len - 1] = NUL;
     } /* while */
-        
-    
-    pastpath= ploc;
-    err     = parsepath( pid, &pastpath,hostpath, exedir ); if (err) return err;
-    pp      = hostpath;
 
-    if (spP->rawMode) {        /* rawmode allows only reading of 1st sector */
-        spP->rw_sct = get_mem( STD_SECTSIZE );       /* for some info procs */
+    pastpath = ploc;
+    err      = parsepath(pid, &pastpath, hostpath, exedir);
+    if (err)
+        return err;
+    pp = hostpath;
+
+    if (spP->rawMode) { /* rawmode allows only reading of 1st sector */
+        spP->rw_sct = get_mem(STD_SECTSIZE); /* for some info procs */
         spP->rawPos = 0;
-                     vn= (char*)&spP->rw_sct[31];
-        VolInfo( pp, vn );    /* this is the correct position */      
-        
+        vn          = (char *)&spP->rw_sct[31];
+        VolInfo(pp, vn); /* this is the correct position */
 
         return 0;
     } /* if IsRaw */
 
-    f->readFlag= false;
+    f->readFlag = false;
 
-      debugprintf(dbgFiles,dbgNorm,("# pFopen: trying to %s '%s', mode=$%04hX\n",
-                                     cre ? "create":"open", pp,*modeP));
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# pFopen: trying to %s '%s', mode=$%04hX\n",
+                 cre ? "create" : "open",
+                 pp,
+                 *modeP));
 
-      err= AdjustPath( pp,adapted, cre ); if (err) return err;
-      pp=                 adapted; 
+    err = AdjustPath(pp, adapted, cre);
+    if (err)
+        return err;
+    pp = adapted;
 
-      if (cre) {
-          /* --- create */
-          /* check if file exists */
-          if (FileFound( pp )) return os9error(E_CEF); /* create existing file not allowed */
+    if (cre) {
+        /* --- create */
+        /* check if file exists */
+        if (FileFound(pp))
+            return os9error(E_CEF); /* create existing file not allowed */
 
-              stream= fopen( pp,"wb+" ); /* create for update, use binary mode (bfo) ! */
-          if (stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
-      }
-      else {
-          /* --- open */
-          #ifdef win_unix
-            /* object exists, but make sure it is not a directory */
-            
-            if (PathFound( pp )) return os9error(E_FNA);
+        stream =
+            fopen(pp, "wb+"); /* create for update, use binary mode (bfo) ! */
+        if (stream == NULL)
+            return c2os9err(
+                errno,
+                E_FNA); /* default: file not accessible in this mode */
+    }
+    else {
+/* --- open */
+#ifdef win_unix
+        /* object exists, but make sure it is not a directory */
 
-          #endif
-        
-              stream= fopen( pp,"rb" ); /* try to open for read, use binary mode */
-          if (stream==NULL) return os9error(E_PNNF); /* file not found */
+        if (PathFound(pp))
+            return os9error(E_FNA);
 
-          if (isW) { /* open (also) for write */
-              fclose(stream);  /* close the read-only path again */
-                  stream= fopen( pp,"rb+" ); /* open for update, use binary mode */
-              if (stream==NULL) {
-                  return c2os9err(errno,E_FNA); /* default: file no access in this mode */
-              }
-          }
-      }
-      
-    //spP->rw_sct= get_mem( BUFSIZ );
-    //err= setvbuf( stream, spP->rw_sct, _IOFBF, BUFSIZ ); // make buffered I/O
-      spP->stream=  stream;                                // assign stream
-    
-      #ifdef win_unix
-                spP->dDsc= NULL; /* this is not a directory */
-        strcpy( spP->fullName, pp );
-      #endif
-    
-    p= (char*)ploc+strlen(ploc)-1; /* only the filename itself, no path name */
-    while (p>=ploc && *p!=PSEP) p--;
+#endif
+
+        stream = fopen(pp, "rb"); /* try to open for read, use binary mode */
+        if (stream == NULL)
+            return os9error(E_PNNF); /* file not found */
+
+        if (isW) {                     /* open (also) for write */
+            fclose(stream);            /* close the read-only path again */
+            stream = fopen(pp, "rb+"); /* open for update, use binary mode */
+            if (stream == NULL) {
+                return c2os9err(
+                    errno,
+                    E_FNA); /* default: file no access in this mode */
+            }
+        }
+    }
+
+    // spP->rw_sct= get_mem( BUFSIZ );
+    // err= setvbuf( stream, spP->rw_sct, _IOFBF, BUFSIZ ); // make buffered I/O
+    spP->stream = stream; // assign stream
+
+#ifdef win_unix
+    spP->dDsc = NULL; /* this is not a directory */
+    strcpy(spP->fullName, pp);
+#endif
+
+    p = (char *)ploc + strlen(ploc) -
+        1; /* only the filename itself, no path name */
+    while (p >= ploc && *p != PSEP)
+        p--;
     p++;
-    
-    strcpy( spP->name,p );
-    
-    f->moddate_changed= false;
-    
+
+    strcpy(spP->name, p);
+
+    f->moddate_changed = false;
+
     return 0;
 } /* pFopen */
 
-
-
 /* close a file */
-os9err pFclose( _pid_, syspath_typ* spP )
+os9err pFclose(_pid_, syspath_typ *spP)
 {
-      
-    file_typ* f= &spP->u.disk.u.file;
-      
+
+    file_typ *f = &spP->u.disk.u.file;
+
     if (spP->rawMode) {
-        release_mem( spP->rw_sct ); 
-        spP->rw_sct= NULL;
-        spP->rawMode= false;
+        release_mem(spP->rw_sct);
+        spP->rw_sct  = NULL;
+        spP->rawMode = false;
         return 0;
     }
-    
-      if (fclose(spP->stream)<0) return c2os9err( errno, E_WRITE );    
-      if (f->moddate_changed) Set_FileDate( spP, f->moddate );
-      
-    //release_mem( spP->rw_sct ); // don't use I/O buffer anymore
-    //             spP->rw_sct= NULL;
-    
+
+    if (fclose(spP->stream) < 0)
+        return c2os9err(errno, E_WRITE);
+    if (f->moddate_changed)
+        Set_FileDate(spP, f->moddate);
+
+    // release_mem( spP->rw_sct ); // don't use I/O buffer anymore
+    //              spP->rw_sct= NULL;
+
     return 0;
 } /* pFclose */
 
-
-os9err pFseek( _pid_, syspath_typ* spP, ulong *posP )
+os9err pFseek(_pid_, syspath_typ *spP, ulong *posP)
 /* seek within a file */
 {
-      int   fildes;
+    int fildes;
 
     if (spP->rawMode) {
-        if (*posP>STD_SECTSIZE) return E_SEEK;
-        spP->rawPos= *posP;
+        if (*posP > STD_SECTSIZE)
+            return E_SEEK;
+        spP->rawPos = *posP;
         return 0;
     } /* if */
 
-      if (fseek( spP->stream, (long)*posP, SEEK_SET )==0) return 0;
+    if (fseek(spP->stream, (long)*posP, SEEK_SET) == 0)
+        return 0;
 
-      debugprintf(dbgFiles,dbgDetail,("# pFseek: tried to seek to $%08lX, got errno=%d\n",*posP,errno));
+    debugprintf(
+        dbgFiles,
+        dbgDetail,
+        ("# pFseek: tried to seek to $%08lX, got errno=%d\n", *posP, errno));
 
-      if (errno!=0) /* %%% rude version, if seek fails, assume that we must enlarge the file */
-      {
-          /* try extending file */
-          debugprintf(dbgFiles,dbgDetail,("# pFseek: Trying to extend file to size=$%08lX\n",*posP));
-          fflush(spP->stream); /* unbuffer everything */
-          fildes= fileno( spP->stream );
+    if (errno != 0) /* %%% rude version, if seek fails, assume that we must
+                       enlarge the file */
+    {
+        /* try extending file */
+        debugprintf(
+            dbgFiles,
+            dbgDetail,
+            ("# pFseek: Trying to extend file to size=$%08lX\n", *posP));
+        fflush(spP->stream); /* unbuffer everything */
+        fildes = fileno(spP->stream);
 
-            return c2os9err(errno,E_SEEK); /* %%% FIOSETEOF is not available in MSL !! */
+        return c2os9err(errno,
+                        E_SEEK); /* %%% FIOSETEOF is not available in MSL !! */
 
-          if (fseek(spP->stream, (long int) *posP, SEEK_SET)!=0) return c2os9err(errno,E_SEEK);
-      } 
-      else return c2os9err(errno,E_SEEK);
-    
-      fflush( spP->stream );  
-      return 0;
+        if (fseek(spP->stream, (long int)*posP, SEEK_SET) != 0)
+            return c2os9err(errno, E_SEEK);
+    }
+    else
+        return c2os9err(errno, E_SEEK);
+
+    fflush(spP->stream);
+    return 0;
 } /* pFseek */
 
-
-
-os9err pFdelete( ushort pid, _spP_, ushort *modeP, char* pathname )
+os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
-    os9err  err;    
-    OSErr   oserr= 0;
-    char*   pastpath;
+    os9err  err;
+    OSErr   oserr = 0;
+    char   *pastpath;
     char    pp[OS9PATHLEN];
-    Boolean exedir= IsExec(*modeP);
-    
-    
-        
-    #ifdef win_unix
-      char adapted[OS9PATHLEN];
-    #endif
-    
+    Boolean exedir = IsExec(*modeP);
 
-    pastpath= pathname;
-    err     = parsepath( pid, &pastpath,pp, exedir ); if (err) return err;  
-    pathname= pp;
+#ifdef win_unix
+    char adapted[OS9PATHLEN];
+#endif
 
-    debugprintf( dbgFiles,dbgNorm,( "# I$Delete: pathname=%s, err=%d\n", pathname,err ));
-    if (err) return err;
+    pastpath = pathname;
+    err      = parsepath(pid, &pastpath, pp, exedir);
+    if (err)
+        return err;
+    pathname = pp;
 
-    #if   defined win_unix
-      err     = AdjustPath( pathname,adapted, false ); if (err) return err;
-      pathname= adapted;
-      
-        oserr= remove( pathname );
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# I$Delete: pathname=%s, err=%d\n", pathname, err));
+    if (err)
+        return err;
 
-    #else
-      #error I_Delete not yet implemented
-    #endif
-    
-    return host2os9err( oserr,E_SHARE );  
+#if defined win_unix
+    err = AdjustPath(pathname, adapted, false);
+    if (err)
+        return err;
+    pathname = adapted;
+
+    oserr = remove(pathname);
+
+#else
+#error I_Delete not yet implemented
+#endif
+
+    return host2os9err(oserr, E_SHARE);
 } /* pFdelete */
 
-
-
 /* get file position */
-os9err pFpos( _pid_, syspath_typ* spP, ulong *posP )
-{   
-    *posP= (ulong) ftell( spP->stream );
-  //fgetpos( spP->stream,  posP );   /* save current position */
+os9err pFpos(_pid_, syspath_typ *spP, ulong *posP)
+{
+    *posP = (ulong)ftell(spP->stream);
+    // fgetpos( spP->stream,  posP );   /* save current position */
     return 0;
 } /* pFpos */
 
-
-
 /* get file size */
-os9err pFsize( _pid_, syspath_typ* spP, ulong* sizeP )
+os9err pFsize(_pid_, syspath_typ *spP, ulong *sizeP)
 {
-  os9err err= 0;
-    
-    int    fd= fileno( spP->stream );
+    os9err err = 0;
+
+    int         fd = fileno(spP->stream);
     struct stat info;
 
-        err= fstat( fd,&info );
-    if (err) return E_SEEK;
-    *sizeP= info.st_size; // for MACOSX <st_size> is unfortunately 0
-      
-      
-  return err;
+    err = fstat(fd, &info);
+    if (err)
+        return E_SEEK;
+    *sizeP = info.st_size; // for MACOSX <st_size> is unfortunately 0
+
+    return err;
 } /* pFsize */
 
-
-
 /* set file size */
-os9err pFsetsz( ushort pid, syspath_typ* spP, ulong *sizeP )
+os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
 {
-    os9err err= 0;
-    char   b= 0;
+    os9err err = 0;
+    char   b   = 0;
     ulong  n;
     ulong  p;
-    ulong  tmp_pos= 0;
-    
-    #if defined win_unix || defined MACFILES
-      long curSize;
-    #endif
+    ulong  tmp_pos = 0;
 
-      #if   defined UNIX
-        int  fd, i, j, cnt;
-        OSErr oserr= 0;
-        char tmpName[ OS9PATHLEN ];
-        FILE* tmp__stream;
-        #define      BUFFSIZE 1024
-        byte buffer[ BUFFSIZE ];
-        
-        tmp_pos= ftell( spP->stream );                 /* make it compatible for gcc >= 3.2 */
-        err= fseek    ( spP->stream,0,SEEK_END ); if (err) return err;         /* go to EOF */
+#if defined win_unix || defined MACFILES
+    long curSize;
+#endif
 
-        curSize= (ulong)ftell( spP->stream ); /* get position now = file size */
-      //upo_printf( "curSize=%d\n", curSize );
-      //upe_printf( "pos=%d size=%d newSize=%d\n", tmp_pos, curSize, *sizeP );
-        
-        if (*sizeP<curSize) {
-          err= fseek ( spP->stream,0,SEEK_SET ); if (err) return err; // go to beginning
-          fd = fileno( spP->stream );                                 // <fd> used for "ftruncate"
-          
-          if (fd!=0) err= ftruncate( fd, *sizeP  );                   // cut the file at <*sizeP>
-          else {
+#if defined UNIX
+    int   fd, i, j, cnt;
+    OSErr oserr = 0;
+    char  tmpName[OS9PATHLEN];
+    FILE *tmp__stream;
+#define BUFFSIZE 1024
+    byte buffer[BUFFSIZE];
+
+    tmp_pos = ftell(spP->stream); /* make it compatible for gcc >= 3.2 */
+    err     = fseek(spP->stream, 0, SEEK_END);
+    if (err)
+        return err; /* go to EOF */
+
+    curSize = (ulong)ftell(spP->stream); /* get position now = file size */
+    // upo_printf( "curSize=%d\n", curSize );
+    // upe_printf( "pos=%d size=%d newSize=%d\n", tmp_pos, curSize, *sizeP );
+
+    if (*sizeP < curSize) {
+        err = fseek(spP->stream, 0, SEEK_SET);
+        if (err)
+            return err;           // go to beginning
+        fd = fileno(spP->stream); // <fd> used for "ftruncate"
+
+        if (fd != 0)
+            err = ftruncate(fd, *sizeP); // cut the file at <*sizeP>
+        else {
             // problems with Mach ...
-          //upe_printf( "problems_with_mach\n" );
-            strcpy          ( tmpName, spP->fullName );
-                   i= strlen( tmpName );
-            while (i>=0  &&   tmpName[ i ]!='/') i--;
-            tmpName[ i+1 ]= NUL;
-            sprintf( tmpName, "%s.tmpfile.%d", tmpName, pid );
-            
-            err= fclose( spP->stream );
-            err= remove               ( tmpName );
-          //upe_printf( "remove '%s' err=%d\n", tmpName, err );
-            err= rename( spP->fullName, tmpName );
-          //upe_printf( "rename err=%d\n", err );
-           
-            spP->stream= fopen( spP->fullName, "wb+" );
-            tmp__stream= fopen(       tmpName, "rb+" );
-           
-            err= E_FNA;
-            if  (spP->stream && tmp__stream) {
-              err= 0;
-              
-                     i= *sizeP;
-              while (i>0) {
-                j=   i;
-                if  (j>BUFFSIZE) j= BUFFSIZE;
-                cnt= fread ( (void*)buffer, 1,  j, tmp__stream );
-                cnt= fwrite( (void*)buffer, 1,cnt, spP->stream );
-                i -= cnt;
-              } // while
-              
-              err= fclose( tmp__stream );
-              err= remove( tmpName );
+            // upe_printf( "problems_with_mach\n" );
+            strcpy(tmpName, spP->fullName);
+            i = strlen(tmpName);
+            while (i >= 0 && tmpName[i] != '/')
+                i--;
+            tmpName[i + 1] = NUL;
+            sprintf(tmpName, "%s.tmpfile.%d", tmpName, pid);
+
+            err = fclose(spP->stream);
+            err = remove(tmpName);
+            // upe_printf( "remove '%s' err=%d\n", tmpName, err );
+            err = rename(spP->fullName, tmpName);
+            // upe_printf( "rename err=%d\n", err );
+
+            spP->stream = fopen(spP->fullName, "wb+");
+            tmp__stream = fopen(tmpName, "rb+");
+
+            err = E_FNA;
+            if (spP->stream && tmp__stream) {
+                err = 0;
+
+                i = *sizeP;
+                while (i > 0) {
+                    j = i;
+                    if (j > BUFFSIZE)
+                        j = BUFFSIZE;
+                    cnt = fread((void *)buffer, 1, j, tmp__stream);
+                    cnt = fwrite((void *)buffer, 1, cnt, spP->stream);
+                    i -= cnt;
+                } // while
+
+                err = fclose(tmp__stream);
+                err = remove(tmpName);
             } // if
-          } // if
-        }  // if
-        
-        /*  
-        //fflush     ( spP->stream );                             // unbuffer everything
-          fd = fileno( spP->stream );                       // <fd> used for "ftruncate"
-          upe_printf( "fd=%d errno=%d fdGOOD=%d\n", fd, errno, spP->stream->_file );
- 
-          err= fclose( spP->stream );
-          upe_printf( "close err=%d\n", err );
- 
-        //upe_printf( "name='%s' fd=%d\n", spP->fullName, fd );
-          upe_printf( "name='%s' size=%d\n", spP->fullName, *sizeP );
-          err= truncate( spP->fullName, *sizeP  );              // cut the file at <*sizeP>
-        //err= SetEOF( spP->stream->handle );
-          upe_printf( "err=%d errno=%d\n", err, errno );
-          
-              spP->stream= fopen( spP->fullName,"rb+" ); // open for update, use binary mode
-          if (spP->stream) err= 0;
-          else             err= E_FNA;
-          upe_printf( "stream=%08X err=%d\n", spP->stream, err );
-          
-        //if (fd!=0) err= ftruncate( fd, *sizeP  );             // cut the file at <*sizeP>
-          // problems with Mach ...
-          
-        //upe_printf( "TRUncate=%d fd=%d err=%d\n", *sizeP, fd, err );
-        //fflush        ( spP->stream );
-        //fseek         ( spP->stream, *sizeP,SEEK_SET );
-        //fflush        ( spP->stream );
-        //upe_printf( "NOW=%d\n", ftell( spP->stream ) ); 
-        
-        //             fclose( spP->stream );
-        //spP->stream= fopen ( spP->fullName,"rb+" ); // create for update, use binary mode (bfo) !
-        //fseek              ( spP->stream, *sizeP,SEEK_SET );
-        }  // if
-          
-      //            curSize= *sizeP;
-      //if (tmp_pos>curSize)            tmp_pos= curSize;
-      //fsetpos         ( spP->stream, &tmp_pos );   // restore position
-        */
-      #endif
+        }     // if
+    }         // if
+
+    /*
+    //fflush     ( spP->stream );                             // unbuffer
+  everything fd = fileno( spP->stream );                       // <fd> used for
+  "ftruncate" upe_printf( "fd=%d errno=%d fdGOOD=%d\n", fd, errno,
+  spP->stream->_file );
+
+      err= fclose( spP->stream );
+      upe_printf( "close err=%d\n", err );
+
+    //upe_printf( "name='%s' fd=%d\n", spP->fullName, fd );
+      upe_printf( "name='%s' size=%d\n", spP->fullName, *sizeP );
+      err= truncate( spP->fullName, *sizeP  );              // cut the file at
+  <*sizeP>
+    //err= SetEOF( spP->stream->handle );
+      upe_printf( "err=%d errno=%d\n", err, errno );
+
+          spP->stream= fopen( spP->fullName,"rb+" ); // open for update, use
+  binary mode if (spP->stream) err= 0; else             err= E_FNA; upe_printf(
+  "stream=%08X err=%d\n", spP->stream, err );
+
+    //if (fd!=0) err= ftruncate( fd, *sizeP  );             // cut the file at
+  <*sizeP>
+      // problems with Mach ...
+
+    //upe_printf( "TRUncate=%d fd=%d err=%d\n", *sizeP, fd, err );
+    //fflush        ( spP->stream );
+    //fseek         ( spP->stream, *sizeP,SEEK_SET );
+    //fflush        ( spP->stream );
+    //upe_printf( "NOW=%d\n", ftell( spP->stream ) );
+
+    //             fclose( spP->stream );
+    //spP->stream= fopen ( spP->fullName,"rb+" ); // create for update, use
+  binary mode (bfo) !
+    //fseek              ( spP->stream, *sizeP,SEEK_SET );
+    }  // if
+
+  //            curSize= *sizeP;
+  //if (tmp_pos>curSize)            tmp_pos= curSize;
+  //fsetpos         ( spP->stream, &tmp_pos );   // restore position
+    */
+#endif
 
     /* just read and write back one char at the end to get the correct size */
-    do {           // do not change the content if smaller -> read it first
-      #ifdef UNIX
-        if (*sizeP==0) {
-          fclose( spP->stream );
-          oserr=          remove( spP->fullName );
-              spP->stream= fopen( spP->fullName,"wb+" );       /* create for update, use binary mode (bfo) ! */
-          if (spP->stream==NULL) return c2os9err(errno,E_FNA); /* default: file not accessible in this mode */  
+    do { // do not change the content if smaller -> read it first
+#ifdef UNIX
+        if (*sizeP == 0) {
+            fclose(spP->stream);
+            oserr = remove(spP->fullName);
+            spP->stream =
+                fopen(spP->fullName,
+                      "wb+"); /* create for update, use binary mode (bfo) ! */
+            if (spP->stream == NULL)
+                return c2os9err(
+                    errno,
+                    E_FNA); /* default: file not accessible in this mode */
         }
-      #endif
-      
-      /*
-      if (*sizeP>0) {
-        #if defined win_unix || defined MACFILES
-          if (*sizeP<=curSize) {              n= sizeof(b);
-                                    p= *sizeP-n;
-            err= pFseek( pid, spP, &p );               if (err) break;
-            err= pFread( pid, spP,           &n, &b ); if (err) break;
-          } // if
-        #endif
-                                           n= sizeof(b);
-                                 p= *sizeP-n;
-        err= pFseek ( pid, spP, &p );               if (err) break;
-        err= pFwrite( pid, spP,           &n, &b ); if (err) break;
-      } // if
-      */
+#endif
 
-      if (*sizeP>curSize) {                n= sizeof( b );
-                                 p= *sizeP-n;
-        err= pFseek ( pid, spP, &p );               if (err) break;
-        err= pFwrite( pid, spP,           &n, &b ); if (err) break;
-      } // if
-      
-      if (tmp_pos>*sizeP)        tmp_pos= *sizeP; // adapt current pos, if now smaller
-      err=   pFseek ( pid, spP, &tmp_pos );
+        /*
+        if (*sizeP>0) {
+          #if defined win_unix || defined MACFILES
+            if (*sizeP<=curSize) {              n= sizeof(b);
+                                      p= *sizeP-n;
+              err= pFseek( pid, spP, &p );               if (err) break;
+              err= pFread( pid, spP,           &n, &b ); if (err) break;
+            } // if
+          #endif
+                                             n= sizeof(b);
+                                   p= *sizeP-n;
+          err= pFseek ( pid, spP, &p );               if (err) break;
+          err= pFwrite( pid, spP,           &n, &b ); if (err) break;
+        } // if
+        */
 
-    //upe_printf( "'%s' new  pos=%d err=%d\n", spP->name, tmp_pos, err );
-    //fflush ( spP->stream );
+        if (*sizeP > curSize) {
+            n   = sizeof(b);
+            p   = *sizeP - n;
+            err = pFseek(pid, spP, &p);
+            if (err)
+                break;
+            err = pFwrite(pid, spP, &n, &b);
+            if (err)
+                break;
+        } // if
+
+        if (tmp_pos > *sizeP)
+            tmp_pos = *sizeP; // adapt current pos, if now smaller
+        err = pFseek(pid, spP, &tmp_pos);
+
+        // upe_printf( "'%s' new  pos=%d err=%d\n", spP->name, tmp_pos, err );
+        // fflush ( spP->stream );
     } while (false);
-    
-    if    (err==E_EOF) err= E_FULL;
+
+    if (err == E_EOF)
+        err = E_FULL;
     return err;
 } /* pFsetsz */
- 
 
-
-os9err pFeof( _pid_, syspath_typ* spP )
+os9err pFeof(_pid_, syspath_typ *spP)
 /* check for EOF */
 {
-    if (feof(spP->stream)) return os9error(E_EOF);
+    if (feof(spP->stream))
+        return os9error(E_EOF);
 
-  return 0;
+    return 0;
 } /* pFeof */
-
 
 // attempt to improve things a little
 #define NEW_LUZ_FD_IMPL 1
 
 /* prepare a FD from a cipb */
-static void getFD( void* fdl, ushort maxbyt, byte *buffer )
+static void getFD(void *fdl, ushort maxbyt, byte *buffer)
 {
-    #define   FDS 16
-    byte      fdbeg[FDS];                  /* buffer for preparing FD */
-    byte*     att     = (byte*) &fdbeg[0]; /* the position of the attr field */
-    ulong*    sizeP   = (ulong*)&fdbeg[9]; /* the position of the size field */
-    Boolean   isFolder= false;
-    ulong     u       = 0;
+#define FDS 16
+    byte      fdbeg[FDS];                 /* buffer for preparing FD */
+    byte     *att   = (byte *)&fdbeg[0];  /* the position of the attr field */
+    ulong    *sizeP = (ulong *)&fdbeg[9]; /* the position of the size field */
+    Boolean   isFolder = false;
+    ulong     u        = 0;
     struct tm tim;
-    
-    #if   defined win_unix
-      char*       pathname;
-      struct stat info;
-      syspath_typ spRec;
-      Boolean     ok;
-      
-      #if   defined MACOSX
-          mode_t v;
-      #else
-        __mode_t v;
-      #endif
-      
-    #else
-      #pragma unused(fdl)
-    #endif
+
+#if defined win_unix
+    char       *pathname;
+    struct stat info;
+    syspath_typ spRec;
+    Boolean     ok;
+
+#if defined MACOSX
+    mode_t v;
+#else
+    __mode_t v;
+#endif
+
+#else
+#pragma unused(fdl)
+#endif
 
     /* fill up with 0 as far as needed, used as default */
-    memset( buffer,0, maxbyt );
-    memset( fdbeg, 0, FDS    );
-    
+    memset(buffer, 0, maxbyt);
+    memset(fdbeg, 0, FDS);
+
     // conventional ifdef haystack :-)
 
     /* fill in constants */
-    *att= 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check file type!) */         
+    *att = 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check
+                    file type!) */
 
-    #if   defined win_unix
-      pathname= (char*)fdl;
-            
-      
-    //upe_printf( "'%s' %s\n", pathname, isFolder ? "folder":"file" );
-      *att= 0x00; 
-      if (!isFolder) {
-          stat_( pathname, &info );
-          v= info.st_mode;
-      
-          if (v & S_IRUSR)    *att|= poRead;
-          if (v & S_IWUSR)    *att|= poWrite;
-       /* if (v & S_IXUSR) */ *att|= poExec; /* always */
+#if defined win_unix
+    pathname = (char *)fdl;
 
-          if (v & S_IROTH)    *att|= 0x08;
-          if (v & S_IWOTH)    *att|= 0x10;
-       /* if (v & S_IXOTH) */ *att|= 0x20;   /* always */
-      
-      
-          isFolder= IsTrDir(v);
-      }
-      
-      if (isFolder) *att|= 0x3F; /* all attr for directory */
-    #endif
-    
-    if (isFolder) *att|= 0x80; /* set if it is a directory */
-    
+    // upe_printf( "'%s' %s\n", pathname, isFolder ? "folder":"file" );
+    *att = 0x00;
+    if (!isFolder) {
+        stat_(pathname, &info);
+        v = info.st_mode;
 
-    fdbeg[1] =0;
-    fdbeg[2] =0; /* owner = superuser */
+        if (v & S_IRUSR)
+            *att |= poRead;
+        if (v & S_IWUSR)
+            *att |= poWrite;
+        /* if (v & S_IXUSR) */ *att |= poExec; /* always */
 
-    /* file dates */
-    #if   defined win_unix
-      u= info.st_mtime;
-      
-    #endif
+        if (v & S_IROTH)
+            *att |= 0x08;
+        if (v & S_IWOTH)
+            *att |= 0x10;
+        /* if (v & S_IXOTH) */ *att |= 0x20; /* always */
 
-    TConv( u, &tim );
-//  tp = localtime( (time_t*)&u );
-//  tim= *tp; /* copy it, as it might be overwritten */
+        isFolder = IsTrDir(v);
+    }
 
-    
-    fdbeg[3]= tim.tm_year;
-    fdbeg[4]= tim.tm_mon+1; /* somewhat different month notation */
-    fdbeg[5]= tim.tm_mday;
-    fdbeg[6]= tim.tm_hour;
-    fdbeg[7]= tim.tm_min;
-    
-    fdbeg[8]= 1; /* link count = 1 */
-    debugprintf(dbgFiles,dbgNorm,("# getFD: %02d/%02d/%02d %02d:%02d\n", 
-                tim.tm_year % 100,tim.tm_mon+1,tim.tm_mday, tim.tm_hour,tim.tm_min));
-    
-    #if   defined win_unix
-      
-      u= info.st_ctime;
-    #endif
+    if (isFolder)
+        *att |= 0x3F; /* all attr for directory */
+#endif
 
-    TConv( u, &tim );
-//  tp = localtime( (time_t*)&u );
-//  tim= *tp; /* copy it, as it might be overwritten */
+    if (isFolder)
+        *att |= 0x80; /* set if it is a directory */
 
-    fdbeg[13]= tim.tm_year;
-    fdbeg[14]= tim.tm_mon+1;
-    fdbeg[15]= tim.tm_mday;
+    fdbeg[1] = 0;
+    fdbeg[2] = 0; /* owner = superuser */
+
+/* file dates */
+#if defined win_unix
+    u = info.st_mtime;
+
+#endif
+
+    TConv(u, &tim);
+    //  tp = localtime( (time_t*)&u );
+    //  tim= *tp; /* copy it, as it might be overwritten */
+
+    fdbeg[3] = tim.tm_year;
+    fdbeg[4] = tim.tm_mon + 1; /* somewhat different month notation */
+    fdbeg[5] = tim.tm_mday;
+    fdbeg[6] = tim.tm_hour;
+    fdbeg[7] = tim.tm_min;
+
+    fdbeg[8] = 1; /* link count = 1 */
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# getFD: %02d/%02d/%02d %02d:%02d\n",
+                 tim.tm_year % 100,
+                 tim.tm_mon + 1,
+                 tim.tm_mday,
+                 tim.tm_hour,
+                 tim.tm_min));
+
+#if defined win_unix
+
+    u = info.st_ctime;
+#endif
+
+    TConv(u, &tim);
+    //  tp = localtime( (time_t*)&u );
+    //  tim= *tp; /* copy it, as it might be overwritten */
+
+    fdbeg[13] = tim.tm_year;
+    fdbeg[14] = tim.tm_mon + 1;
+    fdbeg[15] = tim.tm_mday;
 
     /* file length */
-//  *sizeP= 0; /* by default */
+    //  *sizeP= 0; /* by default */
 
-        
-    #if   defined win_unix
-      if (isFolder) {
-          *sizeP= 0; /* by default */
-          
-              ok= (pathname!=NULL && ustrcmp( pathname,"" )!=0);
-          if (ok) {
-                        strcpy( spRec.fullName, (char*)fdl );
-                  ok= OpenTDir( spRec.fullName, &spRec.dDsc );
-              if (ok) {
-                  *att  = 0x80 | 0x3F;
-                  *sizeP= os9_long( 2*DIRENTRYSZ ); /* if no entries */   
-              
-                  if (spRec.dDsc!=NULL) {
-                      *sizeP= os9_long( DirSize(&spRec) );
-                      closedir( spRec.dDsc );
-                  }
-              }
-    	  } /* if (ok) */
-      }
-      else *sizeP= os9_long(info.st_size);
-        
-//    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
-    #endif
-    
-    
+#if defined win_unix
+    if (isFolder) {
+        *sizeP = 0; /* by default */
+
+        ok = (pathname != NULL && ustrcmp(pathname, "") != 0);
+        if (ok) {
+            strcpy(spRec.fullName, (char *)fdl);
+            ok = OpenTDir(spRec.fullName, &spRec.dDsc);
+            if (ok) {
+                *att   = 0x80 | 0x3F;
+                *sizeP = os9_long(2 * DIRENTRYSZ); /* if no entries */
+
+                if (spRec.dDsc != NULL) {
+                    *sizeP = os9_long(DirSize(&spRec));
+                    closedir(spRec.dDsc);
+                }
+            }
+        } /* if (ok) */
+    }
+    else
+        *sizeP = os9_long(info.st_size);
+
+        //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
+#endif
+
     /* copy FD beginning to caller's buffer */
-    memcpy(buffer,fdbeg,maxbyt>FDS ? FDS : maxbyt);
+    memcpy(buffer, fdbeg, maxbyt > FDS ? FDS : maxbyt);
 
-//  /* fill up with 0 as far as needed */
-//  if (maxbyt>16) {
-//      memset( &buffer[16],0, maxbyt-16 );
-//  }
+    //  /* fill up with 0 as far as needed */
+    //  if (maxbyt>16) {
+    //      memset( &buffer[16],0, maxbyt-16 );
+    //  }
 } /* getFD */
 
-
-
-static void setFD( syspath_typ* spP, void* fdl, byte *buffer )
+static void setFD(syspath_typ *spP, void *fdl, byte *buffer)
 /* adapt cipb with info of FD */
 // void setFD(CInfoPBRec *cipbP, ushort maxbyt, byte *buffer)
 {
-    byte fdbeg[16]; /* buffer for preparing FD */
+    byte      fdbeg[16]; /* buffer for preparing FD */
     struct tm tim;
-    time_t u;
-    
-    
-    memcpy(fdbeg,buffer,16);  /* the size IS 16 */  
-    tim.tm_year= fdbeg[ 3]; 
-    tim.tm_mon = fdbeg[ 4]-1; /* the month correction */
-    tim.tm_mday= fdbeg[ 5];
-    tim.tm_hour= fdbeg[ 6];
-    tim.tm_min = fdbeg[ 7];
-    tim.tm_sec = 0;           /* no seconds supported */
-    
-    u= UConv( &tim );
+    time_t    u;
 
-    spP->u.disk.u.file.moddate        = u;
-    spP->u.disk.u.file.moddate_changed= true;
+    memcpy(fdbeg, buffer, 16); /* the size IS 16 */
+    tim.tm_year = fdbeg[3];
+    tim.tm_mon  = fdbeg[4] - 1; /* the month correction */
+    tim.tm_mday = fdbeg[5];
+    tim.tm_hour = fdbeg[6];
+    tim.tm_min  = fdbeg[7];
+    tim.tm_sec  = 0; /* no seconds supported */
 
-    #if   defined win_unix
-      Set_FileDate( spP, u );
-    #endif
+    u = UConv(&tim);
 
-  //printf( "Set_FileDate was1\n" );
+    spP->u.disk.u.file.moddate         = u;
+    spP->u.disk.u.file.moddate_changed = true;
 
-    if (fdbeg[13]==0) return; /* don't change it for invalid year */
-    
-    tim.tm_year= fdbeg[13];
-    tim.tm_mon = fdbeg[14]-1; /* the month correction */
-    tim.tm_mday= fdbeg[15];
-    tim.tm_hour= 0;
-    tim.tm_min = 0;
-    tim.tm_sec = 0;           /* no seconds supported */
+#if defined win_unix
+    Set_FileDate(spP, u);
+#endif
 
-  //printf( "Set_FileDate was2\n" );
-    u= UConv( &tim );
-	
+    // printf( "Set_FileDate was1\n" );
+
+    if (fdbeg[13] == 0)
+        return; /* don't change it for invalid year */
+
+    tim.tm_year = fdbeg[13];
+    tim.tm_mon  = fdbeg[14] - 1; /* the month correction */
+    tim.tm_mday = fdbeg[15];
+    tim.tm_hour = 0;
+    tim.tm_min  = 0;
+    tim.tm_sec  = 0; /* no seconds supported */
+
+    // printf( "Set_FileDate was2\n" );
+    u = UConv(&tim);
+
 } /* setFD */
 
-
 /* get file descriptor for object */
-os9err pHgetFD( _pid_, syspath_typ* spP, ulong *maxbytP, byte *buffer )
+os9err pHgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 {
-    void* fdl;
+    void *fdl;
 
-    #if   defined win_unix
-      fdl= &spP->fullName; /* use this for linux */
-    
-    #else
-      #pragma unused(spP)
-      /* no FD sector read possible w/o native OS access */
-      return E_UNKSVC;
-    #endif
-    
-    getFD( fdl, loword(*maxbytP),buffer );
-    debugprintf(dbgFiles,dbgNorm,("# pHgetFD: no longer alive\n"));
+#if defined win_unix
+    fdl = &spP->fullName; /* use this for linux */
+
+#else
+#pragma unused(spP)
+    /* no FD sector read possible w/o native OS access */
+    return E_UNKSVC;
+#endif
+
+    getFD(fdl, loword(*maxbytP), buffer);
+    debugprintf(dbgFiles, dbgNorm, ("# pHgetFD: no longer alive\n"));
     return 0;
 } /* pHgetFD */
 
-
 /* set file descriptor for object */
 /* %%% currently only the file date will be set */
-os9err pHsetFD( _pid_, syspath_typ* spP, byte *buffer )
+os9err pHsetFD(_pid_, syspath_typ *spP, byte *buffer)
 {
-    os9err err= 0;
-    void*  fdl;
-    
-    #if   defined win_unix
-      fdl= NULL;
+    os9err err = 0;
+    void  *fdl;
 
-    #else
-      /* no FD read possible w/o native OS access */
-      return E_UNKSVC;
-    #endif
+#if defined win_unix
+    fdl = NULL;
 
+#else
+    /* no FD read possible w/o native OS access */
+    return E_UNKSVC;
+#endif
 
-    setFD( spP, fdl, buffer);
-
-
+    setFD(spP, fdl, buffer);
 
     return err;
 } /* pHsetFD */
 /* adapt time/date of a file */
 
-
-
 /* get file descriptor for file specified by "sector" */
-os9err pHgetFDInf( _pid_, syspath_typ* spP, ulong *maxbytP,
-                                            ulong *fdinf, byte *buffer)
+os9err
+pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
 {
-    void*  fdl;
-    os9err err= 0;
-    
-    
-    #if   defined win_unix
-      err= FD_Name( *fdinf, (char**)&fdl ); if (err) return err;
-      
-      /*
-      if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
-          strcpy( name, spP->fullName );
-          strcat( name, PATHDELIM_STR );
-          strcat( name, result );
-          fdl=   &name; // use this for windows and linux
-      }
-      */
-          
-    #else
-      #pragma unused(spP,fdinf)
-      /* no FD sector read possible w/o native OS access */
-      return E_UNKSVC;
-    #endif
-    
-    getFD( fdl, loword(*maxbytP), buffer );
+    void  *fdl;
+    os9err err = 0;
+
+#if defined win_unix
+    err = FD_Name(*fdinf, (char **)&fdl);
+    if (err)
+        return err;
+
+        /*
+        if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
+            strcpy( name, spP->fullName );
+            strcat( name, PATHDELIM_STR );
+            strcat( name, result );
+            fdl=   &name; // use this for windows and linux
+        }
+        */
+
+#else
+#pragma unused(spP, fdinf)
+    /* no FD sector read possible w/o native OS access */
+    return E_UNKSVC;
+#endif
+
+    getFD(fdl, loword(*maxbytP), buffer);
     return 0;
 } /* pHgetFDInf */
-
-
 
 /* Directory file emulation */
 /* ------------------------ */
 
 /* open directory */
-os9err pDopen( ushort pid, syspath_typ* spP, ushort *modeP, const char* pathname )
+os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 {
-    os9err  err= 0;
-    char*   pastpath;
+    os9err  err = 0;
+    char   *pastpath;
     char    hostpath[OS9PATHLEN];
-    char    ploc    [OS9PATHLEN];
-    Boolean exedir= IsExec(*modeP);
-    char*   p;
-    char*   pp;
-    
-    #if   defined win_unix
-      DIR*    d;
-      char    adapted[OS9PATHLEN];
-      Boolean ok;
-    #endif
+    char    ploc[OS9PATHLEN];
+    Boolean exedir = IsExec(*modeP);
+    char   *p;
+    char   *pp;
 
- /* if (strlen(pathname)>DIRNAMSZ) return os9error(E_BPNAM); */
+#if defined win_unix
+    DIR    *d;
+    char    adapted[OS9PATHLEN];
+    Boolean ok;
+#endif
 
-    strcpy  ( ploc,pathname );
-    if      (*ploc==NUL) return E_BPNAM;
-    pastpath= ploc;
-    err     = parsepath( pid, &pastpath,hostpath, exedir );
-    pp      = hostpath;
-    debugprintf( dbgFiles,dbgNorm,( "# parsepath='%s' err=%d\n", pp, err ) );
-    if (err) return err;
-    
-    #if   defined win_unix
-      debugprintf( dbgFiles,dbgNorm,( "# pp (v)='%s'\n", pp ) );
-      err= AdjustPath( pp,adapted, false ); if (err) return err;
-      pp = adapted;
-      debugprintf( dbgFiles,dbgNorm,( "# pp (n)='%s'\n", pp ) );
+    /* if (strlen(pathname)>DIRNAMSZ) return os9error(E_BPNAM); */
 
-           ok= OpenTDir( pp, &d );
-      if (!ok) {
+    strcpy(ploc, pathname);
+    if (*ploc == NUL)
+        return E_BPNAM;
+    pastpath = ploc;
+    err      = parsepath(pid, &pastpath, hostpath, exedir);
+    pp       = hostpath;
+    debugprintf(dbgFiles, dbgNorm, ("# parsepath='%s' err=%d\n", pp, err));
+    if (err)
+        return err;
+
+#if defined win_unix
+    debugprintf(dbgFiles, dbgNorm, ("# pp (v)='%s'\n", pp));
+    err = AdjustPath(pp, adapted, false);
+    if (err)
+        return err;
+    pp = adapted;
+    debugprintf(dbgFiles, dbgNorm, ("# pp (n)='%s'\n", pp));
+
+    ok = OpenTDir(pp, &d);
+    if (!ok) {
         return E_FNA;
-      } // if
-      
-              spP->dDsc= d;
-      strcpy( spP->fullName, adapted ); /* for later use with stat function */
+    } // if
 
-    #else
-      /* no directory read possible w/o native OS access */
-      return E_UNKSVC;
-    #endif
+    spP->dDsc = d;
+    strcpy(spP->fullName, adapted); /* for later use with stat function */
 
-    spP->u.disk.u.dir.pos= 0; /* rewind it ! */
-    
-    #ifdef win_unix
-      spP->svD_n= 0;
-    #endif
-    
-    p= (char*)ploc+strlen(ploc)-1; /* only the filename itself, no path name */
-    while (p>=ploc && *p!=PSEP) p--;
+#else
+    /* no directory read possible w/o native OS access */
+    return E_UNKSVC;
+#endif
+
+    spP->u.disk.u.dir.pos = 0; /* rewind it ! */
+
+#ifdef win_unix
+    spP->svD_n = 0;
+#endif
+
+    p = (char *)ploc + strlen(ploc) -
+        1; /* only the filename itself, no path name */
+    while (p >= ploc && *p != PSEP)
+        p--;
     p++;
 
-    strcpy( spP->name,p );
+    strcpy(spP->name, p);
     return err;
 } /* pDopen */
 
-
 /* not used for Mac */
-os9err pDclose( _pid_, syspath_typ* spP )
+os9err pDclose(_pid_, syspath_typ *spP)
 {
-    os9err err= 0;
+    os9err err = 0;
 
-    #ifdef win_unix
-      DIR* d= spP->dDsc;
-      if  (d!=NULL) { err= closedir( d ); spP->dDsc= NULL; }
-      debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", spP->fullName, err ));
-    #else
-      debugprintf( dbgFiles,dbgNorm,("# pDclose: '%s' err=%d\n", spP->name,     err ));
-    #endif
-    
+#ifdef win_unix
+    DIR *d = spP->dDsc;
+    if (d != NULL) {
+        err       = closedir(d);
+        spP->dDsc = NULL;
+    }
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# pDclose: '%s' err=%d\n", spP->fullName, err));
+#else
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# pDclose: '%s' err=%d\n", spP->name, err));
+#endif
+
     return err;
 } /* pDclose */
 
-
-
-
-
 /* read from (simulated) directory file */
-os9err pDread( _pid_, syspath_typ *spP, ulong *n, char* buffer )
+os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 {
-  os9err err;
-    
-  ulong* pos  = &spP->u.disk.u.dir.pos; /* current file position */
-  ulong  offs = *pos & 0x1F;            /* offset    to start */
-  ushort index= *pos >> 5;              /* dir index to start */
-  char*  myb= buffer;
-    
-  ulong  cnt, nbytes;
-  os9direntry_typ os9dirent;
-  
-  #ifdef win_unix
-    dirent_typ*     dEnt;
-    dirtable_entry* mP= NULL;
+    os9err err;
+
+    ulong *pos   = &spP->u.disk.u.dir.pos; /* current file position */
+    ulong  offs  = *pos & 0x1F;            /* offset    to start */
+    ushort index = *pos >> 5;              /* dir index to start */
+    char  *myb   = buffer;
+
+    ulong           cnt, nbytes;
+    os9direntry_typ os9dirent;
+
+#ifdef win_unix
+    dirent_typ     *dEnt;
+    dirtable_entry *mP = NULL;
     int             len;
     ulong           fdpos;
-    Boolean         topFlag= false;
-      
-  #endif
-    
-//printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
-  debugprintf(dbgFiles,dbgDetail,("# pDread: requests $%lX bytes\n",*n)); 
-  cnt= *n;
-  if  (*n==0) return 0;
-        
-  /* now copy remaining entries (if any) */
-  /* now do it in one single step (bfo)  */
-  while (cnt>0) {
-    #if   defined win_unix
-      memset( &os9dirent, 0,DIRENTRYSZ ); /* clear before using */
-          
-      err= DirNthEntry( spP,index, &dEnt );
-          
-      if      (err) {
-        if    (err==E_EOF && cnt<*n) break; // EOF can be handled !!
-        return err;
-      } // if
-          
-      if (*pos-offs==0) { /* if 1st entry, ".." expected */
-                  
-        if (topFlag) strcpy( dEnt->d_name,".." );
-      } // if
-            
-      if (dEnt!=NULL) {
-        GetEntry( dEnt, os9dirent.name, true );
-        FD_ID          ( spP->fullName, dEnt, &fdpos, &mP );                      
-        if (topFlag) { seekD0( spP ); topFlag= false; }
-      }
-      else err= E_EOF;
-          
-      if (!err) {
-        len= strlen( os9dirent.name );
-        os9dirent.name[ len-1 ] |= 0x80; /* set old-style terminator */
-        os9dirent.fdsect= os9_long( fdpos );
-      } // if
-      
-    #else
-      /* %%% no directory read possible w/o native OS access */
-      return E_UNKSVC;
-    #endif
-        
-    if (!err) {
-      nbytes = (offs+cnt)>DIRENTRYSZ ? DIRENTRYSZ-offs:cnt;
-      memcpy(myb,(byte*)&os9dirent+offs, nbytes);
-            
-      cnt -= nbytes;
-      myb += nbytes;
-      offs = (offs+nbytes) & 0x1F;
-      *pos+= nbytes;
-      if (offs==0) index++;
-    }
-    else {
-      if (err==E_EOF) {
-        if (cnt==*n) return err;  /* nothing to be read */
-        /* ok, no more to read, but something was there */
-        break;
-      }
-      else return err;
-    } // if
-  } /* while */
-    
-  /* sucessful, set number of bytes actually read */
-  *n-= cnt; /* adjust to show actually read # of bytes */
-  debugprintf(dbgFiles,dbgDetail,("# pDread: returned $%lX bytes\n",*n)); 
+    Boolean         topFlag = false;
 
-  /*
-  printf( "buf=%8d n=%4d '%s'\n", buffer, *n, spP->name );
-  for (ii=0; ii<*n; ii++) {
-    printf( "%02X ", (byte)buffer[ii] );
-    if (ii%16==15) printf( "\n" );
-  } // for
-  */
-  
-  return 0;
+#endif
+
+    // printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
+    debugprintf(dbgFiles, dbgDetail, ("# pDread: requests $%lX bytes\n", *n));
+    cnt = *n;
+    if (*n == 0)
+        return 0;
+
+    /* now copy remaining entries (if any) */
+    /* now do it in one single step (bfo)  */
+    while (cnt > 0) {
+#if defined win_unix
+        memset(&os9dirent, 0, DIRENTRYSZ); /* clear before using */
+
+        err = DirNthEntry(spP, index, &dEnt);
+
+        if (err) {
+            if (err == E_EOF && cnt < *n)
+                break; // EOF can be handled !!
+            return err;
+        } // if
+
+        if (*pos - offs == 0) { /* if 1st entry, ".." expected */
+
+            if (topFlag)
+                strcpy(dEnt->d_name, "..");
+        } // if
+
+        if (dEnt != NULL) {
+            GetEntry(dEnt, os9dirent.name, true);
+            FD_ID(spP->fullName, dEnt, &fdpos, &mP);
+            if (topFlag) {
+                seekD0(spP);
+                topFlag = false;
+            }
+        }
+        else
+            err = E_EOF;
+
+        if (!err) {
+            len = strlen(os9dirent.name);
+            os9dirent.name[len - 1] |= 0x80; /* set old-style terminator */
+            os9dirent.fdsect = os9_long(fdpos);
+        } // if
+
+#else
+        /* %%% no directory read possible w/o native OS access */
+        return E_UNKSVC;
+#endif
+
+        if (!err) {
+            nbytes = (offs + cnt) > DIRENTRYSZ ? DIRENTRYSZ - offs : cnt;
+            memcpy(myb, (byte *)&os9dirent + offs, nbytes);
+
+            cnt -= nbytes;
+            myb += nbytes;
+            offs = (offs + nbytes) & 0x1F;
+            *pos += nbytes;
+            if (offs == 0)
+                index++;
+        }
+        else {
+            if (err == E_EOF) {
+                if (cnt == *n)
+                    return err; /* nothing to be read */
+                /* ok, no more to read, but something was there */
+                break;
+            }
+            else
+                return err;
+        } // if
+    }     /* while */
+
+    /* sucessful, set number of bytes actually read */
+    *n -= cnt; /* adjust to show actually read # of bytes */
+    debugprintf(dbgFiles, dbgDetail, ("# pDread: returned $%lX bytes\n", *n));
+
+    /*
+    printf( "buf=%8d n=%4d '%s'\n", buffer, *n, spP->name );
+    for (ii=0; ii<*n; ii++) {
+      printf( "%02X ", (byte)buffer[ii] );
+      if (ii%16==15) printf( "\n" );
+    } // for
+    */
+
+    return 0;
 } /* pDread */
 
-
 /* get pointer position */
-os9err pDpos( _pid_, syspath_typ* spP, ulong *posP )
+os9err pDpos(_pid_, syspath_typ *spP, ulong *posP)
 {
-    *posP= spP->u.disk.u.dir.pos;
+    *posP = spP->u.disk.u.dir.pos;
     return 0;
 } /* pDpos */
 
-
-
 /* get size of directory file */
-os9err pDsize( _pid_, syspath_typ* spP, ulong *sizeP )
+os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
 {
-    os9err err= 0;
-    
-    #if   defined win_unix
-      *sizeP= DirSize( spP );
-      
-    #else
-      #pragma unused(spP,sizeP)
-      return E_UNKSVC;
-    #endif
-    
+    os9err err = 0;
+
+#if defined win_unix
+    *sizeP = DirSize(spP);
+
+#else
+#pragma unused(spP, sizeP)
+    return E_UNKSVC;
+#endif
+
     return err;
 } /* pDsize */
 
-
-
 /* set read position */
-os9err pDseek( ushort pid, syspath_typ* spP, ulong *posP )
+os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
 {
-    #if   defined win_unix
-      int         cnt, n;
-      dirent_typ* dEnt;
-    #else
-      #pragma unused(pid)
-    #endif
-    
-    
-    #if   defined win_unix
-      seekD0( spP ); /* start at the beginning */
+#if defined win_unix
+    int         cnt, n;
+    dirent_typ *dEnt;
+#else
+#pragma unused(pid)
+#endif
 
-      n= 0;    cnt= *posP/DIRENTRYSZ;
-      while (n<cnt) { /* search for the nth entry */
-        dEnt= ReadTDir( spP->dDsc );
-        spP->svD_n= 0; /* catch again */
-        
+#if defined win_unix
+    seekD0(spP); /* start at the beginning */
+
+    n   = 0;
+    cnt = *posP / DIRENTRYSZ;
+    while (n < cnt) { /* search for the nth entry */
+        dEnt       = ReadTDir(spP->dDsc);
+        spP->svD_n = 0; /* catch again */
+
         /* special handling for the root directory */
-         
-        if (dEnt==NULL) return os9error(E_SEEK);
-        if (ustrcmp( dEnt->d_name,AppDo )!=0 ) cnt--; /* ignore ".AppleDouble" */
+
+        if (dEnt == NULL)
+            return os9error(E_SEEK);
+        if (ustrcmp(dEnt->d_name, AppDo) != 0)
+            cnt--; /* ignore ".AppleDouble" */
         n++;
-      } /* while */
+    } /* while */
 
-    #else
-      return E_UNKSVC;
-    #endif  
+#else
+    return E_UNKSVC;
+#endif
 
-    spP->u.disk.u.dir.pos= *posP;
+    spP->u.disk.u.dir.pos = *posP;
     return 0;
 } /* pDseek */
 
-
-
-os9err pDchd( ushort pid, _spP_, ushort *modeP, char* pathname )
+os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
-    os9err       err= 0;
-    char*        pastpath;
-    char         p[OS9PATHLEN]; 
-    Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
-    process_typ* cp= &procs[pid];
-    char*        defDir_s;
-    
-    #if   defined win_unix
-      char    adapted[OS9PATHLEN];
-      
-    #else
-      #error I_Chgdir not yet implemented
-    #endif
-    
-    /* now obtain volume and directory of new path */
-    pastpath= pathname;
-    err     = parsepath( pid, &pastpath,p, exedir);
-    pathname= p;
-     
-    debugprintf( dbgFiles,dbgNorm,("# I$ChgDir: try to %s to '%s', err=%d\n",
-                                      exedir ? "chx":"chd", pathname,err ));
-    if (err) return err;
-      
-    /* get current default path */
-    if (exedir) defDir_s= cp->x.path;
-    else        defDir_s= cp->d.path;
-        
-    #if   defined win_unix
-      /* now do a OS changedir to "resolve" (and verify) location */
-      err= AdjustPath( pathname,adapted, false ); if (err) return err;
-      pathname=                 adapted;
-            
-      if  (!PathFound( pathname )) return E_FNA;    
-      strcpy( defDir_s,pathname );
-    #endif
+    os9err       err = 0;
+    char        *pastpath;
+    char         p[OS9PATHLEN];
+    Boolean      exedir = IsExec(*modeP); /* check if it is chd or chx */
+    process_typ *cp     = &procs[pid];
+    char        *defDir_s;
 
-    if (exedir) cp->x.type= fDir; /* adapt the type */
-    else        cp->d.type= fDir;
-    
+#if defined win_unix
+    char adapted[OS9PATHLEN];
+
+#else
+#error I_Chgdir not yet implemented
+#endif
+
+    /* now obtain volume and directory of new path */
+    pastpath = pathname;
+    err      = parsepath(pid, &pastpath, p, exedir);
+    pathname = p;
+
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# I$ChgDir: try to %s to '%s', err=%d\n",
+                 exedir ? "chx" : "chd",
+                 pathname,
+                 err));
+    if (err)
+        return err;
+
+    /* get current default path */
+    if (exedir)
+        defDir_s = cp->x.path;
+    else
+        defDir_s = cp->d.path;
+
+#if defined win_unix
+    /* now do a OS changedir to "resolve" (and verify) location */
+    err = AdjustPath(pathname, adapted, false);
+    if (err)
+        return err;
+    pathname = adapted;
+
+    if (!PathFound(pathname))
+        return E_FNA;
+    strcpy(defDir_s, pathname);
+#endif
+
+    if (exedir)
+        cp->x.type = fDir; /* adapt the type */
+    else
+        cp->d.type = fDir;
+
     return 0; /* ok */
 } /* pDchd */
 
-
-
-os9err pDmakdir( ushort pid, _spP_, ushort *modeP, char* pathname )
+os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
-  os9err       err;
-  OSErr        oserr= 0;
-  char*        pastpath;
-  char         p[ OS9PATHLEN ]; 
-  Boolean      exedir= IsExec(*modeP); /* check if it is chd or chx */
-//process_typ* cp= &procs[pid];
+    os9err  err;
+    OSErr   oserr = 0;
+    char   *pastpath;
+    char    p[OS9PATHLEN];
+    Boolean exedir = IsExec(*modeP); /* check if it is chd or chx */
+                                     // process_typ* cp= &procs[pid];
 
-  #if   defined win_unix
-    char adapted[ OS9PATHLEN ];
-  #endif
+#if defined win_unix
+    char adapted[OS9PATHLEN];
+#endif
 
-  pastpath= pathname;
-  err     = parsepath( pid, &pastpath,p,exedir ); if (err) return err;
-  pathname= p;
-    
-  #if   defined UNIX
-    err= AdjustPath( pathname,adapted, true ); if (err) return err;
-    
-    debugprintf(dbgFiles,dbgNorm,("# I$MakDir: Linux path=%s\n",adapted));
-    if (PathFound( adapted ) || 
-        FileFound( adapted )) return E_CEF;
-          
-    if (mkdir( adapted,0x01c0 )==0) return 0; /* rwx------ */
+    pastpath = pathname;
+    err      = parsepath(pid, &pastpath, p, exedir);
+    if (err)
+        return err;
+    pathname = p;
+
+#if defined UNIX
+    err = AdjustPath(pathname, adapted, true);
+    if (err)
+        return err;
+
+    debugprintf(dbgFiles, dbgNorm, ("# I$MakDir: Linux path=%s\n", adapted));
+    if (PathFound(adapted) || FileFound(adapted))
+        return E_CEF;
+
+    if (mkdir(adapted, 0x01c0) == 0)
+        return 0; /* rwx------ */
     return E_BPNAM;
 
-  #else
-    /* other OS */
-    #error I_Makdir not yet implemented
-  #endif
+#else
+/* other OS */
+#error I_Makdir not yet implemented
+#endif
 
-  return host2os9err( oserr, E_WRITE );
+    return host2os9err(oserr, E_WRITE);
 } /* pDmakdir */
 
-
-
-
-
-
-os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
+os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 {
-    os9err err= 0;
+    os9err err = 0;
 
-      OSErr  oserr= 0;
-      
-    #if   defined win_unix
-     ushort mode;
-     char*  pp= spP->fullName;
-      
-      #if defined windows32 || defined MACOSX
-        char cmd[OS9PATHLEN];
-      #endif
-    
-    #else
-      return E_UNKSVC;
-    #endif
-          
+    OSErr oserr = 0;
 
-    if (*attr & 0x80 ) return 0; /* it is already a directory */
-      
-    #ifdef win_unix
-          err= RemoveAppledouble( spP ); /* because this file is not visible */
-      if (err==E_EOF) err= 0; // this is not an error !!
-      if (err) return err;
-    #endif
-      
-    
+#if defined win_unix
+    ushort mode;
+    char  *pp = spP->fullName;
+
+#if defined windows32 || defined MACOSX
+    char cmd[OS9PATHLEN];
+#endif
+
+#else
+    return E_UNKSVC;
+#endif
+
+    if (*attr & 0x80)
+        return 0; /* it is already a directory */
+
+#ifdef win_unix
+    err = RemoveAppledouble(spP); /* because this file is not visible */
+    if (err == E_EOF)
+        err = 0; // this is not an error !!
+    if (err)
+        return err;
+#endif
+
     /* can't change attributes in Mac/Linux/Windows */
     /* But remove and recreate as file is possible */
-    err= pDclose      ( pid, spP     ); if (err) return err;
-  //err= syspath_close( pid, spP->nr ); if (err) return err;
-      
-    #if   defined MACOSX
-      sprintf( cmd, "rmdir %s", pp );
-      err= call_hostcmd( cmd, pid, 0,NULL ); if (err) return err;
+    err = pDclose(pid, spP);
+    if (err)
+        return err;
+        // err= syspath_close( pid, spP->nr ); if (err) return err;
 
-    #else
-  //#elif defined UNIX
-      oserr= remove( pp ); if (oserr) err= host2os9err( oserr,E_DNE );
-    #endif
-      
-    debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' remove err=%d\n", pp,err )); 
-    if (err) return err;
-      
-    spP->type= fFile; /* change the file type now */
-    
-                               mode= 0x03 | poCreateMask;
-       err= pFopen( pid, spP, &mode, pp ); // and open it as file again on the same system path
-    
+#if defined MACOSX
+    sprintf(cmd, "rmdir %s", pp);
+    err = call_hostcmd(cmd, pid, 0, NULL);
+    if (err)
+        return err;
+
+#else
+    //#elif defined UNIX
+    oserr = remove(pp);
+    if (oserr)
+        err = host2os9err(oserr, E_DNE);
+#endif
+
+    debugprintf(dbgFiles,
+                dbgNorm,
+                ("# pDsetatt: '%s' remove err=%d\n", pp, err));
+    if (err)
+        return err;
+
+    spP->type = fFile; /* change the file type now */
+
+    mode = 0x03 | poCreateMask;
+    err  = pFopen(pid,
+                 spP,
+                 &mode,
+                 pp); // and open it as file again on the same system path
+
     /*
     #ifdef MACOS9
       for (k=0; k<MAXTRIES_DEL; k++) {
@@ -1603,29 +1691,28 @@ os9err pDsetatt( ushort pid, syspath_typ* spP, ulong *attr )
                                      mode= 0x03;
              err= pFopen( pid, spP, &mode, pp ); // try do open it
         if (!err) break;
-        
+
                                      mode= 0x03 | poCreateMask;
         err=      pFopen( pid, spP, &mode, pp );
       } // for
     #endif
     */
-    
-    debugprintf( dbgFiles,dbgNorm,("# pDsetatt: '%s' end err=%d\n", pp, err )); 
+
+    debugprintf(dbgFiles, dbgNorm, ("# pDsetatt: '%s' end err=%d\n", pp, err));
     return err;
 } /* pDsetatt */
 
-
-
 /* check for EOF */
-os9err pDeof( ushort pid, syspath_typ* spP )
+os9err pDeof(ushort pid, syspath_typ *spP)
 {
     ulong  n;
-    os9err err= pDsize( pid,spP, &n ); if (err) return err;
-    if    (n<=spP->u.disk.u.dir.pos) return os9error(E_EOF);
-    
-    return 0; 
+    os9err err = pDsize(pid, spP, &n);
+    if (err)
+        return err;
+    if (n <= spP->u.disk.u.dir.pos)
+        return os9error(E_EOF);
+
+    return 0;
 } /* pDeof */
 
-
 /* eof */
-

@@ -1,21 +1,21 @@
-// 
-//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux 
+//
+//    OS9exec,   OS-9 emulator for Mac OS, Windows and Linux
 //    Copyright (C) 2002 Lukas Zeller / Beat Forster
 //	  Available under http://www.synthesis.ch/os9exec
-// 
-//    This program is free software; you can redistribute it and/or 
-//    modify it under the terms of the GNU General Public License as 
-//    published by the Free Software Foundation; either version 2 of 
-//    the License, or (at your option) any later version. 
-// 
-//    This program is distributed in the hope that it will be useful, 
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-//    See the GNU General Public License for more details. 
-// 
-//    You should have received a copy of the GNU General Public License 
-//    along with this program; if not, write to the Free Software 
-//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
+//
+//    This program is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU General Public License as
+//    published by the Free Software Foundation; either version 2 of
+//    the License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//    See the GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
 /**********************************************/
@@ -108,7 +108,8 @@
  *    Using "UpTime" as time base, still somewhat strange
  *
  *    Revision 1.4  2002/06/25 20:44:33  luz
- *    Added /lp printer support under windows. Not tested or even compiled for Mac
+ *    Added /lp printer support under windows. Not tested or even compiled for
+ * Mac
  *
  */
 
@@ -120,67 +121,63 @@
 #define OS9MAIN_INCL_PRECOMP_H
 
 // This is OS9exec !!
-#define OS9EXEC 1 
-
+#define OS9EXEC 1
 
 /* XCode is MACH, but does not know about macintosh */
 #if !defined macintosh && defined __MACH__
-  #define MACOSX
-  #define macintosh
-  
-  // Support Intel Macs
-  #ifndef __BIG_ENDIAN__
-    #define __INTEL__
-  #endif
+#define MACOSX
+#define macintosh
+
+// Support Intel Macs
+#ifndef __BIG_ENDIAN__
+#define __INTEL__
+#endif
 #endif
 
 /* WINTEL can't be separated :-) */
 #ifdef __INTEL__
-  // except for the "bright future"
-    #define windows32
+// except for the "bright future"
+#define windows32
 #endif
 
 /* Support only for Linux on PC */
 /* makes life easier for them moment ... */
-  #define __INTEL__
+#define __INTEL__
 
 /* the UNIX systems */
-  #define UNIX
+#define UNIX
 
 /* either windows or linux */
-  #define win_linux
+#define win_linux
 
 /* all modern systems combined */
-  #define win_unix
-
+#define win_unix
 
 // Decide about the system
 #if !defined macintosh && !defined __INTEL__ && !defined __GNUC__
-  /* make sure that this can also be compiled for MPW */
-  /* when "macintosh" is not defined */
-  #define macintosh
+/* make sure that this can also be compiled for MPW */
+/* when "macintosh" is not defined */
+#define macintosh
 #endif
 
 #if !defined powerc && defined MACOSX && !defined __INTEL__
-  #define powerc
+#define powerc
 #endif
 
 /* define a special label for 68k/MacOS9/Carbon software */
 /* which is not compiled for the MACH kernel */
-
 
 // ----------------------------------------------------------------------------
 // the target specific things
 #include "target_options.h"
 // ----------------------------------------------------------------------------
 
-
 // Identifier for CW Pro identification
 // 0xXXYY meaning Compiler Version X.X, rev YY
 // Use the predefined __MWERKS__ macro.
 // It has the form (major version <<12)|(minor version<<8)|patch revision.
 // The "version" here is based on our internal versioning scheme (reflected in
-// plugins' "version" resource).  
+// plugins' "version" resource).
 //  2.3   (0x2300) = Pro5
 //  2.4   (0x2400) = Pro6
 //  2.4.5 (0x2405) = Pro7
@@ -190,7 +187,6 @@
 #define CW7_MWERKS 0x2405 // V 2.4.5 = CW Pro 7
 #define CW8_MWERKS 0x3000 // V 3.0   = CW Pro 8
 
-
 /* these platforms are supported to use TCP/IP sockets */
 //#ifdef NET_SUPPORT
 //  #if defined powerc || defined win_linux
@@ -198,98 +194,89 @@
 //  #endif
 //#endif
 
-
-
 #if defined __INTEL__ || defined UNIX
-  #define TICKS_PER_SEC 100 /* Number of Ticks per sec (as reported by GetTickCount()) */
+#define TICKS_PER_SEC                                                          \
+    100 /* Number of Ticks per sec (as reported by GetTickCount()) */
 #endif
-
-
 
 /* platform includes for all project modules */
 /* ========================================= */
 
-
 #include <math.h>
 
 #ifdef win_unix
-  //#define  MAX_PATH 1024
-    
-    #ifndef __MACH__
-      struct __dirstream {}; /* not visible */
-    #endif
-    
-    #include <dirent.h>
-    #include <sys/stat.h>
-    
-    #ifndef __MACH__
-      #include <unistd.h>
-    #endif
+//#define  MAX_PATH 1024
+
+#ifndef __MACH__
+struct __dirstream {}; /* not visible */
+#endif
+
+#include <dirent.h>
+#include <sys/stat.h>
+
+#ifndef __MACH__
+#include <unistd.h>
+#endif
 #endif
 
 typedef struct dirent dirent_typ;
 
 #ifdef __MACH__
-  #define  NULL 0L
-  #include <stddef.h>
-  
+#define NULL 0L
+#include <stddef.h>
+
 #endif
 
 #ifndef UNIX
-  /* C library include files */
-  #include <CType.h>
-  
-    #include <Types.h>
-    #include <stdarg.h>
-    #include <stddef.h> // %%% added luz 2002-02-04
-    #include <errno.h>  // %%% added luz 2002-02-04
-    #include <StdIO.h>
-    #include <StdLib.h>
-    #include <Time.h>
-    #include <String.h>
+/* C library include files */
+#include <CType.h>
 
+#include <Types.h>
+#include <stdarg.h>
+#include <stddef.h> // %%% added luz 2002-02-04
+#include <errno.h>  // %%% added luz 2002-02-04
+#include <StdIO.h>
+#include <StdLib.h>
+#include <Time.h>
+#include <String.h>
 
-  #include <Signal.h>
+#include <Signal.h>
 #endif
 
 #ifdef TERMINAL_CONSOLE
-  #ifndef MACOSX
-    #include <unistd.h>
-  #endif
+#ifndef MACOSX
+#include <unistd.h>
+#endif
 #endif
 
 /* setjmp/longjmp support */
 #include <setjmp.h>
 
-
-
 // define type shortcuts
-#ifndef  __GLOBDEF
-#define  __GLOBDEF
-  typedef unsigned char  byte;
-  typedef unsigned short os9err;
+#ifndef __GLOBDEF
+#define __GLOBDEF
+typedef unsigned char  byte;
+typedef unsigned short os9err;
 
-  #if defined __INTEL__ || defined __MACH__
-    typedef char Boolean;
-    #define true  1
-    #define false 0
-  #endif
+#if defined __INTEL__ || defined __MACH__
+typedef char                     Boolean;
+#define true 1
+#define false 0
+#endif
 
-  #if defined __MACH__
-    typedef unsigned long ulong;
-  #endif
+#if defined           __MACH__
+typedef unsigned long ulong;
+#endif
 
+#ifndef UNIX
+typedef unsigned int      uint;
+typedef unsigned long int ulong;
+#endif
 
-  #ifndef UNIX
-    typedef unsigned      int uint;
-    typedef unsigned long int ulong;
-  #endif
-
-  #if defined __INTEL__ || defined __MACH__
-    typedef int OSErr;
-  #endif
+#if defined __INTEL__ || defined __MACH__
+typedef int                      OSErr;
+#endif
 #endif //__GLOBDEF
-
 
 #endif // OS9MAIN_INCL_PRECOMP_H
 
