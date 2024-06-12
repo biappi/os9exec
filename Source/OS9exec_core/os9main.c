@@ -450,7 +450,6 @@ Boolean setup_term()
                    strerror(errno));
     }
 
-
     return (reply == 0);
 } // setup_term
 

@@ -477,8 +477,9 @@ os9err pFopt(ushort pid, syspath_typ *spP, byte *buffer)
     dirent_typ      dEnt;
     strcpy(dEnt.d_name, spP->name);
     FD_ID(spP->fullName, &dEnt, &fdID, &mP);
-// upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos
-// );
+    // upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name,
+    // fdpos
+    // );
 
     l  = (ulong *)&buffer[PD_FD];
     *l = os9_long(fdID) << BpB; /* LSN of file */
@@ -541,7 +542,6 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     v=     &volname[ strlen(volname)-1 ];
     if (*v==PATHDELIM) *v= NUL; // cut slash at the end
     */
-
 
     return 0;
 } /* pHvolnam*/
@@ -628,12 +628,11 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
                 E_FNA); /* default: file not accessible in this mode */
     }
     else {
-/* --- open */
+        /* --- open */
         /* object exists, but make sure it is not a directory */
 
         if (PathFound(pp))
             return os9error(E_FNA);
-
 
         stream = fopen(pp, "rb"); /* try to open for read, use binary mode */
         if (stream == NULL)
@@ -766,7 +765,6 @@ os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
     pathname = adapted;
 
     oserr = remove(pathname);
-
 
     return host2os9err(oserr, E_SHARE);
 } /* pFdelete */
@@ -998,7 +996,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     __mode_t v;
 #endif
 
-
     /* fill up with 0 as far as needed, used as default */
     memset(buffer, 0, maxbyt);
     memset(fdbeg, 0, FDS);
@@ -1041,9 +1038,8 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     fdbeg[1] = 0;
     fdbeg[2] = 0; /* owner = superuser */
 
-/* file dates */
+    /* file dates */
     u = info.st_mtime;
-
 
     TConv(u, &tim);
     //  tp = localtime( (time_t*)&u );
@@ -1064,7 +1060,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
                  tim.tm_mday,
                  tim.tm_hour,
                  tim.tm_min));
-
 
     u = info.st_ctime;
 
@@ -1100,7 +1095,7 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     else
         *sizeP = os9_long(info.st_size);
 
-        //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
+    //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
 
     /* copy FD beginning to caller's buffer */
     memcpy(buffer, fdbeg, maxbyt > FDS ? FDS : maxbyt);
@@ -1158,7 +1153,6 @@ os9err pHgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 
     fdl = &spP->fullName; /* use this for linux */
 
-
     getFD(fdl, loword(*maxbytP), buffer);
     debugprintf(dbgFiles, dbgNorm, ("# pHgetFD: no longer alive\n"));
     return 0;
@@ -1172,7 +1166,6 @@ os9err pHsetFD(_pid_, syspath_typ *spP, byte *buffer)
     void  *fdl;
 
     fdl = NULL;
-
 
     setFD(spP, fdl, buffer);
 
@@ -1191,15 +1184,14 @@ pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
     if (err)
         return err;
 
-        /*
-        if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
-            strcpy( name, spP->fullName );
-            strcat( name, PATHDELIM_STR );
-            strcat( name, result );
-            fdl=   &name; // use this for windows and linux
-        }
-        */
-
+    /*
+    if      (DirName( spP->fullName, *fdinf, (char*)&result, false )) {
+        strcpy( name, spP->fullName );
+        strcat( name, PATHDELIM_STR );
+        strcat( name, result );
+        fdl=   &name; // use this for windows and linux
+    }
+    */
 
     getFD(fdl, loword(*maxbytP), buffer);
     return 0;
@@ -1249,7 +1241,6 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 
     spP->dDsc = d;
     strcpy(spP->fullName, adapted); /* for later use with stat function */
-
 
     spP->u.disk.u.dir.pos = 0; /* rewind it ! */
 
@@ -1301,7 +1292,6 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     ulong           fdpos;
     Boolean         topFlag = false;
 
-
     // printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
     debugprintf(dbgFiles, dbgDetail, ("# pDread: requests $%lX bytes\n", *n));
     cnt = *n;
@@ -1343,7 +1333,6 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             os9dirent.name[len - 1] |= 0x80; /* set old-style terminator */
             os9dirent.fdsect = os9_long(fdpos);
         } // if
-
 
         if (!err) {
             nbytes = (offs + cnt) > DIRENTRYSZ ? DIRENTRYSZ - offs : cnt;
@@ -1397,7 +1386,6 @@ os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
 
     *sizeP = DirSize(spP);
 
-
     return err;
 } /* pDsize */
 
@@ -1424,7 +1412,6 @@ os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
         n++;
     } /* while */
 
-
     spP->u.disk.u.dir.pos = *posP;
     return 0;
 } /* pDseek */
@@ -1439,7 +1426,6 @@ os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
     char        *defDir_s;
 
     char adapted[OS9PATHLEN];
-
 
     /* now obtain volume and directory of new path */
     pastpath = pathname;
@@ -1508,7 +1494,6 @@ os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
         return 0; /* rwx------ */
     return E_BPNAM;
 
-
     return host2os9err(oserr, E_WRITE);
 } /* pDmakdir */
 
@@ -1524,7 +1509,6 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 #if defined windows32 || defined MACOSX
     char cmd[OS9PATHLEN];
 #endif
-
 
     if (*attr & 0x80)
         return 0; /* it is already a directory */

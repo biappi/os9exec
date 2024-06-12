@@ -419,7 +419,6 @@ os9err pNclose(_pid_, syspath_typ *spP)
         err = close(net->ep);
         release_mem(net->transferBuffer);
 
-
         release_mem(net->b_local);
         net->closeIt = true;
         net->bound   = false;

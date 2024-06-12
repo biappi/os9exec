@@ -38,13 +38,12 @@
 /* ======== */
 #include "os9exec_incl.h"
 
-int         main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     char *envp[] = {NULL, NULL};
 
     os9_main(argc, argv, envp);
     return 0; // no error
 }
-
 
 /* eof */

@@ -289,7 +289,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         nameS = adS;
         if (!dodir)
             asDirS = PathFound(nameS);
-
     }
 
     if (!dodir && asDirS)

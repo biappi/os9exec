@@ -2113,7 +2113,7 @@ static void setup_exception(loop_proc lo)
     unsigned short err = 0;
     unsigned short xErr;
 
-// The UNIX exception handler, using sigsetjmp/siglongjmp
+    // The UNIX exception handler, using sigsetjmp/siglongjmp
     struct sigaction sa;
 
     err = sigsetjmp(main_env, 1);

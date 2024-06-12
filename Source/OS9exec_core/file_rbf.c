@@ -1453,7 +1453,6 @@ static os9err DeviceInit(ushort       pid,
                     if (err)
                         return E_UNIT; /* GetRBFName called earlier */
                     strcpy(cmp, rbfname);
-
                 }
             } /* if isSCSI */
         }     /* if !isRAMDisk */

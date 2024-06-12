@@ -411,7 +411,7 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
     ulong memsz = rp->d[0];
 
     if (memsz == 0xFFFFFFFF) { /* get max mem */
-        memsz = 0x00800000; /* %%% a large portion */
+        memsz = 0x00800000;    /* %%% a large portion */
     }
 
     memsz = (memsz + 15) & MxV; /* round up to next 16-byte boundary */

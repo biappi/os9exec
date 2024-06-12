@@ -409,7 +409,6 @@ ulong max_mem()
 
     memsz = 0;
 
-
 #ifdef REUSE_MEM
     memsz += freeinfo.freeMem;
 #endif

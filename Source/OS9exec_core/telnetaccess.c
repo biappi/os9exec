@@ -232,7 +232,7 @@ void WindowTitle(char *title, Boolean vmod)
 #endif
 } /* WindowTitle */
 
-void                       HandleEvent(void) {} /* empty implementation */
+void HandleEvent(void) {} /* empty implementation */
 
 /* CheckInputBuffers */
 void CheckInputBuffers(void)
@@ -252,7 +252,7 @@ Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
     return ok;
 } /* DevReadyTerminal */
 
-Boolean     DevReady(long *count)
+Boolean DevReady(long *count)
 {
     HandleEvent();
 

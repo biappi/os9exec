@@ -65,8 +65,9 @@ typedef struct pdsc {
 /*						0x0400	reserved
  */
 #define PS_CONDEMN                                                             \
-    0x0200                  /* process is condemned					*/
-#define PS_DEAD 0x0100      /* process has terminated                          \
+    0x0200 /* process is condemned					*/
+#define PS_DEAD                                                                \
+    0x0100                  /* process has terminated                          \
                              */
         _task;              /* process task number */
     unsigned char _queueid, /* current queue id */

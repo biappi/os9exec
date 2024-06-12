@@ -1077,7 +1077,6 @@ void DoWait(void)
     nanosleep(&wait_time, NULL);
     // slp_idleticks++;
 
-
     slp_idleticks += GetSystemTick() - ticks;
 } // DoWait
 

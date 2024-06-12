@@ -410,7 +410,6 @@ static void disp_line(ushort       pid,
         if (fsspecflag) {
             upo_printf(" %12X",
                        My_FD(spP->fullName)); /* path has fd sector to show */
-
         }
         else
             upo_printf(" %8s %3s", "", ""); /* no name */

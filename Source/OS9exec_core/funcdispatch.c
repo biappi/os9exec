@@ -1113,7 +1113,6 @@ ulong GetSystemTick(void)
     t = tv.tv_sec - sec0;
     t = 100 * t + tv.tv_usec / 10000;
 
-
     /* make the /L2 interrupt handling */
     update_L2(t);
 

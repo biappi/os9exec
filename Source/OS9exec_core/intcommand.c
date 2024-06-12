@@ -777,7 +777,7 @@ const char *DLL_Suffix()
 #if defined MACOSX
     suff = ".dylib";
 #else
-    suff   = ".so";
+    suff = ".so";
 #endif
 
     return suff;
@@ -852,7 +852,6 @@ os9err ConnectDLL(plug_typ *p)
 #endif
 
         p->fDLL = dlopen(fullName, mode);
-
 
         if (p->fDLL)
             break; // found

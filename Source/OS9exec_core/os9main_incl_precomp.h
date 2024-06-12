@@ -223,7 +223,6 @@ typedef struct dirent dirent_typ;
 
 #endif
 
-
 #ifdef TERMINAL_CONSOLE
 #ifndef MACOSX
 #include <unistd.h>
@@ -248,7 +247,6 @@ typedef char                     Boolean;
 #if defined           __MACH__
 typedef unsigned long ulong;
 #endif
-
 
 #if defined __INTEL__ || defined __MACH__
 typedef int                      OSErr;

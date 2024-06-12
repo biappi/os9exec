@@ -437,7 +437,6 @@ os9err host2os9err(OSErr hosterr, ushort suggestion)
     err   = suggestion;
     known = false;
 
-
     return os9error(err);
 } /* host2os9err */
 
@@ -1114,7 +1113,7 @@ void CutUp(char *pathname, const char *prev)
             *q = NUL;
             break; /* cut "/."  at the end */
 
-/* avoid duplicate definition */
+            /* avoid duplicate definition */
         case PSEP:
             *q = NUL;
             strcat(pathname, qs);
@@ -1128,7 +1127,7 @@ void CutUp(char *pathname, const char *prev)
             switch (*v) {
             case NUL:
 
-/* avoid duplicate definition */
+                /* avoid duplicate definition */
             case PSEP:
                 while (q > pathname) {
                     q--;
@@ -1186,7 +1185,7 @@ void EatBack(char *pathname)
                 eat++;
             break;
 
-/* avoid duplicate definition */
+            /* avoid duplicate definition */
         case PSEP:
             *p = NUL;
             eat--;
@@ -1695,7 +1694,6 @@ int stat_(const char *pathname, struct stat *buf)
 
     /* do it the "normal" way */
     err = stat(pathname, buf);
-
 
     return err;
 } /* stat_ */
@@ -2227,7 +2225,6 @@ static Boolean OS9_Device(char *os9path, ushort mode, ptype_typ *typeP)
     err = GetRBFName(os9path, mode, &isFolder, (char *)&rbfname);
     if (err == E_UNIT)
         err = GetRBFName(&os9path[1], mode, &isFolder, (char *)&rbfname);
-
 
 /* try it again, it might be installed now */
 #ifdef RBF_SUPPORT
