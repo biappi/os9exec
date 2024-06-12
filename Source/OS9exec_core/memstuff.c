@@ -407,12 +407,8 @@ ulong max_mem()
 {
     ulong memsz;
 
-#if defined win_unix
     memsz = 0;
 
-#else
-#error MaxBlock size must be defined here
-#endif
 
 #ifdef REUSE_MEM
     memsz += freeinfo.freeMem;

@@ -92,9 +92,7 @@ extern int   gInBufUsed;
 extern short TermWinScrolls;
 #endif
 
-#ifdef win_unix
 extern ttydev_typ main_mco;
-#endif
 
 extern Boolean KeyToBuffer(ttydev_typ *mco, char key);
 extern Boolean DevReady(long *count);

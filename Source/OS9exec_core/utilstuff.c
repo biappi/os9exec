@@ -1277,13 +1277,11 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
 
     strcpy(tmp, pathname);
 
-#if defined win_unix
     if (dEnt != NULL) {
         if (tmp[strlen(tmp) - 1] != PATHDELIM)
             strcat(tmp, PATHDELIM_STR);
         strcat(tmp, dEnt->d_name);
     } // if
-#endif
 
     EatBack(tmp);
     // upe_printf( "REIN name='%s'\n", tmp );
@@ -1522,7 +1520,6 @@ void Flush_FDCache(const char *pathname)
     // main_printf( "flush for '%s'\n", pathname );
 } // Flush_FD_Cache
 
-#ifdef win_unix
 os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
 /* prepare directory to read the <n>th entry */
 {
@@ -1690,7 +1687,6 @@ ulong DirSize(syspath_typ *spP)
         cnt = 2; /* at least two entries are there !!! */
     return cnt * DIRENTRYSZ;
 } /* DirSize */
-#endif
 
 int stat_(const char *pathname, struct stat *buf)
 /* slightly adapted version for Windows */
@@ -1710,7 +1706,6 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
 {
     Boolean ok = false;
 
-#ifdef win_unix
     DIR            *d;
     dirent_typ     *dEnt;
     dirtable_entry *mP = NULL;
@@ -1818,7 +1813,6 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
         // upo_printf( "'%s' %s => '%s'\n\n", pathname, ok ? "OK":"NOT OK",
         // result );
     } /* if */
-#endif
 
     return ok;
 } /* DirName */
@@ -2051,7 +2045,6 @@ Boolean SCSI_Device(const char *os9path,
     return false;
 } /* SCSI_Device */
 
-#ifdef win_unix
 void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
 /* Get the <name> of dir entry <dEnt> */
 /* Convert 2e string, if <do_2e_conv> is true */
@@ -2074,7 +2067,6 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
         *q = '_';
     } /* loop */
 } /* GetEntry */
-#endif
 
 Boolean RBF_ImgSize(long size)
 /* Returns true, if it is a valid RBF Image size */
@@ -2084,7 +2076,6 @@ Boolean RBF_ImgSize(long size)
     return size >= 1024 && (size % STD_SECTSIZE) == 0;
 } /* RBF_ImgSize */
 
-#if defined win_unix
 os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
 {
     os9err      err = 0;
@@ -2182,7 +2173,6 @@ os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
                 ("# GetRBFName: '%s' err=%d\n", rbfname, err));
     return err;
 } /* GetRBFName */
-#endif
 
 // #ifdef RAM_SUPPORT
 Boolean RAM_Device(const char *os9path)
@@ -2216,10 +2206,8 @@ static Boolean OS9_Device(char *os9path, ushort mode, ptype_typ *typeP)
     ushort sas, ssize;
     byte   pdtyp;
 
-#if defined win_unix
     Boolean isFolder;
     char    rbfname[OS9PATHLEN];
-#endif
 
 #ifdef RBF_SUPPORT
     ushort cdv;
@@ -2236,19 +2224,10 @@ static Boolean OS9_Device(char *os9path, ushort mode, ptype_typ *typeP)
 #endif
 #endif
 
-#if defined win_unix
     err = GetRBFName(os9path, mode, &isFolder, (char *)&rbfname);
     if (err == E_UNIT)
         err = GetRBFName(&os9path[1], mode, &isFolder, (char *)&rbfname);
 
-#else
-    /* %%% some fixed devices defined currently */
-    isFolder = false;
-    if (ustrncmp(os9path, "/mt", 3) != 0 && ustrncmp(os9path, "/c1", 3) != 0 &&
-        ustrncmp(os9path, "/c2", 3) != 0 && ustrncmp(os9path, "/c3", 3) != 0 &&
-        ustrncmp(os9path, "/dd", 3) != 0)
-        err = E_MNF;
-#endif
 
 /* try it again, it might be installed now */
 #ifdef RBF_SUPPORT

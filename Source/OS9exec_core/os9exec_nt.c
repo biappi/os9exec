@@ -486,7 +486,6 @@ char mdirPath[MAX_PATH]; /* current mdir path */
 
 /* the windows console definitions */
 
-#if defined  win_unix
 ttydev_typ   main_mco;
 short        gConsoleNLExpand   = true;
 int          gConsoleID         = 0;
@@ -494,7 +493,6 @@ syspath_typ *g_spP              = NULL;
 int          gLastwritten_pid   = 0;
 int          gConsoleQuickInput = true;
 char         gTitle[OS9NAMELEN];
-#endif
 
 // the currently executing process, MAXPROCESSES if none
 ushort currentpid = MAXPROCESSES; // id of current process
@@ -2086,7 +2084,6 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
     } while (currentpid < MAXPROCESSES); /* while active processes */
 } // os9exec_loop
 
-#ifdef win_unix
 static void segv_handler(int sig)
 {
     // int          sv= sig;
@@ -2109,7 +2106,6 @@ static void segv_handler(int sig)
 
     siglongjmp(main_env, cp->exiterr); // go back with bus error
 } // segv_handler
-#endif
 
 typedef void (*loop_proc)(unsigned short xErr, Boolean fromIntUtil);
 static void setup_exception(loop_proc lo)
@@ -2293,13 +2289,11 @@ ushort os9exec_nt(const char *toolname,
 
     GetCurPaths("OS9MDIR", 0x80, &mdir, true);
 
-#if defined win_unix
     /* establish the virtual mdir (dir used to load modules from by default) */
     p = egetenv("OS9MDIR"); /* get path for default module loading dir */
     strcpy(mdirPath, p);
 
     debugprintf(dbgStartup, dbgNorm, ("# main startup: mdir='%s'\n", mdirPath));
-#endif
 
     /* install asynchronous handlers */
     atexit(&cleanup);

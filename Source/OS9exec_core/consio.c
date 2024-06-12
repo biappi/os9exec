@@ -308,9 +308,7 @@ void ConsPutc(char c)
     write(1, &c, 1);
 
 // not yet supported for Mac Classic/Carbon
-#ifdef win_unix
     lw_pid(&main_mco); /* assign for later use */
-#endif
 } /* ConsPutc */
 
 void ConsPutcEdit(char c, Boolean alf, char eorch)

@@ -301,9 +301,7 @@ void init_Net(fmgr_typ *f)
 #define ICMP_ECHOREPLY 0
 #define ICMP_ECHO 8
 
-#if defined win_unix
 #define MAX_PACKET 1024 // Max ICMP packet size
-#endif
 
 typedef struct _icmphdr {
     byte   i_type;
@@ -313,7 +311,6 @@ typedef struct _icmphdr {
     ulong  i_magic;
 } IcmpHeader;
 
-#if defined win_unix
 /* IP header structure */
 typedef struct _iphdr {
     unsigned int   h_len : 4;      // Length of the header
@@ -329,7 +326,6 @@ typedef struct _iphdr {
     unsigned int sourceIP;
     unsigned int destIP;
 } IpHeader;
-#endif
 
 static void SetDefaultEndpointModes(SOCKET s)
 // This routine sets the supplied endpoint into the default
@@ -358,23 +354,19 @@ static void SetDefaultEndpointModes(SOCKET s)
     OTAssert("SetDefaultEndpointModes: Could not use sync idle events",
              junk == noErr);
 
-#elif defined win_unix
+#else
     ulong nonblocking = true;
     int   err         = ioctl(s, FIONBIO, &nonblocking);
 
-#else
-#pragma unused(s)
 #endif
 } /* SetDefaultEndpointModes */
 
 static os9err GetBuffers(net_typ *net)
 /* Get the transfer buffers for the net devices */
 {
-#if defined win_unix
     net->transferBuffer = get_mem(kTransferBufferSize);
     if (net->transferBuffer == NULL)
         return E_NORAM;
-#endif
 
     /* common for all operating systems */
     net->b_local = get_mem(kTransferBufferSize);
@@ -570,9 +562,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
     ushort   fPort;
 #define ALLOC_PORT 1025
 
-#ifdef win_unix
     SOCKADDR_IN name;
-#endif
 
 #ifndef NET_SUPPORT
     return E_UNKSVC;
@@ -582,11 +572,9 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
     net->ipAddress.fHost = os9_long(my_inetaddr);
     fPort = os9_word(net->ipAddress.fPort); /* little/big endian change */
 
-#if defined win_unix
     net->ep = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (net->ep == INVALID_SOCKET)
         return E_FNA;
-#endif
 
     SetDefaultEndpointModes(net->ep);
 
@@ -617,7 +605,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
         else
             break;
 
-#elif defined win_unix
+#else
 
         name.sin_family      = os9_word(net->ipAddress.fAddressType);
         name.sin_port        = os9_word(fPort);
@@ -704,7 +692,7 @@ os9err pNlisten(ushort pid, syspath_typ *spP)
     if (err == kOTNoDataErr)
         err = 0; /* this is not an error */
 
-#elif defined win_unix
+#else
     err             = listen(net->ep, SOMAXCONN);
 
 #endif
@@ -728,10 +716,8 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
     ushort       fPort;
     Boolean      isRaw;
 
-#ifdef win_unix
     int         af, ty, proto;
     SOCKADDR_IN name;
-#endif
 
     int id, u_err;
 
@@ -754,7 +740,6 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
         net->ipRemote.fAddressType = net->fAddT;
     }
     else {
-#if defined win_unix
         af = os9_word(net->ipRemote.fAddressType);
 
         if (isRaw) {
@@ -786,7 +771,6 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
                 return E_PERMIT;
             else
                 return E_FNA;
-#endif
 
         net->bound = true;
         if (isRaw)
@@ -814,7 +798,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
         debugprintf(dbgSpecialIO, dbgNorm, ("connect look=%d\n", lookResult));
     }
 
-#elif defined win_unix
+#else
     name.sin_family = os9_word(net->ipRemote.fAddressType);
     name.sin_port   = net->ipRemote.fPort;
     name.sin_addr.s_addr =
@@ -856,10 +840,8 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
     ulong       *cpt;
     SOCKET       epNew;
 
-#ifdef win_unix
     SOCKADDR_IN name;
     int         len;
-#endif
 
 #ifndef NET_SUPPORT
     return E_UNKSVC;
@@ -868,7 +850,6 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
     if (cp->state == pWaitRead)
         set_os9_state(pid, cp->saved_state, "pNaccept");
 
-#if defined win_unix
     len   = sizeof(name);
     epNew = accept(net->ep, (__SOCKADDR_ARG)&name, (unsigned int *)&len);
     if (epNew == INVALID_SOCKET) {
@@ -883,7 +864,6 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
         name.sin_addr.s_addr; /* no big/little endian change */
 
     SetDefaultEndpointModes(epNew);
-#endif
 
     if (err)
         return E_FNA;
@@ -1020,7 +1000,7 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, ulong *a0)
 #if defined powerc && !defined MACOSX
     TUnitData udata;
 
-#elif defined win_unix
+#else
     //    #define DEF_PACKET_SIZE  32        // Default packet size
 
     struct sockaddr_in name;
@@ -1055,7 +1035,7 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, ulong *a0)
 
     err = OTSndUData(net->ep, &udata);
 
-#elif defined win_unix
+#else
     memset((char *)&name, NUL, sizeof(name));
     name.sin_family = os9_word(net->ipRemote.fAddressType);
     name.sin_port   = net->ipRemote.fPort;
@@ -1114,7 +1094,7 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
     // we use this buffer to hold incoming ICMP packets
     UInt8 icmp_data[5000];
 
-#elif defined win_unix
+#else
     char               icmp_data[MAX_PACKET];
     struct sockaddr_in from;
     int                fromlen = sizeof(from);
@@ -1159,7 +1139,7 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
             }
         }
 
-#elif defined win_unix
+#else
         do {
                         err = ioctl(net->ep, FIONREAD, &n);
                         debugprintf(dbgSpecialIO,
@@ -1204,9 +1184,6 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
 
                         usleep(1000000); /* sleep in microseconds */
         } while (GetSystemTick() < start_time + 5 * 60);
-
-#else
-        return E_UNKSVC;
 
 #endif
     } while (!err && GetSystemTick() < start_time + 5 * 60);
@@ -1266,7 +1243,7 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
         } /* if */
     }     /* if */
 
-#elif defined win_unix
+#else
     err = ioctl(net->ep, FIONREAD, n);
     if (*n == 0) {
         //       err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
@@ -1276,8 +1253,6 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
         err = -1;
     }
 
-#else
-    return E_UNKSVC;
 #endif
 
     if (err)

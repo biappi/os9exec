@@ -411,15 +411,7 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
     ulong memsz = rp->d[0];
 
     if (memsz == 0xFFFFFFFF) { /* get max mem */
-#ifdef win_unix
         memsz = 0x00800000; /* %%% a large portion */
-#else
-        memsz = MaxBlock() - 15;
-        debugprintf(
-            dbgMemory,
-            dbgNorm,
-            ("# F$SRqMem : requested max blocksize : MaxBlock()=%ld\n", memsz));
-#endif
     }
 
     memsz = (memsz + 15) & MxV; /* round up to next 16-byte boundary */

@@ -213,7 +213,6 @@ char *egetenv(const char *name)
     /* getenv for use under MPW and for PC/Linux version */
     rslt = getenv(name);
 
-#ifdef win_unix
     u_disk = (ustrcmp(name, "OS9DISK") == 0);
     u_cmds = (ustrcmp(name, "OS9CMDS") == 0);
     u_mdir = (ustrcmp(name, "OS9MDIR") == 0);
@@ -279,7 +278,6 @@ char *egetenv(const char *name)
             rslt = tmp;
         } /* if */
     }     /* if u_* */
-#endif
 
     debugprintf(dbgStartup, dbgNorm, ("# egetenv %s: '%s'\n", name, rslt));
     return rslt;

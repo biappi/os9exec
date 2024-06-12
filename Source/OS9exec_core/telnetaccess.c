@@ -252,7 +252,6 @@ Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
     return ok;
 } /* DevReadyTerminal */
 
-#if defined win_unix
 Boolean     DevReady(long *count)
 {
     HandleEvent();
@@ -267,7 +266,6 @@ Boolean     DevReady(long *count)
 
     return DevReadyTerminal(count, &main_mco);
 } /* DevReady */
-#endif
 
 #ifdef TERMINAL_CONSOLE
 long ReadCharsFromTerminal(char *buffer, long n, ttydev_typ *mco)

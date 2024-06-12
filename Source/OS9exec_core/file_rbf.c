@@ -1358,9 +1358,7 @@ static os9err DeviceInit(ushort       pid,
     Boolean fum    = fu && mock;
     Boolean opened = false;
 
-#if defined win_unix
     char rbfname[OS9PATHLEN];
-#endif
 
     do {
         *new_inst = false;
@@ -1416,9 +1414,7 @@ static os9err DeviceInit(ushort       pid,
 #endif
 
             if (!isRAMDisk) {
-#if defined win_unix
                 err = GetRBFName(pathname, mode, &isFolder, (char *)&rbfname);
-#endif
 
                 /* must open it in the right mode */
                 if (err == E_FNA && !IsDir(mode))
@@ -1454,29 +1450,10 @@ static os9err DeviceInit(ushort       pid,
                 if (fu)
                     CutPath(cmp);
                 else {
-#if defined win_unix
                     if (err)
                         return E_UNIT; /* GetRBFName called earlier */
                     strcpy(cmp, rbfname);
 
-#else
-                    /* %%% some fixed devices defined currently */
-                    GetOS9Dev(pathname, (char *)&cmp);
-                    if (ustrcmp(cmp, "mt") == 0)
-                        cdv = 1;
-                    else if (ustrcmp(cmp, "c1") == 0)
-                        cdv = 2;
-                    else if (ustrcmp(cmp, "c2") == 0)
-                        cdv = 3;
-                    else if (ustrcmp(cmp, "c3") == 0)
-                        cdv = 4;
-                    else if (ustrcmp(cmp, "dd") == 0)
-                        cdv = 5;
-                    else
-                        return E_UNIT;
-
-                    break;
-#endif
                 }
             } /* if isSCSI */
         }     /* if !isRAMDisk */

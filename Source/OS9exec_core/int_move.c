@@ -220,11 +220,9 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
     char   pD[OS9PATHLEN];
     char  *destname;
 
-#if defined win_unix
     char adD[OS9PATHLEN];
     char adS[OS9PATHLEN];
     int  i;
-#endif
 
     ushort    pathS, pathD, pathX;
     ptype_typ typeS, typeD;
@@ -284,7 +282,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
             return _errmsg(err, "can't find \"%s\". ", nmS);
     }
     else {
-#if defined win_unix
         err = AdjustPath(nameS, (char *)&adS, false);
         if (err)
             return _errmsg(err, "can't find \"%s\". ", adS);
@@ -293,10 +290,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         if (!dodir)
             asDirS = PathFound(nameS);
 
-#else
-        upe_printf("internal move not yet implemented %%%\n");
-        return 1; /* SIGWAKE */
-#endif
     }
 
     if (!dodir && asDirS)
@@ -323,7 +316,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         }
     }
     else {
-#if defined win_unix
         err = AdjustPath(nameD, (char *)&adD, false);
         if (!err)
             err = (!FileFound(adD) && !PathFound(adD));
@@ -343,7 +335,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
                 return _errmsg(1, "\"%s\" already exists\n", adD);
             }
         }
-#endif
     }
 
     if (isRBF) {
@@ -474,7 +465,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
             return err;
     }
     else {
-#if defined win_unix
         err   = AdjustPath(nameD, (char *)&adD, true);
         nameD = (char *)&adD;
         if (!err) {
@@ -488,7 +478,6 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
 
         if (err)
             return _errmsg(err, "can't open dest directory \"%s\".", nameD);
-#endif
     } // if
 
     if (!quiet)

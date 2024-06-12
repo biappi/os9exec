@@ -202,7 +202,6 @@
 
 #include <math.h>
 
-#ifdef win_unix
 //#define  MAX_PATH 1024
 
 #ifndef __MACH__
@@ -214,7 +213,6 @@ struct __dirstream {}; /* not visible */
 
 #ifndef __MACH__
 #include <unistd.h>
-#endif
 #endif
 
 typedef struct dirent dirent_typ;

@@ -183,12 +183,10 @@ os9err Flush_Dir(ushort cpid, ushort *pathP, const char *nmS);
 os9err Flush_Entry(ushort cpid, const char *nmS);
 void   Flush_FDCache(const char *pathname);
 
-#ifdef win_unix
 os9err DirNthEntry(syspath_typ *, int n, dirent_typ **dEnt);
 os9err RemoveAppledouble(syspath_typ *);
 void   seekD0(syspath_typ *);
 ulong  DirSize(syspath_typ *);
-#endif
 
 int stat_(const char *pathname, struct stat *buf);
 Boolean

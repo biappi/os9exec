@@ -914,9 +914,7 @@ void init_syspaths()
     syspath_typ *spP;
     process_typ *cp = &procs[0];
 
-#ifdef win_unix
     ttydev_typ *mco;
-#endif
 
     int k;
     for (k = 0; k < MAXSYSPATHS; k++) {
@@ -946,13 +944,11 @@ void init_syspaths()
 
     spP->linkcount = 3; /* do not close at the end !! */
 
-#ifdef win_unix
     mco             = &main_mco;
     mco->installed  = true;
     mco->spP        = spP;
     mco->inBufUsed  = 0;
     mco->holdScreen = false;
-#endif
 
     /* stdnil */
     spP            = &syspaths[sysStdnil];

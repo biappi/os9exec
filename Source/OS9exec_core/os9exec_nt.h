@@ -736,9 +736,7 @@ typedef struct {
 typedef struct {
     ulong pos; /* the emulated directory "file"'s position for fDir */
 
-#ifdef win_unix
     ulong fdcur;
-#endif
 } dir_typ;
 
 /* variant for disk objects */
@@ -854,11 +852,9 @@ typedef struct {
 
     char fullName[OS9PATHLEN]; /* direct access makes life easier */
 
-#if defined win_unix
     DIR        *dDsc;
     int         svD_n;
     dirent_typ *svD_dEnt;
-#endif
 
     int term_id; /* terminal/port id number, console|pipe|printer used together
                   */
@@ -1351,12 +1347,10 @@ void  eAdvanceCursor(void);
 
 #define MAX_PRINTER 5 /* Com0..com4 */
 
-#ifdef win_unix
 #define AppDo ".AppleDouble" /* specific netatalk file names */
 #define AppDt ".AppleDesktop"
 #define L_P ":2e"         /* specific netatalk way for "." files */
 #define DsSto ".DS_Store" /* specific desktop info store file */
-#endif
 
 /* OS9exec builtin module definitons */
 #define OS9exec_name "OS9exec" /* the name of the built-in OS9exec module */

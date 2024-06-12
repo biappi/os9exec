@@ -184,9 +184,7 @@
 
 #include "os9exec_incl.h"
 
-#ifdef win_unix
 #include <utime.h>
-#endif
 
 /* Macintosh, PC and Linux File System access */
 /* ========================================== */
@@ -475,14 +473,12 @@ os9err pFopt(ushort pid, syspath_typ *spP, byte *buffer)
     ulong  fdID;
     ulong *l;
 
-#if defined win_unix
     dirtable_entry *mP = NULL;
     dirent_typ      dEnt;
     strcpy(dEnt.d_name, spP->name);
     FD_ID(spP->fullName, &dEnt, &fdID, &mP);
 // upe_printf( "FD_ID '%s' '%s' fdPos=%08X\n", spP->fullName, dEnt.d_name, fdpos
 // );
-#endif
 
     l  = (ulong *)&buffer[PD_FD];
     *l = os9_long(fdID) << BpB; /* LSN of file */
@@ -550,7 +546,6 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     return 0;
 } /* pHvolnam*/
 
-#ifdef win_unix
 static void Set_FileDate(syspath_typ *spP, time_t t)
 /* Set (Windows/Linux) file date */
 {
@@ -560,7 +555,6 @@ static void Set_FileDate(syspath_typ *spP, time_t t)
     buf.modtime = t;
     utime(spP->fullName, &buf);
 } /* Set_FileDate */
-#endif
 
 os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 {
@@ -580,9 +574,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 
     FILE *stream;
 
-#ifdef win_unix
     char adapted[OS9PATHLEN];
-#endif
 
     strcpy(ploc, pathname);
     if (*ploc == NUL)
@@ -637,13 +629,11 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     }
     else {
 /* --- open */
-#ifdef win_unix
         /* object exists, but make sure it is not a directory */
 
         if (PathFound(pp))
             return os9error(E_FNA);
 
-#endif
 
         stream = fopen(pp, "rb"); /* try to open for read, use binary mode */
         if (stream == NULL)
@@ -664,10 +654,8 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     // err= setvbuf( stream, spP->rw_sct, _IOFBF, BUFSIZ ); // make buffered I/O
     spP->stream = stream; // assign stream
 
-#ifdef win_unix
     spP->dDsc = NULL; /* this is not a directory */
     strcpy(spP->fullName, pp);
-#endif
 
     p = (char *)ploc + strlen(ploc) -
         1; /* only the filename itself, no path name */
@@ -758,9 +746,7 @@ os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
     char    pp[OS9PATHLEN];
     Boolean exedir = IsExec(*modeP);
 
-#ifdef win_unix
     char adapted[OS9PATHLEN];
-#endif
 
     pastpath = pathname;
     err      = parsepath(pid, &pastpath, pp, exedir);
@@ -774,7 +760,6 @@ os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
     if (err)
         return err;
 
-#if defined win_unix
     err = AdjustPath(pathname, adapted, false);
     if (err)
         return err;
@@ -782,9 +767,6 @@ os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
 
     oserr = remove(pathname);
 
-#else
-#error I_Delete not yet implemented
-#endif
 
     return host2os9err(oserr, E_SHARE);
 } /* pFdelete */
@@ -822,9 +804,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
     ulong  p;
     ulong  tmp_pos = 0;
 
-#if defined win_unix || defined MACFILES
     long curSize;
-#endif
 
     int   fd, i, j, cnt;
     OSErr oserr = 0;
@@ -1007,7 +987,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     ulong     u        = 0;
     struct tm tim;
 
-#if defined win_unix
     char       *pathname;
     struct stat info;
     syspath_typ spRec;
@@ -1019,9 +998,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     __mode_t v;
 #endif
 
-#else
-#pragma unused(fdl)
-#endif
 
     /* fill up with 0 as far as needed, used as default */
     memset(buffer, 0, maxbyt);
@@ -1033,7 +1009,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     *att = 0x3F; /* default: peprpwerw (exe always set for now, %%% later: check
                     file type!) */
 
-#if defined win_unix
     pathname = (char *)fdl;
 
     // upe_printf( "'%s' %s\n", pathname, isFolder ? "folder":"file" );
@@ -1059,7 +1034,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
 
     if (isFolder)
         *att |= 0x3F; /* all attr for directory */
-#endif
 
     if (isFolder)
         *att |= 0x80; /* set if it is a directory */
@@ -1068,10 +1042,8 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     fdbeg[2] = 0; /* owner = superuser */
 
 /* file dates */
-#if defined win_unix
     u = info.st_mtime;
 
-#endif
 
     TConv(u, &tim);
     //  tp = localtime( (time_t*)&u );
@@ -1093,10 +1065,8 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
                  tim.tm_hour,
                  tim.tm_min));
 
-#if defined win_unix
 
     u = info.st_ctime;
-#endif
 
     TConv(u, &tim);
     //  tp = localtime( (time_t*)&u );
@@ -1109,7 +1079,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     /* file length */
     //  *sizeP= 0; /* by default */
 
-#if defined win_unix
     if (isFolder) {
         *sizeP = 0; /* by default */
 
@@ -1132,7 +1101,6 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
         *sizeP = os9_long(info.st_size);
 
         //    printf( "%d %10d '%s'\n", isFolder, os9_long(*sizeP), pathname );
-#endif
 
     /* copy FD beginning to caller's buffer */
     memcpy(buffer, fdbeg, maxbyt > FDS ? FDS : maxbyt);
@@ -1164,9 +1132,7 @@ static void setFD(syspath_typ *spP, void *fdl, byte *buffer)
     spP->u.disk.u.file.moddate         = u;
     spP->u.disk.u.file.moddate_changed = true;
 
-#if defined win_unix
     Set_FileDate(spP, u);
-#endif
 
     // printf( "Set_FileDate was1\n" );
 
@@ -1190,14 +1156,8 @@ os9err pHgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 {
     void *fdl;
 
-#if defined win_unix
     fdl = &spP->fullName; /* use this for linux */
 
-#else
-#pragma unused(spP)
-    /* no FD sector read possible w/o native OS access */
-    return E_UNKSVC;
-#endif
 
     getFD(fdl, loword(*maxbytP), buffer);
     debugprintf(dbgFiles, dbgNorm, ("# pHgetFD: no longer alive\n"));
@@ -1211,13 +1171,8 @@ os9err pHsetFD(_pid_, syspath_typ *spP, byte *buffer)
     os9err err = 0;
     void  *fdl;
 
-#if defined win_unix
     fdl = NULL;
 
-#else
-    /* no FD read possible w/o native OS access */
-    return E_UNKSVC;
-#endif
 
     setFD(spP, fdl, buffer);
 
@@ -1232,7 +1187,6 @@ pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
     void  *fdl;
     os9err err = 0;
 
-#if defined win_unix
     err = FD_Name(*fdinf, (char **)&fdl);
     if (err)
         return err;
@@ -1246,11 +1200,6 @@ pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
         }
         */
 
-#else
-#pragma unused(spP, fdinf)
-    /* no FD sector read possible w/o native OS access */
-    return E_UNKSVC;
-#endif
 
     getFD(fdl, loword(*maxbytP), buffer);
     return 0;
@@ -1270,11 +1219,9 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     char   *p;
     char   *pp;
 
-#if defined win_unix
     DIR    *d;
     char    adapted[OS9PATHLEN];
     Boolean ok;
-#endif
 
     /* if (strlen(pathname)>DIRNAMSZ) return os9error(E_BPNAM); */
 
@@ -1288,7 +1235,6 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     if (err)
         return err;
 
-#if defined win_unix
     debugprintf(dbgFiles, dbgNorm, ("# pp (v)='%s'\n", pp));
     err = AdjustPath(pp, adapted, false);
     if (err)
@@ -1304,16 +1250,10 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     spP->dDsc = d;
     strcpy(spP->fullName, adapted); /* for later use with stat function */
 
-#else
-    /* no directory read possible w/o native OS access */
-    return E_UNKSVC;
-#endif
 
     spP->u.disk.u.dir.pos = 0; /* rewind it ! */
 
-#ifdef win_unix
     spP->svD_n = 0;
-#endif
 
     p = (char *)ploc + strlen(ploc) -
         1; /* only the filename itself, no path name */
@@ -1330,7 +1270,6 @@ os9err pDclose(_pid_, syspath_typ *spP)
 {
     os9err err = 0;
 
-#ifdef win_unix
     DIR *d = spP->dDsc;
     if (d != NULL) {
         err       = closedir(d);
@@ -1339,11 +1278,6 @@ os9err pDclose(_pid_, syspath_typ *spP)
     debugprintf(dbgFiles,
                 dbgNorm,
                 ("# pDclose: '%s' err=%d\n", spP->fullName, err));
-#else
-    debugprintf(dbgFiles,
-                dbgNorm,
-                ("# pDclose: '%s' err=%d\n", spP->name, err));
-#endif
 
     return err;
 } /* pDclose */
@@ -1361,14 +1295,12 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     ulong           cnt, nbytes;
     os9direntry_typ os9dirent;
 
-#ifdef win_unix
     dirent_typ     *dEnt;
     dirtable_entry *mP = NULL;
     int             len;
     ulong           fdpos;
     Boolean         topFlag = false;
 
-#endif
 
     // printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
     debugprintf(dbgFiles, dbgDetail, ("# pDread: requests $%lX bytes\n", *n));
@@ -1379,7 +1311,6 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     /* now copy remaining entries (if any) */
     /* now do it in one single step (bfo)  */
     while (cnt > 0) {
-#if defined win_unix
         memset(&os9dirent, 0, DIRENTRYSZ); /* clear before using */
 
         err = DirNthEntry(spP, index, &dEnt);
@@ -1413,10 +1344,6 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             os9dirent.fdsect = os9_long(fdpos);
         } // if
 
-#else
-        /* %%% no directory read possible w/o native OS access */
-        return E_UNKSVC;
-#endif
 
         if (!err) {
             nbytes = (offs + cnt) > DIRENTRYSZ ? DIRENTRYSZ - offs : cnt;
@@ -1468,13 +1395,8 @@ os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
 {
     os9err err = 0;
 
-#if defined win_unix
     *sizeP = DirSize(spP);
 
-#else
-#pragma unused(spP, sizeP)
-    return E_UNKSVC;
-#endif
 
     return err;
 } /* pDsize */
@@ -1482,14 +1404,9 @@ os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
 /* set read position */
 os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
 {
-#if defined win_unix
     int         cnt, n;
     dirent_typ *dEnt;
-#else
-#pragma unused(pid)
-#endif
 
-#if defined win_unix
     seekD0(spP); /* start at the beginning */
 
     n   = 0;
@@ -1507,9 +1424,6 @@ os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
         n++;
     } /* while */
 
-#else
-    return E_UNKSVC;
-#endif
 
     spP->u.disk.u.dir.pos = *posP;
     return 0;
@@ -1524,12 +1438,8 @@ os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
     process_typ *cp     = &procs[pid];
     char        *defDir_s;
 
-#if defined win_unix
     char adapted[OS9PATHLEN];
 
-#else
-#error I_Chgdir not yet implemented
-#endif
 
     /* now obtain volume and directory of new path */
     pastpath = pathname;
@@ -1551,7 +1461,6 @@ os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
     else
         defDir_s = cp->d.path;
 
-#if defined win_unix
     /* now do a OS changedir to "resolve" (and verify) location */
     err = AdjustPath(pathname, adapted, false);
     if (err)
@@ -1561,7 +1470,6 @@ os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
     if (!PathFound(pathname))
         return E_FNA;
     strcpy(defDir_s, pathname);
-#endif
 
     if (exedir)
         cp->x.type = fDir; /* adapt the type */
@@ -1580,9 +1488,7 @@ os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
     Boolean exedir = IsExec(*modeP); /* check if it is chd or chx */
                                      // process_typ* cp= &procs[pid];
 
-#if defined win_unix
     char adapted[OS9PATHLEN];
-#endif
 
     pastpath = pathname;
     err      = parsepath(pid, &pastpath, p, exedir);
@@ -1612,7 +1518,6 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 
     OSErr oserr = 0;
 
-#if defined win_unix
     ushort mode;
     char  *pp = spP->fullName;
 
@@ -1620,20 +1525,15 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
     char cmd[OS9PATHLEN];
 #endif
 
-#else
-    return E_UNKSVC;
-#endif
 
     if (*attr & 0x80)
         return 0; /* it is already a directory */
 
-#ifdef win_unix
     err = RemoveAppledouble(spP); /* because this file is not visible */
     if (err == E_EOF)
         err = 0; // this is not an error !!
     if (err)
         return err;
-#endif
 
     /* can't change attributes in Mac/Linux/Windows */
     /* But remove and recreate as file is possible */

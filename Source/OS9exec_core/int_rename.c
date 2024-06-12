@@ -169,12 +169,10 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     // dirtable_entry* mP= NULL;
     // ulong           fd_hash;
 
-#if defined win_unix
     char *pp;
     char  newPath[OS9PATHLEN];
     char  adaptOld[OS9PATHLEN];
     char  adaptNew[OS9PATHLEN];
-#endif
 
     debugprintf(dbgUtils, dbgNorm, ("# rename\n"));
 
@@ -309,7 +307,6 @@ os9err int_rename(ushort cpid, int argc, char **argv)
             err = cer;
     }
     else {
-#if defined win_unix
         pp  = oldPath;
         err = AdjustPath(pp, adaptOld, false);
         pp  = adaptOld;
@@ -335,7 +332,6 @@ os9err int_rename(ushort cpid, int argc, char **argv)
                     ("# rename to:   '%s' err=%d\n", qq, err));
         if (err)
             return _errmsg(err, "can't rename to \"%s\"", newName);
-#endif
     }
 
     return err;
