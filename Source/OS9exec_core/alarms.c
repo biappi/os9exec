@@ -70,7 +70,7 @@ void init_alarms(void)
         alarms[k].pid  = 0; /* invalidate alarms */
         alarm_queue[k] = NULL;
     }
-} /* init_alarms */
+}
 
 void A_Insert(alarm_typ *aa)
 {
@@ -91,7 +91,7 @@ void A_Insert(alarm_typ *aa)
     }
 
     alarm_queue[0] = aa; /* if list is still empty */
-} /* A_Insert */
+}
 
 void A_Remove(alarm_typ *aa)
 {
@@ -114,7 +114,7 @@ void A_Remove(alarm_typ *aa)
 
     /* invalidate at least this */
     alarm_queue[MAXALARMS - 1] = NULL;
-} /* A_Remove */
+}
 
 static alarm_typ *A_GetNew(ushort pid)
 {
@@ -131,7 +131,7 @@ static alarm_typ *A_GetNew(ushort pid)
 
     /* no empty entry available */
     return NULL;
-} /* A_GetNew */
+}
 
 os9err
 A_Make(ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic)
@@ -151,7 +151,7 @@ A_Make(ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic)
     A_Insert(aa);
     *aId = (ulong)aa;
     return 0;
-} /* A_Make */
+}
 
 void A_Kill(ushort pid)
 /* Remove all alarms of this process */
@@ -166,7 +166,7 @@ void A_Kill(ushort pid)
         if (q != NULL && q->pid == pid)
             A_Remove(q);
     }
-} /* A_Kill */
+}
 
 /* ------------------------------------------------------------------ */
 
@@ -186,19 +186,19 @@ static os9err Alarm_Delete(_pid_, ulong aId)
 
     /* can't find this alarm */
     return E_BPADDR;
-} /* Alarm_Delete */
+}
 
 static os9err Alarm_Set(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
 /* A$Set call: 1 */
 {
     return A_Make(pid, aId, aCode, aTicks, false);
-} /* Alarm_Set */
+}
 
 static os9err Alarm_Cycle(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
 /* A$Cycle call: 2 */
 {
     return A_Make(pid, aId, aCode, aTicks, true);
-} /* Alarm_Cycle */
+}
 
 static os9err
 Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
@@ -228,7 +228,7 @@ Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 
     aTicks = ((aDate - iDate) * SecsPerDay + aTime - iTime) * TICKS_PER_SEC;
     return A_Make(pid, aId, aCode, aTicks, false);
-} /* Alarm_AtDate */
+}
 
 static os9err
 Alarm_AtJul(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
@@ -250,7 +250,7 @@ Alarm_AtJul(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 
     aTicks = ((aDate - iDate) * SecsPerDay + aTime - iTime) * TICKS_PER_SEC;
     return A_Make(pid, aId, aCode, aTicks, false);
-} /* Alarm_AtJul */
+}
 
 os9err
 Alarm(ushort pid, ulong *aId, short aFunc, ushort sig, ulong aTime, ulong aDate)
@@ -281,9 +281,9 @@ Alarm(ushort pid, ulong *aId, short aFunc, ushort sig, ulong aTime, ulong aDate)
         break;
     default:
         err = E_UNKSVC;
-    } /* switch */
+    }
 
     return err;
-} /* Alarm */
+}
 
 /* eof */

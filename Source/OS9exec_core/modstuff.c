@@ -321,14 +321,14 @@ mod_exec *Le0_ptr = (mod_exec *)Le0_mod; /* ptr to le0 module */
 //   {
 //  	 if (k>=MAXMODULES) return NULL;
 //       return os9modules[k].modulehandle;
-//   } /* os9h */
+//   }
 //
 // #else
 //   static mod_exec* os9h( int k )
 //   {
 //       if (k>=MAXMODULES) return NULL;
 //       return os9modules[k].modulebase;
-//   } /* os9h */
+//   }
 
 // #endif
 
@@ -347,13 +347,13 @@ mod_exec *os9mod(int k)
     return os9modules[k].modulebase;
 
     //  #endif
-} /* os9mod */
+}
 
 char *Mod_Name(mod_exec *mod)
 /* get the module's name */
 {
     return (char *)mod + os9_long(mod->_mh._mname);
-} /* Mod_Name */
+}
 
 void Update_MDir(void)
 /* Update the image of the module directory structure */
@@ -444,7 +444,7 @@ Boolean SameBlk(byte *a, byte *b, ulong size)
         b++;
     }
     return true;
-} /* SameBlk */
+}
 
 /* get the required size of a data module */
 ulong DatMod_Size(ulong namsize, ulong datsize)
@@ -458,7 +458,7 @@ ulong DatMod_Size(ulong namsize, ulong datsize)
     dsize = (dsize + 15) -
             ((dsize + 15) % 16); // OS-9 data module sizes are divisible by 16
     return dsize;
-} /* DatMod_Size */
+}
 
 void FillTemplate(mod_exec *m, short access, short tylan, short attrev)
 /* default values for data module */
@@ -523,10 +523,10 @@ void show_modules(char *cmp)
                            dats,
                            stck,
                            nam);
-            } /* if (cmp==NULL || .. */
+            }
         }     /* if (mod!=NULL) */
     }
-} /* show_modules */
+}
 
 /* initialize internal "module directory" */
 void init_modules()
@@ -546,7 +546,7 @@ void init_modules()
 
     /* special treatement for init module */
     init_module = NULL;
-} /* init_modules */
+}
 
 /* release a module by ID */
 void release_module(ushort mid, Boolean modOK)
@@ -579,9 +579,9 @@ void release_module(ushort mid, Boolean modOK)
                         if (mid == tp->mid)
                             return;
                     }
-                } /* for all traphandlers do */
+                }
             }
-        } /* for all processes do */
+        }
 
         /* special treatment for 'init' module: disconnect at the globals */
         if (ustrcmp(pNam, "init") == 0)
@@ -621,7 +621,7 @@ void release_module(ushort mid, Boolean modOK)
 
     os9modules[mid].isBuiltIn = false;
     os9modules[mid].linkcount = 0;
-} /* release_module */
+}
 
 mod_exec *get_module_ptr(int mid)
 /* get pointer to module by mid */
@@ -629,7 +629,7 @@ mod_exec *get_module_ptr(int mid)
     if (mid >= MAXMODULES)
         return NULL;
     return os9mod(mid);
-} /* get_module_ptr */
+}
 
 int get_mid(void *modptr)
 /* find mid of module given by ID */
@@ -641,7 +641,7 @@ int get_mid(void *modptr)
     }
 
     return MAXMODULES;
-} /* get_mid */
+}
 
 int find_mod_id(const char *name)
 /* find module by name, return mid or MAXMODULES if not found */
@@ -662,7 +662,7 @@ int find_mod_id(const char *name)
     }
 
     return MAXMODULES;
-} /* find_mod_id */
+}
 
 int link_mod_id(char *name)
 /* link module by name, return mid or MAXMODULES if not found */
@@ -671,7 +671,7 @@ int link_mod_id(char *name)
     if (k < MAXMODULES)
         os9modules[k].linkcount++;
     return k;
-} /* link_mod_it */
+}
 
 int NextFreeModuleId(char *name)
 /* Get next free module id: Start at mid=1, exception: <OS9exec> => mid=0 */
@@ -694,7 +694,7 @@ int NextFreeModuleId(char *name)
                 dbgNorm,
                 ("# NextFreeModuleId: %3d '%s'\n", k, name));
     return k;
-} /* NextFreeModule */
+}
 
 static void adapt_init(mod_exec *mh)
 /* special treatment for the "init" module: set version+revision */
@@ -723,7 +723,7 @@ static void adapt_init(mod_exec *mh)
     strcpy(nm, sw_name);
     init_module = mh;
     mod_crc(mh);
-} /* adapt_init */
+}
 
 static void adapt_le0(mod_exec *mh, ulong inetAddr)
 {
@@ -741,13 +741,13 @@ static void adapt_le0(mod_exec *mh, ulong inetAddr)
     *lp = os9_long(inetAddr);
 
     mod_crc(mh);
-} /* adapt_le0 */
+}
 
 static void fill_s(char **b, char *s)
 {
     sprintf(*b, "%s", s);
     *b = *b + strlen(*b) + 1;
-} /* fill_s */
+}
 
 static void go_thru_list(char *v0, char *b0, ulong inetAddr)
 /* adapt "localhost" at the "inetdb" module */
@@ -820,7 +820,7 @@ static void go_thru_list(char *v0, char *b0, ulong inetAddr)
         blk += jump;
         v = blk;
     }
-} /* go_thru_list */
+}
 
 static void adapt_inetdb(mod_exec *mh,
                          ulong     inetAddr,
@@ -898,7 +898,7 @@ static void adapt_inetdb(mod_exec *mh,
 
     /* --- update module CRC --- */
     mod_crc(mh);
-} /* adapt_inetdb */
+}
 
 static void adapt_L2(mod_exec *mh)
 /* special treatment for the "L2" module: set port address */
@@ -909,7 +909,7 @@ static void adapt_L2(mod_exec *mh)
     dsc->_mport = (char *)os9_long((ulong)&l2.hw_location);
 
     mod_crc(mh);
-} /* adapt_L2 */
+}
 
 static os9err load_module_local(ushort  pid,
                                 char   *name,
@@ -1353,7 +1353,7 @@ static os9err load_module_local(ushort  pid,
         theRemainP = pp;
         MoveBlk((byte *)theRemainP, (byte *)theModuleP, dsize);
         theModuleP = theRemainP;
-    } /* loop */
+    }
 
     /* --- bad module */
     release_module(mid, false); /* forget it again */
@@ -1415,7 +1415,7 @@ os9err link_module(ushort pid, const char *name, ushort *midP)
     // if    (err==E_MNF && isNative && strcmp( lName,"hello_world" )==0)
     //        err= 0; // native programs can work without an os9 primary module
     return err;
-} /* link_module */
+}
 
 os9err link_load(ushort pid, char *name, ushort *midP)
 /* try to link first, then try to load */
@@ -1424,7 +1424,7 @@ os9err link_load(ushort pid, char *name, ushort *midP)
     if (err)
         err = load_module(pid, name, midP, true);
     return err;
-} /* link_load */
+}
 
 os9err load_OS9Boot(ushort pid)
 {
@@ -1534,7 +1534,7 @@ void free_modules()
     int k;
     for (k = 0; k < MAXMODULES; k++)
         release_module(k, false);
-} /* free_modules */
+}
 
 void init_exceptions(ushort pid)
 /* initialize process' exceptions */
@@ -1543,7 +1543,7 @@ void init_exceptions(ushort pid)
     int k;
     for (k = 0; k < NUMEXCEPTIONS; k++)
         procs[pid].ErrorTraps[k].handleraddr = 0;
-} /* init_exceptions */
+}
 
 void init_traphandlers(ushort pid)
 /* initialize process' exceptions */
@@ -1555,7 +1555,7 @@ void init_traphandlers(ushort pid)
         procs[pid].TrapHandlers[k].trapentry =
             0; /*IMPORTANT for new os9_llm implementation!! */
     }
-} /* init_traphandlers */
+}
 
 ushort calc_parity(ushort *p, ushort numwords)
 /* calculate header parity (if over 23 words) or check (over 24 words, must be
@@ -1571,7 +1571,7 @@ ushort calc_parity(ushort *p, ushort numwords)
     }
     parity = ~parity; /* invert */
     return parity;
-} /* calc_parity */
+}
 
 ulong calc_crc(byte *p, ulong size, ulong accum)
 /* calculate CRC over <size> bytes at <p>, starting with <accum> */
@@ -1596,7 +1596,7 @@ ulong calc_crc(byte *p, ulong size, ulong accum)
             accum ^= 0x00800021;
     }
     return accum | 0xFF000000; /* CRC value */
-} /* calc_crc */
+}
 
 void mod_crc(mod_exec *m)
 {
@@ -1616,7 +1616,7 @@ void mod_crc(mod_exec *m)
                  Mod_Name(m),
                  modsize,
                  crc));
-} /* mod_crc */
+}
 
 /* prepare data for execution of OS9 executable module/trap handler
  * returns msiz(actual size) and mp(actual base pointer, unbiased)
@@ -1725,7 +1725,7 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
     *mp   = bp;
     *msiz = memsz;
     return 0;
-} /* prepData */
+}
 
 os9err install_traphandler(ushort            pid,
                            ushort            trapidx,
@@ -1769,7 +1769,7 @@ os9err install_traphandler(ushort            pid,
 
     *traphandler = tp;
     return 0;
-} /* install_traphandler */
+}
 
 os9err release_traphandler(ushort pid, ushort trapidx)
 /* release a traphandler */
@@ -1792,7 +1792,7 @@ os9err release_traphandler(ushort pid, ushort trapidx)
     }
 
     return 0;
-} /* release_traphandler */
+}
 
 void unlink_traphandlers(ushort pid)
 /* unlink process' traphandlers */
@@ -1800,6 +1800,6 @@ void unlink_traphandlers(ushort pid)
     int k;
     for (k = 0; k < NUMTRAPHANDLERS; k++)
         release_traphandler(pid, k);
-} /* unlink_traphandlers */
+}
 
 /* eof */

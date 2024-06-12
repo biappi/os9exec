@@ -91,7 +91,7 @@ static void usage(char *name, _pid_)
     upe_printf("Function: rename a file or directory\n");
     upe_printf("Options:\n");
     upe_printf("     -x       path starts from execution dir\n");
-} /* usage */
+}
 
 /*
 static os9err Flush_Dir( ushort cpid, ushort* pathP, const char* nmS )
@@ -335,6 +335,6 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     }
 
     return err;
-} /* int_rename */
+}
 
 /* eof */

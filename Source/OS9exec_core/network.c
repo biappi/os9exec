@@ -254,7 +254,7 @@ void init_Net(fmgr_typ *f)
     ss->_SS_PCmd    = (pathopfunc_typ)pNsPCmd;
 
     ss->_SS_Undef = (pathopfunc_typ)pNop; /* ignored, if any other function */
-} /* init_Net */
+}
 
 /* ----------------------------------------------- */
 
@@ -359,7 +359,7 @@ static void SetDefaultEndpointModes(SOCKET s)
     int   err         = ioctl(s, FIONBIO, &nonblocking);
 
 #endif
-} /* SetDefaultEndpointModes */
+}
 
 static os9err GetBuffers(net_typ *net)
 /* Get the transfer buffers for the net devices */
@@ -374,7 +374,7 @@ static os9err GetBuffers(net_typ *net)
         return E_NORAM;
 
     return 0;
-} /* GetBuffers */
+}
 
 os9err pNopen(_pid_, syspath_typ *spP, _modeP_, char *pathname)
 {
@@ -401,7 +401,7 @@ os9err pNopen(_pid_, syspath_typ *spP, _modeP_, char *pathname)
     net->bsize     = 0;
 
     return GetBuffers(net);
-} /* pNopen */
+}
 
 os9err pNclose(_pid_, syspath_typ *spP)
 {
@@ -425,7 +425,7 @@ os9err pNclose(_pid_, syspath_typ *spP)
     }
 
     return 0;
-} /* pNclose */
+}
 
 static os9err
 netRead(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer, Boolean lnmode)
@@ -485,17 +485,17 @@ netRead(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer, Boolean lnmode)
     } while (lnmode && !CR_found && *lenP < askBytes);
 
     return 0;
-} /* netRead */
+}
 
 os9err pNread(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return netRead(pid, spP, lenP, buffer, false);
-} /* pNread */
+}
 
 os9err pNreadln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return netRead(pid, spP, lenP, buffer, true);
-} /* pNreadln */
+}
 
 static os9err netWrite(ushort       pid,
                        syspath_typ *spP,
@@ -542,17 +542,17 @@ static os9err netWrite(ushort       pid,
     }
 
     return 0;
-} /* netWrite */
+}
 
 os9err pNwrite(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return netWrite(pid, spP, lenP, buffer, false);
-} /* pNwrite */
+}
 
 os9err pNwriteln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return netWrite(pid, spP, lenP, buffer, true);
-} /* pNwriteln */
+}
 
 os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
 {
@@ -644,7 +644,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
                 fPort++;
         }
 
-    } /* loop */
+    }
 
 #if defined powerc && !defined MACOSX
     if (err == kEADDRNOTAVAILErr)
@@ -663,7 +663,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
                 dbgNorm,
                 ("bind fAddT=%d fPort=%d\n", net->fAddT, fPort));
     return 0;
-} /* pNbind */
+}
 
 os9err pNlisten(ushort pid, syspath_typ *spP)
 {
@@ -703,7 +703,7 @@ os9err pNlisten(ushort pid, syspath_typ *spP)
     }
 
     return 0;
-} /* pNlisten */
+}
 
 os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
 {
@@ -826,7 +826,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
 
     net->connected = true;
     return 0;
-} /* pNconnect */
+}
 
 os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
 {
@@ -889,7 +889,7 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
     *d1 = up;              /* here we get the new path number */
 
     return err;
-} /* pNaccept */
+}
 
 os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
 /* for TCP protocol, 2 additional bytes with length info will be received */
@@ -905,7 +905,7 @@ os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
     if (!err)
         *d1 = len;
     return err;
-} /* pNrecv */
+}
 
 os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
 /* for TCP protocol, 2 additional bytes with length info must be sent */
@@ -921,7 +921,7 @@ os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
     if (!err)
         *d1 = len;
     return err;
-} /* pNsend */
+}
 
 os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
 /* Still some hardcoded things here */
@@ -953,7 +953,7 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
 
     //  upe_printf( "gnam '%s'\n", c );
     return 0;
-} /* pNGNam */
+}
 
 os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2)
 /* don't know what this is really good for (bfo) */
@@ -967,7 +967,7 @@ os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2)
 
     *d1 = 0;
     return 0;
-} /* pNSOpt */
+}
 
 static ushort checksum(ushort *buffer, int size)
 /* This function calculates the 16-bit one's complement sum */
@@ -986,7 +986,7 @@ static ushort checksum(ushort *buffer, int size)
     cksum = (cksum >> 16) + (cksum & 0xffff);
     cksum += (cksum >> 16);
     return (ushort)(~cksum);
-} /* checksum */
+}
 
 os9err pNsPCmd(_pid_, syspath_typ *spP, ulong *a0)
 {
@@ -1073,7 +1073,7 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, ulong *a0)
                  os9_word(net->ipRemote.fPort),
                  os9_long(net->ipRemote.fHost)));
     return err;
-} /* pNsPCmd */
+}
 
 os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
 {
@@ -1188,7 +1188,7 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
     } while (!err && GetSystemTick() < start_time + 5 * 60);
 
     return OS9_ENETUNREACH;
-} /* pNgPCmd */
+}
 
 /* constant option sections for SOCKET I$GetStt */
 /* type 7 is important, because used by "telnetdc"/"ftpdc" to determine */
@@ -1210,14 +1210,14 @@ os9err pNopt(_pid_, _spP_, byte *buffer)
 {
     memcpy(buffer, netstdopts, OPTSECTSIZE);
     return 0;
-} /* pNopt */
+}
 
 os9err pNpos(_pid_, _spP_, ulong *posP)
 /* get current file position */
 {
     *posP = 0;
     return 0;
-} /* pRpos */
+}
 
 os9err pNready(_pid_, syspath_typ *spP, ulong *n)
 {
@@ -1262,7 +1262,7 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
         return 0; /* return if not empty */
 
     return os9error(E_NOTRDY);
-} /* pNready */
+}
 
 os9err pNask(ushort pid, syspath_typ *spP)
 {
@@ -1300,6 +1300,6 @@ os9err pNask(ushort pid, syspath_typ *spP)
     }
 
     return 0;
-} /* pNask */
+}
 
 /* eof */

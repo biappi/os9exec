@@ -62,7 +62,7 @@ void init_events(void)
     int k;
     for (k = 0; k < MAXEVENTS; k++)
         events[k].id = 0; /* invalidate event */
-} /* init_events */
+}
 
 static event_typ *getEv(ulong evId)
 {
@@ -75,7 +75,7 @@ static event_typ *getEv(ulong evId)
     }
 
     return NULL;
-} /* getEv */
+}
 
 os9err evLink(char *evName, ulong *evId)
 {
@@ -94,7 +94,7 @@ os9err evLink(char *evName, ulong *evId)
     }
 
     return E_EVNF;
-} /* evLink */
+}
 
 os9err evUnLnk(ulong evId)
 {
@@ -110,7 +110,7 @@ os9err evUnLnk(ulong evId)
     }
 
     return E_EVNTID;
-} /* evUnLnk */
+}
 
 os9err evCreat(char *evName, int evValue, short wInc, short sInc, ulong *evId)
 {
@@ -140,7 +140,7 @@ os9err evCreat(char *evName, int evValue, short wInc, short sInc, ulong *evId)
     *evId = ev->id;
 
     return 0;
-} /* evCreat */
+}
 
 os9err evDelet(char *evName)
 {
@@ -159,7 +159,7 @@ os9err evDelet(char *evName)
     }
 
     return E_EVNF;
-} /* evDelet */
+}
 
 os9err evWait(ulong evId, int minV, int maxV, int *evValue)
 {
@@ -191,7 +191,7 @@ os9err evWait(ulong evId, int minV, int maxV, int *evValue)
     }
 
     return E_EVNTID;
-} /* evWait */
+}
 
 os9err evSignl(ulong evId)
 {
@@ -200,7 +200,7 @@ os9err evSignl(ulong evId)
         return E_EVNTID;
     ev->value += ev->sInc;
     return 0;
-} /* evSignl */
+}
 
 os9err evSet(ulong evId, int evValue, int *prvValue)
 {
@@ -211,6 +211,6 @@ os9err evSet(ulong evId, int evValue, int *prvValue)
     *prvValue = ev->value;
     ev->value = evValue;
     return 0;
-} /* evSet */
+}
 
 /* eof */

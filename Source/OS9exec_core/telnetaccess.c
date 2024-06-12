@@ -92,7 +92,7 @@ void InitTTYs()
         mco->holdScreen = false;
         mco->pid        = 0;
     }
-} /* InitTTYs */
+}
 
 short InstallTTY(syspath_typ *spP, int consoleID)
 /* initialize access to TTY */
@@ -105,14 +105,14 @@ short InstallTTY(syspath_typ *spP, int consoleID)
     }
 
     return 0;
-} /* InstallTTY */
+}
 
 void RemoveTTY(int consoleID)
 /* de-initalize TTY */
 {
     ttydev_typ *mco = &ttydev[consoleID - TTY_Base];
     mco->installed  = false;
-} /* RemoveTTY */
+}
 
 ulong WriteCharsToPTY(char *buffer, ulong n, int consoleID, Boolean do_lf)
 /* write characters to TTY */
@@ -145,7 +145,7 @@ ulong WriteCharsToPTY(char *buffer, ulong n, int consoleID, Boolean do_lf)
 
     return 0;
 #endif
-} /* WriteCharsToPTY */
+}
 
 void CheckInputBuffersTTY(void)
 {
@@ -154,7 +154,7 @@ void CheckInputBuffersTTY(void)
     for (k = 0; k < MAXTTYDEV; k++)
         CheckInBufferTTY(&ttydev[k]);
 #endif
-} /* CheckInputBuffersTTY */
+}
 
 Boolean DevReadyTTY(long *cnt, int consoleID)
 /* how many characters are ready at the TTY ? */
@@ -171,7 +171,7 @@ Boolean DevReadyTTY(long *cnt, int consoleID)
     if (ok)
         *cnt = mco->inBufUsed;
     return ok;
-} /* DevReadyTTY */
+}
 
 long ReadCharsFromPTY(char *buffer, long n, int consoleID)
 /* read characters from TTY */
@@ -202,7 +202,7 @@ long ReadCharsFromPTY(char *buffer, long n, int consoleID)
     }
 
     return 0;
-} /* ReadCharsFromPTY */
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -230,9 +230,9 @@ void WindowTitle(char *title, Boolean vmod)
         sprintf(title, "%s  /%s - terminal window", title, cons);
     }
 #endif
-} /* WindowTitle */
+}
 
-void HandleEvent(void) {} /* empty implementation */
+void HandleEvent(void) {}
 
 /* CheckInputBuffers */
 void CheckInputBuffers(void)
@@ -240,7 +240,7 @@ void CheckInputBuffers(void)
 
     CheckInputBuffersTTY(); /*   "        "       "  ttys         */
     HandleEvent();          /* and check also the Mac events      */
-} /* CheckInputBuffers */
+}
 
 Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
 /* true, if next character(s) can be read */
@@ -250,7 +250,7 @@ Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
     if (ok)
         *count = mco->inBufUsed;
     return ok;
-} /* DevReadyTerminal */
+}
 
 Boolean DevReady(long *count)
 {
@@ -265,7 +265,7 @@ Boolean DevReady(long *count)
 #endif
 
     return DevReadyTerminal(count, &main_mco);
-} /* DevReady */
+}
 
 #ifdef TERMINAL_CONSOLE
 long ReadCharsFromTerminal(char *buffer, long n, ttydev_typ *mco)
@@ -313,8 +313,8 @@ long ReadCharsFromTerminal(char *buffer, long n, ttydev_typ *mco)
                     return ReadCharsFromTerminal(buffer, n, mco);
             }
         }
-    } /* while (true) */
-} /* ReadCharsFromTerminal */
+    }
+}
 #endif
 
 /* eof */

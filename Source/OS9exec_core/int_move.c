@@ -127,7 +127,7 @@ static void usage(char *pname)
         "          -w=<dir name> : wildcard move to specified directory\n");
     upe_printf("          -x : look in execution directory for source\n");
     upe_printf("          -r : rewrite destination\n");
-} /* usage */
+}
 
 /**** analyze command line options */
 static os9err options(int argc, char *argv[])
@@ -168,14 +168,14 @@ static os9err options(int argc, char *argv[])
                     usage(argv[0]);
                     return _errmsg(1, "unknown option '%c'\n", *sc);
                     break;
-                } /* switch */
+                }
             }
-        } /* if hyphen */
+        }
         else
             nargc++;
     }
     return 0;
-} /* options */
+}
 
 static os9err separate(char **dnp, char **fnp)
 /**** separate file and directory name
@@ -201,7 +201,7 @@ static os9err separate(char **dnp, char **fnp)
     *fnp = p;
     *dnp = "."; /* default directory name */
     return 0;
-} /* separate */
+}
 
 static os9err
 move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
@@ -488,7 +488,7 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
                        destname);
 
     return 0;
-} /* move_file */
+}
 
 /* main program */
 os9err int_move(ushort cpid, int argc, char **argv)
@@ -548,8 +548,8 @@ os9err int_move(ushort cpid, int argc, char **argv)
         }
 
         return move_file(cpid, fromdir, fromname, todir, toname);
-    } /* single move */
+    }
     return 0;
-} /* main */
+}
 
 /* eof */

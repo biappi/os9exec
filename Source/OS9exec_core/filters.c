@@ -67,7 +67,7 @@ void releasefilter(void **memoryPP)
         release_mem(*memoryPP);
         *memoryPP = NULL; /* no memory any more */
     }
-} /* releasefilter */
+}
 
 #ifndef MPW_FILTERS
 /* no filters available */
@@ -77,13 +77,13 @@ void releasefilter(void **memoryPP)
 filterfunc initfilterfunc(_txt_, _txt2_, _memPP_)
 {
     return NULL; /* no filters */
-} /* getfilterfunc */
+}
 
 /* show available filters from outside command line */
 void printfilters(void)
 {
     uphe_printf("No compiler output filters available\n");
-} /* printfilters */
+}
 
 #else
 
@@ -163,7 +163,7 @@ static void omega_filter(char *linebuf, FILE *stream, void *fmv)
             }
         }
     }
-} /* omega_filter */
+}
 
 /* output filter for icc6811 */
 /* ========================= */
@@ -242,7 +242,7 @@ static void icc_filter(char *linebuf, FILE *stream, void *fmv)
             "---------------------------------------------------------------\n",
             stream);
     }
-} /* icc_filter */
+}
 
 /* output filter for cfe (C-compiler) */
 /* ================================== */
@@ -267,7 +267,7 @@ static void *c_init(char * /* argline */)
 
     fm->state = 0; /* begin without state */
     return (void *)fm;
-} /* c_init */
+}
 
 static void c_filter(char *linebuf, FILE *stream, void *fmv)
 {
@@ -327,7 +327,7 @@ static void c_filter(char *linebuf, FILE *stream, void *fmv)
         dispit    = true; /* all info found */
         fm->state = 0;    /* wait for next error */
         break;
-    } /* switch */
+    }
     if (dispit) {
         /* --- error message is complete */
         fputs(
@@ -340,7 +340,7 @@ static void c_filter(char *linebuf, FILE *stream, void *fmv)
             "---------------------------------------------------------------\n",
             stream);
     }
-} /* c_filter */
+}
 
 /* output filter for r68 Assembler */
 /* =============================== */
@@ -367,7 +367,7 @@ static void *r68_init(char * /* argline */)
     fm->state   = 0; /* begin without state */
     fm->outline = 0; /* no line written yet */
     return (void *)fm;
-} /* r68_init */
+}
 
 static void r68_filter(char *linebuf, FILE *stream, void *fmv)
 {
@@ -415,7 +415,7 @@ static void r68_filter(char *linebuf, FILE *stream, void *fmv)
         dispit    = true; /* all info found */
         fm->state = 0;    /* wait for next error */
         break;
-    } /* switch */
+    }
     if (dispit) {
         /* --- error message is complete */
         fputs(
@@ -428,7 +428,7 @@ static void r68_filter(char *linebuf, FILE *stream, void *fmv)
             "---------------------------------------------------------------\n",
             stream);
     }
-} /* r68_filter */
+}
 
 /* Filter-to-module name table */
 /* --------------------------- */
@@ -449,7 +449,7 @@ filtertable_typ filtertable[] = {
     {"cfe", c_filter, c_init, "Microware C compiler (C-frontend)"},
     {"pc", mega_filter, omega_init, "OmegaSoft Pascal Compiler"},
     {"icc6811", icc_filter, icc_init, "IAR HC 11 cross compiler"},
-    {NULL, NULL, NULL} /* terminator */
+    {NULL, NULL, NULL}
 };
 
 /* Routines */
@@ -490,7 +490,7 @@ filterfunc initfilterfunc(char *modname, char *argline, void **memoryPP)
         index++;
     } while (1);
     return NULL;
-} /* getfilterfunc */
+}
 
 /* show available filters from outside command line */
 void printfilters(void)
@@ -505,7 +505,7 @@ void printfilters(void)
                     filtertable[k].helptext);
     }
     upe_printf("\n");
-} /* printfilters */
+}
 
 #endif
 

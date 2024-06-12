@@ -267,7 +267,7 @@ void init_File(fmgr_typ *f)
     ss->_SS_Attr = (pathopfunc_typ)pNop;
     ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
     ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
-} /* init_File */
+}
 
 void init_Dir(fmgr_typ *f)
 /* install all procedures of the transparent file manager for directories */
@@ -303,7 +303,7 @@ void init_Dir(fmgr_typ *f)
     ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
     ss->_SS_Lock = (pathopfunc_typ)pNop;   /* ignored */
     ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
-} /* init_Dir */
+}
 
 /* -------------------------------------------------------- */
 
@@ -358,7 +358,7 @@ os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     /* ok, return # of chars read to caller */
     *n = cnt;
     return 0;
-} /* pFread */
+}
 
 /* input line from file */
 os9err pFreadln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
@@ -399,7 +399,7 @@ os9err pFreadln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 
     *n = cnt;
     return 0;
-} /* pFreadln */
+}
 
 /* output to file */
 os9err pFwrite(_pid_, syspath_typ *spP, ulong *n, char *buffer)
@@ -433,7 +433,7 @@ os9err pFwrite(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 
     *n = cnt;
     return 0;
-} /* pFwrite */
+}
 
 /* output to file */
 os9err pFwriteln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
@@ -465,7 +465,7 @@ os9err pFwriteln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 
     *n = cnt;
     return 0;
-} /* pFwriteln */
+}
 
 os9err pFopt(ushort pid, syspath_typ *spP, byte *buffer)
 {
@@ -484,14 +484,14 @@ os9err pFopt(ushort pid, syspath_typ *spP, byte *buffer)
     l  = (ulong *)&buffer[PD_FD];
     *l = os9_long(fdID) << BpB; /* LSN of file */
     return err;
-} /* pFopt */
+}
 
 /* check ready */
 os9err pFready(_pid_, _spP_, ulong *n)
 {
     *n = 1;
     return 0;
-} /* pFready */
+}
 
 /* get device name from HFS object */
 os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
@@ -554,7 +554,7 @@ static void Set_FileDate(syspath_typ *spP, time_t t)
     buf.actime  = t;
     buf.modtime = t;
     utime(spP->fullName, &buf);
-} /* Set_FileDate */
+}
 
 os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 {
@@ -598,7 +598,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
         VolInfo(pp, vn); /* this is the correct position */
 
         return 0;
-    } /* if IsRaw */
+    }
 
     f->readFlag = false;
 
@@ -667,7 +667,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     f->moddate_changed = false;
 
     return 0;
-} /* pFopen */
+}
 
 /* close a file */
 os9err pFclose(_pid_, syspath_typ *spP)
@@ -691,7 +691,7 @@ os9err pFclose(_pid_, syspath_typ *spP)
     //              spP->rw_sct= NULL;
 
     return 0;
-} /* pFclose */
+}
 
 os9err pFseek(_pid_, syspath_typ *spP, ulong *posP)
 /* seek within a file */
@@ -735,7 +735,7 @@ os9err pFseek(_pid_, syspath_typ *spP, ulong *posP)
 
     fflush(spP->stream);
     return 0;
-} /* pFseek */
+}
 
 os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
@@ -767,7 +767,7 @@ os9err pFdelete(ushort pid, _spP_, ushort *modeP, char *pathname)
     oserr = remove(pathname);
 
     return host2os9err(oserr, E_SHARE);
-} /* pFdelete */
+}
 
 /* get file position */
 os9err pFpos(_pid_, syspath_typ *spP, ulong *posP)
@@ -775,7 +775,7 @@ os9err pFpos(_pid_, syspath_typ *spP, ulong *posP)
     *posP = (ulong)ftell(spP->stream);
     // fgetpos( spP->stream,  posP );   /* save current position */
     return 0;
-} /* pFpos */
+}
 
 /* get file size */
 os9err pFsize(_pid_, syspath_typ *spP, ulong *sizeP)
@@ -791,7 +791,7 @@ os9err pFsize(_pid_, syspath_typ *spP, ulong *sizeP)
     *sizeP = info.st_size; // for MACOSX <st_size> is unfortunately 0
 
     return err;
-} /* pFsize */
+}
 
 /* set file size */
 os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
@@ -960,7 +960,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
     if (err == E_EOF)
         err = E_FULL;
     return err;
-} /* pFsetsz */
+}
 
 os9err pFeof(_pid_, syspath_typ *spP)
 /* check for EOF */
@@ -969,7 +969,7 @@ os9err pFeof(_pid_, syspath_typ *spP)
         return os9error(E_EOF);
 
     return 0;
-} /* pFeof */
+}
 
 // attempt to improve things a little
 #define NEW_LUZ_FD_IMPL 1
@@ -1090,7 +1090,7 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
                     closedir(spRec.dDsc);
                 }
             }
-        } /* if (ok) */
+        }
     }
     else
         *sizeP = os9_long(info.st_size);
@@ -1104,7 +1104,7 @@ static void getFD(void *fdl, ushort maxbyt, byte *buffer)
     //  if (maxbyt>16) {
     //      memset( &buffer[16],0, maxbyt-16 );
     //  }
-} /* getFD */
+}
 
 static void setFD(syspath_typ *spP, void *fdl, byte *buffer)
 /* adapt cipb with info of FD */
@@ -1144,7 +1144,7 @@ static void setFD(syspath_typ *spP, void *fdl, byte *buffer)
     // printf( "Set_FileDate was2\n" );
     u = UConv(&tim);
 
-} /* setFD */
+}
 
 /* get file descriptor for object */
 os9err pHgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
@@ -1156,7 +1156,7 @@ os9err pHgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
     getFD(fdl, loword(*maxbytP), buffer);
     debugprintf(dbgFiles, dbgNorm, ("# pHgetFD: no longer alive\n"));
     return 0;
-} /* pHgetFD */
+}
 
 /* set file descriptor for object */
 /* %%% currently only the file date will be set */
@@ -1170,7 +1170,7 @@ os9err pHsetFD(_pid_, syspath_typ *spP, byte *buffer)
     setFD(spP, fdl, buffer);
 
     return err;
-} /* pHsetFD */
+}
 /* adapt time/date of a file */
 
 /* get file descriptor for file specified by "sector" */
@@ -1195,7 +1195,7 @@ pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
 
     getFD(fdl, loword(*maxbytP), buffer);
     return 0;
-} /* pHgetFDInf */
+}
 
 /* Directory file emulation */
 /* ------------------------ */
@@ -1254,7 +1254,7 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
 
     strcpy(spP->name, p);
     return err;
-} /* pDopen */
+}
 
 /* not used for Mac */
 os9err pDclose(_pid_, syspath_typ *spP)
@@ -1271,7 +1271,7 @@ os9err pDclose(_pid_, syspath_typ *spP)
                 ("# pDclose: '%s' err=%d\n", spP->fullName, err));
 
     return err;
-} /* pDclose */
+}
 
 /* read from (simulated) directory file */
 os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
@@ -1370,14 +1370,14 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     */
 
     return 0;
-} /* pDread */
+}
 
 /* get pointer position */
 os9err pDpos(_pid_, syspath_typ *spP, ulong *posP)
 {
     *posP = spP->u.disk.u.dir.pos;
     return 0;
-} /* pDpos */
+}
 
 /* get size of directory file */
 os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
@@ -1387,7 +1387,7 @@ os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
     *sizeP = DirSize(spP);
 
     return err;
-} /* pDsize */
+}
 
 /* set read position */
 os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
@@ -1414,7 +1414,7 @@ os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
 
     spP->u.disk.u.dir.pos = *posP;
     return 0;
-} /* pDseek */
+}
 
 os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
@@ -1463,7 +1463,7 @@ os9err pDchd(ushort pid, _spP_, ushort *modeP, char *pathname)
         cp->d.type = fDir;
 
     return 0; /* ok */
-} /* pDchd */
+}
 
 os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
 {
@@ -1495,7 +1495,7 @@ os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
     return E_BPNAM;
 
     return host2os9err(oserr, E_WRITE);
-} /* pDmakdir */
+}
 
 os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 {
@@ -1569,7 +1569,7 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 
     debugprintf(dbgFiles, dbgNorm, ("# pDsetatt: '%s' end err=%d\n", pp, err));
     return err;
-} /* pDsetatt */
+}
 
 /* check for EOF */
 os9err pDeof(ushort pid, syspath_typ *spP)
@@ -1582,6 +1582,6 @@ os9err pDeof(ushort pid, syspath_typ *spP)
         return os9error(E_EOF);
 
     return 0;
-} /* pDeof */
+}
 
 /* eof */

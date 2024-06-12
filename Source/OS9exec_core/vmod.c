@@ -73,6 +73,6 @@ os9err pVMod(ushort pid, _spP_, ulong *d1, ulong *d2)
 #endif
 
     return 0; /* no errors */
-} /* pVMod */
+}
 
 /* eof */

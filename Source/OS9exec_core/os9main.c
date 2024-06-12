@@ -168,7 +168,7 @@ void writeline(char *linebuf, FILE *stream)
 
     putc('\n', stream);
     fflush(stream);
-} /* writeline */
+}
 
 Boolean F_Avail(const char *pathname)
 {
@@ -194,7 +194,7 @@ Boolean F_Avail(const char *pathname)
                  info.st_size,
                  info.st_mode));
     return ok;
-} /* F_Avail */
+}
 
 char *egetenv(const char *name)
 {
@@ -277,18 +277,18 @@ char *egetenv(const char *name)
             strcat(tmp, rslt);
             rslt = tmp;
         }
-    } /* if u_* */
+    }
 
     debugprintf(dbgStartup, dbgNorm, ("# egetenv %s: '%s'\n", name, rslt));
     return rslt;
-} /* egetenv */
+}
 
 /* advance cursor and force time slicing */
 void eAdvanceCursor(void)
 {
     // sleep(1);
 
-} /* eAdvanceCursor */
+}
 
 /* spin cursor (event processing) */
 void eSpinCursor(short incr)
@@ -300,7 +300,7 @@ void eSpinCursor(short incr)
     // sleep(1);
 
 #endif
-} /* eSpinCursor */
+}
 
 /* os9 utility program */
 /* =================== */
@@ -323,7 +323,7 @@ static void show_wish(void)
     upho_printf("program.\n");
     upho_printf("Lukas Zeller, September 1996\n");
     upo_printf("\n");
-} /* show_wish */
+}
 
 /* display os9 usage */
 static void os9_usage(char *name)
@@ -388,7 +388,7 @@ static void os9_usage(char *name)
     upho_printf(
         "1993-2007 by luz/bfo ( luz@synthesis.ch / bfo@synthesis.ch )\n");
     upo_printf("\n");
-} /* os9_usage */
+}
 
 static void GetStartTick()
 {
@@ -406,7 +406,7 @@ static void GetStartTick()
     startTick = GetSystemTick();
     /* now the tick counter is synchronised to the second changing, as in OS-9
      */
-} /* GetStartTick */
+}
 
 /* Set the the terminal for unbuffered, no-echo operation.
    If errors are found they will be reported but the function

@@ -214,7 +214,7 @@ static os9err OS9_TCP_Select(regs_type *rp, _pid_)
     rp->d[2] = 0;
 
     return 0;
-} /* OS9_TCP_Select */
+}
 
 /* dispatch table */
 const funcdispatch_entry startcall = {/* start   */ OS9_F_SDummy,
@@ -557,7 +557,7 @@ const funcdispatch_entry fcalltable[NUMFCALLS] = {
     {/* 0x60 */ OS9_F_UnImp,
      "F$Trans",
      d_w(0),
-     d_w(1)} /* Translate memory address to/from external bus */
+     d_w(1)}
 };
 
 const funcdispatch_entry icalltable[NUMICALLS] = {
@@ -625,7 +625,7 @@ const funcdispatch_entry icalltable[NUMICALLS] = {
      "I$SGetSt",
      SFUNC_STATCALL + d_w(0) + d_w(1) + d_l(2) + d_l(3) + a_l(0),
      d_l(0) + d_l(1) + d_l(2) + d_l(3) +
-         a_l(0)} /* Getstat using system path number */
+         a_l(0)}
 };
 
 /* quickly get correct entry for function call */
@@ -653,7 +653,7 @@ const funcdispatch_entry *getfuncentry(ushort func)
             return &invalidcall; /* any other: invalid call */
         }
     }
-} /* getfuncentry */
+}
 
 static ulong DiffTick(void)
 /* get the difference since last ticks */
@@ -675,7 +675,7 @@ static ulong DiffTick(void)
     slp_idleticks = 0;
 
     return a;
-} /* DiffTick */
+}
 
 void os9_to_xxx(ushort pid)
 /* Get systime ticks on the way from OS-9 to XXX command */
@@ -749,7 +749,7 @@ void os9_to_xxx(ushort pid)
                 sj->intern = sj1->intern;
                 sj->ticks  = sj1->ticks;
                 sj->num    = sj1->num;
-            } /* inner for */
+            }
 
             strcpy(s->name, mn);
             s->intern = !eli && cp->isIntUtil;
@@ -796,7 +796,7 @@ void xxx_to_arb(ushort func, ushort pid)
     }
 
     cp->pd._sticks = os9_long(cp->fticks + cp->iticks);
-} /* xxx_to_arb */
+}
 
 void arb_to_os9(Boolean last_arbitrate)
 /* Get systime ticks on the way from arbitration to OS-9 */
@@ -810,7 +810,7 @@ void arb_to_os9(Boolean last_arbitrate)
 
     if (last_arbitrate)
         arbnum++;
-} /* arb_to_os9 */
+}
 
 Boolean Dbg_SysCall(regs_type *rp, ushort pid)
 {
@@ -822,7 +822,7 @@ Boolean Dbg_SysCall(regs_type *rp, ushort pid)
     // OS9_I_WritLn, special masking provided for "Maloney" system
     return cp->func != 0x8c || loword(rp->d[0]) < 0x80 ||
            debugcheck(dbgSysCall, dbgDetail);
-} /* Dbg_SysCall */
+}
 
 void debug_comein(regs_type *rp, ushort pid)
 {
@@ -840,7 +840,7 @@ void debug_comein(regs_type *rp, ushort pid)
     uphe_printf(">>>%cPid=%02d: OS9 %s : ", msk ? '*' : ' ', pid, fdeP->name);
     show_maskedregs(rp, fdeP->inregs);
     upe_printf("\n");
-} /* debug_comein */
+}
 
 void debug_return(regs_type *crp, ushort pid, Boolean cwti)
 {
@@ -916,8 +916,8 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
                 upe_printf("\n");
             }
         }
-    } /* if (cwti) */
-} /* debug_return */
+    }
+}
 
 ushort pthread_pid()
 {
@@ -967,7 +967,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
         if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as
                                               name for debugging */
             fSS = get_stat_name(loword(rp->d[1]));
-    } /* if (logtiming) */
+    }
 
     /* execute syscall */
     if (withinIntUtil) {
@@ -999,7 +999,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
 
     if (logtiming) {
         xxx_to_arb(func, pid);
-    } /* if (logtiming) */
+    }
 
     if (fdeP != &invalidcall) {
         if (func < NUMFCALLS)
@@ -1030,7 +1030,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
 #endif
 
     return cp->oerr;
-} /* exec_syscall */
+}
 
 // Callback entry for plugin trap0 calls
 os9err trap0_call(ushort code, Regs_68k *regs)
@@ -1068,7 +1068,7 @@ void init_L2(void)
 
     l2.lcount = 0;
     l2.phase  = 1; /* blink phases: either 1 or 2 */
-} /* init_L2 */
+}
 
 static void update_L2(ulong t)
 {
@@ -1097,7 +1097,7 @@ static void update_L2(ulong t)
         if (v != l2.hw_location)
             l2.hw_location = v;
     }
-} /* update_L2 */
+}
 
 /* get system tick count and subtract the start tick */
 ulong GetSystemTick(void)
@@ -1117,7 +1117,7 @@ ulong GetSystemTick(void)
     update_L2(t);
 
     return t - startTick;
-} /* GetSystemTick */
+}
 
 /* init syscall timing */
 void init_syscalltimers(void)
@@ -1162,7 +1162,7 @@ void init_syscalltimers(void)
         statistics[k].ticks = 0;
         statistics[k].num   = 0;
     }
-} /* init_syscalltimers */
+}
 
 /* time display */
 static char *time_disp(ulong t)
@@ -1185,7 +1185,7 @@ static char *time_disp(ulong t)
     }
 
     return tbuf;
-} /* time_disp */
+}
 
 static void show_title(Boolean show, char *name)
 {
@@ -1201,7 +1201,7 @@ static void show_title(Boolean show, char *name)
                     n);
         upho_printf(" %-19s  ----------  ----------  ------  -----------\n", u);
     }
-} /* show_title */
+}
 
 static void show_line(Boolean show,
                       ushort  mode,
@@ -1248,12 +1248,12 @@ static void show_line(Boolean show,
                nnnn,
                perc,
                time_disp(t));
-} /* show_line */
+}
 
 static void show_sline(char *name, ulong t, int n, ulong active)
 {
     show_line(true, 0, ' ', name, t, n, active, 1);
-} /* show_sline */
+}
 
 /* show system call timers */
 static void Get_FI_tn(ushort k, Boolean icalls, int *t, int *n)
@@ -1330,7 +1330,7 @@ static void show_syscalltimers(Boolean icalls,
             *num += n;
         }
     }
-} /* show_syscalltimers */
+}
 
 /* show system call timers */
 static void Get_Statistics_tn(ushort k, st_typ **s, int *t, int *n)
@@ -1402,7 +1402,7 @@ show_os9timers(ushort mode, ulong active, ulong *call, ulong *num, int ticksLim)
             *num += n;
         }
     }
-} /* show_os9timers */
+}
 
 /* show timing summary */
 ulong show_timing(ushort mode, int ticksLim, Boolean doDisable)
@@ -1471,7 +1471,7 @@ ulong show_timing(ushort mode, int ticksLim, Boolean doDisable)
     }
 
     return ticall + tfcall;
-} /* show_timing */
+}
 
 /* internal command for timing management */
 
@@ -1494,7 +1494,7 @@ static void usage(char *name, _pid_)
     upe_printf("          -t=[<n>]    a minimum of <n> ticks must have been "
                "counted\n");
     copyright();
-} /* usage */
+}
 
 os9err int_systime(ushort pid, int argc, char **argv)
 {

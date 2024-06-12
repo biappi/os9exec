@@ -73,4 +73,4 @@ os9err int_dir(ushort pid, int argc, char **argv)
     err = call_hostcmd("ls", pid, argc - 1, &argv[1]);
 
     return err;
-} /* int_dir */
+}

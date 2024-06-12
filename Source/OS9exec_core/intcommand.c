@@ -232,7 +232,7 @@ static os9err int_stop(ushort pid, _argc_, _argv_)
     }
 
     return (E_PERMIT); /* not super user: reject the stop command */
-} /* int_stop */
+}
 
 static void idbg_usage(char *name)
 {
@@ -509,14 +509,14 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
         debugwait();
     }
     return 0;
-} /* int_debughalt */
+}
 
 /* show procs */
 static os9err int_procs(_pid_, _argc_, _argv_)
 {
     show_processes();
     return 0;
-} /* int_procs */
+}
 
 /* show modules */
 static os9err int_mdir(_pid_, int argc, char **argv)
@@ -526,14 +526,14 @@ static os9err int_mdir(_pid_, int argc, char **argv)
         cmp = argv[1];
     show_modules(cmp);
     return 0;
-} /* int_mdir */
+}
 
 static void ipaths_usage(char *name)
 {
     upe_printf("Syntax:   %s [<pid>]\n", name);
     upe_printf("Function: Print OS9exec system paths\n");
     upe_printf("Options:  None.\n");
-} /* ipaths_usage */
+}
 
 /* OS9exec internal path list */
 static os9err int_paths(_pid_, int argc, char **argv)
@@ -572,7 +572,7 @@ static os9err int_paths(_pid_, int argc, char **argv)
 
     show_files(k);
     return 0;
-} /* int_paths */
+}
 
 static void imem_usage(char *name)
 {
@@ -645,14 +645,14 @@ static os9err int_mem(_pid_, int argc, char **argv)
 
     show_mem(my_pid, mem_unused, mem_fulldisp);
     return 0;
-} /* int_mem */
+}
 
 static os9err int_unused(_pid_, _argc_, _argv_)
 /* Show unused memory */
 {
     show_unused();
     return 0;
-} /* int_unused */
+}
 
 static void idevs_usage(char *name)
 {
@@ -661,7 +661,7 @@ static void idevs_usage(char *name)
     upe_printf("Options:\n");
     upe_printf("    -r    show RBF devices only\n");
     upe_printf("    -s    show statistic values\n");
-} /* idevs_usage */
+}
 
 static void devs_printf(syspath_typ *spP, char *driv, char *fmgr)
 {
@@ -675,7 +675,7 @@ static void devs_printf(syspath_typ *spP, char *driv, char *fmgr)
                StrBlk_Pt(d, 8),
                fmgr,
                spP->nr);
-} /* devs_printf */
+}
 
 static os9err int_devs(_pid_, int argc, char **argv)
 /* idevs": OS9exec internal devices */
@@ -765,7 +765,7 @@ static os9err int_devs(_pid_, int argc, char **argv)
     }
 
     return 0;
-} /* int_devs */
+}
 
 // ---------------------------------------------------------------------------------
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
@@ -1641,18 +1641,18 @@ static os9err int_crash(_pid_, _argc_, _argv_)
     upe_printf("a=%08X\n", a); /* must do something with <a>, because high */
     /* optimizing system would remove the <a> assignment !! */
     return 0;
-} /* int_crash */
+}
 
 static os9err int_quit(_pid_, _argc_, _argv_)
 {
     quitFlag = true;
     return 0;
-} /* int_quit */
+}
 
 static os9err int_ignored(_pid_, _argc_, _argv_)
 {
     return 0; /* do nothing */
-} /* int_ignored */
+}
 
 /* Command table */
 /* ------------- */
@@ -1711,7 +1711,7 @@ cmdtable_typ commandtable[] = {
     {"native_calls", native_calls, "Native calls"},
 #endif
 
-    {NULL, NULL, NULL} /* terminator */
+    {NULL, NULL, NULL}
 };
 
 /* show available internal commands */
@@ -1737,7 +1737,7 @@ os9err int_help(ushort pid, _argc_, _argv_)
     if (pid == 0)
         upo_printf("\n");
     return 0;
-} /* int_help */
+}
 
 /* Routines */
 /* -------- */
@@ -1772,7 +1772,7 @@ static int IntCmdIndex(const char *name)
         } while (q != NULL);
 
         index++;
-    } /* loop */
+    }
 } // IntCmdIndex
 
 // checks if command is internal
@@ -1856,7 +1856,7 @@ os9err _errmsg(os9err err, char *format, ...)
 
     upe_printf(obuf);
     return err;
-} /* _errmsg */
+}
 
 os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
 /* prepare arguments for internal commands
@@ -1955,7 +1955,7 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
     *argP  = &pp[0];
     *argcP = argc + 1; /* include argv[ 0 ] */
     return 0;
-} /* prepArgs */
+}
 
 static void large_pipe_connect(ushort pid, syspath_typ *spC)
 {
@@ -1991,7 +1991,7 @@ static void large_pipe_connect(ushort pid, syspath_typ *spC)
 
 #else
 #endif
-} /* large_pipe_connect */
+}
 
 #ifdef THREAD_SUPPORT
 typedef struct {
@@ -2174,7 +2174,7 @@ os9err callcommand(char    *name,
                       pActive,
                       "IntCmd (out)"); // make it active again
     return err;
-} /* callcommand */
+}
 
 /* call of external Win/DOS commands for OS9exec/nt */
 os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv)
@@ -2193,6 +2193,6 @@ os9err call_hostcmd(char *cmdline, ushort pid, int moreargs, char **argv)
     upe_printf("Calling external commands not yet implemented!\n");
     return 0;
 #endif
-} /* call_hostcmd */
+}
 
 /* eof */

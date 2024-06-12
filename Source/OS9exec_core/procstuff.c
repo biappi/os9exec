@@ -304,7 +304,7 @@ void show_processes(void)
                 mName);
         }
     }
-} /* show_processes */
+}
 
 void init_processes()
 /* initialize process descriptors */
@@ -363,7 +363,7 @@ void init_processes()
     s++; /* the size of the real descriptor */
 
     currentpid = 0; /* earlier: MAXPROCESSES; no process is running */
-} /* init_processes */
+}
 
 os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
 /* prepare a new process
@@ -528,7 +528,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                     if (numpaths > 2)
                         cp->usrpaths[2] = sysStderr;
                 }
-            } /* if (npid>1) */
+            }
 
             /* --- process descriptor prepared ok */
             debugprintf(dbgProcess,
@@ -545,7 +545,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
     }
     /* all processes used, can't prepare new process */
     return os9error(E_PRCFUL);
-} /* new_process */
+}
 
 void AssignNewChild(ushort parentid, ushort pid)
 {
@@ -574,7 +574,7 @@ void AssignNewChild(ushort parentid, ushort pid)
         if (n > MAXPROCESSES)
             break;
     } // loop
-} /* AssignNewChild */
+}
 
 os9err kill_process(ushort pid)
 /* kill a process
@@ -704,7 +704,7 @@ os9err kill_process(ushort pid)
                 dbgNorm,
                 ("# kill_process: successfully killed pid=%d\n", pid));
     return 0;
-} /* kill_process */
+}
 
 /* send a signal to a process */
 os9err send_signal(ushort spid, ushort signal)
@@ -973,7 +973,7 @@ os9err send_signal(ushort spid, ushort signal)
     }
 
     return 0; /* signal sent successfully */
-} /* send_signal */
+}
 
 os9err sig_mask(ushort cpid, int level)
 {
@@ -1023,7 +1023,7 @@ os9err sig_mask(ushort cpid, int level)
     }
 
     return 0;
-} /* sig_mask */
+}
 
 void kill_processes()
 /* kill all running processes and cleanup their resources */
@@ -1034,7 +1034,7 @@ void kill_processes()
             kill_process(k);
         }
     }
-} /* kill_processes */
+}
 
 static void wait_for_signal(ushort pid)
 /* this routine looks for incoming data from any of the connected */
@@ -1064,7 +1064,7 @@ static void wait_for_signal(ushort pid)
         }
     }
     currentpid = sv;
-} /* wait_for_signal */
+}
 
 void DoWait(void)
 {
@@ -1260,7 +1260,7 @@ void do_arbitrate(ushort allowedIntUtil)
                     if (sprocess->isIntUtil && ptocThread)
                         pthread_mutex_lock(&sysCallMutex);
 #endif
-                } /* if !chkAll */
+                }
             }
             else if (sprocess->state == pUnused)
                 continue; /* fast forward */
@@ -1414,7 +1414,7 @@ void do_arbitrate(ushort allowedIntUtil)
     }
     else
         currentpid = sleepingpid; /* is there a sleeping process ? */
-} /* do_arbitrate */
+}
 
 static os9err os9exec_compatible(mod_exec *mod)
 /* this is the list of modules, which can't run under OS9exec */
@@ -1438,7 +1438,7 @@ static os9err os9exec_compatible(mod_exec *mod)
         return E_BADREV; /* V3.0 version is bugy */
 
     return 0;
-} /* os9exec_compatible */
+}
 
 void stop_os9exec(void)
 /* print a messsage and stop the OS9 emulator */
@@ -1450,7 +1450,7 @@ void stop_os9exec(void)
     fflush(stdout);
 
     exit(0); /* never come back */
-} /* stop-os9exec */
+}
 
 void lw_pid(ttydev_typ *mco)
 /* set the last written pid */
@@ -1460,7 +1460,7 @@ void lw_pid(ttydev_typ *mco)
     procs[mco->spP->lastwritten_pid].last_mco = NULL; /* switch off old one */
     mco->spP->lastwritten_pid = gLastwritten_pid;     /* assign for later use */
     procs[mco->spP->lastwritten_pid].last_mco = mco;  /* activate new */
-} /* lw_pid */
+}
 
 os9err setprior(ushort pid, ushort newprior)
 /* set priority (and update IRQblock flag */
@@ -1481,7 +1481,7 @@ os9err setprior(ushort pid, ushort newprior)
             (~FLAGS_IRQ); /* disallow any IRQs during OS9 code execution */
 
     return 0;
-} /* setprior */
+}
 
 /* prepare OS9 program module for fork
  * Note: procs[pid] must be already prepared (by new_process())
@@ -1646,6 +1646,6 @@ os9err prepFork(ushort newpid,
                 ("# prepFork: Everything's ready for launch!\n"));
 
     return 0; /* ok */
-} /* prepFork */
+}
 
 /* eof */

@@ -254,7 +254,7 @@ char *nullterm(char *s1, const char *s2, ushort max)
     *s1 = NUL;                  /* terminate */
     trigcheck("nullterm", res); /* check for name trigger */
     return (char *)s2;
-} /* nullterm */
+}
 
 /*
 int ustrcmp( const char *s1,const char *s2 )
@@ -305,7 +305,7 @@ int pustrcmp(const char *s1, const char *s2)
         return 1;
 
     return 0; /* equal */
-} /* pustrcmp */
+}
 
 int ustrncmp(const char *s1, const char *s2, ushort n)
 /* case insensitive version of strcmp
@@ -324,13 +324,13 @@ int ustrncmp(const char *s1, const char *s2, ushort n)
     }
 
     return 0; /* equal */
-} /* ustrncmp */
+}
 
 void os9_long_inc(unsigned int *a, ulong increment)
 /* increment ulong field <a> dependent on big/little endian */
 {
     *a = os9_long(os9_long(*a) + increment);
-} /* os9_long_inc */
+}
 
 void set_os9_state(ushort cpid, pstate_typ state, const char *callingProc)
 /* convert the state into OS-9 notation */
@@ -387,7 +387,7 @@ void set_os9_state(ushort cpid, pstate_typ state, const char *callingProc)
         pd->_state   = 0;
         pd->_queueid = 'i';
     }
-} /* set_os9_state */
+}
 
 /* generates OS9 error (and saves traceback values) */
 os9err os9error(os9err err)
@@ -422,7 +422,7 @@ os9err os9error(os9err err)
     }
 
     return err;
-} /* os9error */
+}
 
 /* translates mac OS error into OS-9 error codes */
 os9err host2os9err(OSErr hosterr, ushort suggestion)
@@ -438,7 +438,7 @@ os9err host2os9err(OSErr hosterr, ushort suggestion)
     known = false;
 
     return os9error(err);
-} /* host2os9err */
+}
 
 os9err c2os9err(int cliberr, ushort suggestion)
 /* translates mac/C-library error into OS-9 error codes */
@@ -455,7 +455,7 @@ os9err c2os9err(int cliberr, ushort suggestion)
     }
     debugprintf(dbgErrors, dbgNorm, ("# ** c2os9err: C-lib-err=%d\n", cliberr));
     return os9error(err);
-} /* c2os9err */
+}
 
 ulong j_date(int d, int m, int y)
 /* this routine returns the number of days
@@ -474,7 +474,7 @@ ulong j_date(int d, int m, int y)
         fct += (y / 4) - ((3 * ((y / 100) + 1)) / 4) - (4 * m + 23) / 10;
 
     return fct + DAYS_SINCE_0000;
-} /* j_date */
+}
 
 void g_date(ulong jdn, int *dp, int *mp, int *yp)
 /* this routine returns the date from julian day number */
@@ -515,7 +515,7 @@ void g_date(ulong jdn, int *dp, int *mp, int *yp)
     *yp = y;
     *mp = m;
     *dp = d;
-} /* g_date */
+}
 
 void TConv(time_t u, struct tm *tim)
 /* time conversion, seems to be buggy under CW7 -> 70 year correction */
@@ -535,7 +535,7 @@ void TConv(time_t u, struct tm *tim)
 #if __MWERKS__ >= CW7_MWERKS && !defined __MACH__
     tim->tm_year += 2;
 #endif
-} /* TConv */
+}
 
 time_t UConv(struct tm *tim)
 /* time conversion, seems to be buggy under CW7 -> 70 year correction */
@@ -554,7 +554,7 @@ time_t UConv(struct tm *tim)
 #endif
 
     return u;
-} /* UConv */
+}
 
 void GetTim(struct tm *tim)
 /* time conversion, seems to be buggy under CW7 -> 70 year correction */
@@ -567,7 +567,7 @@ void GetTim(struct tm *tim)
     memcpy(tim,
            tp,
            sizeof(struct tm)); /* copy it, as it might be overwritten    */
-} /* GetTim */
+}
 
 void Get_Time(ulong  *cTime,
               ulong  *cDate,
@@ -660,7 +660,7 @@ tc[3]= tim.tm_sec;
     }
 
     *dayOfWk = tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
-} /* Get_Time */
+}
 
 ulong GetScreen(char mode)
 /* Get screen dimensions: 'w'=width, 'h'=height */
@@ -677,7 +677,7 @@ ulong GetScreen(char mode)
     }
 
     return (ulong)r;
-} /* GetScreen */
+}
 
 /* ------------------------------------------------------------------------ */
 
@@ -688,7 +688,7 @@ ulong Min(ulong a, ulong b)
         return a;
     else
         return b;
-} /* Min */
+}
 
 ulong Max(ulong a, ulong b)
 /* returns the larger of two ulongs */
@@ -697,7 +697,7 @@ ulong Max(ulong a, ulong b)
         return a;
     else
         return b;
-} /* Max */
+}
 
 char *StrBlk_Pt(char *s, int n)
 {
@@ -706,49 +706,49 @@ char *StrBlk_Pt(char *s, int n)
         strcat(s, "..");
     }
     return s;
-} /* StrBlk_Pt */
+}
 
 Boolean IsRead(ushort mode)
 /* returns true, if <mode> has read bit set */
 {
     return (mode & poRead) != 0;
-} /* IsRead */
+}
 
 Boolean IsWrite(ushort mode)
 /* returns true, if <mode> has write bit set */
 {
     return (mode & poWrite) != 0;
-} /* IsWrite */
+}
 
 Boolean IsRW(ushort mode)
 /* returns true, if <mode> has read or write bit set */
 {
     return IsRead(mode) && IsWrite(mode);
-} /* IsRW */
+}
 
 Boolean IsExec(ushort mode)
 /* returns true, if <mode> has execution bit set */
 {
     return (mode & poExec) != 0;
-} /* IsExec */
+}
 
 Boolean IsDir(ushort mode)
 /* returns true, if <mode> has directory bit set */
 {
     return (mode & poDir) != 0;
-} /* IsDir */
+}
 
 Boolean IsCrea(ushort mode)
 /* returns true, if <mode> has creation bit set */
 {
     return (mode & poCreateMask) != 0;
-} /* IsCrea */
+}
 
 Boolean IsTrDir(ushort umode)
 /* returns true, if <mode> has dir bit set */
 {
     return S_ISDIR(umode); /* it is a directory ? */
-} /* IsTrDir */
+}
 
 /* ------------------------------------------------------------------------ */
 /* default options for Console/non-Console SCF I$GetStt */
@@ -791,7 +791,7 @@ os9err pSCFopt(_pid_, _spP_, byte *buffer)
 {
     memcpy(buffer, &init_consoleopts, OPTSECTSIZE);
     return 0;
-} /* pSCFopt */
+}
 
 /* ------------------------------------------------------------------------ */
 /* constant option sections for RBF I$GetStt */
@@ -846,7 +846,7 @@ os9err pRBFopt(_pid_, _spP_, byte *buffer)
 {
     memcpy(buffer, rbfstdopts, OPTSECTSIZE);
     return 0;
-} /* pRBFopt */
+}
 
 /* ------------------------------------------------------------------------ */
 
@@ -889,7 +889,7 @@ Boolean KeyToBuffer(ttydev_typ *mco, char key)
 
     mco->inBuf[mco->inBufUsed++] = key; /* update the buffer */
     return true;
-} /* KeyToBuffer */
+}
 
 void LastCh_Bit7(char *name, Boolean setIt)
 /* adapt the dir entry's last char to normal/dir style depending on <setIt> */
@@ -905,7 +905,7 @@ void LastCh_Bit7(char *name, Boolean setIt)
         *c = *c | 0x80;
     else
         *c = *c & 0x7f;
-} /* LastCh_Bit7 */
+}
 
 void Console_Name(int term_id, char *consname)
 {
@@ -936,7 +936,7 @@ void Console_Name(int term_id, char *consname)
     }
 
     strcpy(consname, p);
-} /* Console_Name */
+}
 
 char *OS9exec_Name(void)
 {
@@ -944,7 +944,7 @@ char *OS9exec_Name(void)
 
     sprintf(theName, "OS9exec V%x.%02x", exec_version, exec_revision);
     return theName;
-} /* OS9exec_Name */
+}
 
 ulong Pipe_NReady(pipechan_typ *p)
 {
@@ -952,14 +952,14 @@ ulong Pipe_NReady(pipechan_typ *p)
     if (p->pwp < p->prp)
         n += p->size; /* wrapper */
     return n;
-} /* Pipe_NReady */
+}
 
 /* --------------------------------------------------------------- */
 Boolean AbsPath(const char *pathname)
 /* returns true if <pathname> is an absolute path */
 {
     return *pathname == PSEP;
-} /* AbsPath */
+}
 
 void GetOS9Dev(const char *pathname, char *cmp_entry)
 /* gets the next subpath of <p> into <cmp_entry> */
@@ -977,7 +977,7 @@ void GetOS9Dev(const char *pathname, char *cmp_entry)
     }
 
     *c = NUL;
-} /* GetOS9Dev */
+}
 
 Boolean IsWhat(const char *pathname, Boolean isRoot)
 /* Test if <pathname> is a root/raw path */
@@ -995,7 +995,7 @@ Boolean IsWhat(const char *pathname, Boolean isRoot)
         if (*p == '@') {
             p++;
             break;
-        } /* will be decremented again */
+        }
         if (*p == PSEP)
             return false;
         p++;
@@ -1006,19 +1006,19 @@ Boolean IsWhat(const char *pathname, Boolean isRoot)
         return *p != '@';
     else
         return *p == '@';
-} /* IsWhat */
+}
 
 Boolean IsRoot(const char *pathname)
 /* Test if <pathname> is a root path */
 {
     return IsWhat(pathname, true);
-} /* IsRoot */
+}
 
 Boolean IsRaw(const char *pathname)
 /* Test if <pathname> is a raw path */
 {
     return IsWhat(pathname, false);
-} /* IsRaw */
+}
 
 /* --------------------------------------------------------------- */
 Boolean VolInfo(const char *pathname, char *volname)
@@ -1028,7 +1028,7 @@ Boolean VolInfo(const char *pathname, char *volname)
     strcpy(volname, "/");
 
     return ok;
-} /* VolInfo */
+}
 
 Boolean OpenTDir(const char *pathname, DIR **d)
 /* Open Directory with special treatment of empty root dir on windows */
@@ -1043,14 +1043,14 @@ Boolean OpenTDir(const char *pathname, DIR **d)
 #endif
 
     return ok;
-} /* OpenTDir */
+}
 
 dirent_typ *ReadTDir(DIR *d)
 {
     if (d == NULL)
         return NULL;
     return readdir(d);
-} /* ReadTDir */
+}
 
 Boolean PathFound(const char *pathname)
 /* Check if this entry is a directory */
@@ -1067,7 +1067,7 @@ Boolean PathFound(const char *pathname)
                 dbgNorm,
                 ("# PathFound %s '%s'\n", ok ? " (ok)" : "(err)", pathname));
     return ok;
-} /* PathFound */
+}
 
 Boolean FileFound(const char *pathname)
 /* Check if this entry is a file */
@@ -1081,7 +1081,7 @@ Boolean FileFound(const char *pathname)
                 dbgNorm,
                 ("# FileFound %s '%s'\n", ok ? " (ok)" : "(err)", pathname));
     return ok;
-} /* FileFound */
+}
 
 void include_2e(char *filename, char *pos)
 {
@@ -1091,7 +1091,7 @@ void include_2e(char *filename, char *pos)
     strcpy(tmp, &pos[1]);
     strcat(filename, L_P);
     strcat(filename, tmp);
-} /* include_2e */
+}
 
 void CutUp(char *pathname, const char *prev)
 /* cut out /xxxx/../ sequences */
@@ -1150,13 +1150,13 @@ void CutUp(char *pathname, const char *prev)
             default:
                 q++;
                 inc = true;
-            } /* switch */
+            }
             break;
 
         default:
             q++;
             inc = true;
-        } /* switch */
+        }
 
         if (inc)
             include_2e(pathname, q);
@@ -1164,7 +1164,7 @@ void CutUp(char *pathname, const char *prev)
         debugprintf(dbgFiles, dbgNorm, ("# AdjustPath REDU '%s'\n", pathname));
         v = q;
     }
-} /* CutUp */
+}
 
 void EatBack(char *pathname)
 {
@@ -1197,7 +1197,7 @@ void EatBack(char *pathname)
             eat     = eat0;
             searchP = false;
             break;
-        } /* switch */
+        }
 
         p--;
         if (eat <= 0)
@@ -1206,7 +1206,7 @@ void EatBack(char *pathname)
 
     CutUp(pathname, Prev); /* support also for RBF OS-9 paths */
 
-} /* EatBack */
+}
 
 // Take the CRC algorithm as hash function
 // static int HashF( char* name, char* fName )
@@ -1348,7 +1348,7 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
 
         if (n < MAXDIRHIT - 1)
             n++;
-    } /* loop */
+    }
     if (*fdID == 0)
         return E_NORAM;
 
@@ -1356,7 +1356,7 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
 
     // upe_printf( "id=%08X <= name='%s'\n", *id, tmp );
     return 0;
-} /* FD_ID */
+}
 
 os9err FD_Name(ulong fdID, char **pathnameP)
 // get back the real <volID> and <objID> for Mac file system
@@ -1601,7 +1601,7 @@ os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
         return E_EOF;
     else
         return 0;
-} /* DirNthEntry */
+}
 
 os9err RemoveAppledouble(syspath_typ *spP)
 {
@@ -1619,7 +1619,7 @@ os9err RemoveAppledouble(syspath_typ *spP)
         if (ustrcmp(dEnt->d_name, AppDo) != 0)
             return 0; /* there are still more entries */
         dEnt = ReadTDir(spP->dDsc);
-    } /* loop */
+    }
 
     strcpy(app, spP->fullName);
     strcat(app, PATHDELIM_STR);
@@ -1654,13 +1654,13 @@ os9err RemoveAppledouble(syspath_typ *spP)
     if (err)
         return err;
     return 0;
-} /* RemoveAppledouble */
+}
 
 void seekD0(syspath_typ *spP)
 {
     if (spP->dDsc != NULL)
         rewinddir(spP->dDsc); /* start at the beginning */
-} /* seekD0 */
+}
 
 ulong DirSize(syspath_typ *spP)
 /* get the virtual OS-9 dir size in bytes */
@@ -1685,7 +1685,7 @@ ulong DirSize(syspath_typ *spP)
     if (cnt < 2)
         cnt = 2; /* at least two entries are there !!! */
     return cnt * DIRENTRYSZ;
-} /* DirSize */
+}
 
 int stat_(const char *pathname, struct stat *buf)
 /* slightly adapted version for Windows */
@@ -1696,7 +1696,7 @@ int stat_(const char *pathname, struct stat *buf)
     err = stat(pathname, buf);
 
     return err;
-} /* stat_ */
+}
 
 Boolean
 DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
@@ -1813,7 +1813,7 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
     }
 
     return ok;
-} /* DirName */
+}
 
 ulong My_FD(const char *pathname)
 {
@@ -1847,7 +1847,7 @@ ulong My_FD(const char *pathname)
     }
 
     return fd;
-} /* My_FD */
+}
 
 void MakeOS9Path(char *pathname)
 {
@@ -1879,7 +1879,7 @@ void MakeOS9Path(char *pathname)
     if (*q == PSEP)
         *q = NUL;
     strcpy(pathname, tmp);
-} /* MakeOS9Path */
+}
 
 static void CutRaw(char **pP)
 /* expect OS-9 notation */
@@ -1892,7 +1892,7 @@ static void CutRaw(char **pP)
         }
         p++;
     }
-} /* CutRaw */
+}
 
 Boolean SamePathBegin(const char *pathname, const char *cmp)
 {
@@ -1900,7 +1900,7 @@ Boolean SamePathBegin(const char *pathname, const char *cmp)
     return len > 0 && ustrncmp(pathname, cmp, len) == 0 &&
            (pathname[len] == NUL || pathname[len] == '@' ||
             pathname[len] == PSEP);
-} /* SamePathBegin */
+}
 
 Boolean IsDesc(const char *dvn, mod_dev **mod, char **p)
 {
@@ -1917,7 +1917,7 @@ Boolean IsDesc(const char *dvn, mod_dev **mod, char **p)
 
     *p = (char *)*mod + os9_word((*mod)->_mfmgr);
     return true;
-} /* IsDesc */
+}
 
 Boolean SCSI_Device(const char *os9path,
                     short      *scsiAdapt,
@@ -2041,7 +2041,7 @@ Boolean SCSI_Device(const char *os9path,
     }
 
     return false;
-} /* SCSI_Device */
+}
 
 void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
 /* Get the <name> of dir entry <dEnt> */
@@ -2063,8 +2063,8 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
         if (q == NULL)
             break; /* replace " " by "_" */
         *q = '_';
-    } /* loop */
-} /* GetEntry */
+    }
+}
 
 Boolean RBF_ImgSize(long size)
 /* Returns true, if it is a valid RBF Image size */
@@ -2072,7 +2072,7 @@ Boolean RBF_ImgSize(long size)
     //   if (size<8192 || (size % 2048)!=0)         return E_PNNF;
     //   if (size<1024 || (size % STD_SECTSIZE)!=0) return E_PNNF;
     return size >= 1024 && (size % STD_SECTSIZE) == 0;
-} /* RBF_ImgSize */
+}
 
 os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
 {
@@ -2122,7 +2122,7 @@ os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
         while (*qq != PATHDELIM && qq > pp)
             qq--;
         *qq = NUL;
-    } /* loop */
+    }
 
     do {
         /* the first conditions for RBF image are min size and granularity */
@@ -2170,7 +2170,7 @@ os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
                 dbgNorm,
                 ("# GetRBFName: '%s' err=%d\n", rbfname, err));
     return err;
-} /* GetRBFName */
+}
 
 // #ifdef RAM_SUPPORT
 Boolean RAM_Device(const char *os9path)
@@ -2190,7 +2190,7 @@ Boolean RAM_Device(const char *os9path)
     }
 
     return false;
-} /* RAM_Device */
+}
 // #endif
 
 static Boolean OS9_Device(char *os9path, ushort mode, ptype_typ *typeP)
@@ -2254,7 +2254,7 @@ static Boolean OS9_Device(char *os9path, ushort mode, ptype_typ *typeP)
         *typeP != fNone)
         return true;
     return false;
-} /* OS9_Device */
+}
 
 char *Mod_TypeStr(mod_exec *mod)
 {
@@ -2300,7 +2300,7 @@ char *Mod_TypeStr(mod_exec *mod)
     }
 
     return nam;
-} /* Mod_TypeStr */
+}
 
 char *PStateStr(process_typ *cp)
 {
@@ -2335,7 +2335,7 @@ char *PStateStr(process_typ *cp)
         nam = "pIntUtil";
 
     return nam;
-} /* PStateStr */
+}
 
 char *TypeStr(ptype_typ type)
 {
@@ -2382,7 +2382,7 @@ char *TypeStr(ptype_typ type)
     }
 
     return nam;
-} /* TypeStr */
+}
 
 char *spP_TypeStr(syspath_typ *spP)
 {
@@ -2390,7 +2390,7 @@ char *spP_TypeStr(syspath_typ *spP)
     if (spP != NULL)
         nam = TypeStr(spP->type);
     return nam;
-} /* spP_TypeStr */
+}
 
 ptype_typ IO_Type(ushort pid, char *os9path, ushort mode)
 /* get the I/O type of <os9path> */
@@ -2481,6 +2481,6 @@ ptype_typ IO_Type(ushort pid, char *os9path, ushort mode)
                 dbgNorm,
                 ("# IO_Type (out): '%s' %s\n", os9path, TypeStr(type)));
     return type;
-} /* IO_Type */
+}
 
 /* eof */

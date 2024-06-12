@@ -84,7 +84,7 @@ void Conv_to_2e(char *pathname, char **qP, char **qsP)
             **qP = toupper(**qP); /* convert to upper string, if not found */
         (*qP)++;
     }
-} /* Conv_to_2e */
+}
 
 Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
 /* Case sensitivity handling: Make it insensitive for OS-9 */
@@ -108,7 +108,7 @@ Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
     if (d == NULL) {
         *(filename - 1) = PATHDELIM;
         return false;
-    } /* shouldn't happen */
+    }
 
     strcpy(tmp, filename);
     if (strncmp(tmp, ":2e", 3) == 0) {
@@ -131,7 +131,7 @@ Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
             *reduS = true;
             break;
         }
-    } /* loop */
+    }
 
     closedir(d);
 
@@ -142,7 +142,7 @@ Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
                 dbgNorm,
                 ("# CaseSens: (out) '%s' %d\n", pathname, ok));
     return ok;
-} /* CaseSens */
+}
 
 os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
 /* Adjusts a <pathname> to <adname> by supporting linux features
@@ -167,7 +167,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
         if (q == NULL)
             break;
         *q = '_';
-    } /* loop */
+    }
 
     /* cut out /xxxx/../ sequences */
     CutUp(adname, Prev);
@@ -191,7 +191,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
             }
             q--;
         }
-    } /* loop */
+    }
 
     /* and forward again with uppercase/converted strings */
     while (q < qs) {
@@ -241,7 +241,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
                 dbgNorm,
                 ("# AdjustPath(out) '%s' err=%d\n", adname, err));
     return err;
-} /* AdjustPath */
+}
 
 void CheckDir(DIR *d)
 {
@@ -259,6 +259,6 @@ void CheckDir(DIR *d)
     seekdir(d, 0);
     pos = telldir(d);
     // printf( "%08x EOF\n", pos );
-} /* CheckDir */
+}
 
 /* eof */

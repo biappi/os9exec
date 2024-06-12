@@ -149,7 +149,7 @@ void init_all_mem(void)
         freeinfo.f[k].size = 0;
 #endif
     }
-} /* init_all_mem */
+}
 
 #ifdef REUSE_MEM
 static void MemLine(int *k, ulong value, const char *s)
@@ -174,7 +174,7 @@ static void MemLine(int *k, ulong value, const char *s)
         upo_printf("%s  %4d  %9d\n", s, n, tot);
     else
         upo_printf("%s  %4s  %9s\n", s, "-", "-");
-} /* MemLine */
+}
 #endif
 
 /* show memory blocks */
@@ -263,7 +263,7 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
 #endif
 
         return;
-    } /* if mem_unused */
+    }
 
     upo_printf("Pid  Block   Start      Size       End (+1)\n");
     upo_printf("---  -----  ---------  ---------  ---------\n");
@@ -287,7 +287,7 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
             }
         }
     }
-} /* show_mem */
+}
 
 void show_unused(void)
 {
@@ -325,7 +325,7 @@ void init_mem(ushort pid)
     int k;
     for (k = 0; k < MAXMEMBLOCKS; k++)
         pmem[pid].m[k].base = NULL; // no memory yet
-} /* init_mem */
+}
 
 #ifdef REUSE_MEM
 static Boolean release_ok(void *membase, ulong memsz)
@@ -399,7 +399,7 @@ static Boolean release_ok(void *membase, ulong memsz)
     }
 
     return false;
-} /* release_ok */
+}
 #endif
 
 ulong max_mem()
@@ -414,7 +414,7 @@ ulong max_mem()
 #endif
 
     return memsz;
-} /* max_mem */
+}
 
 // --------------------------------------------------------------------------------------
 // install a memory area as memory block
@@ -435,7 +435,7 @@ static ushort install_memblock(ushort pid, void *base, ulong size)
     }
 
     return MAXMEMBLOCKS;
-} /* install_memblock */
+}
 
 void release_mem(void *membase)
 /* process independent part of memory deallocation */
@@ -499,7 +499,7 @@ void release_mem(void *membase)
 #else
     free(membase);
 #endif
-} /* release_mem */
+}
 
 /* free an allocated memory block */
 static void release_memblock(ushort pid, ushort memblocknum)
@@ -536,7 +536,7 @@ void free_mem(ushort pid)
     int k;
     for (k = 0; k < MAXMEMBLOCKS; k++)
         release_memblock(pid, k);
-} /* free_mem */
+}
 
 void *get_mem(ulong memsz)
 /* process independent part of memory allocation */
@@ -649,7 +649,7 @@ void *get_mem(ulong memsz)
     //#endif
 
     return NULL;
-} /* get_mem */
+}
 
 /* memory allocation for OS-9 */
 void *os9malloc(ushort pid, ulong memsz)
@@ -682,7 +682,7 @@ void *os9malloc(ushort pid, ulong memsz)
          totalMem,
          pid));
     return pp;
-} /* os9malloc */
+}
 
 /* memory deallocation for OS-9 */
 os9err os9free(ushort pid, void *membase, ulong memsz)
@@ -747,6 +747,6 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
                  memsz,
                  pid));
     return os9error(E_BPADDR); /* no memory was allocated here */
-} /* os9free */
+}
 
 /* eof */

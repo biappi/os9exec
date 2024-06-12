@@ -169,7 +169,7 @@ void init_Cons(fmgr_typ *f)
     ss->_SS_Size = (pathopfunc_typ)pNop; /* ignored */
     ss->_SS_Opt  = (pathopfunc_typ)pCsetopt;
     ss->_SS_Attr = (pathopfunc_typ)pNop; /* ignored */
-} /* init_Cons */
+}
 
 void init_NIL(fmgr_typ *f)
 {
@@ -197,7 +197,7 @@ void init_NIL(fmgr_typ *f)
     ss->_SS_Size = (pathopfunc_typ)pNop; /* ignored */
     ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
     ss->_SS_Attr = (pathopfunc_typ)pNop; /* ignored */
-} /* init_NIL */
+}
 
 void init_SCF(fmgr_typ *f)
 /* currently implemented for support of the /vmod driver only */
@@ -230,7 +230,7 @@ void init_SCF(fmgr_typ *f)
     ss->_SS_Attr   = (pathopfunc_typ)pNop;    /* ignored */
     ss->_SS_LBlink = (pathopfunc_typ)pSBlink; /* specific */
     ss->_SS_Undef  = (pathopfunc_typ)pNop;    /* ignored */
-} /* init_SCF */
+}
 
 /* --------------------------------------------------------- */
 
@@ -289,7 +289,7 @@ static long stdwrite(ushort pid, byte *p, long cnt, FILE *stream, Boolean wrln)
     }
 
     return cnt;
-} /* stdwrite */
+}
 
 #ifdef TERMINAL_CONSOLE
 /* put char to console and perform CR/LF expansion etc. */
@@ -309,7 +309,7 @@ void ConsPutc(char c)
 
     // not yet supported for Mac Classic/Carbon
     lw_pid(&main_mco); /* assign for later use */
-} /* ConsPutc */
+}
 
 void ConsPutcEdit(char c, Boolean alf, char eorch)
 /* put char to console and perform CR/LF expansion etc. */
@@ -317,7 +317,7 @@ void ConsPutcEdit(char c, Boolean alf, char eorch)
     ConsPutc(c); /* Auto LF */
     if (alf && c != NUL && c == eorch)
         ConsPutc(LF);
-} /* ConsPutcEdit */
+}
 #endif
 
 #ifdef TERMINAL_CONSOLE
@@ -359,7 +359,7 @@ Boolean ConsGetc(char *c)
         *c = LF; /* convert CR to LF, in case we need it */
 
     return true;
-} /* ConsGetc */
+}
 
 static os9err ConsRead(ushort       pid,
                        syspath_typ *spP,
@@ -444,7 +444,7 @@ static os9err ConsRead(ushort       pid,
                 dupMode = true; /* duplicate last line */
             }
 
-        } /* if not NUL char */
+        }
 
         if (ot->_sgs_pause && term_line >= ot->_sgs_page) {
             /* pause is ON and a screenful has been output,
@@ -522,7 +522,7 @@ static os9err ConsRead(ushort       pid,
 
     rw__idleticks += GetSystemTick() - inputticks;
     return os9error(err);
-} /* ConsRead */
+}
 #endif
 
 /* returns index for numbered descriptors like tty00,01,02... */
@@ -548,7 +548,7 @@ ConsId(char *name, char *family, int range, int offs, int *result)
     }
 
     return false;
-} /* ConsId */
+}
 
 os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, char *name)
 /* routine for opening serial devices */
@@ -568,18 +568,18 @@ os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, char *name)
         if (ustrcmp(name, MainConsole) == 0) {
             id = Main_ID;
             break;
-        } /* /term */
+        }
         if (ustrcmp(name, SerialLineA) == 0) {
             id = SerialA_ID;
             break;
-        } /* /ts1  */
+        }
         if (ustrcmp(name, SerialLineB) == 0) {
             id = SerialB_ID;
             break;
-        } /* /ts2  */
+        }
 
         break;
-    } /* end exit part */
+    }
 
     spP->term_id = id;
     strcpy(spP->name, &name[1]);
@@ -599,7 +599,7 @@ os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, char *name)
                 dbgDetail,
                 ("# pCopen (%s): successful, pid=%d\n", name, pid));
     return 0;
-} /* pCOpen */
+}
 
 os9err pSopen(_pid_, syspath_typ *spP, _modeP_, char *name)
 /* routine for opening SCF devices */
@@ -614,7 +614,7 @@ os9err pSopen(_pid_, syspath_typ *spP, _modeP_, char *name)
     }
 
     return reply;
-} /* pSopen */
+}
 
 os9err pSBlink(_pid_, _spP_, ulong *d2)
 /* specific "/L2" blink command, as defined in "led_Drv" */
@@ -627,7 +627,7 @@ os9err pSBlink(_pid_, _spP_, ulong *d2)
     l2.col2   = *(bb + 4);
     l2.ratio2 = os9_word(*(ww + 3));
     return 0;
-} /* pSBlink */
+}
 
 os9err pGBlink(_pid_, _spP_, ulong *d2)
 /* specific "/L2" blink command, as defined in "led_Drv" */
@@ -640,7 +640,7 @@ os9err pGBlink(_pid_, _spP_, ulong *d2)
     *(bb + 4) = l2.col2;
     *(ww + 3) = os9_word(l2.ratio2);
     return 0;
-} /* pGBlink */
+}
 
 os9err pCclose(ushort pid, syspath_typ *spP)
 {
@@ -691,10 +691,10 @@ os9err pCclose(ushort pid, syspath_typ *spP)
 
     RemoveTTY(gConsoleID);
     return 0;
-} /* pCclose */
+}
 
 /* Close an SCF device, resetting the terminal modes to pre-open values */
-os9err pSclose(_pid_, _spP_) { return 0; } /* pSclose */
+os9err pSclose(_pid_, _spP_) { return 0; }
 
 /* input character wise from console */
 os9err pConsIn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
@@ -707,7 +707,7 @@ os9err pConsIn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 #else
     return pUnimp(pid, spP);
 #endif
-} /* pConsIn */
+}
 
 os9err pConsInLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 /* input line from console */
@@ -767,13 +767,13 @@ os9err pConsInLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 
     arbitrate = true;
     return err;
-} /* pConsInLn */
+}
 
 os9err pEOF(_pid_, _spP_, _maxlenP_, _buffer_)
 /* read operation for the nil device is alway EOF */
 {
     return E_EOF;
-} /* pEOF */
+}
 
 static os9err ConsoleOut(ushort       pid,
                          syspath_typ *spP,
@@ -856,13 +856,13 @@ static os9err ConsoleOut(ushort       pid,
 
     *maxlenP = cnt;
     return 0;
-} /* ConsoleOut */
+}
 
 os9err pConsOut(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 /* output to console */
 {
     return ConsoleOut(pid, spP, maxlenP, buffer, false);
-} /* pConsOut */
+}
 
 os9err pConsOutLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 /* output line to console */
@@ -870,27 +870,27 @@ os9err pConsOutLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
     os9err err = ConsoleOut(pid, spP, maxlenP, buffer, true);
     arbitrate  = true; /* create smoother output */
     return err;
-} /* pConsOutLn */
+}
 
 os9err pCopt(_pid_, syspath_typ *spP, byte *buffer)
 /* get options from console */
 {
     memcpy(buffer, &spP->opt, OPTSECTSIZE);
     return 0;
-} /* pCopt */
+}
 
 os9err pCsetopt(_pid_, syspath_typ *spP, byte *buffer)
 /* set console options */
 {
     memcpy(&spP->opt, buffer, OPTSECTSIZE);
     return 0;
-} /* pCsetopt */
+}
 
 os9err pCpos(_pid_, _spP_, ulong *posP)
 {
     *posP = 0;
     return 0;
-} /* pCpos */
+}
 
 os9err pCready(_pid_, syspath_typ *spP, ulong *n)
 /* check ready */
@@ -911,6 +911,6 @@ os9err pCready(_pid_, syspath_typ *spP, ulong *n)
     }
 
     return os9error(E_NOTRDY);
-} /* pCready */
+}
 
 /* eof */

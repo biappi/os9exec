@@ -314,7 +314,7 @@ void init_RBF(fmgr_typ *f)
     ss->_SS_WTrk = (pathopfunc_typ)pRWTrk;
 
     init_RBF_devs(); /* init RBF devices */
-} /* init_RBF */
+}
 
 /* --------------------------------------------------------- */
 
@@ -331,14 +331,14 @@ void init_RBF_devs()
     for (ii = 0; ii < MAXSCSI; ii++) {
         strcpy(scsi[ii].name, "");
     }
-} /* init_RBF_devs */
+}
 
 // -----------------------------------------------------------------------
 
 static Boolean IsSCSI(rbfdev_typ *dev)
 {
     return dev->scsi.ID != NO_SCSI;
-} /* IsSCSI */
+}
 
 static os9err
 ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
@@ -473,7 +473,7 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
     } while (false);
 
     return err;
-} /* ReadSector */
+}
 
 static os9err
 WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
@@ -624,7 +624,7 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
     } while (false);
 
     return err;
-} /* WriteSector */
+}
 
 // ----------------------------------------------------------------
 // utility procs
@@ -648,7 +648,7 @@ static os9err CutOS9Path(char **p, char *cmp_entry)
         if (n++ >= OS9NAMELEN) {
             err = E_BPNAM;
             break;
-        } /* avoid too long strings */
+        }
         if (**p == PSEP) {
             (*p)++;
             break;
@@ -660,7 +660,7 @@ static os9err CutOS9Path(char **p, char *cmp_entry)
 
     *c = NUL;
     return err;
-} /* CutOS9Path */
+}
 
 static void GetBuffers(_rbf_, syspath_typ *spP)
 {
@@ -681,7 +681,7 @@ static void GetBuffers(_rbf_, syspath_typ *spP)
 
     // if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n",
     //                      spP->nr, dev->sctSize, spP->fd_sct,spP->rw_sct );
-} /* GetBuffers */
+}
 
 static void ReleaseBuffers(syspath_typ *spP)
 {
@@ -694,7 +694,7 @@ static void ReleaseBuffers(syspath_typ *spP)
     if (spP->rw_sct != NULL)
         release_mem(spP->rw_sct);
     spP->rw_sct = NULL;
-} /* ReleaseBuffers */
+}
 
 static os9err ReleaseIt(ushort pid, rbfdev_typ *dev)
 {
@@ -713,7 +713,7 @@ static os9err ReleaseIt(ushort pid, rbfdev_typ *dev)
     }
 
     return err;
-} /* ReleaseIt */
+}
 
 static os9err DevSize(rbfdev_typ *dev)
 /* get the size of the device as numbers of sectors
@@ -756,7 +756,7 @@ static os9err DevSize(rbfdev_typ *dev)
     }
 
     return err;
-} /* DevSize */
+}
 
 static os9err
 ChkIntegrity(rbfdev_typ *dev, syspath_typ *spP, byte *mysct, Boolean ignore)
@@ -776,7 +776,7 @@ ChkIntegrity(rbfdev_typ *dev, syspath_typ *spP, byte *mysct, Boolean ignore)
     }
 
     return 0;
-} /* ChkIntegrity */
+}
 
 static os9err GetTop(ushort pid, rbfdev_typ *dev)
 {
@@ -847,7 +847,7 @@ static os9err GetTop(ushort pid, rbfdev_typ *dev)
     // upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect,
     // pos, last, img, dev->totScts-img );
     return err;
-} /* GetTop */
+}
 
 static os9err GetFull(ushort pid, rbfdev_typ *dev)
 {
@@ -862,7 +862,7 @@ static os9err GetFull(ushort pid, rbfdev_typ *dev)
 
     // upo_printf( "FULL AGAIN err=%d\n", err );
     return err;
-} /* GetFull */
+}
 
 static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
 {
@@ -944,7 +944,7 @@ static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
     spP->u.rbf.fd_nr = dev->root_fd_nr;
     err              = ChkIntegrity(dev, spP, dev->tmp_sct, ignore);
     return err;
-} /* RootLSN */
+}
 
 static void CutPath(char *s)
 {
@@ -955,7 +955,7 @@ static void CutPath(char *s)
             break;
         }
     }
-} /* CutPath */
+}
 
 static os9err Open_Image(ushort      pid,
                          rbfdev_typ *dev,
@@ -1058,7 +1058,7 @@ static os9err Open_Image(ushort      pid,
 
     EatBack(dev->img_name);
     return 0;
-} /* Open_Image */
+}
 
 Boolean InstalledDev(const char *os9path,
                      const char *curpath,
@@ -1127,7 +1127,7 @@ Boolean InstalledDev(const char *os9path,
     }
 
     return false;
-} /* InstalledDev */
+}
 
 static Boolean MWrong(int cdv)
 /* check if already installed on a different device */
@@ -1145,7 +1145,7 @@ static Boolean MWrong(int cdv)
     }
 
     return false;
-} /* MWrong */
+}
 
 // #ifdef RAM_SUPPORT
 static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
@@ -1322,7 +1322,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
 
     strcpy(dev->img_name, cmp);
     return 0;
-} /* PrepareRAM */
+}
 // #endif
 
 static os9err DeviceInit(ushort       pid,
@@ -1454,7 +1454,7 @@ static os9err DeviceInit(ushort       pid,
                         return E_UNIT; /* GetRBFName called earlier */
                     strcpy(cmp, rbfname);
                 }
-            } /* if isSCSI */
+            }
         }     /* if !isRAMDisk */
 
         if (!AbsPath(pathname)) {
@@ -1567,7 +1567,7 @@ static os9err DeviceInit(ushort       pid,
         //  printf( "path='%s'  n2='%s'\n", pathname,dev->name2 );
         //  printf( "path='%s'  n3='%s'\n", pathname,dev->name3 );
         return E_DEVBSY;
-    } /* if installed */
+    }
 
     dev->nr         = cdv;          /* already done ?? */
     dev->wProtected = mnt_wProtect; /* if not otherwise defined */
@@ -1716,7 +1716,7 @@ static os9err DeviceInit(ushort       pid,
                  dev->installed ? "/installed" : "",
                  err ? ers : ""));
     return err;
-} /* DeviceInit */
+}
 
 static void mount_usage(char *name, _pid_)
 {
@@ -1733,7 +1733,7 @@ static void mount_usage(char *name, _pid_)
     upe_printf("    -n=<bytes>   sector  size in bytes     for RAM disk\n");
     upe_printf("    -c=<num>     cluster size (default: 1) for RAM disk\n");
     upe_printf("    -d=<device>  create RAM disk as a copy of <device>\n");
-} /* mount_usage */
+}
 
 os9err MountDev(ushort  pid,
                 char   *name,
@@ -1794,11 +1794,11 @@ os9err MountDev(ushort  pid,
             if (ch == PSEP) {
                 err = E_FNA;
                 break;
-            } /* no more path separators allowed */
+            }
             if (ch < '0' && ch != '.') {
                 err = E_BPNAM;
                 break;
-            } /* illegal tokens in path name */
+            }
         }
 
         if (err)
@@ -1840,7 +1840,7 @@ os9err MountDev(ushort  pid,
     if (!err)
         err = syspath_close(pid, sp);
     return err;
-} /* MountDev */
+}
 
 os9err int_mount(ushort pid, int argc, char **argv)
 /* mount an RBF image partition file */
@@ -2006,14 +2006,14 @@ os9err int_mount(ushort pid, int argc, char **argv)
     if (err)
         return _errmsg(err, "can't mount device \"%s\".\n", nargv[0]);
     return err;
-} /* int_mount */
+}
 
 static void unmount_usage(char *name, _pid_)
 {
     upe_printf("Syntax:   %s <device>\n", name);
     upe_printf("Function: unmount an RBF image file\n");
     upe_printf("Options:  None\n");
-} /* unmount_usage */
+}
 
 os9err int_unmount(ushort pid, int argc, char **argv)
 /* unmount an RBF image partition file */
@@ -2108,7 +2108,7 @@ os9err int_unmount(ushort pid, int argc, char **argv)
     if (err)
         return _errmsg(err, "can't unmount device \"%s\".\n", name);
     return err;
-} /* int_unmount */
+}
 
 static Boolean Mega(long long size, float *r)
 {
@@ -2198,7 +2198,7 @@ static void Disp_RBF_DevsLine(rbfdev_typ *rb, char *name, Boolean statistic)
                    rb->wProtected ? "yes" : "no",
                    StrBlk_Pt(u, 21),
                    v);
-} /* Disp_RBF_DevsLine */
+}
 
 void Disp_RBF_Devs(Boolean statistic)
 {
@@ -2215,7 +2215,7 @@ void Disp_RBF_Devs(Boolean statistic)
                 Disp_RBF_DevsLine(r, r->name3, statistic);
         }
     }
-} /* Disp_RBF_Devs */
+}
 
 /* ------------------------------------------------------------------------------
  */
@@ -2256,13 +2256,13 @@ static void AdaptPath(rbfdev_typ *dev, char **pathP)
 
         p++;
     }
-} /* AdaptPath */
+}
 
 /* ---------------------------------------------------------------- */
 static ulong DirLSN(os9direntry_typ *dir_entry)
 {
     return os9_long(dir_entry->fdsect);
-} /* DirLSN */
+}
 
 os9err ReadFD(syspath_typ *spP)
 /* read the current file description sector */
@@ -2274,7 +2274,7 @@ os9err ReadFD(syspath_typ *spP)
     if (fd != 0)
         return ReadSector(dev, fd, 1, spP->fd_sct);
     return 0;
-} /* ReadFD */
+}
 
 static os9err WriteFD(syspath_typ *spP)
 /* write the current file description sector */
@@ -2286,24 +2286,24 @@ static os9err WriteFD(syspath_typ *spP)
     if (fd != 0)
         return WriteSector(dev, fd, 1, spP->fd_sct);
     return 0;
-} /* WriteFD */
+}
 
 static ulong FDSize(syspath_typ *spP)
 /* get the file size  */
 {
     ulong *lp = (ulong *)&spP->fd_sct[9];
     return os9_long(*lp);
-} /* FDSize */
+}
 
 static void Set_FDSize(syspath_typ *spP, ulong size)
 /* set the file size  */
 {
     ulong *lp = (ulong *)&spP->fd_sct[9];
     *lp       = os9_long(size);
-} /* Set_FDSize */
+}
 
 static byte FDAtt(syspath_typ *spP)
-/* get the file attributes  */ { return spP->fd_sct[0]; } /* FDAtt */
+/* get the file attributes  */ { return spP->fd_sct[0]; }
 
 static void Set_FDAtt(syspath_typ *spP, byte att)
 /* set the file attributes  */
@@ -2314,10 +2314,10 @@ static void Set_FDAtt(syspath_typ *spP, byte att)
 
     if (rbf->fd_nr != dev->root_fd_nr)
         spP->fd_sct[0] = att;
-} /* Set_FDAtt */
+}
 
 static void Set_FDLnk(syspath_typ *spP, byte lnk)
-/* set the link count */ { spP->fd_sct[8] = lnk; } /* Set_FDLnk */
+/* set the link count */ { spP->fd_sct[8] = lnk; }
 
 static os9err FD_Segment(syspath_typ *spP,
                          byte        *attr,
@@ -2370,7 +2370,7 @@ static os9err FD_Segment(syspath_typ *spP,
                  *totsize,
                  *sect));
     return 0;
-} /* FD_Segment */
+}
 
 static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
 /* Allocate the bits at the allocation map */
@@ -2390,7 +2390,7 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
     while (jj > 0) {
         mask = mask / 2;
         jj--;
-    } /* search first mask */
+    }
 
     kk = scs;
     while (kk > 0) { /* use the device's temporary sector */
@@ -2426,7 +2426,7 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
 
             mask = mask / 2;
             kk -= dev->clusterSize;
-        } /* inner while */
+        }
 
         err = WriteSector(dev, asct, 1, dev->tmp_sct);
         if (err)
@@ -2436,7 +2436,7 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
     }             /* outer while */
 
     return 0;
-} /* GetThem */
+}
 
 static os9err BlkSearch(rbfdev_typ *dev,
                         ulong       uscs,
@@ -2494,7 +2494,7 @@ static os9err BlkSearch(rbfdev_typ *dev,
     *pos = posmax;
     *scs = scsmax;
     return 0;
-} /* BlkSearch */
+}
 
 static os9err AllocateBlocks(syspath_typ *spP,
                              ulong        uscs,
@@ -2565,7 +2565,7 @@ static os9err AllocateBlocks(syspath_typ *spP,
     err             = GetThem(dev, *posP, *scsP, true);
     // printf( "GetThem err=%d\n", err );
     return err;
-} /* AllocateBlocks */
+}
 
 static os9err DeallocateBlocks(syspath_typ *spP)
 {
@@ -2601,7 +2601,7 @@ static os9err DeallocateBlocks(syspath_typ *spP)
     }
 
     return 0;
-} /* DeallocateBlocks */
+}
 
 static os9err ReleaseBlocks(syspath_typ *spP, ulong lastPos)
 {
@@ -2653,7 +2653,7 @@ static os9err ReleaseBlocks(syspath_typ *spP, ulong lastPos)
 
     err = WriteFD(spP);
     return err;
-} /* ReleaseBlocks */
+}
 
 static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 {
@@ -2719,7 +2719,7 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 
     GetThem(dev, pos, scs, false);
     return E_SLF;
-} /* AdaptAlloc_FD */
+}
 
 static os9err DoAccess(syspath_typ *spP,
                        ulong       *lenP,
@@ -3015,7 +3015,7 @@ static os9err DoAccess(syspath_typ *spP,
                 dbgDetail,
                 ("# <DoAccess (%s): n=%d\n", wMode ? "write" : "read", *lenP));
     return err;
-} /* DoAccess */
+}
 
 static os9err Create_FD(syspath_typ *spP, byte att, ulong size)
 {
@@ -3030,7 +3030,7 @@ static os9err Create_FD(syspath_typ *spP, byte att, ulong size)
     Set_FDLnk(spP, 1);     /* the link count */
     Set_FDSize(spP, size); /* file size  */
     return WriteFD(spP);   /* write FD sector */
-} /* Create_FD */
+}
 
 static os9err OpenDir(rbfdev_typ *dev, ulong dfd, ushort *sp)
 {
@@ -3061,7 +3061,7 @@ static os9err OpenDir(rbfdev_typ *dev, ulong dfd, ushort *sp)
         rbf->lastPos = FDSize(spP); /* get the file size  */
 
     return err;
-} /* OpenDir */
+}
 
 static os9err CloseDir(ushort sp)
 {
@@ -3071,7 +3071,7 @@ static os9err CloseDir(ushort sp)
     spP->u.rbf.currPos = 0; /* don't release blocks */
     err                = syspath_close(0, sp);
     return err;
-} /* CloseDir */
+}
 
 static void Fill_DirEntry(os9direntry_typ *dir_entry, char *name, ulong fd)
 {
@@ -3092,7 +3092,7 @@ static void Fill_DirEntry(os9direntry_typ *dir_entry, char *name, ulong fd)
         LastCh_Bit7(dir_entry->name, true);
         dir_entry->fdsect = os9_long(fd);
     }
-} /* Fill_DirEntry */
+}
 
 static os9err
 Access_DirEntry(rbfdev_typ *dev, ulong dfd, ulong fd, char *name, ulong *deptr)
@@ -3130,7 +3130,7 @@ Access_DirEntry(rbfdev_typ *dev, ulong dfd, ulong fd, char *name, ulong *deptr)
             if (deleteIt) {
                 err = E_PNNF;
                 break;
-            } /* E_EOF for del: not found */
+            }
         }
 
         found = (ustrcmp(cmp, dir_entry.name) == 0);
@@ -3144,19 +3144,19 @@ Access_DirEntry(rbfdev_typ *dev, ulong dfd, ulong fd, char *name, ulong *deptr)
             err     = DoAccess(spP, &dir_len, (char *)&dir_entry, false, true);
             break;
         }
-    } /* loop */
+    }
 
     cer = CloseDir(sp);
     if (!err)
         err = cer;
     return err;
-} /* Access_DirEntry */
+}
 
 static os9err Delete_DirEntry(rbfdev_typ *dev, ulong fd, char *name)
 {            /* file sector 0 deletes the file */
     ulong d; /* no interrest for this variable here */
     return Access_DirEntry(dev, fd, 0, name, &d);
-} /* Delete_DirEntry */
+}
 
 static os9err touchfile_RBF(syspath_typ *spP, Boolean creDat)
 {
@@ -3177,7 +3177,7 @@ static os9err touchfile_RBF(syspath_typ *spP, Boolean creDat)
     }
 
     return WriteFD(spP);
-} /* touchfile_RBF */
+}
 
 static os9err
 CreateNewFile(syspath_typ *spP, byte fileAtt, char *name, ulong csize)
@@ -3236,13 +3236,13 @@ CreateNewFile(syspath_typ *spP, byte fileAtt, char *name, ulong csize)
     if (!err)
         strcpy(spP->name, name); /* assign file name, if everything is ok */
     return err;
-} /* CreateNewFile */
+}
 
 static os9err ConvertToDir(syspath_typ *spP)
 {
     Set_FDAtt(spP, 0xbf); /* as directory */
     return WriteFD(spP);
-} /* ConvertToDir */
+}
 
 /* ------------------------------------------------------------ */
 /* visible procs */
@@ -3529,9 +3529,9 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                 if (isFileEntry) {
                     err = E_FNA;
                     break;
-                } /* must be a directory */
+                }
             }
-        } /* if entry found */
+        }
     }     /* while (true) */
 
 #ifdef RBF_CACHE
@@ -3552,7 +3552,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
     if (err)
         ReleaseBuffers(spP);
     return err;
-} /* pRopen */
+}
 
 os9err pRclose(ushort pid, syspath_typ *spP)
 {
@@ -3608,27 +3608,27 @@ os9err pRclose(ushort pid, syspath_typ *spP)
 
     ReleaseBuffers(spP);
     return err;
-} /* pRclose */
+}
 
 os9err pRread(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, false, false);
-} /* pRread */
+}
 
 os9err pRreadln(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, true, false);
-} /* pRreadln */
+}
 
 os9err pRwrite(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, false, true);
-} /* pRwrite */
+}
 
 os9err pRwriteln(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, true, true);
-} /* pRwriteln */
+}
 
 os9err pRseek(_pid_, syspath_typ *spP, ulong *posP)
 /* seek to new file position <posP> */
@@ -3646,7 +3646,7 @@ os9err pRseek(_pid_, syspath_typ *spP, ulong *posP)
     //   upe_printf( "hallo\n" );
 
     return 0;
-} /* pRseek */
+}
 
 os9err pRchd(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
 {
@@ -3710,7 +3710,7 @@ os9err pRchd(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
         cp->d.type = fRBF;
 
     return 0;
-} /* pRchd */
+}
 
 os9err pRdelete(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
 {
@@ -3758,7 +3758,7 @@ os9err pRdelete(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
     if (!err)
         err = cer;
     return err;
-} /* pRdelete */
+}
 
 os9err pRmakdir(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
 {
@@ -3792,7 +3792,7 @@ os9err pRmakdir(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
         return err;
     err = usrpath_close(pid, path);
     return err;
-} /* pRmakdir */
+}
 
 os9err pRpos(_pid_, syspath_typ *spP, ulong *posP)
 /* get current file position <posP> */
@@ -3803,7 +3803,7 @@ os9err pRpos(_pid_, syspath_typ *spP, ulong *posP)
     *posP = rbf->currPos;
     debugprintf(dbgFiles, dbgNorm, ("# RBF pos: '%s' %d\n", dev->name, *posP));
     return 0;
-} /* pRpos */
+}
 
 os9err pReof(_pid_, syspath_typ *spP)
 /* get current file position <posP> */
@@ -3820,7 +3820,7 @@ os9err pReof(_pid_, syspath_typ *spP)
         return os9error(E_EOF);
     else
         return 0;
-} /* pReof */
+}
 
 /* get options for RBF file */
 os9err pRopt(ushort pid, syspath_typ *spP, byte *buffer)
@@ -3863,14 +3863,14 @@ os9err pRopt(ushort pid, syspath_typ *spP, byte *buffer)
     strcpy(c, spP->name); /* name */
 
     return err;
-} /* pRopt */
+}
 
 os9err pRready(_pid_, _spP_, ulong *n)
 /* check ready */
 {
     *n = 1;
     return 0;
-} /* pRready */
+}
 
 os9err pRgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 /* get the current FD sector of the opened path */
@@ -3882,7 +3882,7 @@ os9err pRgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 
     memcpy(buffer, spP->fd_sct, *maxbytP); /* copy to the buffer */
     return 0;
-} /* pRgetFD */
+}
 
 os9err
 pRgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
@@ -3900,7 +3900,7 @@ pRgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
         return err;
     memcpy(buffer, dev->tmp_sct, *maxbytP); /* copy to the buffer */
     return 0;
-} /* pRgetFDInf */
+}
 
 os9err pRsetFD(_pid_, syspath_typ *spP, byte *buffer)
 /* set the current FD sector */
@@ -3912,7 +3912,7 @@ os9err pRsetFD(_pid_, syspath_typ *spP, byte *buffer)
 
     memcpy(spP->fd_sct, buffer, maxbyt); /* copy to the buffer */
     return WriteFD(spP);
-} /* pRsetFD */
+}
 
 os9err pRsize(ushort pid, syspath_typ *spP, ulong *sizeP)
 /* get the size of a file */
@@ -3939,7 +3939,7 @@ os9err pRsize(ushort pid, syspath_typ *spP, ulong *sizeP)
 
     debugprintf(dbgFiles, dbgNorm, ("# RBF size (pid=%d): %d\n", pid, *sizeP));
     return err;
-} /* pRsize */
+}
 
 os9err pRdsize(ushort pid, syspath_typ *spP, ulong *size, ulong *dtype)
 /* get the size of the device as numbers of sectors */
@@ -3956,7 +3956,7 @@ os9err pRdsize(ushort pid, syspath_typ *spP, ulong *size, ulong *dtype)
 
     debugprintf(dbgFiles, dbgNorm, ("# RBF dsize (pid=%d): %d\n", pid, *size));
     return 0;
-} /* pRdsize */
+}
 
 os9err pRsetsz(_pid_, syspath_typ *spP, ulong *size)
 /* set the size of a file */
@@ -3969,14 +3969,14 @@ os9err pRsetsz(_pid_, syspath_typ *spP, ulong *size)
 
     Set_FDSize(spP, *size); /* new file size */
     return WriteFD(spP);
-} /* pRsetsz */
+}
 
 os9err pRsetatt(_pid_, syspath_typ *spP, ulong *attr)
 /* set the attributes of a file */
 {
     Set_FDAtt(spP, (byte)*attr); /* byte ordering is already correct */
     return WriteFD(spP);
-} /* pRsetatt */
+}
 
 os9err pRnam(ushort pid, syspath_typ *spP, char *volname)
 /* get device name of RBF device */

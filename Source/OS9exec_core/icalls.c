@@ -123,7 +123,7 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
 
         default:
             return E_BNAM;
-        } /* switch */
+        }
     }
 
     err = usrpath_open(cpid, &path, type, os9_path, xmode);
@@ -136,7 +136,7 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
                 dbgNorm,
                 ("# %s successful, path number= %d\n", co, path));
     return 0;
-} /* OS9_I_OpenCreate */
+}
 
 os9err OS9_I_Open(regs_type *rp, ushort cpid)
 /* I$Open:
@@ -158,7 +158,7 @@ os9err OS9_I_Open(regs_type *rp, ushort cpid)
  */
 {
     return OS9_I_OpenCreate(rp, cpid, false);
-} /* OS9_I_Open */
+}
 
 os9err OS9_I_Create(regs_type *rp, ushort cpid)
 /* I$Create:
@@ -182,7 +182,7 @@ os9err OS9_I_Create(regs_type *rp, ushort cpid)
  */
 {
     return OS9_I_OpenCreate(rp, cpid, true);
-} /* OS9_I_Create */
+}
 
 os9err OS9_I_Delete(regs_type *rp, ushort cpid)
 /* I$Delete:
@@ -213,7 +213,7 @@ os9err OS9_I_Delete(regs_type *rp, ushort cpid)
     if (type == fNone)
         return E_BPNAM;
     return delete_file(cpid, type, os9_path, mode);
-} /* OS9_I_Delete */
+}
 
 os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
 /* I$MakDir:
@@ -245,7 +245,7 @@ os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
     if (type == fNone)
         return E_BPNAM;
     return make_dir(cpid, type, os9_path, mode);
-} /* OS9_I_MakDir */
+}
 
 os9err OS9_I_ChgDir(regs_type *rp, ushort cpid)
 /* I$ChgDir:
@@ -276,7 +276,7 @@ os9err OS9_I_ChgDir(regs_type *rp, ushort cpid)
     if (type == fNone)
         return E_BPNAM;
     return change_dir(cpid, type, os9_path, mode);
-} /* OS9_I_ChgDir */
+}
 
 os9err OS9_I_Close(regs_type *rp, ushort cpid)
 /* I$Close:
@@ -294,7 +294,7 @@ os9err OS9_I_Close(regs_type *rp, ushort cpid)
                 dbgNorm,
                 ("# I$Close: close path number = %d\n", path));
     return usrpath_close(cpid, path);
-} /* OS9_I_Close */
+}
 
 os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
 /* I$WritLn:
@@ -351,7 +351,7 @@ os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
     err      = usrpath_write(cpid, path, &cnt, buff, true);
     rp->d[1] = cnt;
     return err;
-} /* OS9_I_WritLn */
+}
 
 os9err OS9_I_Write(regs_type *rp, ushort cpid)
 /* I$Write:
@@ -396,7 +396,7 @@ os9err OS9_I_Write(regs_type *rp, ushort cpid)
     err      = usrpath_write(cpid, path, &cnt, buff, false);
     rp->d[1] = cnt;
     return err;
-} /* OS9_I_Write */
+}
 
 os9err OS9_I_ReadLn(regs_type *rp, ushort cpid)
 /* I$ReadLn:
@@ -440,7 +440,7 @@ os9err OS9_I_ReadLn(regs_type *rp, ushort cpid)
         return err;
     rp->d[1] = cnt; /* return # of chars actually read */
     return 0;
-} /* OS9_I_ReadLn */
+}
 
 os9err OS9_I_Read(regs_type *rp, ushort cpid)
 /* I$Read:
@@ -479,7 +479,7 @@ os9err OS9_I_Read(regs_type *rp, ushort cpid)
         return err;
     rp->d[1] = cnt; /* return # of chars actually read */
     return 0;
-} /* OS9_I_Read */
+}
 
 os9err OS9_I_Seek(regs_type *rp, ushort cpid)
 /* I$Seek:
@@ -501,7 +501,7 @@ os9err OS9_I_Seek(regs_type *rp, ushort cpid)
         dbgDetail,
         ("# I$Seek: path=%d: New position=$%lX, err=%d\n", path, pos, err));
     return err;
-} /* OS9_I_Seek */
+}
 
 os9err OS9_I_SetStt(regs_type *rp, ushort cpid)
 /* I$SetStt:
@@ -527,7 +527,7 @@ os9err OS9_I_SetStt(regs_type *rp, ushort cpid)
     ushort func = loword(*d1);
 
     return usrpath_setstat(cpid, path, func, a0, a1, d0, d1, d2, d3);
-} /* OS9_I_SetStt */
+}
 
 os9err OS9_I_GetStt(regs_type *rp, ushort cpid)
 /* I$GetStt:
@@ -552,7 +552,7 @@ os9err OS9_I_GetStt(regs_type *rp, ushort cpid)
 
     /* perform getstat */
     return usrpath_getstat(cpid, path, func, a0, d0, d1, d2, d3);
-} /* OS9_I_GetStt */
+}
 
 os9err OS9_I_SGetSt(regs_type *rp, ushort cpid)
 /* I$SGetSt:
@@ -577,7 +577,7 @@ os9err OS9_I_SGetSt(regs_type *rp, ushort cpid)
 
     /* perform getstat */
     return syspath_getstat(cpid, path, func, a0, d0, d1, d2, d3);
-} /* OS9_I_SGetSt */
+}
 
 os9err OS9_I_Dup(regs_type *rp, ushort cpid)
 /* I$Dup:
@@ -617,7 +617,7 @@ os9err OS9_I_Dup(regs_type *rp, ushort cpid)
     }
 
     return os9error(E_PTHFUL); /* no more user paths */
-} /* OS9_I_Dup */
+}
 
 os9err OS9_I_Attach(regs_type *rp, _pid_)
 /* I$Attach:
@@ -642,7 +642,7 @@ os9err OS9_I_Attach(regs_type *rp, _pid_)
                 ("# I$Attach, simply returned dummy pointer\n"));
     rp->a[2] = 0xFF00FF00; /* dummy return pointer */
     return 0;
-} /* OS9_I_Attach */
+}
 
 os9err OS9_I_Detach(regs_type *rp, _pid_)
 /* I$Detach:
@@ -668,6 +668,6 @@ os9err OS9_I_Detach(regs_type *rp, _pid_)
         return os9error(E_DAMAGE); /* bad dummy pointer value */
 
     return 0;
-} /* OS9_I_Detach */
+}
 
 /* eof */

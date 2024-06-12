@@ -158,7 +158,7 @@ Boolean debugcheck(ushort mask, ushort level)
     return (debug[level & dbgLevelMask] & mask) != 0 &&
            (currentpid == 0 || currentpid != without_pid) &&
            (currentpid == justthis_pid || justthis_pid < 1);
-} /* debugcheck */
+}
 #endif
 
 // check if address is outside process' allocated memory
@@ -246,7 +246,7 @@ void regcheck(ushort pid, char *nam, ulong reg, ushort mode)
             debug_halt(dbgWarnings);
         }
     }
-} /* regcheck */
+}
 #endif
 
 /* check for trigger name */
@@ -259,7 +259,7 @@ void trigcheck(char *message, char *name)
             debugwait();
         }
     }
-} /* trigcheck */
+}
 
 /* debug printf */
 #ifndef NODEBUG
@@ -281,7 +281,7 @@ void _debugprintf(char *format, ...)
 
     /* look if also halt enabled for that class */
     debug_halt(tempmask);
-} /* debugprintf */
+}
 #endif
 
 #ifndef NODEBUG
@@ -292,7 +292,7 @@ ushort debug_halt(ushort haltmask)
         return debugwait();
     else
         return false;
-} /* debug_halt */
+}
 #endif
 
 /* prepare debug leveling */
@@ -302,7 +302,7 @@ void debug_prep()
     debug[dbgDetail] |= debug[dbgDeep]; /* deep detail also enables detail */
     debug[dbgNorm] |= debug[dbgDetail]; /* detail also enables normal */
 #endif
-} /* debug_prep */
+}
 
 /* Dump the process descriptor */
 void debug_procdump(process_typ *cp, int cpid)
@@ -561,7 +561,7 @@ os9err debug_help(ushort pid, _argc_, _argv_)
     if (pid == 0)
         upo_printf("\n");
     return 0; /* not really used, but same proc definition as int cmds */
-} /* debug_help */
+}
 
 /* show registers */
 void dumpregs(ushort pid)
@@ -601,7 +601,7 @@ void dumpregs(ushort pid)
     if (pid < MAXPROCESSES)
         m68k_disasm(rp->pc, &aa, 2, (dbg_func)console_out);
 #endif
-} /* dumpregs */
+}
 
 /* show memory */
 static void dumpmem(ulong *memptrP, int numlines)
@@ -621,14 +621,14 @@ static void dumpmem(ulong *memptrP, int numlines)
         upe_printf("\n");
         (*memptrP) += 16;
     }
-} /* dumpmem */
+}
 
 /* show regs in debugger */
 static void regs_in_debugger(regs_type *rp)
 {
 
     uphe_printf("Non-Macintosh: No low level debugger\n");
-} /* regs_in_debugger */
+}
 
 #ifdef USE_UAEMU
 extern int m68k_os9trace;
@@ -857,7 +857,7 @@ ushort debugwait(void)
 
 goon:
     return extra;
-} /* debugwait */
+}
 
 /* show one reg in specified length */
 void showonereg(ulong value, Boolean isa, ushort regnum, ushort lenspec)
@@ -895,7 +895,7 @@ void showonereg(ulong value, Boolean isa, ushort regnum, ushort lenspec)
             }
         }
     }
-} /* showonereg */
+}
 
 /* show multiple regs according to bitmask */
 void show_maskedregs(regs_type *rp, ulong regmask)
@@ -920,7 +920,7 @@ void show_maskedregs(regs_type *rp, ulong regmask)
         showonereg(rp->a[k], true, k, regmask & 0x03);
         regmask >>= 2;
     }
-} /* show_maskedregs */
+}
 
 /* setstat/getstat names for debugging */
 char *get_stat_name(ushort stat)
@@ -1181,9 +1181,9 @@ char *get_stat_name(ushort stat)
     default:
         name = "<<<unknown>>>";
         break;
-    } /* switch */
+    }
     return name;
-} /* get_stat_name */
+}
 
 char *get_ev_name(ushort ev)
 {
@@ -1229,10 +1229,10 @@ char *get_ev_name(ushort ev)
     default:
         name = "<<<unknown>>>";
         break;
-    } /* switch */
+    }
 
     return name;
-} /* get_ev_name */
+}
 
 /* error names for debugging and F$PErr */
 void get_error_strings(os9err err, char **nameP, char **descP)
@@ -1631,18 +1631,18 @@ void get_error_strings(os9err err, char **nameP, char **descP)
         name = "E_???";
         desc = "<<unknown error code>>";
         break;
-    } /* switch */
+    }
 
     if (nameP != NULL)
         *nameP = name;
     if (descP != NULL)
         *descP = desc;
-} /* get_error_strings */
+}
 
 /* syscall names for debugging */
 char *get_syscall_name(ushort syscall)
 {
     return getfuncentry(syscall)->name;
-} /* get_syscall_name */
+}
 
 /* eof */

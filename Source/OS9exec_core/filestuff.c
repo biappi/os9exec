@@ -247,7 +247,7 @@ void init_None(fmgr_typ *f)
     ss->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
 
     ss->_SS_Undef = (pathopfunc_typ)pUnimp; /* any other setstat */
-} /* init_None */
+}
 
 /* --------------------------------------------------------- */
 
@@ -257,7 +257,7 @@ void conn_FMgr(ptype_typ type, fmgr_typ *f, init_func i)
     fmgr_op[type] = f; /* assign array field */
     init_None(f);      /* set all routines to 'pUnimp' */
     i(f);              /* just call function <i> with fmgr_typ */
-} /* conn_FMgr */
+}
 
 void init_fmgrs(void)
 {
@@ -322,7 +322,7 @@ void init_fmgrs(void)
               &fmgr_printer,
               init_Printer); /*    "    printer          routines (printer) */
 #endif
-} /* init_fmgrs */
+}
 
 /* -----------------------------------------------------------------------------
  */
@@ -427,7 +427,7 @@ static void disp_line(ushort       pid,
     }
 
     upo_printf("\n"); /* close the line */
-} /* disp_line */
+}
 
 void show_files(ushort pid)
 /* show files, if pid!=MAXPROCESSES only files of given pid */
@@ -517,7 +517,7 @@ void show_files(ushort pid)
             }
         }
     }
-} /* show_files */
+}
 
 static void CheckH0(char *name, char *p, char **p3)
 {
@@ -559,7 +559,7 @@ static void CheckH0(char *name, char *p, char **p3)
 
 #else
 #endif
-} /* CheckH0 */
+}
 
 static void TwoCharDev(char *p, char **p3, char *tmp)
 /* --- two-char device name */
@@ -619,7 +619,7 @@ static void TwoCharDev(char *p, char **p3, char *tmp)
     if (*p3 != NULL && **p3 == NUL)
         *p3 = NULL; /* invalidate again */
     debugprintf(dbgFiles, dbgNorm, ("# TwoCharDev: path='%s'\n", *p3));
-} /* TwoCharDev */
+}
 
 os9err
 parsepathext(ushort pid, char **inp, char *out, Boolean exedir, Boolean *ispath)
@@ -768,7 +768,7 @@ parsepathext(ushort pid, char **inp, char *out, Boolean exedir, Boolean *ispath)
             }
         }
 #endif
-    } /* if *p... */
+    }
 
     *op = NUL; /* make it readeable */
     debugprintf(dbgFiles, dbgNorm, ("# pathbuf '%s' '%s'\n", pathbuf, p));
@@ -783,7 +783,7 @@ parsepathext(ushort pid, char **inp, char *out, Boolean exedir, Boolean *ispath)
             while (*p3 == '.') {
                 k++;
                 p3++;
-            } /* count consecutive periods */
+            }
 
             if ((*p3 == '/') || (*p3 <= ' ')) {
                 /* path element consists of periods only */
@@ -842,33 +842,33 @@ parsepathext(ushort pid, char **inp, char *out, Boolean exedir, Boolean *ispath)
     /* show result */
     debugprintf(dbgFiles, dbgNorm, ("# parsepathext Output: '%s'\n", out));
     return 0; /* no error (no bad pathlists possible) */
-} /* parsepathext */
+}
 
 /* same as parsepathext, but uses default settings for file-only paths */
 os9err parsepath(ushort pid, char **inp, char *out, Boolean exedir)
 {
     Boolean isPath;
     return parsepathext(pid, inp, out, exedir, &isPath);
-} /* parsepath */
+}
 
 /* Generic I/O routines */
 /* -------------------- */
 
 /* unimplemented function */
-os9err pUnimp(_pid_, _spP_) { return os9error(E_UNKSVC); } /* pUnimp */
+os9err pUnimp(_pid_, _spP_) { return os9error(E_UNKSVC); }
 
 /* unimplemented function, but that's OS9-conformant and therefore not to be
  * alerted */
-os9err pUnimpOk(_pid_, _spP_) { return E_UNKSVC + E_OKFLAG; } /* pUnimpOk */
+os9err pUnimpOk(_pid_, _spP_) { return E_UNKSVC + E_OKFLAG; }
 
 /* bad mode */
-os9err pBadMode(_pid_, _spP_) { return os9error(E_BMODE); } /* pBadMode */
+os9err pBadMode(_pid_, _spP_) { return os9error(E_BMODE); }
 
 /* no operation (allowed, but useless) */
-os9err pNop(_pid_, _spP_) { return 0; } /* pNop */
+os9err pNop(_pid_, _spP_) { return 0; }
 
 /* unavailable 'open' function, as in OS-9 */
-os9err pNoModule(_pid_, _spP_) { return os9error(E_MNF); } /* pNoModule */
+os9err pNoModule(_pid_, _spP_) { return os9error(E_MNF); }
 
 /* get SCF device name from file */
 os9err pSCFnam(_pid_, syspath_typ *spP, char *volname)
@@ -894,14 +894,14 @@ os9err pSCFnam(_pid_, syspath_typ *spP, char *volname)
     default:
         p = spP->name;
         break;
-    } /* switch */
+    }
 
     if (volname == p)
         return 0;
 
     strcpy(volname, p);
     return 0;
-} /* pSCFnam */
+}
 
 /* Unified I/O routines */
 /* ==================== */
@@ -967,7 +967,7 @@ void init_syspaths()
     cp->usrpaths[usrStdin]  = sysStdin;
     cp->usrpaths[usrStdout] = sysStdin;
     cp->usrpaths[usrStderr] = sysStdin;
-} /* init_syspaths */
+}
 
 syspath_typ *get_syspathd(ushort pid, ushort sp)
 /* get_syspath */
@@ -998,7 +998,7 @@ syspath_typ *get_syspathd(ushort pid, ushort sp)
     if (spP->type == fNone)
         return NULL;
     return spP;
-} /* get_syspathd */
+}
 
 syspath_typ *get_syspath(ushort pid, ushort sp)
 /* get_syspath */
@@ -1012,7 +1012,7 @@ syspath_typ *get_syspath(ushort pid, ushort sp)
     in_recursion = sv;
 
     return spP;
-} /* get_syspath */
+}
 
 static void showbuff(syspath_typ *spP, byte *buffer, ulong len)
 {
@@ -1057,7 +1057,7 @@ static void showbuff(syspath_typ *spP, byte *buffer, ulong len)
     }
 
     in_recursion = false;
-} /* showbuff */
+}
 
 os9err syspath_close(ushort pid, ushort sp)
 /* close system path
@@ -1110,7 +1110,7 @@ os9err syspath_close(ushort pid, ushort sp)
     strcpy(spP->name, "");
 
     return err;
-} /* syspath_close */
+}
 
 // close user path
 os9err usrpath_close(ushort pid, ushort up)
@@ -1184,7 +1184,7 @@ os9err usrpath_link(ushort pid, ushort up, const char *ident)
                  sp,
                  spP->linkcount));
     return 0;
-} /* usrpath_link */
+}
 
 /* allocate a new syspath number */
 os9err syspath_new(ushort *sp, ptype_typ type)
@@ -1224,7 +1224,7 @@ os9err syspath_new(ushort *sp, ptype_typ type)
     }
 
     return os9error(E_PTHFUL); /* no more system paths */
-} /* syspath_new */
+}
 
 os9err usrpath_new(ushort pid, ushort *up, ptype_typ type)
 {
@@ -1250,7 +1250,7 @@ os9err usrpath_new(ushort pid, ushort *up, ptype_typ type)
     }
 
     return os9error(E_PTHFUL); /* no more user paths available */
-} /* usrpath_new */
+}
 
 os9err syspath_open(ushort      pid,
                     ushort     *sp,
@@ -1295,7 +1295,7 @@ os9err syspath_open(ushort      pid,
             if (err == E_PLINK) {
                 *sp = mode;
                 err = 0;
-            } /* returns *sp with mode param */
+            }
             spP->type =
                 fNone; /* not sucessfully opened, in case of E_PLINK: no need */
         }
@@ -1310,7 +1310,7 @@ os9err syspath_open(ushort      pid,
                  type,
                  err));
     return err;
-} /* syspath_open */
+}
 
 os9err usrpath_open(ushort      pid,
                     ushort     *up,
@@ -1352,7 +1352,7 @@ os9err usrpath_open(ushort      pid,
         dbgNorm,
         ("# usrpath_open: no more userpaths can be opened: E_PTHFUL\n"));
     return os9error(E_PTHFUL); /* no more user paths */
-} /* usrpath_open */
+}
 
 /* write to a syspath */
 os9err
@@ -1404,7 +1404,7 @@ syspath_write(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean wrln)
          *len,
          err));
     return err;
-} /* syspath_write */
+}
 
 /* write to a usrpath */
 os9err
@@ -1413,7 +1413,7 @@ usrpath_write(ushort pid, ushort up, ulong *len, void *buffer, Boolean wrln)
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);
     return syspath_write(pid, procs[pid].usrpaths[up], len, buffer, wrln);
-} /* usrpath_write */
+}
 
 /* print to user path */
 static void usrpath_puts(ushort pid, ushort up, char *s, Boolean direct)
@@ -1457,7 +1457,7 @@ static void usrpath_puts(ushort pid, ushort up, char *s, Boolean direct)
     gConsoleID   = sv_ConsoleID;
     g_spP        = sv_spP;
     in_recursion = sv;
-} /* usrpath_puts */
+}
 
 void usrpath_printf(ushort pid, ushort up, const char *format, ...)
 /* printf to OS9 user path */
@@ -1469,7 +1469,7 @@ void usrpath_printf(ushort pid, ushort up, const char *format, ...)
     va_end(vp);
 
     usrpath_puts(pid, up, buffer, true);
-} /* usrpath_printf */
+}
 
 void upo_printf(const char *format, ...)
 {
@@ -1480,7 +1480,7 @@ void upo_printf(const char *format, ...)
     va_end(vp);
 
     usrpath_puts(currentpid, usrStdout, buffer, true);
-} /* upo_printf */
+}
 
 void upho_printf(const char *format, ...)
 /* usr path with hash std output printing */
@@ -1496,7 +1496,7 @@ void upho_printf(const char *format, ...)
     buffer[0] = '#';
     buffer[1] = ' ';
     usrpath_puts(currentpid, usrStdout, buffer, true);
-} /* upho_printf */
+}
 
 void upe_printf(const char *format, ...)
 {
@@ -1507,7 +1507,7 @@ void upe_printf(const char *format, ...)
     va_end(vp);
 
     usrpath_puts(currentpid, usrStderr, buffer, false);
-} /* upe_printf */
+}
 
 void uphe_printf(const char *format, ...)
 /* usr path with hash error output printing */
@@ -1523,7 +1523,7 @@ void uphe_printf(const char *format, ...)
     buffer[0] = '#';
     buffer[1] = ' ';
     usrpath_puts(currentpid, usrStderr, buffer, false);
-} /* uphe_printf */
+}
 
 void main_printf(const char *format, ...)
 /* main path error output printing */
@@ -1535,14 +1535,14 @@ void main_printf(const char *format, ...)
     va_end(vp);
 
     usrpath_puts(currentpid, MAXUSRPATHS, buffer, true);
-} /* main_printf */
+}
 
 /* copyright notice */
 void copyright(void)
 {
     upe_printf(
         "(c) 1993-2007 by luz/bfo (luz@synthesis.ch / bfo@synthesis.ch)\n");
-} /* copyright */
+}
 
 /* read from a syspath */
 os9err
@@ -1579,7 +1579,7 @@ syspath_read(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean rdln)
         cer = evSet(spP->set_evId, 1, &prev);
 
     return err;
-} /* syspath_read */
+}
 
 /* read from a usrpath */
 os9err
@@ -1588,7 +1588,7 @@ usrpath_read(ushort pid, ushort up, ulong *len, void *buffer, Boolean rdln)
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);
     return syspath_read(pid, procs[pid].usrpaths[up], len, buffer, rdln);
-} /* usrpath_read */
+}
 
 os9err syspath_seek(ushort pid, ushort spnum, ulong pos)
 /* seek from a syspath */
@@ -1598,7 +1598,7 @@ os9err syspath_seek(ushort pid, ushort spnum, ulong pos)
         return os9error(E_BPNUM);
 
     return (fmgr_op[spP->type]->seek)(pid, spP, &pos);
-} /* syspath_seek */
+}
 
 os9err usrpath_seek(ushort pid, ushort up, ulong pos)
 /* read from a usrpath */
@@ -1606,7 +1606,7 @@ os9err usrpath_seek(ushort pid, ushort up, ulong pos)
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);
     return syspath_seek(pid, procs[pid].usrpaths[up], pos);
-} /* usrpath_seek */
+}
 
 static os9err etc_path(_pid_, _spP_, _d2_, byte *a0)
 /* %%% this is a very straight forward implementation for OS9TCP/inetd */
@@ -1632,7 +1632,7 @@ static os9err etc_path(_pid_, _spP_, _d2_, byte *a0)
     strcpy(p, "/dd/ETC");
 
     return 0;
-} /* etc_path */
+}
 
 os9err syspath_getstat(ushort pid,
                        ushort sp,
@@ -1720,15 +1720,15 @@ os9err syspath_getstat(ushort pid,
     default:
         err = (g->_SS_Undef)(pid, spP, d1, d2);
         break;
-    } /* switch */
+    }
 
     return err;
-} /* syspath_getstat */
+}
 
 os9err syspath_gs_size(ushort pid, ushort sp, ulong *size)
 {
     return syspath_getstat(pid, sp, SS_Size, NULL, NULL, NULL, size, NULL);
-} /* syspath_gs_size */
+}
 
 os9err syspath_gs_devnm(ushort pid, ushort sp, char *name)
 {
@@ -1740,12 +1740,12 @@ os9err syspath_gs_devnm(ushort pid, ushort sp, char *name)
                            NULL,
                            NULL,
                            NULL);
-} /* syspath_gs_devnm */
+}
 
 os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt)
 {
     return syspath_getstat(pid, sp, SS_Ready, NULL, NULL, cnt, NULL, NULL);
-} /* syspath_gs_ready */
+}
 
 os9err usrpath_getstat(ushort pid,
                        ushort up,
@@ -1767,7 +1767,7 @@ os9err usrpath_getstat(ushort pid,
                            d1,
                            d2,
                            d3);
-} /* usrpath_getstat */
+}
 
 /* SetStat from syspath */
 os9err syspath_setstat(ushort pid,
@@ -1916,10 +1916,10 @@ os9err syspath_setstat(ushort pid,
     default:
         err = (s->_SS_Undef)(pid, spP, d2, *a);
         break;
-    } /* switch */
+    }
 
     return err;
-} /* syspath_setstat */
+}
 
 /* SetStat from usrpath */
 os9err usrpath_setstat(ushort pid,
@@ -1943,7 +1943,7 @@ os9err usrpath_setstat(ushort pid,
                            d1,
                            d2,
                            d3);
-} /* usrpath_setstat */
+}
 
 os9err get_locations(ushort      pid,
                      ptype_typ   type,
@@ -1994,7 +1994,7 @@ os9err get_locations(ushort      pid,
     *sSct = os9_long(*l); /* dir entry pointer */
     err   = usrpath_close(pid, path);
     return err;
-} /* get_locations */
+}
 
 static os9err doCmd(pathopfunc_typ cmd,
                     ushort         pid,
@@ -2009,26 +2009,26 @@ static os9err doCmd(pathopfunc_typ cmd,
         dbgNorm,
         ("# %s '%s' (type=%s) err=%d\n", txt, pathname, TypeStr(type), err));
     return err;
-} /* doCmd */
+}
 
 os9err change_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode)
 /* Change a directory */
 {
     return doCmd(fmgr_op[type]->chd, pid, type, mode, pathname, "change_dir");
-} /* change_dir */
+}
 
 os9err
 delete_file(ushort pid, ptype_typ type, const char *pathname, ushort mode)
 /* Delete a file */
 {
     return doCmd(fmgr_op[type]->del, pid, type, mode, pathname, "delete_file");
-} /* delete_file */
+}
 
 os9err make_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode)
 /* Create a directory */
 {
     return doCmd(fmgr_op[type]->makdir, pid, type, mode, pathname, "make_dir");
-} /* make_dir */
+}
 
 void init_usrpaths(ushort pid)
 /* initialize process' list of open paths */
@@ -2036,7 +2036,7 @@ void init_usrpaths(ushort pid)
     int k;
     for (k = 0; k < MAXUSRPATHS; k++)
         procs[pid].usrpaths[k] = 0; /* no paths yet */
-} /* init_usrpaths */
+}
 
 void close_usrpaths(ushort pid)
 /* close all process <pid>'s open paths */
@@ -2050,7 +2050,7 @@ void close_usrpaths(ushort pid)
         //  *spN= 0;                     /* and invalidate to avoid double
         //  closing */
     }
-} /* close_usrpaths */
+}
 
 void close_syspaths(void)
 /* close all OS9exec's system paths */
@@ -2069,6 +2069,6 @@ void close_syspaths(void)
     gConsoleID = NO_CONSOLE; /* final condition for no console */
     g_spP      = NULL;
 #endif
-} /* close_syspaths */
+}
 
 /* eof */

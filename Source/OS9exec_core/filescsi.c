@@ -129,7 +129,7 @@ static os9err SCSIcall(short   scsiAdapt,
     }
 
     return err;
-} /* SCSIcall */
+}
 
 os9err Set_SSize(scsi_dev *scsi, ulong sctSize)
 /* Set the SCSI sector size */
@@ -157,7 +157,7 @@ os9err Set_SSize(scsi_dev *scsi, ulong sctSize)
                     (byte *)&dat_buf,
                     sizeof(dat_buf),
                     true);
-} /* Set_SSize */
+}
 
 os9err Get_SSize(scsi_dev *scsi, ulong *sctSize)
 /* Get the SCSI sector size */
@@ -184,7 +184,7 @@ os9err Get_SSize(scsi_dev *scsi, ulong *sctSize)
                    false);
     *sctSize = os9_long(dat_buf[2]);
     return err;
-} /* Set_SSize */
+}
 
 os9err ReadCapacity(scsi_dev *scsi, ulong *totScts, ulong *sctSize)
 /* Get the SCSI device size */
@@ -223,7 +223,7 @@ os9err ReadCapacity(scsi_dev *scsi, ulong *totScts, ulong *sctSize)
     *sctSize = os9_long(dat_buf[1]);
 
     return err;
-} /* ReadCapacity */
+}
 
 os9err Get_DSize(scsi_dev *scsi, ulong *totScts)
 /* Get the SCSI device size */
@@ -258,7 +258,7 @@ os9err Get_DSize(scsi_dev *scsi, ulong *totScts)
     }
 
     return err;
-} /* Get_DSize */
+}
 
 os9err ReadFromSCSI(scsi_dev *scsi,
                     ulong     sectorNr,
@@ -297,7 +297,7 @@ os9err ReadFromSCSI(scsi_dev *scsi,
     if (err == E_UNIT)
         err = E_READ;
     return err;
-} /* ReadFromSCSI */
+}
 
 os9err WriteToSCSI(scsi_dev *scsi,
                    ulong     sectorNr,
@@ -336,6 +336,6 @@ os9err WriteToSCSI(scsi_dev *scsi,
     if (err == E_UNIT)
         err = E_WRITE;
     return err;
-} /* WriteToSCSI */
+}
 
 /* eof */

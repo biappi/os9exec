@@ -156,7 +156,7 @@ void init_Pipe(fmgr_typ *f)
     ss->_SS_Size = (pathopfunc_typ)pPsetsz;
     ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
     ss->_SS_Attr = (pathopfunc_typ)pNop; /* ignored */
-} /* init_Pipe */
+}
 
 void init_PTY(fmgr_typ *f)
 /* install all procedures of the pseudo tty (packet manager) */
@@ -188,7 +188,7 @@ void init_PTY(fmgr_typ *f)
     ss->_SS_Attr  = (pathopfunc_typ)pNop; /* ignored */
     ss->_SS_Lock  = (pathopfunc_typ)pKlock;
     ss->_SS_Undef = (pathopfunc_typ)pNop; /* ignored */
-} /* init_PTY */
+}
 
 /* -------------------------------------------------------- */
 
@@ -223,7 +223,7 @@ os9err getPipe(_pid_, syspath_typ *spP, ulong buffsize)
                  buffsize,
                  buf));
     return 0;
-} /* getPipe */
+}
 
 os9err releasePipe(ushort pid, syspath_typ *spP)
 {
@@ -270,7 +270,7 @@ os9err releasePipe(ushort pid, syspath_typ *spP)
     release_mem(p);
     spP->u.pipe.pchP = NULL; /* and make it invisible */
     return 0;
-} /* releasePipe */
+}
 
 static void releasePipe_svd(ushort pid, syspath_typ *spP, Boolean forced)
 {
@@ -287,7 +287,7 @@ static void releasePipe_svd(ushort pid, syspath_typ *spP, Boolean forced)
         pp->pchP       = pp->i_svd_pchP;
         pp->i_svd_pchP = NULL;
     }
-} /* releasePipe_svd */
+}
 
 os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char *name)
 /* open pipe, make it anonymous if name==NULL, named otherwise */
@@ -368,7 +368,7 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char *name)
     spP->u.pipe.i_svd_pchP = NULL;            /* initialize */
     err = pPopt(pid, spP, (byte *)&spP->opt); /* no err returned */
     return getPipe(pid, spP, pipesz);
-} /* pPopen */
+}
 
 os9err pPclose(ushort pid, syspath_typ *spP)
 /* close pipe */
@@ -389,7 +389,7 @@ os9err pPclose(ushort pid, syspath_typ *spP)
         releasePipe_svd(pid, spP, true);
     releasePipe(pid, spP);
     return 0;
-} /* pPclose */
+}
 
 os9err pPdelete(_pid_, _spP_, ushort *modeP, char *pathname)
 /* delete pipe */
@@ -426,14 +426,14 @@ os9err pPdelete(_pid_, _spP_, ushort *modeP, char *pathname)
     }
 
     return E_PNNF;
-} /* pPdelete */
+}
 
 static void PipePutc(pipechan_typ *p, char c)
 {
     *(p->pwp++) = c;
     if (p->pwp >= p->buf + p->size)
         p->pwp = p->buf; /* wrap */
-} /* PipePutC */
+}
 
 static void Reactivate(ushort pid, process_typ *cp, const char *callingProc)
 {
@@ -442,7 +442,7 @@ static void Reactivate(ushort pid, process_typ *cp, const char *callingProc)
         cp->state != pWaiting) /* and this one another 1.5 days !!! */
         // cp->state!=pIntUtil)          /* ... don't ask me about this ... */
         set_os9_state(pid, pActive, callingProc); /* re-activate */
-} /* Reactvate */
+}
 
 static os9err pWriteSysTaskExe(ushort          pid,
                                syspath_typ    *spP,
@@ -612,7 +612,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
     }
 
     return 0;
-} /* pWriteSysTaskExe */
+}
 
 /* system task routines to complete pipe write request */
 static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
@@ -630,7 +630,7 @@ static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
                            (systaskfunc_typ)pWriteSysTask);
     rp->d[1] = d1 + dd;
     return err;
-} /* pWriteSysTask */
+}
 
 static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
@@ -647,7 +647,7 @@ static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
                            (systaskfunc_typ)pWriteSysTaskLn);
     rp->d[1] = d1 + dd;
     return err;
-} /* pWriteSysTaskLn */
+}
 
 /* write to pipe buffer */
 os9err pPwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
@@ -662,7 +662,7 @@ os9err pPwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
                             buffer,
                             false,
                             (systaskfunc_typ)pWriteSysTask);
-} /* pPwrite */
+}
 
 /* writeln to pipe buffer */
 os9err pPwriteln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
@@ -677,7 +677,7 @@ os9err pPwriteln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
                             buffer,
                             true,
                             (systaskfunc_typ)pWriteSysTaskLn);
-} /* pPwriteln */
+}
 
 /* <syW>: if true, it is already in SysTask write mode */
 static os9err pReadSysTaskExe(ushort          pid,
@@ -813,7 +813,7 @@ static os9err pReadSysTaskExe(ushort          pid,
     }
 
     return 0;
-} /* pReadSysTaskExe */
+}
 
 /* system task routines to complete pipe read request */
 static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
@@ -831,7 +831,7 @@ static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
                           (systaskfunc_typ)pReadSysTask);
     rp->d[1] = d1;
     return err;
-} /* pReadSysTask */
+}
 
 static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
@@ -848,7 +848,7 @@ static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
                           (systaskfunc_typ)pReadSysTaskLn);
     rp->d[1] = d1;
     return err;
-} /* pReadSysTaskLn */
+}
 
 static os9err ShowPipeDir(syspath_typ *spP, char *buffer)
 {
@@ -913,7 +913,7 @@ os9err pPread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
                            false,
                            syW,
                            (systaskfunc_typ)pReadSysTask);
-} /* pPread */
+}
 
 /* readln from pipe buffer */
 os9err pPreadln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
@@ -937,7 +937,7 @@ os9err pPreadln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
                            true,
                            syW,
                            (systaskfunc_typ)pReadSysTaskLn);
-} /* pPreadln */
+}
 
 /* constant option sections for non-Console SCF I$GetStt */
 const byte pipestdopts[OPTSECTSIZE] = {
@@ -958,7 +958,7 @@ os9err pPopt(_pid_, _spP_, byte *buffer)
 {
     memcpy(buffer, pipestdopts, OPTSECTSIZE);
     return 0;
-} /* pPopt */
+}
 
 /* check for EOF in pipe */
 os9err pPeof(_pid_, syspath_typ *spP)
@@ -980,7 +980,7 @@ os9err pPeof(_pid_, syspath_typ *spP)
         return os9error(E_EOF);
 
     return 0;
-} /* pPeof */
+}
 
 /* check ready */
 os9err pPready(ushort pid, syspath_typ *spP, ulong *n)
@@ -1001,13 +1001,13 @@ os9err pPready(ushort pid, syspath_typ *spP, ulong *n)
         if (p->broken) {
             *n = 1;
             return 0;
-        } /* handle broken half-pipe correctly */
+        }
     }
 
     if (pp->i_svd_pchP != NULL)
         releasePipe_svd(pid, spP, false);
     return os9error(E_NOTRDY);
-} /* pPready */
+}
 
 os9err pPFDInf(_pid_, _spP_, ulong *maxbytP, ulong *fdinf, byte *buffer)
 {
@@ -1047,7 +1047,7 @@ os9err pPFDInf(_pid_, _spP_, ulong *maxbytP, ulong *fdinf, byte *buffer)
 
     memcpy(buffer, fdbeg, *maxbytP > FDS ? FDS : *maxbytP);
     return 0;
-} /* pPFDInf */
+}
 
 /* get pipe size */
 os9err pPsize(_pid_, syspath_typ *spP, ulong *sizeP)
@@ -1055,7 +1055,7 @@ os9err pPsize(_pid_, syspath_typ *spP, ulong *sizeP)
     *sizeP = spP->u.pipe.pchP->size -
              1; /* return max available size of pipe buffer */
     return 0;
-} /* pPsize */
+}
 
 /* set pipe size */
 os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
@@ -1069,7 +1069,7 @@ os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
     }
 
     return 0;
-} /* pPsetsz */
+}
 
 /* ------------------------- packet manager routines --------- */
 os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
@@ -1104,7 +1104,7 @@ os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
     err = pKopt(pid, spP, (byte *)&spP->opt); /* no err returned */
     err = ConnectPTY_TTY(pid, spP);
     return err;
-} /* pKopen */
+}
 
 os9err pKclose(ushort pid, syspath_typ *spP)
 {
@@ -1166,7 +1166,7 @@ os9err pKclose(ushort pid, syspath_typ *spP)
     }
 
     return 0;
-} /* pKclose */
+}
 
 /* read/readln will be done directly */
 os9err pKread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
@@ -1184,13 +1184,13 @@ os9err pKwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
 {
     syspath_typ *spC = crossedPath(pid, spP);
     return pPwrite(pid, spC, n, buffer);
-} /* pKwrite */
+}
 
 os9err pKwriteln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
 {
     syspath_typ *spC = crossedPath(pid, spP);
     return pPwriteln(pid, spC, n, buffer);
-} /* pKwriteln */
+}
 
 /* emulate that a real pkman device is connected */
 const byte pkstdopts[OPTSECTSIZE] = {
@@ -1208,20 +1208,20 @@ os9err pKopt(_pid_, _spP_, byte *buffer)
 {
     memcpy(buffer, pkstdopts, OPTSECTSIZE);
     return 0;
-} /* pKopt */
+}
 
 os9err pKpos(_pid_, _spP_, ulong *posP)
 /* get current file position */
 {
     *posP = 0;
     return 0;
-} /* pKpos */
+}
 
 os9err pKready(ushort pid, syspath_typ *spP, ulong *n)
 /* gs_ready will be done directly */
 {
     return pPready(pid, spP, n);
-} /* pKready */
+}
 
 os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
 /* creates tty/pty system paths and locks them together */
@@ -1291,7 +1291,7 @@ os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
     spPX->u.pipe.locked_open = true;
     spPY->u.pipe.locked_open = true;
     return 0;
-} /* pKlock */
+}
 
 /* ------------------------------------------------------------------------- */
 syspath_typ *crossedPath(ushort pid, syspath_typ *spP)
@@ -1338,7 +1338,7 @@ syspath_typ *crossedPath(ushort pid, syspath_typ *spP)
     }
 
     return spC;
-} /* crossedPath */
+}
 
 os9err ConnectPTY_TTY(ushort pid, syspath_typ *spP)
 {
@@ -1386,7 +1386,7 @@ os9err ConnectPTY_TTY(ushort pid, syspath_typ *spP)
     if (!found)
         spP->u.pipe.pchP->sp_lock = spP->nr; /* short circuit */
     return 0;
-} /* ConnectPTY_TTY */
+}
 
 void PutCharsToTTY(ushort       pid,
                    syspath_typ *spP,
@@ -1400,7 +1400,7 @@ void PutCharsToTTY(ushort       pid,
         err = pPwriteln(pid, spP, lenP, buffer);
     else
         err = pPwrite(pid, spP, lenP, buffer);
-} /* PutCharsToTTY */
+}
 
 void CheckInBufferTTY(ttydev_typ *mco)
 /* check if there is something at the input and put it into buffer <mco> */
@@ -1430,6 +1430,6 @@ void CheckInBufferTTY(ttydev_typ *mco)
             k++;
         }
     }
-} /* CheckInBufferTTY */
+}
 
 /* eof */

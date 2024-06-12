@@ -73,6 +73,6 @@
 
 #include "os9exec_incl.h"
 
-void init_Printer(_fmgr_) {} /* do nothing */
+void init_Printer(_fmgr_) {}
 
 /* eof */

@@ -83,7 +83,7 @@ os9err NetInstall(void)
     // do nothing here
     netInstalled = true; /* it is ok now */
     return 0;
-} /* NetInstall */
+}
 
 os9err
 MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
@@ -162,7 +162,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
                     *dns2Addr = os9_long(inet_addr(v));
                 n++;
             }
-        } /* loop */
+        }
 
         fclose(stream);
     }
@@ -187,7 +187,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
     // domainName ); printf( "inet/dns %08X %08X\n", *inetAddr,*dns_Addr );
 
     return 0;
-} /* MyInetAddr */
+}
 
 OSStatus netReadBlock(_pid_, net_typ *net, ulong *nBytes)
 // platform specific reading
@@ -205,7 +205,7 @@ OSStatus netReadBlock(_pid_, net_typ *net, ulong *nBytes)
 
     *nBytes = (ulong)err;
     return 0;
-} /* netReadBlock */
+}
 
 OSStatus netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
 // platform specific reading
@@ -223,6 +223,6 @@ OSStatus netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
 
     *nBytes = (ulong)err;
     return 0;
-} /* netWriteBlock */
+}
 
 /* eof */

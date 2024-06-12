@@ -779,7 +779,7 @@ static os9err prepParams(mod_exec *theModule,
     *psiz = paramsiz; /* return parameter size */
     *pap  = pp;       /* return pointer to prepared parameter area */
     return 0;
-} /* prepParams */
+}
 
 /* prepare first OS9 process to launch from MPW command line
  * Note: - allocates process descriptor and sets global currentpid
@@ -833,7 +833,7 @@ static os9err prepLaunch(char  *toolname,
     }
 
     return err;
-} /* prepLaunch */
+}
 
 /* the os9exec kernel */
 /* ================== */
@@ -876,7 +876,7 @@ static void cleanup(void)
                 dbgNorm,
                 ("# cleanup: releasing low-level magic\n"));
     lowlevel_release(); /* release low-level stuff */
-} /* cleanup */
+}
 
 /* must be done before linking "init" module */
 /* and this will be done earlier now */
@@ -886,7 +886,7 @@ void get_hw()
     hw_name  = "Linux - PC";
     platform = "x86";
 
-} /* get_hw */
+}
 
 // Get the start directory
 void StartDir(char *pathname)
@@ -921,7 +921,7 @@ static os9err GetStartPath(char *pathname)
     StartDir(pathname);
 
     return 0;
-} /* GetStartPath */
+}
 
 // Search one path up ( .. )
 static void PathUp(char *p)
@@ -936,7 +936,7 @@ static void PathUp(char *p)
 
         q--;
     }
-} /* PathUp */
+}
 
 static void
 GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
@@ -984,7 +984,7 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
     /* do this before the recursive loop */
     strncpy(drP->path, p, OS9PATHLEN);
 
-} /* GetCurPaths */
+}
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
 // Test, if upshifted string <str> begins with <cmp>
@@ -1377,7 +1377,7 @@ static void BootLoader(ushort cpid)
     p   = "socket";
     err = link_module(cpid, p, &mid);
     debugprintf(dbgStartup, dbgNorm, (BLTxt, p, err));
-} /* Bootloader */
+}
 
 static void CheckStartup(int cpid, char *toolname, int *argc, char **argv)
 /* Check if "startup" file is available */
@@ -1401,11 +1401,11 @@ static void CheckStartup(int cpid, char *toolname, int *argc, char **argv)
         if (err) {
             *argc = 0;
             return;
-        } /* no startup file, ignore it */
+        }
         err      = usrpath_close(cpid, path);
         quitFlag = true; /* in case of startup sequence, quit automatically */
     }
-} /* CheckStartup */
+}
 
 static void CtrlC_Handler(int sig)
 {
@@ -1440,7 +1440,7 @@ static void titles(void)
 
     fflush(stderr);
     fflush(stdout);
-} /* titles */
+}
 
 static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
 /* Exception or trap handler call */
@@ -1582,7 +1582,7 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
     }
 
     return true;
-} /* TCALL_or_Exception */
+}
 
 static void debug_retsystask(regs_type *crp, ushort cpid)
 {
@@ -1603,7 +1603,7 @@ static void debug_retsystask(regs_type *crp, ushort cpid)
         show_maskedregs(crp, fdeP->outregs);
         upe_printf("\n");
     }
-} /* debug_retsystask */
+}
 
 // ---- Callback routines for "cclib" ----------------------------------
 // missing "atoi"/"atof" operations for "cclib", placed here
@@ -1693,7 +1693,7 @@ void os9exec_globinit(void)
     init_syspaths();  // prepare system paths, ready for usrpath print now
     init_L2();        // prepare the /L2 stuff
     init_plugins();   // prepare plugin DLL stuff
-} /* os9exec_globinit */
+}
 
 // This is the main loop, where all the OS9exec processes will be handled and
 // arbitrated. In one direction the 68k emulation (MacOS9 built-in or UAE) will
@@ -2371,13 +2371,13 @@ cleanup:
                 dbgNorm,
                 ("# os9exec_nt: returning to caller with err=%d\n", err));
     return err;
-} /* os9exec_nt */
+}
 
 /* Entry for old os9exec V1.14 style tools */
 ushort os9exec(int argc, char **argv, char **envp)
 {
     /* execute default module (OS9C ID=0) with no extra memory */
     return os9exec_nt(NULL, argc, argv, envp, 0, MYPRIORITY);
-} /* os9exec */
+}
 
 /* eof */

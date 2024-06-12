@@ -161,7 +161,7 @@ ulong llm_os9_go(regs_type *rp)
     r = m68k_os9go();
     memcpy(rp, &regs, sizeof(regs));
     return r;
-} /* llm_os9_go */
+}
 
 void llm_os9_copyback(regs_type *rp)
 {
@@ -173,20 +173,20 @@ void llm_os9_copyback(regs_type *rp)
 static void llm_cache_rf(_bufferV_, _size_) {}
 
 /* returns if FPU present */
-Boolean llm_has_cache(void) { return needsflush; } /* llm_fpu_present */
+Boolean llm_has_cache(void) { return needsflush; }
 
 /* returns if FPU present */
-Boolean llm_fpu_present(void) { return hasfpu; } /* llm_fpu_present */
+Boolean llm_fpu_present(void) { return hasfpu; }
 
 /* returns if virtual memory is enabled */
-Boolean llm_vm_enabled(void) { return vmenabled; } /* llm_fpu_present */
+Boolean llm_vm_enabled(void) { return vmenabled; }
 
 /* returns if 68k Mac Context runs in usermode */
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
 Boolean llm_runs_in_usermode(void)
 {
     return usesusermode;
-} /* llm_runs_in_usermode */
+}
 
 /* prepare access to low-level code */
 OSErr lowlevel_prepare(void)
@@ -213,9 +213,9 @@ OSErr lowlevel_prepare(void)
                 dbgDeep,
                 ("# lowlevel_prepare: UAE 68k emulator initialized\n"));
     return (0);
-} /* lowlevel_prepare */
+}
 
 /* uninstall low-level code */
-void lowlevel_release(void) {} /* lowlevel_release */
+void lowlevel_release(void) {}
 
 /* eof */
