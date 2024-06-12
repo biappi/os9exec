@@ -332,7 +332,7 @@ os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         memcpy(buffer, spP->rw_sct + spP->rawPos, *n);
         spP->rawPos += *n;
         return 0;
-    } 
+    }
 
     cnt = *n;
     if (cnt == 0)
@@ -383,13 +383,13 @@ os9err pFreadln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             *n = cnt;
             return cnt == 0 ? os9error(E_EOF)
                             : 0; /* return EOF only if on first char */
-        }                        
+        }
 
         *p++ = c; /* save in the buffer */
         cnt++;
         if (c == CR)
             break; /* abort on CR */
-    }              
+    }
 
     f->readFlag = true;
 
@@ -415,7 +415,7 @@ os9err pFwrite(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         fgetpos(spP->stream, &tmp_pos); /* save current position */
         fsetpos(spP->stream, &tmp_pos); /* restore position */
         f->readFlag = false;
-    } 
+    }
 
     /* output to a FILE */
     cnt = fwrite((void *)buffer, 1, *n, spP->stream);
@@ -449,7 +449,7 @@ os9err pFwriteln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         fgetpos(spP->stream, &tmp_pos); /* save current position */
         fsetpos(spP->stream, &tmp_pos); /* restore position */
         f->readFlag = false;
-    } 
+    }
 
     /* output line to a FILE */
     for (ii = 0; ii < *n; ii++)
@@ -503,7 +503,7 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
             volname[ii] = NUL;
             break;
         }
-    } 
+    }
 
     // strcpy( volname,spP->fullName ); /* none for Linux, top directory
     // structure is different */
@@ -528,7 +528,7 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     //w= volname + strlen(VV)-1;
     //v= strstr( w, PATHDELIM_STR );
     //if (v!=NULL) *v= NUL;   // Keep "/Volumes/XXX"
-    } 
+    }
     else
       strcpy( volname, "" );
     */
@@ -583,7 +583,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
         spP->rawMode  = true;
         len           = strlen(ploc);
         ploc[len - 1] = NUL;
-    } 
+    }
 
     pastpath = ploc;
     err      = parsepath(pid, &pastpath, hostpath, exedir);
@@ -703,7 +703,7 @@ os9err pFseek(_pid_, syspath_typ *spP, ulong *posP)
             return E_SEEK;
         spP->rawPos = *posP;
         return 0;
-    } 
+    }
 
     if (fseek(spP->stream, (long)*posP, SEEK_SET) == 0)
         return 0;
@@ -859,13 +859,13 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
                     cnt = fread((void *)buffer, 1, j, tmp__stream);
                     cnt = fwrite((void *)buffer, 1, cnt, spP->stream);
                     i -= cnt;
-                } 
+                }
 
                 err = fclose(tmp__stream);
                 err = remove(tmpName);
-            } 
-        }     
-    }         
+            }
+        }
+    }
 
     /*
     //fflush     ( spP->stream );                             // unbuffer
@@ -901,7 +901,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
     //spP->stream= fopen ( spP->fullName,"rb+" ); // create for update, use
   binary mode (bfo) !
     //fseek              ( spP->stream, *sizeP,SEEK_SET );
-    }  
+    }
 
   //            curSize= *sizeP;
   //if (tmp_pos>curSize)            tmp_pos= curSize;
@@ -929,13 +929,13 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
                                       p= *sizeP-n;
               err= pFseek( pid, spP, &p );               if (err) break;
               err= pFread( pid, spP,           &n, &b ); if (err) break;
-            } 
+            }
           #endif
                                              n= sizeof(b);
                                    p= *sizeP-n;
           err= pFseek ( pid, spP, &p );               if (err) break;
           err= pFwrite( pid, spP,           &n, &b ); if (err) break;
-        } 
+        }
         */
 
         if (*sizeP > curSize) {
@@ -947,7 +947,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
             err = pFwrite(pid, spP, &n, &b);
             if (err)
                 break;
-        } 
+        }
 
         if (tmp_pos > *sizeP)
             tmp_pos = *sizeP; // adapt current pos, if now smaller
@@ -1237,7 +1237,7 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     ok = OpenTDir(pp, &d);
     if (!ok) {
         return E_FNA;
-    } 
+    }
 
     spP->dDsc = d;
     strcpy(spP->fullName, adapted); /* for later use with stat function */
@@ -1309,13 +1309,13 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             if (err == E_EOF && cnt < *n)
                 break; // EOF can be handled !!
             return err;
-        } 
+        }
 
         if (*pos - offs == 0) { /* if 1st entry, ".." expected */
 
             if (topFlag)
                 strcpy(dEnt->d_name, "..");
-        } 
+        }
 
         if (dEnt != NULL) {
             GetEntry(dEnt, os9dirent.name, true);
@@ -1332,7 +1332,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             len = strlen(os9dirent.name);
             os9dirent.name[len - 1] |= 0x80; /* set old-style terminator */
             os9dirent.fdsect = os9_long(fdpos);
-        } 
+        }
 
         if (!err) {
             nbytes = (offs + cnt) > DIRENTRYSZ ? DIRENTRYSZ - offs : cnt;
@@ -1354,8 +1354,8 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             }
             else
                 return err;
-        } 
-    }     
+        }
+    }
 
     /* sucessful, set number of bytes actually read */
     *n -= cnt; /* adjust to show actually read # of bytes */
@@ -1366,7 +1366,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     for (ii=0; ii<*n; ii++) {
       printf( "%02X ", (byte)buffer[ii] );
       if (ii%16==15) printf( "\n" );
-    } 
+    }
     */
 
     return 0;
@@ -1410,7 +1410,7 @@ os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
         if (ustrcmp(dEnt->d_name, AppDo) != 0)
             cnt--; /* ignore ".AppleDouble" */
         n++;
-    } 
+    }
 
     spP->u.disk.u.dir.pos = *posP;
     return 0;
@@ -1563,7 +1563,7 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 
                                      mode= 0x03 | poCreateMask;
         err=      pFopen( pid, spP, &mode, pp );
-      } 
+      }
     #endif
     */
 

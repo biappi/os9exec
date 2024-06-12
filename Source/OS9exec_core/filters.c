@@ -312,8 +312,8 @@ static void c_filter(char *linebuf, FILE *stream, void *fmv)
                     ("# cfe filter: extracted line no=%s\n", fm->fline));
                 /* first line processed */
                 fm->state = 1;
-            }  
-        }      
+            }
+        }
         break; /* case 0 */
     case 1:
         if (*linebuf != '"')

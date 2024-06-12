@@ -422,7 +422,7 @@ os9err pNclose(_pid_, syspath_typ *spP)
         release_mem(net->b_local);
         net->closeIt = true;
         net->bound   = false;
-    } 
+    }
 
     return 0;
 } /* pNclose */
@@ -453,12 +453,12 @@ netRead(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer, Boolean lnmode)
                 cp->saved_state = cp->state;
                 set_os9_state(pid, pWaitRead, "netRead");
                 return E_NOTRDY;
-            } 
+            }
 
             net->bsize = nBytes; /* bytesReceived */
             net->bpos  = net->b_local;
             memcpy(net->bpos, net->transferBuffer, net->bsize);
-        } 
+        }
 
         // upe_printf( "netread: nBytes=%d *lenP=%d bsize=%d\n", nBytes, *lenP,
         // net->bsize );
@@ -476,7 +476,7 @@ netRead(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer, Boolean lnmode)
                     break;
                 }
             }
-        } 
+        }
         memcpy(buffer, net->bpos, mx);
 
         net->bpos += mx; /* calculate remaining */
@@ -515,8 +515,8 @@ static os9err netWrite(ushort       pid,
                 *lenP = ii + 1;
                 break;
             }
-        } 
-    }     
+        }
+    }
 
     pp     = buffer; /* don't change buffer pos, make a copy */
     remain = *lenP;
@@ -539,7 +539,7 @@ static os9err netWrite(ushort       pid,
         pp += nBytes; /* bytesSent */
         remain -= nBytes;
         *lenP += nBytes;
-    } 
+    }
 
     return 0;
 } /* netWrite */
@@ -700,7 +700,7 @@ os9err pNlisten(ushort pid, syspath_typ *spP)
         cp->saved_state = cp->state;
         set_os9_state(pid, pWaitRead, "pNlisten");
         return E_NOTRDY;
-    } 
+    }
 
     return 0;
 } /* pNlisten */
@@ -809,7 +809,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
         cp->saved_state = cp->state;
         cp->state       = pWaitRead;
         return E_NOTRDY;
-    } 
+    }
 #endif
 
     debugprintf(dbgSpecialIO,
@@ -855,7 +855,7 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
         cp->saved_state = cp->state;
         set_os9_state(pid, pWaitRead, "pNaccept");
         return E_NOTRDY;
-    } 
+    }
 
     net->ipRemote.fAddressType = os9_word(name.sin_family);
     net->ipRemote.fPort = name.sin_port; /* no big/little endian change */
@@ -939,7 +939,7 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
         *d1 = sizeof(net->ipAddress);
         memcpy(ispP, &net->ipAddress, sizeof(net->ipAddress));
         return 0;
-    } 
+    }
 
     if (*d2 == 0)
         return 0;
@@ -963,7 +963,7 @@ os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2)
     if (*d2 == 4) {
         net->listen = false;
         net->check  = true;
-    } 
+    }
 
     *d1 = 0;
     return 0;
@@ -978,7 +978,7 @@ static ushort checksum(ushort *buffer, int size)
     while (size > 1) {
         cksum += *buffer++;
         size -= sizeof(ushort);
-    } 
+    }
 
     if (size > 0)
         cksum += *(byte *)buffer; /* odd handling */
@@ -1179,7 +1179,7 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
                                 *a0 = icmp->i_ISP;
                                 return 0;
                 }
-            } 
+            }
 
                         usleep(1000000); /* sleep in microseconds */
         } while (GetSystemTick() < start_time + 5 * 60);
@@ -1239,8 +1239,8 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
         if (lookResult == T_DISCONNECT) {
             err = OTRcvDisconnect(net->ep, nil);
             *n  = 1;
-        } 
-    }     
+        }
+    }
 
 #else
     err = ioctl(net->ep, FIONREAD, n);
@@ -1297,7 +1297,7 @@ os9err pNask(ushort pid, syspath_typ *spP)
         sig = spP->signal_to_send; /* must be stored before clear */
         spP->signal_to_send = 0;   /* remove the signal after used once */
         return sig;
-    } 
+    }
 
     return 0;
 } /* pNask */

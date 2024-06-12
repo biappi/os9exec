@@ -245,8 +245,8 @@ os9err releasePipe(ushort pid, syspath_typ *spP)
                     pk->sp_lock = k;
                 return 0; /* still in use by another path */
             }
-        } 
-    }     
+        }
+    }
 
     //  printf( "RELEASE PIPE OK  %08X %08X\n", p,spP->u.pipe.i_svd_pchP );
     spK = get_syspathd(pid, p->sp_lock);
@@ -379,11 +379,11 @@ os9err pPclose(ushort pid, syspath_typ *spP)
         if (pp->i_svd_pchP != NULL) {
             if (pp->i_svd_pchP->prp != pp->i_svd_pchP->pwp)
                 return 1;
-        } 
+        }
 
         if (pp->pchP->prp != pp->pchP->pwp)
             return 1;
-    } 
+    }
 
     if (pp->i_svd_pchP != NULL)
         releasePipe_svd(pid, spP, true);
@@ -422,8 +422,8 @@ os9err pPdelete(_pid_, _spP_, ushort *modeP, char *pathname)
                 spK->type = fNone; // delete it really
                 return 0;
             }
-        } 
-    }     
+        }
+    }
 
     return E_PNNF;
 } /* pPdelete */
@@ -463,7 +463,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
 
     if (spP->name[0] != NUL) {
         GetTim(&p->pipeTim);
-    } 
+    }
 
     /* find out how many bytes are free in the buffer; leave always one free */
     // if (p->prp<=p->pwp) numfree= p->prp-p->pwp + p->size-SAFETY; /* CR safety
@@ -514,14 +514,14 @@ static os9err pWriteSysTaskExe(ushort          pid,
             if (p->do_lf) {
                 p->do_lf = false;
                 PipePutc(p, LF);
-            } 
+            }
 
             remaining = 0;
             break; /* writeln aborts at first CR found */
         }
 
         remaining--;
-    } 
+    }
 
     if (debugcheck(dbgFiles, dbgDeep)) {
         char  *dp = buffer + p->bwritten; /* at start of buffer */
@@ -530,7 +530,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
         for (kk = 0; kk < nn; kk++)
             putc(*dp++, stderr);
         upe_printf("'\n");
-    } 
+    }
 
     p->bwritten += bytes - nn; /* we have written so many now */
     if (remaining < 0)
@@ -552,7 +552,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
         err = send_signal(spP->signal_pid, spP->signal_to_send);
         if (!err)
             spP->signal_to_send = 0;
-    } 
+    }
 
     /* check how things go on */
     // if (remaining || cp->state==pSysTask) printf( "FULL remain=%d pid=%d
@@ -590,7 +590,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
                               pSysTask,
                               "pWriteSysTaskExe"); /* goto systask */
                 cp->systask_offs = 0;              /* by default */
-            }                                      
+            }
 
             cp->systask      = wr_func;
             cp->systaskdataP = (void *)spP;
@@ -733,7 +733,7 @@ static os9err pReadSysTaskExe(ushort          pid,
             remaining = ++nn; /* set remaining such that we're done now */
             break;            /* readln aborts at first CR found */
         }
-    } 
+    }
 
     if (debugcheck(dbgFiles, dbgDeep)) {
         char  *dp = (char *)buffer + p->bread; /* at start of buffer */
@@ -742,7 +742,7 @@ static os9err pReadSysTaskExe(ushort          pid,
         for (kk = 0; kk < nn; kk++)
             putc(*dp++, stderr);
         upe_printf("'\n");
-    } 
+    }
 
     p->bread += nn;  /* we have read so many now */
     remaining -= nn; /* calc what we've left */
@@ -866,8 +866,8 @@ static os9err ShowPipeDir(syspath_typ *spP, char *buffer)
                 break;
             }
             n++;
-        } 
-    }     
+        }
+    }
 
     if (!found)
         return E_EOF;
@@ -895,7 +895,7 @@ os9err pPread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
             return E_EOF;
         *n = DIRENTRYSZ;
         return ShowPipeDir(spP, buffer);
-    } 
+    }
 
     if (p->broken)
         return E_EOF;
@@ -1066,7 +1066,7 @@ os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
         /* clear pipe buffer */
         p->pwp = p->buf;
         p->prp = p->buf;
-    } 
+    }
 
     return 0;
 } /* pPsetsz */
@@ -1099,7 +1099,7 @@ os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
                 ustrcmp(tty_cmp, spK->name) == 0)
                 return E_DEVBSY;
         }
-    } 
+    }
 
     err = pKopt(pid, spP, (byte *)&spP->opt); /* no err returned */
     err = ConnectPTY_TTY(pid, spP);
@@ -1136,10 +1136,9 @@ os9err pKclose(ushort pid, syspath_typ *spP)
                         break; /* only one signal per process */
                     }
                 }
-            } 
-
-        } 
-    }     
+            }
+        }
+    }
 
     //  snd= 0;
     //  for (n=0; n<MAXSYSPATHS; n++) {
@@ -1151,7 +1150,7 @@ os9err pKclose(ushort pid, syspath_typ *spP)
     //             (k->sp_lock==spP->nr ||
     //              k->sp_lock==lk) && snd==0) snd= spK->lastwritten_pid;
     //      }
-    //  } 
+    //  }
     //  if (snd!=0 &&
     //      snd!=pid) send_signal( snd, S_HangUp );
 
@@ -1164,7 +1163,7 @@ os9err pKclose(ushort pid, syspath_typ *spP)
                 k->sp_lock = spK->nr; /* short-circuit them all */
             }
         }
-    } 
+    }
 
     return 0;
 } /* pKclose */
@@ -1257,12 +1256,12 @@ os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
                     break;
                 }
             }
-        } 
+        }
 
         if (found)
             break;
         newPty++;
-    } 
+    }
 
     /* use pipe structure for the tty/pty system */
     err = usrpath_new(pid, &up, fPTY);
@@ -1429,8 +1428,8 @@ void CheckInBufferTTY(ttydev_typ *mco)
                 break;
             }
             k++;
-        } 
-    }     
+        }
+    }
 } /* CheckInBufferTTY */
 
 /* eof */

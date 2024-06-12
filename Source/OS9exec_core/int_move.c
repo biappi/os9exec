@@ -169,11 +169,11 @@ static os9err options(int argc, char *argv[])
                     return _errmsg(1, "unknown option '%c'\n", *sc);
                     break;
                 } /* switch */
-            }     
-        }         /* if hyphen */
+            }
+        } /* if hyphen */
         else
             nargc++;
-    } 
+    }
     return 0;
 } /* options */
 
@@ -472,12 +472,12 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
                 if (!err)
                     break;
                 DoWait();
-            } 
-        }     
+            }
+        }
 
         if (err)
             return _errmsg(err, "can't open dest directory \"%s\".", nameD);
-    } 
+    }
 
     if (!quiet)
         return _errmsg(0,
@@ -523,7 +523,7 @@ os9err int_move(ushort cpid, int argc, char **argv)
             err = move_file(cpid, fromdir, fromname, wilddir, "");
             if (err)
                 return err;
-        } 
+        }
     }
     else {
         /* single file move */

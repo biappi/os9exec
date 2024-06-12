@@ -830,7 +830,7 @@ static os9err prepLaunch(char  *toolname,
     if (!err) {              /* make this process ready to execute */
         currentpid = newpid; /* make this process current */
         set_os9_state(currentpid, pActive, "prepLaunch"); /* now active */
-    }                                                     
+    }
 
     return err;
 } /* prepLaunch */
@@ -907,13 +907,13 @@ void StartDir(char *pathname)
         if (strcmp(result, ".") == 0) {
             strcpy(result, "");
             break;
-        } 
+        }
 
         strcpy(sv, pathname);
         strcpy(pathname, PATHDELIM_STR);
         strcat(pathname, result);
         strcat(pathname, sv);
-    } 
+    }
 } // StartDir
 
 static os9err GetStartPath(char *pathname)
@@ -932,10 +932,10 @@ static void PathUp(char *p)
 
             *q = NUL;
             break;
-        } 
+        }
 
         q--;
-    } 
+    }
 } /* PathUp */
 
 static void
@@ -957,13 +957,13 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
     if (drP->type == fRBF) {
         err = change_dir(1, drP->type, p, mode); // set the types at procid 0
         return;
-    } 
+    }
 
     /*
         drP->type= IO_Type( 1,           p,mode ); // get device type: Mac/PC or
     RBF if (drP->type==fRBF || drP->type==fDir) { err=      change_dir(
     1,drP->type, p,mode ); // set the types at procid 0 if (drP->type==fRBF)
-    return; } 
+    return; }
         */
 
     if (tmp != p)
@@ -976,10 +976,10 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
             if (*p == PSEP)
                 *p = PATHDELIM;
             p++;
-        } 
+        }
 
         p = tmp;
-    } 
+    }
 
     /* do this before the recursive loop */
     strncpy(drP->path, p, OS9PATHLEN);
@@ -1046,7 +1046,7 @@ Boolean OtherThere(const char *str, const char *suff)
 
         if (ustrcmp(p->name, nm) == 0)
             return true;
-    } 
+    }
 
     return false;
 } // OtherThere
@@ -1105,8 +1105,8 @@ static os9err SearchDLLs(ushort      pid,
             *m = get_mem(strlen(dEnt.name) + 1);
             strcpy(*m, dEnt.name);
             (*i)++;
-        } 
-    }     
+        }
+    }
     if (err == E_EOF)
         err = 0; // just end of file
 
@@ -1129,7 +1129,7 @@ static void Init_NativeProgs(plug_typ *p)
             ChangeNativeElement(iName, true);
         if (strcmp(iOpt, "-") == 0 || strcmp(iOpt, "I-") == 0)
             ChangeNativeElement(iName, false);
-    } 
+    }
 } // Init_NativeProgs
 
 static void DispList(int last)
@@ -1144,7 +1144,7 @@ static void DispList(int last)
             continue;
 
         upe_printf("%d '%s' (n=%d)\n", i, p->name, p->numNativeProgs);
-    } 
+    }
 } // DispList
 
 static void SwapElements(int i, int j)
@@ -1159,7 +1159,7 @@ static void SwapElements(int i, int j)
     while (j > i) {
         MoveBlk(&pluginList[j], &pluginList[j - 1], sizeof(plug_typ));
         j--;
-    } 
+    }
 
     MoveBlk(&pluginList[j], &tmp, sizeof(plug_typ));
 } // SwapElements
@@ -1174,7 +1174,7 @@ static int PLast(void)
         if (p->name != NULL)
             break;
         last--;
-    } 
+    }
 
     return last;
 } // PLast;
@@ -1197,10 +1197,10 @@ static void SortedPluginList(void)
                     MoveBlk(p, q, sizeof(plug_typ));
                     q->name = NULL;
                     break;
-                } 
-            }     
-        }         
-    }             
+                }
+            }
+        }
+    }
 
     // bubble sort
     last = PLast();
@@ -1210,8 +1210,8 @@ static void SortedPluginList(void)
             q = &pluginList[j];
             if (strcmp(p->name, q->name) > 0)
                 SwapElements(i, j);
-        } 
-    }     
+        }
+    }
 
     i = 0;
     while (i <= last) {
@@ -1219,7 +1219,7 @@ static void SortedPluginList(void)
         if (p->numNativeProgs > 1)
             break;
         i++;
-    } 
+    }
 
     // Get the ones with just 1 program first
     j = i + 1;
@@ -1235,13 +1235,13 @@ static void SortedPluginList(void)
                 if (p->numNativeProgs > 1)
                     break;
                 i++;
-            } 
+            }
 
             j = i;
-        } 
+        }
 
         j++;
-    } 
+    }
 } // SortedPluginList
 
 // Main routine for connecting plugin DLLs
@@ -1289,7 +1289,7 @@ static void PluginLoader(ushort cpid)
 
         release_mem(p->name);
         p->name = NULL;
-    } 
+    }
 
     SortedPluginList();
 
@@ -1309,10 +1309,10 @@ static void PluginLoader(ushort cpid)
             p->start_NativeProg = Start_NativeProg;
             p->call_Intercept   = Call_Intercept;
             break;
-        } 
+        }
 
         i++;
-    } 
+    }
 #endif
 
     for (i = 0; i < MAXLIST; i++) {
@@ -1320,7 +1320,7 @@ static void PluginLoader(ushort cpid)
         if (p->name == NULL)
             break;
         Init_NativeProgs(p);
-    } 
+    }
 
     pluginActive =
         Plugin_Possible(true); // built-in will not be taken in account
@@ -1360,19 +1360,19 @@ static void BootLoader(ushort cpid)
 
     if (cp->d.type == fRBF) {
         err = load_OS9Boot(cpid);
-    } 
+    }
 
     if (err) {
         p   = "OS9Boot";
         err = load_module(cpid, p, &mid, false);
         debugprintf(dbgStartup, dbgNorm, (BLTxt, p, err));
-    } 
+    }
 
     if (err) {
         p   = "init";
         err = link_module(cpid, p, &mid);
         debugprintf(dbgStartup, dbgNorm, (BLTxt, p, err));
-    } 
+    }
 
     p   = "socket";
     err = link_module(cpid, p, &mid);
@@ -1459,8 +1459,8 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
                 // offset=$%04X (num=%d)\n", cpid,cp->func,vect);
                 //  if (!cp->isIntUtil) dumpregs(cpid);
                 debug_procdump(cp, cpid);
-            } 
-        }     
+            }
+        }
 
         if ((vect >= FIRSTEXCEPTION) &&
             (vect < FIRSTEXCEPTION + NUMEXCEPTIONS)) {
@@ -1505,7 +1505,7 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
                 set_os9_state(parentid,
                               pActive,
                               "IntCmd (excp)"); // make it active again
-            }                                   
+            }
 
             debugprintf(dbgTrapHandler,
                         dbgNorm,
@@ -1619,7 +1619,7 @@ static Boolean IsZeroI(const char *s)
         if (*s < '0' && *s > '9' && *s != '-' && *s != '+')
             return false;
         s++;
-    } 
+    }
 
     return true;
 } // IsZeroI
@@ -1633,7 +1633,7 @@ static Boolean IsZeroR(const char *s)
             *s != '+')
             return false;
         s++;
-    } 
+    }
 
     return true;
 } // IsZeroR
@@ -1728,7 +1728,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
 
         svd_intpid = currentpid;  // allow only this one as int util
         do_arbitrate(svd_intpid); // now search another active process
-    }                             
+    }
 
     do {
         // --- prepare for entry into OS9 world, process is "currentpid"
@@ -1773,7 +1773,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
             lastspin = my_tick;
             CheckInputBuffers();
             eSpinCursor(32); // rotate forward once
-        }                    
+        }
 
         // --- now execute
         if (cp->state == pSysTask) {
@@ -1798,8 +1798,8 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                 }
                 else
                     crp->sr &= ~CARRY;
-            } 
-        }     // system task
+            }
+        } // system task
 
         else if (cp->state == pActive || cp->state == pWaitRead) {
             if ((cp->state == pActive || cp->way_to_icpt)) {
@@ -1831,7 +1831,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                     // --- and now exec syscall
                     cp->vector = hiword(resL);
                     cp->func   = loword(resL);
-                } 
+                }
 
                 cp->way_to_icpt = false; // now it is done
 
@@ -1844,7 +1844,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                                     cp->memstart + 0x8000,
                                     crp->a[6]);
                         debug_halt(dbgWarnings);
-                    } 
+                    }
 
                     if ((crp->a[7] > cp->memtop) ||
                         (crp->a[7] < cp->memstart)) {
@@ -1855,15 +1855,15 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                                     cp->memstart,
                                     cp->memtop);
                         debug_halt(dbgWarnings);
-                    } 
-                }     
+                    }
+                }
 
                 // register will be saved, in case they are reused in pWaitRead
                 // state
                 svd->r      = cp->os9regs;
                 svd->vector = cp->vector;
                 svd->func   = cp->func;
-            } 
+            }
 
             // in case of a unsuccessful read just repeat the call with saved
             // registers correct exception handling
@@ -1872,7 +1872,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                 cp->os9regs = svd->r;
                 cp->vector  = svd->vector;
                 cp->func    = svd->func;
-            } 
+            }
 
             // --- now handle trap
             if (cp->vector != 0) {
@@ -1893,7 +1893,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                             get_syscall_name(cp->func),
                             cpid,
                             PStateStr(cp));
-                } 
+                }
 
                 // --- Alarm handling
                 aa = alarm_queue[0];
@@ -1908,8 +1908,8 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                                    true);
                         send_signal(aa->pid, aa->signal); // renew it
                         A_Remove(aa); // and remove the old one
-                    }                 
-                }                     
+                    }
+                }
 
                 // --------------------------------------------
                 // asynchronous signals are allowed here
@@ -1920,7 +1920,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                     // isInt=%d pid=%d sig9=%d\n",
                     //             cp->isIntUtil, cpid, procs[ 9 ].icpt_signal
                     //             ));
-                } 
+                }
 
                 // execute syscall, except in case of way to intercept, where
                 // icpt routine must be done first Can have been triggered by
@@ -1939,7 +1939,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
 
                     if (sigp->isIntUtil) {
                         printf("intutil intercept\n");
-                    } 
+                    }
 
                     if (cp->icpt_pid ==
                         currentpid) { // in case of the own process
@@ -1949,8 +1949,8 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                     else {
                         cp->way_to_icpt = false; // now the way to icpt changes
                         currentpid = cp->icpt_pid; // continue as this process
-                    }                              
-                }                                  // if cwti
+                    }
+                } // if cwti
 
                 if (cp->state == pActive || cp->state == pWaitRead ||
                     cp->oerr) {
@@ -1963,8 +1963,8 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                                                 // restored to normal error code
                         retword(crp->d[1]) = cp->oerr;
                         crp->sr |= CARRY;
-                    } 
-                }     
+                    }
+                }
 
                 if (cwti && cp->icpt_signal != S_Wake && sigp->state != pDead) {
                     sigp->masklevel = 1; // not interrupteable during intercept
@@ -1983,15 +1983,15 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                         sigp->rtevector = svd->vector;
                         sigp->rtefunc   = svd->func;
                         set_os9_state(spid, pActive, "");
-                    } 
+                    }
 
                     if (sigp->state ==
                             pWaiting &&          // a signalled waiting process
                         sigp->pd._sigvec != 0) { // will be active afterwards
                         set_os9_state(spid, pActive, "");
                         sigp->rtestate = pActive;
-                    } 
-                }     // if (cwti && ...)
+                    }
+                } // if (cwti && ...)
             }
         } // active OS9 process that has called a TRAP
 
@@ -2006,13 +2006,13 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                             cpid,
                             PStateStr(cp));
                 debug_halt(dbgAll);
-            } 
-        }     
+            }
+        }
 
         if (debugcheck(dbgTaskSwitch, dbgDetail) && cp->state == pWaitRead) {
             uphe_printf("arbitrate: current pid=%d: pWaitRead (before) \n",
                         cpid);
-        } 
+        }
 
         // do not arbitrate if way to intercept
         // if (!arb_cnt--) arb_cnt= ARB_RATE-1; // arbitrate= true;
@@ -2026,7 +2026,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
         // if (currentpid==justthis_pid) {
         //   debugprintf(dbgTaskSwitch,dbgNorm,("# LOOOPI cwti=%d masklevel=%d
         //   arbitrate=%d\n", cwti, cp->masklevel, arbitrate ));
-        // } 
+        // }
 
         // if (fullArb || fromIntUtil) arbitrate= true;
         if (fullArb)
@@ -2038,7 +2038,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
             //   state=%d isInt=%d\n",
             //                                      currentpid, cp->state,
             //                                      cp->isIntUtil ));
-        } 
+        }
 
         if (logtiming)
             arb_to_os9(last_arbitrate);
@@ -2056,12 +2056,12 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                 if (cp->icpt_pid != currentpid) {
                     cp->way_to_icpt = false;        // reset if another process
                     currentpid      = cp->icpt_pid; // continue as this process
-                }                                   
+                }
 
                 if (cp->icpt_signal != S_Wake) {
                     cp->os9regs.d[1] =
                         cp->icpt_signal; // get signal code at icpt routine
-                }                        
+                }
 
                 cp = &procs[currentpid];
             }
@@ -2070,7 +2070,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
         if (debugcheck(dbgTaskSwitch, dbgDetail) && cp->state == pWaitRead) {
             uphe_printf("arbitrate: current pid=%d: pWaitRead (after) \n",
                         cpid);
-        } 
+        }
 
         // --- show process changes
         if (debugcheck(dbgTaskSwitch, dbgNorm)) {
@@ -2079,8 +2079,8 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                             cpid,
                             currentpid);
                 debug_halt(dbgTaskSwitch);
-            }                            
-        }                                
+            }
+        }
     } while (currentpid < MAXPROCESSES); /* while active processes */
 } // os9exec_loop
 
@@ -2131,7 +2131,7 @@ static void setup_exception(loop_proc lo)
             uphe_printf("Exception occurred [pid=%d] err=%d\n",
                         currentpid,
                         err);
-        } 
+        }
 
         xErr = err;
         err  = 0; // preserve this in case of no exception
@@ -2193,7 +2193,7 @@ ushort os9exec_nt(const char *toolname,
         ia.sa_flags = 0;
 
         sigaction(SIGINT, &ia, NULL);
-    } 
+    }
 
     // some global init moved from here to os9exec_globinit() to allow them
     // being called in os9main.c already
@@ -2208,7 +2208,7 @@ ushort os9exec_nt(const char *toolname,
 #ifdef LINKED_HASH
         dirtable[ii].next = NULL;
 #endif
-    } 
+    }
 
     for (ii = 0; ii < MAXDIRHIT; ii++)
         hittable[ii] = 0;
@@ -2227,7 +2227,7 @@ ushort os9exec_nt(const char *toolname,
         argv_startup[0] = "startup";
         argv_startup[1] = NULL;
         argv            = (char **)&argv_startup;
-    } 
+    }
 
     withTitle =
         ustrcmp(my_toolname, "shell") == 0 || ustrcmp(my_toolname, "sh") == 0;
@@ -2241,7 +2241,7 @@ ushort os9exec_nt(const char *toolname,
         upho_printf("       the GNU General Public License         \n");
         upho_printf("\n");
         titles();
-    } 
+    }
 
     /* prepare low-level magic, to allow using llm_xxx() routines */
     oserr = lowlevel_prepare();
@@ -2349,7 +2349,7 @@ ushort os9exec_nt(const char *toolname,
         }
         else
             err = cp->oerr;
-    } 
+    }
     goto cleanup;
 
 mainabort:

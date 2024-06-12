@@ -386,7 +386,7 @@ void Update_MDir(void)
             en->size = 0;
             en->lnk  = 0;
         }
-    } 
+    }
 }
 
 /*
@@ -429,7 +429,7 @@ void MoveBlk( void* dst, void* src, ulong size )
     s= (byte*)( (ulong)src + size-1 );
     d= (byte*)( (ulong)dst + size-1 );
     for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
-  } 
+  }
 } // MoveBlk
 */
 
@@ -525,7 +525,7 @@ void show_modules(char *cmp)
                            nam);
             } /* if (cmp==NULL || .. */
         }     /* if (mod!=NULL) */
-    }         
+    }
 } /* show_modules */
 
 /* initialize internal "module directory" */
@@ -659,7 +659,7 @@ int find_mod_id(const char *name)
         p = Mod_Name(mod);
         if (ustrcmp(p, name) == 0)
             return k; /* module found */
-    }                 
+    }
 
     return MAXMODULES;
 } /* find_mod_id */
@@ -688,7 +688,7 @@ int NextFreeModuleId(char *name)
             if (os9mod(k) == NULL)
                 break;
         }
-    } 
+    }
 
     debugprintf(dbgModules,
                 dbgNorm,
@@ -782,13 +782,13 @@ static void go_thru_list(char *v0, char *b0, ulong inetAddr)
             v = v + strlen(v) + 1;
             if (*v == NUL)
                 break;
-        } 
+        }
         if (lFound)
             break;
 
         blk += jump;
         v = blk;
-    } 
+    }
     if (!lFound)
         return; /* probably not enough room to put "localhost" in */
 
@@ -819,7 +819,7 @@ static void go_thru_list(char *v0, char *b0, ulong inetAddr)
 
         blk += jump;
         v = blk;
-    } 
+    }
 } /* go_thru_list */
 
 static void adapt_inetdb(mod_exec *mh,
@@ -1093,7 +1093,7 @@ static os9err load_module_local(ushort  pid,
             dsize      = os9_long(theModuleP->_mh._msize);
             isBuiltIn  = true;
             break; /* found */
-        }          
+        }
 
         /* no more trials for linking */
         if (linkstyle)
@@ -1120,7 +1120,7 @@ static os9err load_module_local(ushort  pid,
             err = usrpath_open(pid, &path, type, name, mode);
             if (err)
                 return os9error(linkstyle ? E_MNF : err); /* as the real OS-9 */
-        }                                                 
+        }
 
         if (bootSiz == 0) {
             err = usrpath_getstat(pid,
@@ -1136,7 +1136,7 @@ static os9err load_module_local(ushort  pid,
         }
         else {
             dsize = bootSiz;
-        } 
+        }
 
         pp = get_mem(dsize);
         if (pp == NULL) {
@@ -1144,7 +1144,7 @@ static os9err load_module_local(ushort  pid,
                 err = usrpath_close(pid, path);
 
             return os9error(E_NORAM); /* not enough memory */
-        }                             
+        }
 
         loadbytes  = dsize;
         theModuleP = pp;
@@ -1154,7 +1154,7 @@ static os9err load_module_local(ushort  pid,
             if (bootPos == 0)
                 err = usrpath_close(pid, path);
             return E_READ;
-        } 
+        }
 
         isBuiltIn = false; /* is no resource-based module */
 
@@ -1247,7 +1247,7 @@ static os9err load_module_local(ushort  pid,
                         ("# load_module: bad modsync: %04x, E_BMID\n", sync));
             err = E_BMID;
             break;
-        } 
+        }
 
         par = calc_parity((ushort *)theModuleP, 24);
         if (par != 0) {
@@ -1259,7 +1259,7 @@ static os9err load_module_local(ushort  pid,
                          par));
             err = E_BMHP;
             break;
-        } 
+        }
 
         modSize = os9_long(theModuleP->_mh._msize);
         if (modSize > dsize) {
@@ -1269,7 +1269,7 @@ static os9err load_module_local(ushort  pid,
                 ("# load_module: bad size: %d>%d, E_BMID\n", modSize, dsize));
             err = E_BMID;
             break; /* as a native OS-9 system (bfo) */
-        }          
+        }
 
         crc = calc_crc((byte *)theModuleP, modSize, 0xFFFFFFFF);
         if (crc != 0xFF800FE3) {
@@ -1281,7 +1281,7 @@ static os9err load_module_local(ushort  pid,
             /* bad CRC */
             err = E_BMCRC;
             break;
-        } 
+        }
 
         /* --- module loaded is ok */
         /* now check if we already have something like this in our module dir */
@@ -1316,7 +1316,7 @@ static os9err load_module_local(ushort  pid,
                              &dns2,
                              domainName); /* assign my internet address */
 #endif
-        } 
+        }
 
         if (ustrcmp(realmodname, "init") == 0)
             adapt_init(theModuleP);
@@ -1387,7 +1387,7 @@ os9err link_module(ushort pid, const char *name, ushort *midP)
             ("# link_module: internal cmd '%s' => try 'OS9exec' instead\n",
              lName));
         strcpy(lName, OS9exec_name);
-    } 
+    }
 #endif
 
     err = load_module_local(pid, lName, midP, true, true, modBase, 0, 0, 0);
@@ -1402,11 +1402,11 @@ os9err link_module(ushort pid, const char *name, ushort *midP)
                     dbgNorm,
                     ("# link_module: 'OS9exec' not found, returned ptr to main "
                      "module\n"));
-    } 
+    }
 
     // if (err && isNative) {
     //   *midP= NextFreeModuleId( lName );
-    // } 
+    // }
 
     // if    (err==E_MNF && isNative && strcmp( lName,"hello_world" )==0)
     //        err= 0; // native programs can work without an os9 primary module
@@ -1482,7 +1482,7 @@ os9err load_OS9Boot(ushort pid)
             err = usrpath_seek(pid, path, pos * scs);
             if (err)
                 break;
-        } 
+        }
 
         err = load_module_local(pid,
                                 name,
@@ -1493,7 +1493,7 @@ os9err load_OS9Boot(ushort pid)
                                 path,
                                 pos,
                                 siz);
-    } while (false); 
+    } while (false);
 
     cErr = usrpath_close(pid, path);
     if (!err)
@@ -1785,7 +1785,7 @@ os9err release_traphandler(ushort pid, ushort trapidx)
 
         tp->trapmodule = NULL; /* no traphandler installed any more */
         tp->trapentry  = 0;    /* no traphandler entry available any more */
-    }                          
+    }
 
     return 0;
 } /* release_traphandler */

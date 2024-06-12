@@ -126,14 +126,14 @@ ulong WriteCharsToPTY(char *buffer, ulong n, int consoleID, Boolean do_lf)
     if (cp->state == pWaitRead) {
         set_os9_state(pid, cp->saved_state, "WriteCharsToPTY");
         n = cp->saved_cnt;
-    } 
+    }
 
     if (mco->holdScreen) {
         cp->saved_cnt   = n;
         cp->saved_state = cp->state;
         set_os9_state(pid, pWaitRead, "WriteCharsToPTY");
         return n;
-    } 
+    }
 
     spC->u.pipe.pchP->do_lf = do_lf;                   /* store it here also */
     PutCharsToTTY(currentpid, spC, &n, buffer, do_lf); /* put it into pipe !! */
@@ -228,7 +228,7 @@ void WindowTitle(char *title, Boolean vmod)
     else {
         Console_Name(gConsoleID, (char *)&cons);
         sprintf(title, "%s  /%s - terminal window", title, cons);
-    } 
+    }
 #endif
 } /* WindowTitle */
 

@@ -262,7 +262,7 @@ char *egetenv(const char *name)
                 rslt = tmp;
                 debugprintf(dbgStartup, dbgNorm, ("# startPath: '%s'\n", rslt));
             }
-        } 
+        }
 
         if (!cm && !F_Avail(rslt)) {
             rslt = sv;
@@ -276,8 +276,8 @@ char *egetenv(const char *name)
                 strcat(tmp, PATHDELIM_STR);
             strcat(tmp, rslt);
             rslt = tmp;
-        } 
-    }     /* if u_* */
+        }
+    } /* if u_* */
 
     debugprintf(dbgStartup, dbgNorm, ("# egetenv %s: '%s'\n", name, rslt));
     return rslt;
@@ -548,7 +548,7 @@ void os9_main(int argc, char **argv, char **envp)
                     int_help(0, 0, NULL);
 #endif
                     exit(0);
-                } 
+                }
 
                 with_intcmds = false;
                 break;
@@ -594,7 +594,7 @@ void os9_main(int argc, char **argv, char **envp)
                     level = *(p + 1) - 0x30;
                     if (level > DEBUGLEVELS)
                         level = 0; /* default to 0 if level invalid */
-                }                  
+                }
                 usp = &debug[level];
                 goto getmask;
 
@@ -608,7 +608,7 @@ void os9_main(int argc, char **argv, char **envp)
                 if (sscanf(p, "%hx", usp) != 1) {
                     printf("# Error in hex mask '%s'\n", p);
                     exit(1);
-                } 
+                }
                 break;
 
             case 'u':
@@ -628,12 +628,12 @@ void os9_main(int argc, char **argv, char **envp)
                         printf("# Error: missing argument for '%s' option!\n",
                                p);
                         exit(1);
-                    } 
+                    }
 
                     p        = argv[k];
                     g_ipAddr = malloc(strlen(p) + 1);
                     strcpy(g_ipAddr, p);
-                } 
+                }
                 break;
 
             case 'x':
@@ -661,7 +661,7 @@ void os9_main(int argc, char **argv, char **envp)
                 if (k >= argc) {
                     printf("# Error: missing argument for '%s' option!\n", p);
                     exit(1);
-                } 
+                }
 
                 p        = argv[k];
                 modifier = 0;
@@ -669,14 +669,14 @@ void os9_main(int argc, char **argv, char **envp)
                     if (sscanf(++p, "%lx%c", ulp, &modifier) < 1) {
                         printf("# Error in hex number '$%s'\n", p);
                         exit(1);
-                    } 
+                    }
                 }
                 else {
                     if (sscanf(p, "%ld%c", ulp, &modifier) < 1) {
                         printf("# Error in decimal number '%s'\n", p);
                         exit(1);
-                    } 
-                }     
+                    }
+                }
 
                 switch (tolower(modifier)) {
                 case 'm':
@@ -702,8 +702,8 @@ void os9_main(int argc, char **argv, char **envp)
             no_app = false;
             kX     = k;
             break;
-        } 
-    }     
+        }
+    }
 
     // not enough arguments
     if (no_app) {
@@ -719,12 +719,12 @@ void os9_main(int argc, char **argv, char **envp)
     }
     else {
         toolname = argv[kX];
-    } 
+    }
 
     if (fullScreen) {
         screenW = 0; // full screen mode
         screenH = 0;
-    } 
+    }
 
     if (userOpt)
         catch_ctrlC = false;

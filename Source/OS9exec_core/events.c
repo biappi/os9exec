@@ -91,7 +91,7 @@ os9err evLink(char *evName, ulong *evId)
             *evId = ev->id;
             return 0;
         }
-    } 
+    }
 
     return E_EVNF;
 } /* evLink */
@@ -107,7 +107,7 @@ os9err evUnLnk(ulong evId)
                 ev->e_linkcount--;
             return 0;
         }
-    } 
+    }
 
     return E_EVNTID;
 } /* evUnLnk */
@@ -124,7 +124,7 @@ os9err evCreat(char *evName, int evValue, short wInc, short sInc, ulong *evId)
         ev = &events[k];
         if (ev->id != 0 && strcmp(ev->name, evName) == 0)
             return E_EVBUSY;
-    } 
+    }
 
     ev = getEv(0); /* this is an event which is not yet in use */
     if (ev == NULL)
@@ -156,7 +156,7 @@ os9err evDelet(char *evName)
             ev->id = 0;
             return 0;
         }
-    } 
+    }
 
     return E_EVNF;
 } /* evDelet */
@@ -181,14 +181,14 @@ os9err evWait(ulong evId, int minV, int maxV, int *evValue)
                 err = evSet(evId, 1, &prev);
                 break;
             }
-        } 
+        }
     }
 
     if (ev->value >= minV && ev->value <= maxV) {
         ev->value += ev->wInc;
         *evValue = ev->value;
         return 0;
-    } 
+    }
 
     return E_EVNTID;
 } /* evWait */

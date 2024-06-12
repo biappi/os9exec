@@ -527,7 +527,7 @@ os9err OS9_F_Time(regs_type *rp, _pid_)
         /* we need some ticks, too */
         hiword(rp->d[3]) = TICKS_PER_SEC;
         loword(rp->d[3]) = currentTick;
-    } 
+    }
 
     return 0;
 } /* OS9_F_Time */
@@ -830,9 +830,9 @@ os9err OS9_F_RTE(_rp_, ushort cpid)
                 syt = GetSystemTick();
                 if (cp->wakeUpTick > syt)
                     cp->os9regs.d[0] = cp->wakeUpTick - syt;
-            } 
-        }     
-    }         
+            }
+        }
+    }
 
     sig_mask(cpid, 0); /* disable signal mask */
     return err;
@@ -925,7 +925,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
         pd._traps[k]  = (byte *)os9_long((ulong)tp->trapmodule);
         pd._trpmem[k] = (byte *)os9_long((ulong)tp->trapmem);
         pd._trpsiz[k] = 0;
-    } 
+    }
 
     // get the list of the currently installed error trap handlers (LuZ)
     for (k = 0; k < NUMEXCEPTIONS; k++) {
@@ -933,12 +933,12 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
 
         pd.except[k] = (byte *)os9_long((ulong)ep->handleraddr);
         pd._exstk[k] = (byte *)os9_long((ulong)ep->handlerstack);
-    } 
+    }
 
     // get the list of the currently opened paths
     for (k = 0; k < MAXUSRPATHS; k++) {
         pd._path[k] = os9_word(cp->usrpaths[k]);
-    } 
+    }
 
     // ... and get the total size from the first segment
     memsz = 0;
@@ -947,8 +947,8 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
         if (cm->m[k].base != NULL) {
             pd._memimg[0] = (unsigned char *)os9_long((ulong)cm->m[k].base);
             memsz += cm->m[k].size;
-        } 
-    }     
+        }
+    }
     pd._blksiz[0] = os9_long(memsz);
 
     memcpy((byte *)rp->a[0], &pd, loword(rp->d[1]));
@@ -1321,7 +1321,7 @@ os9err OS9_F_TLink(regs_type *rp, ushort cpid)
                 *(--sp)  = 0; // save two dummy null words
                 *(--sp)  = os9_long(rp->a[6]); // save "caller's A6"
                 rp->a[7] = (ulong)sp;          // update stack pointer
-            }                                  
+            }
 
             /* --- modify registers to continue execution in traphandler's init
              * routine */
@@ -1518,7 +1518,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
             if (*p == '/')
                 putchar('¶'); /* quote slashes, as they are MPW shell quotes */
             putchar(*p++);
-        } 
+        }
 
         puts(" ;\n");
         fflush(stdout);
@@ -1565,7 +1565,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         if (!np->isIntUtil) {
             if (cp->pd._cid != 0 && cp->pd._cid != newpid)
                 np->pd._sid = cp->pd._cid;
-        } 
+        }
 
         if (!np->isIntUtil) {
             cp->pd._cid = os9_word(newpid); /* this is the child */
@@ -1578,7 +1578,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
             set_os9_state(newpid,
                           pActive,
                           "OS9_F_Fork"); /* make this process active */
-        }                                
+        }
 
         retword(rp->d[0]) =
             newpid; // return forked process' ID, in case it has been changed
@@ -1593,7 +1593,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
                       pUnused,
                       "OS9_F_Fork"); /* unused again because of error */
         // np->exiterr= err;
-    } 
+    }
 
     return err;
 
@@ -1611,7 +1611,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
       if  (!np->isIntUtil) {
         if (cp->pd._cid!=0 &&
             cp->pd._cid!=newpid) np->pd._sid= cp->pd._cid;
-      } 
+      }
 
       if   (!np->isIntUtil) {
              cp->pd._cid= os9_word( newpid );                     // this is the
@@ -1621,11 +1621,11 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     later
 
         set_os9_state( newpid, pActive, "OS9_F_Fork" );    // make this process
-    active } 
+    active }
 
       arbitrate= true; // really needed !
       return 0;
-    } 
+    }
 
     // -- save exit code
     close_usrpaths( newpid );
@@ -1760,7 +1760,7 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
             cpid + 1;          /* previously "forked" child's process ID */
         retword(rp->d[1]) = 0; /* exit status */
         return 0;
-    } 
+    }
 
     /* check if there are children at all */
     activeChild = MAXPROCESSES;
@@ -1781,7 +1781,7 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
 
                     pp= &procs[ *chP ];
               chP= &pp->pd._sid; // go to the next element
-            } 
+            }
 
           //pp->pd._cid= cp->pd._sid; // restore former child id
             */
@@ -1794,8 +1794,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
                          cpid));
             set_os9_state(k, pUnused, "OS9_F_Wait");
             return 0; // process already died, no need to wait
-        }             
-    }                 
+        }
+    }
 
     for (k = 2; k < MAXPROCESSES; k++) { // start at process 2
         cp = &procs[k];
@@ -1807,8 +1807,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
                         ("# F$Wait: child pid=%d is active\n", k));
             activeChild = k; // remember its id
             break;
-        } 
-    }     
+        }
+    }
 
     cp = &procs[cpid];
     if (activeChild < MAXPROCESSES) { /* there is (at least) one child, but it's
@@ -1839,7 +1839,7 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
                     retword(rp->d[0]) = cp->os9regs.d[0];
                     retword(rp->d[1]) = cp->os9regs.d[1]; // exit error of child
                     return 0; // it's done already !!
-                }             
+                }
 
                 for (k = 2; k < MAXPROCESSES; k++) { /* start at process 2  */
                     cp = &procs[k];
@@ -1857,15 +1857,15 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
                                      cpid));
                         set_os9_state(k, pUnused, "OS9_F_Wait");
                         return 0; // process already died, no need to wait
-                    }             
-                }                 
-            }                     // loop
-        }                         
+                    }
+                }
+            } // loop
+        }
 
         currentpid = activeChild; /* activate that child */
         arbitrate  = true;
         return 0; /* continue execution with another process */
-    }             
+    }
 
     /* there are no children */
     debugprintf(dbgProcess,
@@ -1919,7 +1919,7 @@ os9err OS9_F_Sleep(regs_type *rp, ushort cpid)
                     dbgNorm,
                     ("# F$Sleep: pid=%d sleep for %d ticks\n", cpid, ticks));
         cp->wakeUpTick = GetSystemTick() + ticks;
-    } 
+    }
 
     return 0;
 } /* OS9_F_Sleep */
@@ -1983,7 +1983,7 @@ os9err OS9_F_CRC(regs_type *rp, _pid_)
     else {
         /* update CRC over given area */
         rp->d[1] = calc_crc((byte *)rp->a[0], rp->d[0], rp->d[1]);
-    } 
+    }
 
     return 0;
 } /* OS9_F_CRC */
@@ -2123,7 +2123,7 @@ os9err OS9_F_CmpNam(regs_type *rp, _pid_)
                 targ = starg++; /* begin behind last match */
             }
         }
-    } 
+    }
 
     /* only if match and both strings at end it is a real match */
     if (match && pat >= patend && *targ == 0)

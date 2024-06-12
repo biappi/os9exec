@@ -635,7 +635,7 @@ os9err OS9_I_Attach(regs_type *rp, _pid_)
     if (ustrcmp(name, "/L2") == 0) {
         rp->a[2] = 0x22002200; /* %%% /L2 identifier */
         return 0;
-    } 
+    }
 
     debugprintf((dbgPartial + dbgFiles),
                 dbgNorm,
@@ -659,7 +659,7 @@ os9err OS9_I_Detach(regs_type *rp, _pid_)
     if (rp->a[2] == 0x22002200) {
         init_L2(); /* switch off /L2 completely */
         return 0;
-    } 
+    }
 
     debugprintf((dbgPartial + dbgFiles),
                 dbgNorm,

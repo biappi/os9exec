@@ -126,7 +126,7 @@ static os9err SCSIcall(short   scsiAdapt,
         }
 
         upe_printf("# SCSIcall: %s (err=%d)\n", s, err);
-    } 
+    }
 
     return err;
 } /* SCSIcall */
@@ -255,7 +255,7 @@ os9err Get_DSize(scsi_dev *scsi, ulong *totScts)
     /* Iomega JAZ does not support the mode sense command */
     if (*totScts == 0) {
         err = ReadCapacity(scsi, totScts, &sctSize);
-    } 
+    }
 
     return err;
 } /* Get_DSize */
@@ -292,8 +292,7 @@ os9err ReadFromSCSI(scsi_dev *scsi,
         //      if (err) printf( "Read  %008X %d %d\n", sectorNr,ii,err );
         if (err != E_UNIT && err != E_SEEK)
             break;
-
-    } 
+    }
 
     if (err == E_UNIT)
         err = E_READ;
@@ -332,8 +331,7 @@ os9err WriteToSCSI(scsi_dev *scsi,
         //      if (err) printf( "Write %008X %d %d\n", sectorNr,ii,err );
         if (err != E_UNIT && err != E_SEEK)
             break;
-
-    } 
+    }
 
     if (err == E_UNIT)
         err = E_WRITE;

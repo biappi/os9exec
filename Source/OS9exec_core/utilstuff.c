@@ -249,7 +249,7 @@ char *nullterm(char *s1, const char *s2, ushort max)
             *s1++ = *s2++; /* don't use max-- structure any more */
         else
             s2++; /* don't copy more, simply increment */
-    }             
+    }
 
     *s1 = NUL;                  /* terminate */
     trigcheck("nullterm", res); /* check for name trigger */
@@ -418,8 +418,8 @@ os9err os9error(os9err err)
             debugprintf(dbgErrors,
                         dbgDetail,
                         ("#    last path parsed=%s\n", lastpathparsed));
-        } 
-    }     
+        }
+    }
 
     return err;
 } /* os9error */
@@ -620,7 +620,7 @@ void Get_Time(ulong  *cTime,
             *currentTick = (syTick + syCorr) % TICKS_PER_SEC;
             // upe_printf( "  %10d %10d %10d %10d %10d\n", tsm,ssm,
             // syTick,syCorr,*currentTick );
-        } 
+        }
 
         if (tsm < ssm) {
             // upe_printf( "< %10d %10d %10d %10d %10d\n", tsm,ssm,
@@ -629,8 +629,8 @@ void Get_Time(ulong  *cTime,
             *currentTick = (syTick + syCorr) % TICKS_PER_SEC;
             // upe_printf( "  %10d %10d %10d %10d %10d\n", tsm,ssm,
             // syTick,syCorr,*currentTick );
-        } 
-    }     
+        }
+    }
 
     if (asGregorian) {
         /* gregorian format */
@@ -657,7 +657,7 @@ tc[3]= tim.tm_sec;
         /* julian format */
         *cTime = ssm;             /* seconds since midnight */
         *cDate = j_date(d, m, y); /* julian date, intenral clock starts 1904 */
-    }                             
+    }
 
     *dayOfWk = tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
 } /* Get_Time */
@@ -973,7 +973,7 @@ void GetOS9Dev(const char *pathname, char *cmp_entry)
             *c = *p;
             c++;
             p++;
-        } 
+        }
     }
 
     *c = NUL;
@@ -999,7 +999,7 @@ Boolean IsWhat(const char *pathname, Boolean isRoot)
         if (*p == PSEP)
             return false;
         p++;
-    } 
+    }
 
     p--;
     if (isRoot)
@@ -1139,8 +1139,8 @@ void CutUp(char *pathname, const char *prev)
                         q++;
                         // if (i>0) q++;
                         break;
-                    } 
-                }     
+                    }
+                }
 
                 *q = NUL; /* concatenate at the new position */
                 strcat(pathname, qs);
@@ -1163,7 +1163,7 @@ void CutUp(char *pathname, const char *prev)
 
         debugprintf(dbgFiles, dbgNorm, ("# AdjustPath REDU '%s'\n", pathname));
         v = q;
-    } 
+    }
 } /* CutUp */
 
 void EatBack(char *pathname)
@@ -1220,7 +1220,7 @@ static int HashF(char *name)
     len = strlen(name);
     for (i = 0; i < len + 1; i++) {
         ups[i] = toupper(name[i]); // make comparisons more "the same"
-    }                              
+    }
 
     rslt = AccStart;
     rslt = calc_crc((byte *)&ups, len, rslt);
@@ -1259,8 +1259,8 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
       //if (spP!=NULL) {
       //  while (dEnt!=NULL && isFirst && strcmp( dEnt->d_name,"." )!=0) {
       //         dEnt= ReadTDir( spP->dDsc );
-      //  } 
-      //} 
+      //  }
+      //}
 
         if (dEnt==NULL) *id= 0;
         else            *id= dEnt->d_ino;
@@ -1280,7 +1280,7 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
         if (tmp[strlen(tmp) - 1] != PATHDELIM)
             strcat(tmp, PATHDELIM_STR);
         strcat(tmp, dEnt->d_name);
-    } 
+    }
 
     EatBack(tmp);
     // upe_printf( "REIN name='%s'\n", tmp );
@@ -1304,14 +1304,14 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
             if (liCnt == 0)
                 hittable[0]--; // adapt statistics
             hittable[n]++;
-        } 
+        }
 
         if (dirid != 0)
             (*mH)->dirid = dirid;
         if (ustrcmp((*mH)->ident, tmp) == 0) {
             *fdID = (ulong)ii;
             break;
-        } 
+        }
 
 #ifdef LINKED_HASH
         liCnt++;
@@ -1342,9 +1342,9 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
                 (*mH)->ident = NULL;
 
                 (*mH)->next = NULL;
-            } 
+            }
 #endif
-        } 
+        }
 
         if (n < MAXDIRHIT - 1)
             n++;
@@ -1381,13 +1381,13 @@ os9err FD_Name(ulong fdID, char **pathnameP)
         for (i = 0; i < liCnt; i++) {
             if (m)
                 m = m->next;
-        } 
+        }
 #endif
 
         if (m && m->ident != NULL) {
             *pathnameP = m->ident;
-        } 
-    }     
+        }
+    }
 
     if (*pathnameP == NULL)
         err = E_PNNF;
@@ -1449,8 +1449,8 @@ os9err Flush_Dir(ushort cpid, ushort *pathP, const char *nmS)
                 //   os9_long( d.fdsect ), mP->dirid );
 
                 mP->dirid = 0;
-            } 
-        }     
+            }
+        }
 
         if (err == E_EOF)
             err = 0;
@@ -1476,7 +1476,7 @@ os9err Flush_Entry(ushort cpid, const char *name)
         strcpy(tmp, procs[cpid].d.path);
         strcat(tmp, PSEP_STR);
         strcat(tmp, name);
-    } 
+    }
 
     err = FD_ID(tmp, NULL, &fd_hash, &mP);
     if (!err)
@@ -1494,7 +1494,7 @@ os9err Flush_Entry(ushort cpid, const char *name)
         cer = usrpath_close(cpid, path);
         if (!err)
             err = cer;
-    } 
+    }
 
     return 0;
 
@@ -1533,7 +1533,7 @@ os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
       if (*dEnt==NULL) break;
       debugprintf(dbgFiles,dbgDetail,("# DirEntry: '%s'\n", (*dEnt)->d_name ));
       m--;
-    } 
+    }
     debugprintf(dbgFiles,dbgDetail,("# DirEntry: ---\n" ));
     */
 
@@ -1546,14 +1546,14 @@ os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
             } // still the same
             if (n != i + 1)
                 i = 0; // not the next one
-        }              
+        }
 
         // if (i==0) { seekD0( spP ); i= 1; }  // start at the beginning
 
         if (n <= 2 || i == 0) {
             seekD0(spP);
             i = 1; // ignore ".." and "." entries for n>=2
-        }          
+        }
 
         if (n == 0) { // search for ".."
             do
@@ -1561,7 +1561,7 @@ os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
             while (*dEnt != NULL && strcmp((*dEnt)->d_name, "..") != 0);
 
             break;
-        } 
+        }
 
         if (n == 1) { // search for "."
             do
@@ -1569,14 +1569,14 @@ os9err DirNthEntry(syspath_typ *spP, int n, dirent_typ **dEnt)
             while (*dEnt != NULL && strcmp((*dEnt)->d_name, ".") != 0);
 
             break;
-        } 
+        }
 
         //#ifdef windows32 // missing top dir entry
         /*
         if (n==2 || i==0) {
           seekD0( spP );
           i= 1; // ignore ".." and "." entries
-        } 
+        }
         */
         //#endif
 
@@ -1643,7 +1643,7 @@ os9err RemoveAppledouble(syspath_typ *spP)
             if (err)
                 break;
         }
-    } 
+    }
 
     closedir(app_d);
     if (err)
@@ -1741,7 +1741,7 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
                 if (fd == 1)
                     fd = 2; // adapt for top dir searching
 #endif
-            } 
+            }
 
             if (!okINO)
                 FD_ID(pathname, dEnt, &fd, &mP);
@@ -1798,19 +1798,19 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
                                 strcpy(result, dEnt->d_name);
                                 ok = true;
                                 break;
-                            } 
-                        }     
-                    }         // loop
+                            }
+                        }
+                    } // loop
 
                     closedir(d);
-                } 
+                }
             } while (false);
 #endif
-        } 
+        }
 
         // upo_printf( "'%s' %s => '%s'\n\n", pathname, ok ? "OK":"NOT OK",
         // result );
-    } 
+    }
 
     return ok;
 } /* DirName */
@@ -1840,11 +1840,11 @@ ulong My_FD(const char *pathname)
             if (ustrcmp(dEnt->d_name, q) == 0) {
                 FD_ID(p, dEnt, &fd, &mP);
                 break;
-            } 
-        }     
+            }
+        }
 
         closedir(d);
-    } 
+    }
 
     return fd;
 } /* My_FD */
@@ -1863,8 +1863,8 @@ void MakeOS9Path(char *pathname)
         else {
             tmp[0] = PSEP; /* start with a slash */
             i      = 1;
-        } 
-    }     
+        }
+    }
 
     strcpy(&tmp[i], q);
     q = tmp;
@@ -1873,7 +1873,7 @@ void MakeOS9Path(char *pathname)
         if (*q == PATHDELIM)
             *q = PSEP;
         q++;
-    } 
+    }
 
     q--;
     if (*q == PSEP)
@@ -1970,7 +1970,7 @@ Boolean SCSI_Device(const char *os9path,
             *typeP     = fRBF;
             return true;
         }
-    } 
+    }
 
     if (!IsDesc(dvn, &mod, &p))
         return false;
@@ -2022,7 +2022,7 @@ Boolean SCSI_Device(const char *os9path,
         }
         // no more room in SCSI table
         return false;
-    } 
+    }
 
     // is false, but useful anyway
     if (ustrcmp(p, "SCF") == 0) {
@@ -2415,7 +2415,7 @@ ptype_typ IO_Type(ushort pid, char *os9path, ushort mode)
             if (type == fDir && !(mode & 0x80))
                 type = fFile;
             break;
-        } 
+        }
 
         if (ustrcmp(os9path, "/nil") == 0) {
             type = fNIL;
