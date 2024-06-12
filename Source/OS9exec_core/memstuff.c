@@ -148,7 +148,7 @@ void init_all_mem(void)
         freeinfo.f[k].base = NULL;
         freeinfo.f[k].size = 0;
 #endif
-    } /* for */
+    } 
 } /* init_all_mem */
 
 #ifdef REUSE_MEM
@@ -165,10 +165,10 @@ static void MemLine(int *k, ulong value, const char *s)
                 break;
             tot += f->size;
             n++;
-        } /* if */
+        } 
 
         (*k)--;
-    } /* while */
+    } 
 
     if (n > 0)
         upo_printf("%s  %4d  %9d\n", s, n, tot);
@@ -214,7 +214,7 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
                         break;
                     }
                     upe_printf("%8d  %08X\n", diff, nxMin);
-                } /* if */
+                } 
 
                 nx    = nxMin;
                 svSiz = nxSiz;
@@ -228,10 +228,10 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
                         nxMin = f->base;
                         nxSiz = f->size;
                     }
-                } /* for */
+                } 
 
                 i++;
-            } /* while */
+            } 
 #endif
 
             return;
@@ -355,8 +355,8 @@ static Boolean release_ok(void *membase, ulong memsz)
             freeinfo.freeN--;
             freeinfo.freeMem -= svsize;
             break;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     /* check if piece appended at the beginning available */
     for (k = 0; k < MAX_MEMALLOC; k++) {
@@ -376,8 +376,8 @@ static Boolean release_ok(void *membase, ulong memsz)
             freeinfo.freeN--;
             freeinfo.freeMem -= svsize;
             break;
-        } /* if */
-    }     /* for */
+        } 
+    }     
           //#endif
 
     for (k = 0; k < MAX_MEMALLOC; k++) { /* do not really release the memory */
@@ -395,8 +395,8 @@ static Boolean release_ok(void *membase, ulong memsz)
             freeinfo.freeN++;
             freeinfo.freeMem += memsz;
             return true;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     return false;
 } /* release_ok */
@@ -454,8 +454,8 @@ void release_mem(void *membase)
             m->base = NULL; /* and release the segment */
             m->size = 0;
             break;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
 #ifdef REUSE_MEM
     if (memsz == 0) {
@@ -476,7 +476,7 @@ void release_mem(void *membase)
              memsz,
              totalMem));
         return;
-    } /* if */
+    } 
 #endif
 
     debugprintf(dbgMemory,
@@ -640,9 +640,9 @@ void *get_mem(ulong memsz)
                              memsz,
                              totalMem));
                 return pp;
-            } /* if */
-        }     /* for */
-    }         /* if */
+            } 
+        }     
+    }         
 
     //#ifndef PLUGIN_DLL
     upe_printf("No more memory !!!\n");
@@ -735,7 +735,7 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
 
                 return 0; /* freed ok */
             }             // if
-        }                 /* for */
+        }                 
     }                     // if
 
     // upe_printf( "bad block %08X size=%d\n", membase, memsz );

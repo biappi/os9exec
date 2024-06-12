@@ -169,11 +169,11 @@ static os9err options(int argc, char *argv[])
                     return _errmsg(1, "unknown option '%c'\n", *sc);
                     break;
                 } /* switch */
-            }     /* while */
+            }     
         }         /* if hyphen */
         else
             nargc++;
-    } /* for */
+    } 
     return 0;
 } /* options */
 
@@ -523,7 +523,7 @@ os9err int_move(ushort cpid, int argc, char **argv)
             err = move_file(cpid, fromdir, fromname, wilddir, "");
             if (err)
                 return err;
-        } /* while */
+        } 
     }
     else {
         /* single file move */

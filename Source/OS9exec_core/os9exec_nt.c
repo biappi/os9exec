@@ -976,7 +976,7 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
             if (*p == PSEP)
                 *p = PATHDELIM;
             p++;
-        } /* while */
+        } 
 
         p = tmp;
     } // if
@@ -2227,7 +2227,7 @@ ushort os9exec_nt(const char *toolname,
         argv_startup[0] = "startup";
         argv_startup[1] = NULL;
         argv            = (char **)&argv_startup;
-    } /* if */
+    } 
 
     withTitle =
         ustrcmp(my_toolname, "shell") == 0 || ustrcmp(my_toolname, "sh") == 0;

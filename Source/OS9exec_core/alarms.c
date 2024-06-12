@@ -84,11 +84,11 @@ void A_Insert(alarm_typ *aa)
             if (aa->due >= q->due) {
                 alarm_queue[k] = aa;
                 return;
-            } /* if */
+            } 
 
             alarm_queue[k] = q;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     alarm_queue[0] = aa; /* if list is still empty */
 } /* A_Insert */
@@ -110,7 +110,7 @@ void A_Remove(alarm_typ *aa)
 
         if (fnd)
             alarm_queue[k] = alarm_queue[k + 1];
-    } /* for */
+    } 
 
     /* invalidate at least this */
     alarm_queue[MAXALARMS - 1] = NULL;
@@ -126,8 +126,8 @@ static alarm_typ *A_GetNew(ushort pid)
         if (aa->pid == 0) {
             aa->pid = pid; /* activate it */
             return aa;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     /* no empty entry available */
     return NULL;
@@ -165,7 +165,7 @@ void A_Kill(ushort pid)
         q = alarm_queue[k];
         if (q != NULL && q->pid == pid)
             A_Remove(q);
-    } /* for */
+    } 
 } /* A_Kill */
 
 /* ------------------------------------------------------------------ */
@@ -181,8 +181,8 @@ static os9err Alarm_Delete(_pid_, ulong aId)
         if (aa != NULL && aa == (alarm_typ *)aId) {
             A_Remove(aa);
             return 0;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     /* can't find this alarm */
     return E_BPADDR;

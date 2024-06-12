@@ -1096,7 +1096,7 @@ static void update_L2(ulong t)
         v = os9_word(ll);
         if (v != l2.hw_location)
             l2.hw_location = v;
-    } /* if */
+    } 
 } /* update_L2 */
 
 /* get system tick count and subtract the start tick */
@@ -1329,7 +1329,7 @@ static void show_syscalltimers(Boolean icalls,
             *call += t;
             *num += n;
         }
-    } /* for */
+    } 
 } /* show_syscalltimers */
 
 /* show system call timers */
@@ -1401,7 +1401,7 @@ show_os9timers(ushort mode, ulong active, ulong *call, ulong *num, int ticksLim)
             *call += t;
             *num += n;
         }
-    } /* for */
+    } 
 } /* show_os9timers */
 
 /* show timing summary */
@@ -1585,7 +1585,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
                 }
 
                 p++;
-            } /* while */
+            } 
         }
         else {
             upe_printf("Error: no arguments allowed\n");

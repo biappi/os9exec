@@ -354,7 +354,7 @@ void init_processes()
         procs[k].isPlugin  = false;
         procs[k].plugElem  = NULL;
         prDBT[k]           = 0; /* and also the table entry */
-    }                           /* for */
+    }                           
 
     s  = (short *)prDBT;
     *s = os9_word(MAXPROCESSES - 1);
@@ -728,10 +728,10 @@ os9err send_signal(ushort spid, ushort signal)
             if (cp->pd._group == procs[k].pd._group &&
                 cp->pd._user == procs[k].pd._user && currentpid != k)
                 send_signal(k, signal);
-        } /* for */
+        } 
 
         return 0;
-    } /* if */
+    } 
 
     if (spid >= MAXPROCESSES)
         return E_IPRCID; /* check the validity of <spid> first */
@@ -799,7 +799,7 @@ os9err send_signal(ushort spid, ushort signal)
         if (!async_area)
             async_pending = true;
         return 0;
-    } /* if */
+    } 
 
     /* now it's time to clear the flag again */
     if (signal <= Pwr_Signal)
@@ -854,7 +854,7 @@ os9err send_signal(ushort spid, ushort signal)
             retword(sigp->os9regs.d[1]) =
                 0; /* no signal code !!! returning signal code is wrong (bfo) */
             sigp->os9regs.sr &= ~CARRY; /* error-free return */
-        }                               /* if */
+        }                               
 
         arbitrate = false;
         sigp->pd._signal =
@@ -1013,14 +1013,14 @@ os9err sig_mask(ushort cpid, int level)
             for (j = i; j < s->cnt; j++) { /* remove one element from stack */
                 s->pid[j]    = s->pid[j + 1];
                 s->signal[j] = s->signal[j + 1];
-            } /* for */
+            } 
 
             if (s->cnt <= 0)
                 async_pending = false;
             err = send_signal(pid, signal);
             break;
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     return 0;
 } /* sig_mask */
@@ -1061,7 +1061,7 @@ static void wait_for_signal(ushort pid)
                     send_signal(pid, sig);
 #endif
             }
-        } /* if */
+        } 
     }
     currentpid = sv;
 } /* wait_for_signal */
@@ -1292,7 +1292,7 @@ void do_arbitrate(ushort allowedIntUtil)
                 if (deadpid < MAXPROCESSES)
                     break; /* yes, there is a dead child, we can unwait */
             }              // if
-        }                  /* if */
+        }                  
 
         if (sprocess->isIntUtil && spid != allowedIntUtil) {
             arbitrate = true;

@@ -386,7 +386,7 @@ void Update_MDir(void)
             en->size = 0;
             en->lnk  = 0;
         }
-    } /* for */
+    } 
 }
 
 /*
@@ -525,7 +525,7 @@ void show_modules(char *cmp)
                            nam);
             } /* if (cmp==NULL || .. */
         }     /* if (mod!=NULL) */
-    }         /* for */
+    }         
 } /* show_modules */
 
 /* initialize internal "module directory" */
@@ -659,7 +659,7 @@ int find_mod_id(const char *name)
         p = Mod_Name(mod);
         if (ustrcmp(p, name) == 0)
             return k; /* module found */
-    }                 /* for */
+    }                 
 
     return MAXMODULES;
 } /* find_mod_id */
@@ -782,13 +782,13 @@ static void go_thru_list(char *v0, char *b0, ulong inetAddr)
             v = v + strlen(v) + 1;
             if (*v == NUL)
                 break;
-        } /* while */
+        } 
         if (lFound)
             break;
 
         blk += jump;
         v = blk;
-    } /* for */
+    } 
     if (!lFound)
         return; /* probably not enough room to put "localhost" in */
 
@@ -819,7 +819,7 @@ static void go_thru_list(char *v0, char *b0, ulong inetAddr)
 
         blk += jump;
         v = blk;
-    } /* for */
+    } 
 } /* go_thru_list */
 
 static void adapt_inetdb(mod_exec *mh,
@@ -1154,7 +1154,7 @@ static os9err load_module_local(ushort  pid,
             if (bootPos == 0)
                 err = usrpath_close(pid, path);
             return E_READ;
-        } /* if */
+        } 
 
         isBuiltIn = false; /* is no resource-based module */
 
@@ -1247,7 +1247,7 @@ static os9err load_module_local(ushort  pid,
                         ("# load_module: bad modsync: %04x, E_BMID\n", sync));
             err = E_BMID;
             break;
-        } /* if */
+        } 
 
         par = calc_parity((ushort *)theModuleP, 24);
         if (par != 0) {
@@ -1259,7 +1259,7 @@ static os9err load_module_local(ushort  pid,
                          par));
             err = E_BMHP;
             break;
-        } /* if */
+        } 
 
         modSize = os9_long(theModuleP->_mh._msize);
         if (modSize > dsize) {
@@ -1269,7 +1269,7 @@ static os9err load_module_local(ushort  pid,
                 ("# load_module: bad size: %d>%d, E_BMID\n", modSize, dsize));
             err = E_BMID;
             break; /* as a native OS-9 system (bfo) */
-        }          /* if */
+        }          
 
         crc = calc_crc((byte *)theModuleP, modSize, 0xFFFFFFFF);
         if (crc != 0xFF800FE3) {
@@ -1281,7 +1281,7 @@ static os9err load_module_local(ushort  pid,
             /* bad CRC */
             err = E_BMCRC;
             break;
-        } /* if */
+        } 
 
         /* --- module loaded is ok */
         /* now check if we already have something like this in our module dir */
@@ -1316,7 +1316,7 @@ static os9err load_module_local(ushort  pid,
                              &dns2,
                              domainName); /* assign my internet address */
 #endif
-        } /* if */
+        } 
 
         if (ustrcmp(realmodname, "init") == 0)
             adapt_init(theModuleP);
@@ -1785,7 +1785,7 @@ os9err release_traphandler(ushort pid, ushort trapidx)
 
         tp->trapmodule = NULL; /* no traphandler installed any more */
         tp->trapentry  = 0;    /* no traphandler entry available any more */
-    }                          /* if */
+    }                          
 
     return 0;
 } /* release_traphandler */

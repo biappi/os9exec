@@ -126,7 +126,7 @@ static os9err SCSIcall(short   scsiAdapt,
         }
 
         upe_printf("# SCSIcall: %s (err=%d)\n", s, err);
-    } /* if */
+    } 
 
     return err;
 } /* SCSIcall */
@@ -293,7 +293,7 @@ os9err ReadFromSCSI(scsi_dev *scsi,
         if (err != E_UNIT && err != E_SEEK)
             break;
 
-    } /* for */
+    } 
 
     if (err == E_UNIT)
         err = E_READ;
@@ -333,7 +333,7 @@ os9err WriteToSCSI(scsi_dev *scsi,
         if (err != E_UNIT && err != E_SEEK)
             break;
 
-    } /* for */
+    } 
 
     if (err == E_UNIT)
         err = E_WRITE;

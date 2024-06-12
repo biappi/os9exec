@@ -761,8 +761,8 @@ static os9err int_devs(_pid_, int argc, char **argv)
                     devs_printf(spP, "pty", "scf");
                 }
             }
-        } /* for */
-    }     /* if */
+        } 
+    }     
 
     return 0;
 } /* int_devs */
@@ -1986,8 +1986,8 @@ static void large_pipe_connect(ushort pid, syspath_typ *spC)
             *(q->pwp++) = *(p->prp++); /* put into the new buffer */
             if (p->prp >= p->buf + p->size)
                 p->prp = p->buf; /* wrap */
-        }                        /* while */
-    }                            /* if */
+        }                        
+    }                            
 
 #else
 #endif

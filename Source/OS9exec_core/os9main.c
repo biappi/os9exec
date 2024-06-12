@@ -262,7 +262,7 @@ char *egetenv(const char *name)
                 rslt = tmp;
                 debugprintf(dbgStartup, dbgNorm, ("# startPath: '%s'\n", rslt));
             }
-        } /* if */
+        } 
 
         if (!cm && !F_Avail(rslt)) {
             rslt = sv;
@@ -276,7 +276,7 @@ char *egetenv(const char *name)
                 strcat(tmp, PATHDELIM_STR);
             strcat(tmp, rslt);
             rslt = tmp;
-        } /* if */
+        } 
     }     /* if u_* */
 
     debugprintf(dbgStartup, dbgNorm, ("# egetenv %s: '%s'\n", name, rslt));

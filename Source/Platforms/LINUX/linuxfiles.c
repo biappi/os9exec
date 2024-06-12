@@ -83,7 +83,7 @@ void Conv_to_2e(char *pathname, char **qP, char **qsP)
         if (!fnd)
             **qP = toupper(**qP); /* convert to upper string, if not found */
         (*qP)++;
-    } /* while */
+    } 
 } /* Conv_to_2e */
 
 Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
@@ -190,7 +190,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
                 break;
             }
             q--;
-        } /* while */
+        } 
     }     /* loop */
 
     /* and forward again with uppercase/converted strings */
@@ -218,7 +218,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
                     err = E_CEF; /* both options true -> problem */
                 break;
             }
-        } /* if */
+        } 
 
         if (!fnd) {
             err = E_PNNF;
@@ -235,7 +235,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
 
         while (*q != NUL && *q != PATHDELIM)
             q++;
-    } /* while */
+    } 
 
     debugprintf(dbgFiles,
                 dbgNorm,

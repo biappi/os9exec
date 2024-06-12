@@ -249,7 +249,7 @@ char *nullterm(char *s1, const char *s2, ushort max)
             *s1++ = *s2++; /* don't use max-- structure any more */
         else
             s2++; /* don't copy more, simply increment */
-    }             /* while */
+    }             
 
     *s1 = NUL;                  /* terminate */
     trigcheck("nullterm", res); /* check for name trigger */
@@ -973,7 +973,7 @@ void GetOS9Dev(const char *pathname, char *cmp_entry)
             *c = *p;
             c++;
             p++;
-        } /* while */
+        } 
     }
 
     *c = NUL;
@@ -999,7 +999,7 @@ Boolean IsWhat(const char *pathname, Boolean isRoot)
         if (*p == PSEP)
             return false;
         p++;
-    } /* while */
+    } 
 
     p--;
     if (isRoot)
@@ -1163,7 +1163,7 @@ void CutUp(char *pathname, const char *prev)
 
         debugprintf(dbgFiles, dbgNorm, ("# AdjustPath REDU '%s'\n", pathname));
         v = q;
-    } /* while */
+    } 
 } /* CutUp */
 
 void EatBack(char *pathname)
@@ -1304,14 +1304,14 @@ FD_ID(const char *pathname, dirent_typ *dEnt, ulong *fdID, dirtable_entry **mH)
             if (liCnt == 0)
                 hittable[0]--; // adapt statistics
             hittable[n]++;
-        } /* if */
+        } 
 
         if (dirid != 0)
             (*mH)->dirid = dirid;
         if (ustrcmp((*mH)->ident, tmp) == 0) {
             *fdID = (ulong)ii;
             break;
-        } /* if */
+        } 
 
 #ifdef LINKED_HASH
         liCnt++;
@@ -1643,7 +1643,7 @@ os9err RemoveAppledouble(syspath_typ *spP)
             if (err)
                 break;
         }
-    } /* while */
+    } 
 
     closedir(app_d);
     if (err)
@@ -1810,7 +1810,7 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
 
         // upo_printf( "'%s' %s => '%s'\n\n", pathname, ok ? "OK":"NOT OK",
         // result );
-    } /* if */
+    } 
 
     return ok;
 } /* DirName */
@@ -1873,7 +1873,7 @@ void MakeOS9Path(char *pathname)
         if (*q == PATHDELIM)
             *q = PSEP;
         q++;
-    } /* while */
+    } 
 
     q--;
     if (*q == PSEP)
@@ -1970,7 +1970,7 @@ Boolean SCSI_Device(const char *os9path,
             *typeP     = fRBF;
             return true;
         }
-    } /* for */
+    } 
 
     if (!IsDesc(dvn, &mod, &p))
         return false;
@@ -2415,7 +2415,7 @@ ptype_typ IO_Type(ushort pid, char *os9path, ushort mode)
             if (type == fDir && !(mode & 0x80))
                 type = fFile;
             break;
-        } /* if */
+        } 
 
         if (ustrcmp(os9path, "/nil") == 0) {
             type = fNIL;

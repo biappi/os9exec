@@ -142,7 +142,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
 
                 *p++ = c; /* save in the buffer */
                 cnt++;
-            } /* while */
+            } 
 
             *p++ = '\0';
             //  if (*buffer!='#') printf( "'%s'\n", buffer );
@@ -151,7 +151,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
             if (strstr(buffer, v) != NULL) {
                 v = buffer + strlen(v);
                 strcpy(domainName, v);
-            } /* if */
+            } 
 
             v = "nameserver ";
             if (strstr(buffer, v) != NULL) {
@@ -165,7 +165,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
         } /* loop */
 
         fclose(stream);
-    } /* if */
+    } 
 
     hostPtr = gethostbyaddr((void *)&serverName.sin_addr.s_addr,
                             sizeof(ulong),
@@ -180,7 +180,7 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
         dom--;
         if (*dom == '.')
             *dom = '\0';
-    } /* if */
+    } 
 
     // printf( "'%s'\n", hostName );
     // printf( "i12d %08X %08X %08X '%s'\n", *inetAddr, *dns1Addr, *dns2Addr,

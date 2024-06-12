@@ -954,7 +954,7 @@ static void CutPath(char *s)
             strcpy(s, &s[ii + 1]);
             break;
         }
-    } /* for */
+    } 
 } /* CutPath */
 
 static os9err Open_Image(ushort      pid,
@@ -1084,7 +1084,7 @@ Boolean InstalledDev(const char *os9path,
             *cdv = ii;
             return true;
         }
-    } /* for */
+    } 
 
     p = tmp;
     if (*p == PSEP)
@@ -1105,7 +1105,7 @@ Boolean InstalledDev(const char *os9path,
             }
         }
         p++;
-    } /* while */
+    } 
 
     if (*dvn == NUL)
         return false; /* no device */
@@ -1124,7 +1124,7 @@ Boolean InstalledDev(const char *os9path,
             *cdv = ii;
             return true;
         }
-    } /* for */
+    } 
 
     return false;
 } /* InstalledDev */
@@ -1142,7 +1142,7 @@ static Boolean MWrong(int cdv)
              ustrcmp(mnt_name, dev->name2) == 0 ||
              ustrcmp(mnt_name, dev->name3) == 0))
             return true;
-    } /* for */
+    } 
 
     return false;
 } /* MWrong */
@@ -1517,7 +1517,7 @@ static os9err DeviceInit(ushort       pid,
                     return E_DEVBSY;
                 }
             }
-        } /* for */
+        } 
 
         if (cdv == 0)
             return E_UNIT; /* no valid device found */
@@ -1799,11 +1799,11 @@ os9err MountDev(ushort  pid,
                 err = E_BPNAM;
                 break;
             } /* illegal tokens in path name */
-        }     /* for */
+        }     
 
         if (err)
             name = mnt_name; /* for error output */
-    }                        /* if */
+    }                        
 
     mnt_wProtect = wProtect;
     mnt_imgMode  = imgMode;
@@ -1975,7 +1975,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
             }
             nargv[nargc++] = argv[k];
         }
-    } /* for */
+    } 
 
     if (nargc ==
         0) { /* no param is not really allowed: exception is ramDisk with */
@@ -2069,7 +2069,7 @@ os9err int_unmount(ushort pid, int argc, char **argv)
                     break;
                 }
             }
-        } /* for */
+        } 
         if (err)
             break;
 
@@ -2102,7 +2102,7 @@ os9err int_unmount(ushort pid, int argc, char **argv)
                     break;
                 }
             }
-        } /* for */
+        } 
     } while (false);
 
     if (err)
@@ -2252,10 +2252,10 @@ static void AdaptPath(rbfdev_typ *dev, char **pathP)
                 *pathP = p - 1;
                 break;
             }
-        } /* if */
+        } 
 
         p++;
-    } /* while */
+    } 
 } /* AdaptPath */
 
 /* ---------------------------------------------------------------- */
@@ -2488,8 +2488,8 @@ static os9err BlkSearch(rbfdev_typ *dev,
                 scsmax = *scs;
             }
             mask = mask / 2;
-        } /* for */
-    }     /* for */
+        } 
+    }     
 
     *pos = posmax;
     *scs = scsmax;
@@ -2597,8 +2597,8 @@ static os9err DeallocateBlocks(syspath_typ *spP)
 
             if (dev->last_alloc > pos)
                 dev->last_alloc = pos; /* next pos to search */
-        }                              /* if */
-    }                                  /* for */
+        }                              
+    }                                  
 
     return 0;
 } /* DeallocateBlocks */
@@ -2711,11 +2711,11 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
                     return err;
                 return 0;
             } // if
-        }     /* if */
+        }     
 
         prev_l  = os9_long(*lp) >> BpB;
         prev_sp = sp;
-    } /* for */
+    } 
 
     GetThem(dev, pos, scs, false);
     return E_SLF;
@@ -3452,7 +3452,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                     err = E_PNNF; /* OS-9 expects E_PNNF, if entry not found */
             }
             break; /* leave loop also, if file has been correctly created */
-        }          /* if */
+        }          
 
         debugprintf(
             dbgFiles,
@@ -3512,7 +3512,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                                  pathname,
                                  err));
                             spP->fullsearch = false;
-                        } /* if */
+                        } 
                     }
                 }
                 else { /* if it is a dir  entry */

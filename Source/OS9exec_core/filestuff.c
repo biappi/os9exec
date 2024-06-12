@@ -487,7 +487,7 @@ void show_files(ushort pid)
                             strcat(upc, ups);
                             stdp = true;
                         }
-                    } /* for */
+                    } 
 
                     if (stdp) {
                         up_found = true;
@@ -507,16 +507,16 @@ void show_files(ushort pid)
                                       nameflag,
                                       typenam);
                         }
-                    } /* for */
+                    } 
                 }
-            } /* for */
+            } 
 
             if (!up_found && pid >= MAXPROCESSES) {
                 strcpy(ups, "-");
                 disp_line(0, sp, ups, spP, false, nameflag, typenam);
             }
-        } /* if */
-    }     /* for */
+        } 
+    }     
 } /* show_files */
 
 static void CheckH0(char *name, char *p, char **p3)
@@ -830,7 +830,7 @@ parsepathext(ushort pid, char **inp, char *out, Boolean exedir, Boolean *ispath)
 
         p++;
         op++;
-    } /* while */
+    } 
 
     *op  = NUL; /* set terminator */
     *inp = p;   /* return updated pointer */
@@ -1043,7 +1043,7 @@ static void showbuff(syspath_typ *spP, byte *buffer, ulong len)
                 if (ii % 2 == 1)
                     upe_printf(" ");
                 ii++;
-            } /* while */
+            } 
         }
 
         if (k % 16 == 15 || k + 1 == len) {
@@ -1053,7 +1053,7 @@ static void showbuff(syspath_typ *spP, byte *buffer, ulong len)
                 upe_printf("%c", c < ' ' ? '.' : c);
             }
             upe_printf("\"\n");
-        } /* if */
+        } 
     }
 
     in_recursion = false;
@@ -1221,7 +1221,7 @@ os9err syspath_new(ushort *sp, ptype_typ type)
                         ("# syspath_new: allocated new sp=%d\n", k));
             return 0;
         }
-    } /* for */
+    } 
 
     return os9error(E_PTHFUL); /* no more system paths */
 } /* syspath_new */
@@ -1298,7 +1298,7 @@ os9err syspath_open(ushort      pid,
             } /* returns *sp with mode param */
             spP->type =
                 fNone; /* not sucessfully opened, in case of E_PLINK: no need */
-        }              /* if */
+        }              
     }
 
     debugprintf(dbgFiles,
@@ -1452,7 +1452,7 @@ static void usrpath_puts(ushort pid, ushort up, char *s, Boolean direct)
 
             base = ii + 1;
         }
-    } /* for */
+    } 
 
     gConsoleID   = sv_ConsoleID;
     g_spP        = sv_spP;
@@ -2049,7 +2049,7 @@ void close_usrpaths(ushort pid)
             usrpath_close(pid, k); /* close this path */
         //  *spN= 0;                     /* and invalidate to avoid double
         //  closing */
-    } /* for */
+    } 
 } /* close_usrpaths */
 
 void close_syspaths(void)

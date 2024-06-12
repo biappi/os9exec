@@ -245,8 +245,8 @@ os9err releasePipe(ushort pid, syspath_typ *spP)
                     pk->sp_lock = k;
                 return 0; /* still in use by another path */
             }
-        } /* if */
-    }     /* for */
+        } 
+    }     
 
     //  printf( "RELEASE PIPE OK  %08X %08X\n", p,spP->u.pipe.i_svd_pchP );
     spK = get_syspathd(pid, p->sp_lock);
@@ -521,7 +521,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
         }
 
         remaining--;
-    } /* while */
+    } 
 
     if (debugcheck(dbgFiles, dbgDeep)) {
         char  *dp = buffer + p->bwritten; /* at start of buffer */
@@ -733,7 +733,7 @@ static os9err pReadSysTaskExe(ushort          pid,
             remaining = ++nn; /* set remaining such that we're done now */
             break;            /* readln aborts at first CR found */
         }
-    } /* for */
+    } 
 
     if (debugcheck(dbgFiles, dbgDeep)) {
         char  *dp = (char *)buffer + p->bread; /* at start of buffer */
@@ -1066,7 +1066,7 @@ os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
         /* clear pipe buffer */
         p->pwp = p->buf;
         p->prp = p->buf;
-    } /* if */
+    } 
 
     return 0;
 } /* pPsetsz */
@@ -1099,7 +1099,7 @@ os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
                 ustrcmp(tty_cmp, spK->name) == 0)
                 return E_DEVBSY;
         }
-    } /* for */
+    } 
 
     err = pKopt(pid, spP, (byte *)&spP->opt); /* no err returned */
     err = ConnectPTY_TTY(pid, spP);
@@ -1136,10 +1136,10 @@ os9err pKclose(ushort pid, syspath_typ *spP)
                         break; /* only one signal per process */
                     }
                 }
-            } /* if */
+            } 
 
-        } /* for */
-    }     /* for */
+        } 
+    }     
 
     //  snd= 0;
     //  for (n=0; n<MAXSYSPATHS; n++) {
@@ -1151,7 +1151,7 @@ os9err pKclose(ushort pid, syspath_typ *spP)
     //             (k->sp_lock==spP->nr ||
     //              k->sp_lock==lk) && snd==0) snd= spK->lastwritten_pid;
     //      }
-    //  } /* for */
+    //  } 
     //  if (snd!=0 &&
     //      snd!=pid) send_signal( snd, S_HangUp );
 
@@ -1164,7 +1164,7 @@ os9err pKclose(ushort pid, syspath_typ *spP)
                 k->sp_lock = spK->nr; /* short-circuit them all */
             }
         }
-    } /* for */
+    } 
 
     return 0;
 } /* pKclose */
@@ -1257,12 +1257,12 @@ os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
                     break;
                 }
             }
-        } /* for */
+        } 
 
         if (found)
             break;
         newPty++;
-    } /* while */
+    } 
 
     /* use pipe structure for the tty/pty system */
     err = usrpath_new(pid, &up, fPTY);
@@ -1429,8 +1429,8 @@ void CheckInBufferTTY(ttydev_typ *mco)
                 break;
             }
             k++;
-        } /* while */
-    }     /* if */
+        } 
+    }     
 } /* CheckInBufferTTY */
 
 /* eof */

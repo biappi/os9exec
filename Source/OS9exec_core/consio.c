@@ -611,7 +611,7 @@ os9err pSopen(_pid_, syspath_typ *spP, _modeP_, char *name)
         k = link_mod_id(spP->name);
         if (k != MAXMODULES)
             spP->mh = os9mod(k);
-    } /* if */
+    } 
 
     return reply;
 } /* pSopen */
@@ -655,7 +655,7 @@ os9err pCclose(ushort pid, syspath_typ *spP)
     if (spP->type != fTTY) {
 
         return 0;
-    } /* if */
+    } 
 
     if (p == NULL)
         return 0; /* no pipe available => return */
@@ -677,7 +677,7 @@ os9err pCclose(ushort pid, syspath_typ *spP)
             b->sp_lock = spK->nr;
             return 0;
         }
-    } /* for */
+    } 
 
     /* syspath no longer in use, disconnect the pipe */
     if (b != NULL) {
@@ -804,8 +804,8 @@ static os9err ConsoleOut(ushort       pid,
                     do_lf    = ot->_sgs_alf;
                     break;
                 }
-            } /* while */
-        }     /* if */
+            } 
+        }     
 
         cnt = WriteCharsToPTY(buffer, *maxlenP, gConsoleID, do_lf);
         if (cp->state == pSysTask)
@@ -843,7 +843,7 @@ static os9err ConsoleOut(ushort       pid,
                     ConsPutc(LF);
                 break;
             }
-        } /* while */
+        } 
 
 #else
         cnt = stdwrite(pid, buffer, *maxlenP, spP->stream, false);

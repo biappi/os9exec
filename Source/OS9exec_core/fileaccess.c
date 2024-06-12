@@ -583,7 +583,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
         spP->rawMode  = true;
         len           = strlen(ploc);
         ploc[len - 1] = NUL;
-    } /* while */
+    } 
 
     pastpath = ploc;
     err      = parsepath(pid, &pastpath, hostpath, exedir);
@@ -703,7 +703,7 @@ os9err pFseek(_pid_, syspath_typ *spP, ulong *posP)
             return E_SEEK;
         spP->rawPos = *posP;
         return 0;
-    } /* if */
+    } 
 
     if (fseek(spP->stream, (long)*posP, SEEK_SET) == 0)
         return 0;
@@ -1355,7 +1355,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             else
                 return err;
         } // if
-    }     /* while */
+    }     
 
     /* sucessful, set number of bytes actually read */
     *n -= cnt; /* adjust to show actually read # of bytes */
@@ -1410,7 +1410,7 @@ os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
         if (ustrcmp(dEnt->d_name, AppDo) != 0)
             cnt--; /* ignore ".AppleDouble" */
         n++;
-    } /* while */
+    } 
 
     spP->u.disk.u.dir.pos = *posP;
     return 0;

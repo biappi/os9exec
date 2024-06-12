@@ -832,7 +832,7 @@ os9err OS9_F_RTE(_rp_, ushort cpid)
                     cp->os9regs.d[0] = cp->wakeUpTick - syt;
             } // if
         }     // if
-    }         /* if */
+    }         
 
     sig_mask(cpid, 0); /* disable signal mask */
     return err;
@@ -1518,7 +1518,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
             if (*p == '/')
                 putchar('¶'); /* quote slashes, as they are MPW shell quotes */
             putchar(*p++);
-        } /* while */
+        } 
 
         puts(" ;\n");
         fflush(stdout);
@@ -2123,7 +2123,7 @@ os9err OS9_F_CmpNam(regs_type *rp, _pid_)
                 targ = starg++; /* begin behind last match */
             }
         }
-    } /* while */
+    } 
 
     /* only if match and both strings at end it is a real match */
     if (match && pat >= patend && *targ == 0)
