@@ -221,9 +221,7 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv);
 Boolean RBF_ImgSize(long size);
 /* Returns true, if it is a valid RBF Image size */
 
-#if defined UNIX
 os9err GetRBFName(char *os9path, ushort mdoe, Boolean *isFolder, char *rbfname);
-#endif
 
 char     *Mod_TypeStr(mod_exec *mod);
 char     *PStateStr(process_typ *cp);

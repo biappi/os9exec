@@ -194,10 +194,8 @@
 //  #endif
 //#endif
 
-#if defined __INTEL__ || defined UNIX
 #define TICKS_PER_SEC                                                          \
     100 /* Number of Ticks per sec (as reported by GetTickCount()) */
-#endif
 
 /* platform includes for all project modules */
 /* ========================================= */
@@ -227,21 +225,6 @@ typedef struct dirent dirent_typ;
 
 #endif
 
-#ifndef UNIX
-/* C library include files */
-#include <CType.h>
-
-#include <Types.h>
-#include <stdarg.h>
-#include <stddef.h> // %%% added luz 2002-02-04
-#include <errno.h>  // %%% added luz 2002-02-04
-#include <StdIO.h>
-#include <StdLib.h>
-#include <Time.h>
-#include <String.h>
-
-#include <Signal.h>
-#endif
 
 #ifdef TERMINAL_CONSOLE
 #ifndef MACOSX
@@ -268,10 +251,6 @@ typedef char                     Boolean;
 typedef unsigned long ulong;
 #endif
 
-#ifndef UNIX
-typedef unsigned int      uint;
-typedef unsigned long int ulong;
-#endif
 
 #if defined __INTEL__ || defined __MACH__
 typedef int                      OSErr;

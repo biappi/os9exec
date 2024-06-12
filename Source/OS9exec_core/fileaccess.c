@@ -499,7 +499,6 @@ os9err pFready(_pid_, _spP_, ulong *n)
 /* get device name from HFS object */
 os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
 {
-#if defined UNIX
     int ii; // get the current top path as name
     for (ii = 0; ii < strlen(spP->fullName); ii++) {
         volname[ii] = spP->fullName[ii + 1];
@@ -547,9 +546,6 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     if (*v==PATHDELIM) *v= NUL; // cut slash at the end
     */
 
-#else
-    return E_UNKSVC;
-#endif
 
     return 0;
 } /* pHvolnam*/
@@ -558,13 +554,11 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
 static void Set_FileDate(syspath_typ *spP, time_t t)
 /* Set (Windows/Linux) file date */
 {
-#if defined UNIX
     struct utimbuf buf;
 
     buf.actime  = t;
     buf.modtime = t;
     utime(spP->fullName, &buf);
-#endif
 } /* Set_FileDate */
 #endif
 
@@ -832,7 +826,6 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
     long curSize;
 #endif
 
-#if defined UNIX
     int   fd, i, j, cnt;
     OSErr oserr = 0;
     char  tmpName[OS9PATHLEN];
@@ -936,11 +929,9 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
   //if (tmp_pos>curSize)            tmp_pos= curSize;
   //fsetpos         ( spP->stream, &tmp_pos );   // restore position
     */
-#endif
 
     /* just read and write back one char at the end to get the correct size */
     do { // do not change the content if smaller -> read it first
-#ifdef UNIX
         if (*sizeP == 0) {
             fclose(spP->stream);
             oserr = remove(spP->fullName);
@@ -952,7 +943,6 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
                     errno,
                     E_FNA); /* default: file not accessible in this mode */
         }
-#endif
 
         /*
         if (*sizeP>0) {
@@ -1600,7 +1590,6 @@ os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
         return err;
     pathname = p;
 
-#if defined UNIX
     err = AdjustPath(pathname, adapted, true);
     if (err)
         return err;
@@ -1613,10 +1602,6 @@ os9err pDmakdir(ushort pid, _spP_, ushort *modeP, char *pathname)
         return 0; /* rwx------ */
     return E_BPNAM;
 
-#else
-/* other OS */
-#error I_Makdir not yet implemented
-#endif
 
     return host2os9err(oserr, E_WRITE);
 } /* pDmakdir */

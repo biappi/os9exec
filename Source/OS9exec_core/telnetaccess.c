@@ -232,9 +232,7 @@ void WindowTitle(char *title, Boolean vmod)
 #endif
 } /* WindowTitle */
 
-#if defined MPW || defined UNIX
 void                       HandleEvent(void) {} /* empty implementation */
-#endif
 
 /* CheckInputBuffers */
 void CheckInputBuffers(void)

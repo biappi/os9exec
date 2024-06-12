@@ -1070,7 +1070,6 @@ void DoWait(void)
 {
     ulong ticks = GetSystemTick();
 
-#ifdef UNIX
     struct timespec wait_time;
 
     wait_time.tv_sec  = 0;
@@ -1078,9 +1077,6 @@ void DoWait(void)
     nanosleep(&wait_time, NULL);
     // slp_idleticks++;
 
-#else
-#error architecture not supported
-#endif
 
     slp_idleticks += GetSystemTick() - ticks;
 } // DoWait

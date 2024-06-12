@@ -1104,7 +1104,6 @@ ulong GetSystemTick(void)
 {
     ulong t;
 
-#if defined UNIX
     struct timeval tv;
     // struct timezone tz;
 
@@ -1114,9 +1113,6 @@ ulong GetSystemTick(void)
     t = tv.tv_sec - sec0;
     t = 100 * t + tv.tv_usec / 10000;
 
-#else
-#error Not yet implemented GetSystemTick()
-#endif
 
     /* make the /L2 interrupt handling */
     update_L2(t);

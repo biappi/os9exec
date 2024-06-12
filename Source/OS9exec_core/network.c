@@ -150,7 +150,6 @@
 
 /* specific network definitions */
 
-#ifdef UNIX
 #include <sys/utsname.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -172,7 +171,6 @@
 #endif
 
 typedef struct sockaddr_in SOCKADDR_IN;
-#endif
 
 // Newer socket libraries require these types
 #if !defined __SOCKADDR_ARG
@@ -425,14 +423,10 @@ os9err pNclose(_pid_, syspath_typ *spP)
     // upe_printf( "Net Close: %s %d %d, %08X\n", spP->name, net->bound,
     //                                            net->accepted, net->ep );
     if (net->bound && net->ep != nil) {
-#if defined UNIX
         // err= shutdown( net->ep, SHUT_RDWR );
         err = close(net->ep);
         release_mem(net->transferBuffer);
 
-#else
-#error Unknown platform
-#endif
 
         release_mem(net->b_local);
         net->closeIt = true;
@@ -739,9 +733,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
     SOCKADDR_IN name;
 #endif
 
-#ifdef UNIX
     int id, u_err;
-#endif
 
 #ifndef NET_SUPPORT
     return E_UNKSVC;
@@ -774,20 +766,16 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
             proto = IPPROTO_TCP;
         }
 
-#ifdef UNIX
         if (isRaw) {
             id    = geteuid();  // printf( "%d\n",     id    );
             u_err = seteuid(0); // printf( "err=%d\n", u_err );
         }
-#endif
 
         net->ep = socket(af, ty, proto);
 
-#ifdef UNIX
         if (isRaw) {             // printf(  "ep=%d %d\n", net->ep, fPort );
             u_err = seteuid(id); // printf( "err=%d\n", u_err   );
         }
-#endif
 
         debugprintf(
             dbgSpecialIO,

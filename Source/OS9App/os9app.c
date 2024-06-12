@@ -38,7 +38,6 @@
 /* ======== */
 #include "os9exec_incl.h"
 
-#if defined UNIX
 int         main(int argc, char *argv[])
 {
     char *envp[] = {NULL, NULL};
@@ -47,30 +46,5 @@ int         main(int argc, char *argv[])
     return 0; // no error
 }
 
-#else
-void main()
-{
-    const argc = 1;
-    // const argc= 3;
-
-    char *argv[] = {
-        "os9app"
-        // ,"-d"
-        // ,"ffff"
-        // ,"shell"
-        // ,"startup"
-    };
-
-    char *envp[] = {NULL, NULL};
-
-    /* set terminal options */
-    TermWinScrolls     = 1;     // use scroll bars
-    gConsoleQuickInput = true;  // get single chars
-    gConsoleEcho       = false; // no echo
-    gConsoleNLExpand   = false; // no NL expand
-
-    os9_main(argc, argv, envp);
-}
-#endif
 
 /* eof */

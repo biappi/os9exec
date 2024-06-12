@@ -432,15 +432,11 @@ os9err host2os9err(OSErr hosterr, ushort suggestion)
 
     known = true;
 
-#if defined UNIX
     if (hosterr == 0)
         return 0;
     err   = suggestion;
     known = false;
 
-#else
-#error Unknown Target OS, no error translation implemented
-#endif
 
     return os9error(err);
 } /* host2os9err */
@@ -1119,9 +1115,6 @@ void CutUp(char *pathname, const char *prev)
             break; /* cut "/."  at the end */
 
 /* avoid duplicate definition */
-#ifndef UNIX
-        case PATHDELIM:
-#endif
         case PSEP:
             *q = NUL;
             strcat(pathname, qs);
@@ -1136,9 +1129,6 @@ void CutUp(char *pathname, const char *prev)
             case NUL:
 
 /* avoid duplicate definition */
-#ifndef UNIX
-            case PATHDELIM:
-#endif
             case PSEP:
                 while (q > pathname) {
                     q--;
@@ -1197,9 +1187,6 @@ void EatBack(char *pathname)
             break;
 
 /* avoid duplicate definition */
-#ifndef UNIX
-        case PATHDELIM:
-#endif
         case PSEP:
             *p = NUL;
             eat--;
@@ -1710,11 +1697,9 @@ int stat_(const char *pathname, struct stat *buf)
 {
     int err = -1 /* default */;
 
-#if defined macintosh || defined UNIX
     /* do it the "normal" way */
     err = stat(pathname, buf);
 
-#endif
 
     return err;
 } /* stat_ */
@@ -1751,7 +1736,6 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
                 break;
 
             okINO = false;
-#if defined UNIX
             // .. when using Inodes
             if (useInodes) {
                 okINO = true;
@@ -1765,7 +1749,6 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
                     fd = 2; // adapt for top dir searching
 #endif
             } // if
-#endif
 
             if (!okINO)
                 FD_ID(pathname, dEnt, &fd, &mP);

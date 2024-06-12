@@ -128,9 +128,7 @@
 
 #include "os9exec_incl.h"
 
-#ifdef UNIX
 #include <termios.h>
-#endif
 
 /* statics */
 /* ======= */
@@ -140,9 +138,7 @@ int   disablefilters; /* filtering stdout */
 ulong memplus;        /* additional memory for first process */
 ulong iniprior;       /* priority for first process */
 
-#ifdef UNIX
 struct termios savedmodes; /* saved terminal attributes     */
-#endif
 
 /* locally defined procedures */
 Boolean F_Avail(const char *pathname);
@@ -421,7 +417,6 @@ Boolean setup_term()
 {
     int reply = 0;
 
-#ifdef UNIX
     struct termios modes;
 
     reply = tcgetattr(0, &modes); /* retrieve terminal attrs */
@@ -457,7 +452,6 @@ Boolean setup_term()
                    strerror(errno));
     }
 
-#endif
 
     return (reply == 0);
 } // setup_term
@@ -467,7 +461,6 @@ Boolean setup_term()
    thje error report isn't followed by an exit() */
 void restore_term()
 {
-#ifdef UNIX
     int reply;
 
     struct termios modes;
@@ -477,7 +470,6 @@ void restore_term()
     if (reply)
         upo_printf("Error restoring normal terminal operation: %s\n",
                    strerror(errno));
-#endif
 } // restore_term
 
 // main program
@@ -518,9 +510,7 @@ void os9_main(int argc, char **argv, char **envp)
     sw_name = "OS-9/68k Emulator";
 #endif
 
-#ifdef UNIX
     sec0 = 0;
-#endif
 
     // set up global init stuff, so user path output will work
     os9exec_globinit();
@@ -742,14 +732,12 @@ void os9_main(int argc, char **argv, char **envp)
     if (userOpt)
         catch_ctrlC = false;
 
-#ifdef UNIX
     // Set the terminal modes and hook mode restoration to the exit function.
     // If setting then fails, the error will already have been reported
     // for suitably detailed fault analysis but the function exits so
     // os9_main() can handle the cleanup: at present this is just to exit.
     if (setup_term())
         atexit(restore_term);
-#endif
 
     // now here starts the os9 command line: go execute
     debug_prep(); // make sure debug info is adjusted

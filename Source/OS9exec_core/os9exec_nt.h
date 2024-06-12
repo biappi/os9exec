@@ -500,10 +500,8 @@ typedef struct {
 #define PSEP_STR "/"
 
 /* for the host system */
-#if defined UNIX
 #define PATHDELIM '/'
 #define PATHDELIM_STR "/"
-#endif
 
 // omitted parameters (does not really work with gcc)
 #ifdef __GNUC__
@@ -785,9 +783,7 @@ typedef struct {
 } scsi_dev;
 
 #ifdef NET_SUPPORT
-#if defined   UNIX
 typedef ulong SOCKET; /* make it visible for linux as std type */
-#endif
 
 #define nil 0
 typedef char *Ptr;
@@ -802,11 +798,7 @@ struct InetAddress {
 
 typedef struct InetAddress InetAddress;
 
-#ifdef UNIX
 #define kTransferBufferSize 256
-#else
-#define kTransferBufferSize 4096
-#endif
 
 /* variant for network objects */
 typedef struct {
@@ -1267,9 +1259,7 @@ extern ulong startTick;
 extern ulong lastTick;
 extern int   syCorr;
 
-#ifdef UNIX
 extern ulong sec0;
-#endif
 
 /* error traceback */
 extern ushort errpid; /* PID of process that generated that error */

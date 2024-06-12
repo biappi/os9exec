@@ -538,9 +538,7 @@ ulong startTick = 0;
 ulong lastTick  = 0;
 int   syCorr    = 0;
 
-#ifdef UNIX
 ulong sec0;
-#endif
 
 /* error traceback */
 ushort errpid; /* PID of process that generated that error */
@@ -892,7 +890,6 @@ void get_hw()
 
 } /* get_hw */
 
-#ifdef UNIX
 // Get the start directory
 void StartDir(char *pathname)
 {
@@ -920,16 +917,11 @@ void StartDir(char *pathname)
         strcat(pathname, sv);
     } // while
 } // StartDir
-#endif
 
 static os9err GetStartPath(char *pathname)
 {
-#if defined UNIX
     StartDir(pathname);
 
-#else
-    strcpy(pathname, "");
-#endif
     return 0;
 } /* GetStartPath */
 
@@ -1417,7 +1409,6 @@ static void CheckStartup(int cpid, char *toolname, int *argc, char **argv)
     }
 } /* CheckStartup */
 
-#ifdef UNIX
 static void CtrlC_Handler(int sig)
 {
     Boolean fnd = false;
@@ -1428,7 +1419,6 @@ static void CtrlC_Handler(int sig)
     // printf("Ctrl-C Addr: %d %d fnd=%s\n", sig, main_mco.spP->lastwritten_pid,
     // fnd ? "TRUE":"FALSE" ); fflush(0);
 } // CtrlC_Handler
-#endif
 
 static void titles(void)
 {
@@ -2105,13 +2095,11 @@ static void segv_handler(int sig)
 
     cp->exiterr = E_BUSERR;
 
-#ifdef UNIX
     switch (sig) {
     case SIGFPE:
         cp->exiterr = E_ZERDIV;
         break;
     } // switch
-#endif
 
     // printf("*** Bus Error *** %d\n", sig );
     // fflush(0);
@@ -2130,7 +2118,6 @@ static void setup_exception(loop_proc lo)
     unsigned short xErr;
 
 // The UNIX exception handler, using sigsetjmp/siglongjmp
-#ifdef UNIX
     struct sigaction sa;
 
     err = sigsetjmp(main_env, 1);
@@ -2142,7 +2129,6 @@ static void setup_exception(loop_proc lo)
     sigaction(SIGSEGV, &sa, NULL); // catch SEG faults
     sigaction(SIGBUS, &sa, NULL);  // ... and others as well
     sigaction(SIGFPE, &sa, NULL);
-#endif
 
     do {
         if (err && debugcheck(dbgTrapHandler, dbgNorm)) {
@@ -2182,9 +2168,7 @@ ushort os9exec_nt(const char *toolname,
 
     char *p;
 
-#ifdef UNIX
     struct sigaction ia;
-#endif
 
     // ulong    res;	    // /* llm_os9_go result */
     ushort err = 0; /* MPW Error */
@@ -2208,13 +2192,11 @@ ushort os9exec_nt(const char *toolname,
 
     if (catch_ctrlC) {
 
-#ifdef UNIX
         ia.sa_handler = &CtrlC_Handler;
         sigemptyset(&ia.sa_mask);
         ia.sa_flags = 0;
 
         sigaction(SIGINT, &ia, NULL);
-#endif
     } // if
 
     // some global init moved from here to os9exec_globinit() to allow them

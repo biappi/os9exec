@@ -198,9 +198,7 @@
 /* global includes */
 #include "os9exec_incl.h"
 
-#ifdef UNIX
 #include <dlfcn.h> // MacOSX and Linux DLL functionality
-#endif
 
 #ifdef THREAD_SUPPORT
 #include <types.h>
@@ -788,11 +786,7 @@ const char *DLL_Suffix()
 // Get <aFunc> of <aFuncName>
 static os9err DLL_Func(void *aDLL, const char *aFuncName, void **aFunc)
 {
-#if defined UNIX
     *aFunc = dlsym(aDLL, aFuncName);
-#else
-    *aFunc = NULL;
-#endif
 
     if (*aFunc == NULL)
         return E_NES;
@@ -816,9 +810,7 @@ static os9err DisconnectDLL(plug_typ *p)
     if (!p || !p->fDLL)
         return E_PNNF;
 
-#ifdef UNIX
     dlclose(p->fDLL);
-#endif
 
     return 0;
 } // DisconnectDLL
@@ -853,7 +845,6 @@ os9err ConnectDLL(plug_typ *p)
         // upe_printf( "connectDLL='%s'\n", fullName );
         //  now we have the complete path name
 
-#if defined UNIX
 #if defined MACOSX
 #define mode RTLD_NOW + RTLD_GLOBAL
 #else
@@ -862,9 +853,6 @@ os9err ConnectDLL(plug_typ *p)
 
         p->fDLL = dlopen(fullName, mode);
 
-#else
-        p->fDLL = NULL;
-#endif
 
         if (p->fDLL)
             break; // found
