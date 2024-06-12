@@ -287,7 +287,6 @@ char *egetenv(const char *name)
 void eAdvanceCursor(void)
 {
     // sleep(1);
-
 }
 
 /* spin cursor (event processing) */

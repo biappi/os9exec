@@ -1640,9 +1640,6 @@ void get_error_strings(os9err err, char **nameP, char **descP)
 }
 
 /* syscall names for debugging */
-char *get_syscall_name(ushort syscall)
-{
-    return getfuncentry(syscall)->name;
-}
+char *get_syscall_name(ushort syscall) { return getfuncentry(syscall)->name; }
 
 /* eof */

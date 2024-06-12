@@ -183,10 +183,7 @@ Boolean llm_vm_enabled(void) { return vmenabled; }
 
 /* returns if 68k Mac Context runs in usermode */
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
-Boolean llm_runs_in_usermode(void)
-{
-    return usesusermode;
-}
+Boolean llm_runs_in_usermode(void) { return usesusermode; }
 
 /* prepare access to low-level code */
 OSErr lowlevel_prepare(void)

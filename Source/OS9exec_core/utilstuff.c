@@ -709,10 +709,7 @@ char *StrBlk_Pt(char *s, int n)
 }
 
 Boolean IsRead(ushort mode)
-/* returns true, if <mode> has read bit set */
-{
-    return (mode & poRead) != 0;
-}
+/* returns true, if <mode> has read bit set */ { return (mode & poRead) != 0; }
 
 Boolean IsWrite(ushort mode)
 /* returns true, if <mode> has write bit set */
@@ -1009,16 +1006,10 @@ Boolean IsWhat(const char *pathname, Boolean isRoot)
 }
 
 Boolean IsRoot(const char *pathname)
-/* Test if <pathname> is a root path */
-{
-    return IsWhat(pathname, true);
-}
+/* Test if <pathname> is a root path */ { return IsWhat(pathname, true); }
 
 Boolean IsRaw(const char *pathname)
-/* Test if <pathname> is a raw path */
-{
-    return IsWhat(pathname, false);
-}
+/* Test if <pathname> is a raw path */ { return IsWhat(pathname, false); }
 
 /* --------------------------------------------------------------- */
 Boolean VolInfo(const char *pathname, char *volname)
@@ -1205,7 +1196,6 @@ void EatBack(char *pathname)
     }
 
     CutUp(pathname, Prev); /* support also for RBF OS-9 paths */
-
 }
 
 // Take the CRC algorithm as hash function

@@ -189,16 +189,10 @@ static os9err Alarm_Delete(_pid_, ulong aId)
 }
 
 static os9err Alarm_Set(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
-/* A$Set call: 1 */
-{
-    return A_Make(pid, aId, aCode, aTicks, false);
-}
+/* A$Set call: 1 */ { return A_Make(pid, aId, aCode, aTicks, false); }
 
 static os9err Alarm_Cycle(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
-/* A$Cycle call: 2 */
-{
-    return A_Make(pid, aId, aCode, aTicks, true);
-}
+/* A$Cycle call: 2 */ { return A_Make(pid, aId, aCode, aTicks, true); }
 
 static os9err
 Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)

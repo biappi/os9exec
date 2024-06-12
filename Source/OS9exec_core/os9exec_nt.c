@@ -885,7 +885,6 @@ void get_hw()
     hw_site  = "PC";
     hw_name  = "Linux - PC";
     platform = "x86";
-
 }
 
 // Get the start directory
@@ -983,7 +982,6 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
 
     /* do this before the recursive loop */
     strncpy(drP->path, p, OS9PATHLEN);
-
 }
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT

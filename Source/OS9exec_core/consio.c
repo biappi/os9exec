@@ -443,7 +443,6 @@ static os9err ConsRead(ushort       pid,
             if (edit && c == ot->_sgs_dulnch) {
                 dupMode = true; /* duplicate last line */
             }
-
         }
 
         if (ot->_sgs_pause && term_line >= ot->_sgs_page) {
@@ -770,10 +769,7 @@ os9err pConsInLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 }
 
 os9err pEOF(_pid_, _spP_, _maxlenP_, _buffer_)
-/* read operation for the nil device is alway EOF */
-{
-    return E_EOF;
-}
+/* read operation for the nil device is alway EOF */ { return E_EOF; }
 
 static os9err ConsoleOut(ushort       pid,
                          syspath_typ *spP,
@@ -859,10 +855,7 @@ static os9err ConsoleOut(ushort       pid,
 }
 
 os9err pConsOut(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
-/* output to console */
-{
-    return ConsoleOut(pid, spP, maxlenP, buffer, false);
-}
+/* output to console */ { return ConsoleOut(pid, spP, maxlenP, buffer, false); }
 
 os9err pConsOutLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 /* output line to console */

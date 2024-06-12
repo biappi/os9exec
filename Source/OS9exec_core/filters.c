@@ -449,8 +449,7 @@ filtertable_typ filtertable[] = {
     {"cfe", c_filter, c_init, "Microware C compiler (C-frontend)"},
     {"pc", mega_filter, omega_init, "OmegaSoft Pascal Compiler"},
     {"icc6811", icc_filter, icc_init, "IAR HC 11 cross compiler"},
-    {NULL, NULL, NULL}
-};
+    {NULL, NULL, NULL}};
 
 /* Routines */
 /* -------- */

@@ -643,7 +643,6 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
             else
                 fPort++;
         }
-
     }
 
 #if defined powerc && !defined MACOSX

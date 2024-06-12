@@ -1649,10 +1649,7 @@ static os9err int_quit(_pid_, _argc_, _argv_)
     return 0;
 }
 
-static os9err int_ignored(_pid_, _argc_, _argv_)
-{
-    return 0; /* do nothing */
-}
+static os9err int_ignored(_pid_, _argc_, _argv_) { return 0; /* do nothing */ }
 
 /* Command table */
 /* ------------- */
@@ -1711,8 +1708,7 @@ cmdtable_typ commandtable[] = {
     {"native_calls", native_calls, "Native calls"},
 #endif
 
-    {NULL, NULL, NULL}
-};
+    {NULL, NULL, NULL}};
 
 /* show available internal commands */
 os9err int_help(ushort pid, _argc_, _argv_)

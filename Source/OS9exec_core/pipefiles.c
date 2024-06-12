@@ -1218,10 +1218,7 @@ os9err pKpos(_pid_, _spP_, ulong *posP)
 }
 
 os9err pKready(ushort pid, syspath_typ *spP, ulong *n)
-/* gs_ready will be done directly */
-{
-    return pPready(pid, spP, n);
-}
+/* gs_ready will be done directly */ { return pPready(pid, spP, n); }
 
 os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
 /* creates tty/pty system paths and locks them together */

@@ -1964,7 +1964,7 @@ os9err OS9_F_Sigmask(regs_type *rp, ushort cpid)
     int level = rp->d[1];
     sig_mask(cpid, level);
     return 0;
-} /* OS9_F_Sigmask*/
+}
 
 os9err OS9_F_CRC(regs_type *rp, _pid_)
 /* F$CRC

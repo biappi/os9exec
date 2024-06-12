@@ -554,11 +554,7 @@ const funcdispatch_entry fcalltable[NUMFCALLS] = {
      "F$MBuf",
      d_w(0),
      d_w(1)}, /* Memory buffer manager */
-    {/* 0x60 */ OS9_F_UnImp,
-     "F$Trans",
-     d_w(0),
-     d_w(1)}
-};
+    {/* 0x60 */ OS9_F_UnImp, "F$Trans", d_w(0), d_w(1)}};
 
 const funcdispatch_entry icalltable[NUMICALLS] = {
     {/* 0x80 */ OS9_I_Attach,
@@ -624,9 +620,7 @@ const funcdispatch_entry icalltable[NUMICALLS] = {
     {/* 0x92 */ OS9_I_SGetSt,
      "I$SGetSt",
      SFUNC_STATCALL + d_w(0) + d_w(1) + d_l(2) + d_l(3) + a_l(0),
-     d_l(0) + d_l(1) + d_l(2) + d_l(3) +
-         a_l(0)}
-};
+     d_l(0) + d_l(1) + d_l(2) + d_l(3) + a_l(0)}};
 
 /* quickly get correct entry for function call */
 const funcdispatch_entry *getfuncentry(ushort func)

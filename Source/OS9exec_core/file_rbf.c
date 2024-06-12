@@ -335,10 +335,7 @@ void init_RBF_devs()
 
 // -----------------------------------------------------------------------
 
-static Boolean IsSCSI(rbfdev_typ *dev)
-{
-    return dev->scsi.ID != NO_SCSI;
-}
+static Boolean IsSCSI(rbfdev_typ *dev) { return dev->scsi.ID != NO_SCSI; }
 
 static os9err
 ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
@@ -1455,7 +1452,7 @@ static os9err DeviceInit(ushort       pid,
                     strcpy(cmp, rbfname);
                 }
             }
-        }     /* if !isRAMDisk */
+        }
 
         if (!AbsPath(pathname)) {
             if (IsExec(mode))
@@ -3532,7 +3529,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                 }
             }
         }
-    }     /* while (true) */
+    }
 
 #ifdef RBF_CACHE
     if (!err) {
@@ -3992,7 +3989,7 @@ os9err pRnam(ushort pid, syspath_typ *spP, char *volname)
 
     debugprintf(dbgFiles, dbgNorm, ("# RBF name: %s\n", volname));
     return 0;
-} /* pRnam*/
+}
 
 os9err pRWTrk(ushort pid, syspath_typ *spP, ulong *trackNr)
 /* get device name of RBF device */
@@ -4015,6 +4012,6 @@ os9err pRWTrk(ushort pid, syspath_typ *spP, ulong *trackNr)
     }
 
     return 0;
-} /* pRWTrk*/
+}
 
 /* eof */

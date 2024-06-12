@@ -544,7 +544,7 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     */
 
     return 0;
-} /* pHvolnam*/
+}
 
 static void Set_FileDate(syspath_typ *spP, time_t t)
 /* Set (Windows/Linux) file date */
@@ -1143,7 +1143,6 @@ static void setFD(syspath_typ *spP, void *fdl, byte *buffer)
 
     // printf( "Set_FileDate was2\n" );
     u = UConv(&tim);
-
 }
 
 /* get file descriptor for object */

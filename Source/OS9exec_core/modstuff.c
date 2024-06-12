@@ -350,10 +350,7 @@ mod_exec *os9mod(int k)
 }
 
 char *Mod_Name(mod_exec *mod)
-/* get the module's name */
-{
-    return (char *)mod + os9_long(mod->_mh._mname);
-}
+/* get the module's name */ { return (char *)mod + os9_long(mod->_mh._mname); }
 
 void Update_MDir(void)
 /* Update the image of the module directory structure */
@@ -524,7 +521,7 @@ void show_modules(char *cmp)
                            stck,
                            nam);
             }
-        }     /* if (mod!=NULL) */
+        }
     }
 }
 
