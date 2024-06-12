@@ -330,7 +330,7 @@ Boolean ConsGetc(char *c)
     if (gConsoleID >= TTY_Base) {
         n = ReadCharsFromPTY(c, 1, gConsoleID);
         return (n > 0) && devIsReady;
-    } // if
+    } 
 
 #if defined MACOSX
     n          = getchar(); // problems with fread
@@ -908,7 +908,7 @@ os9err pCready(_pid_, syspath_typ *spP, ulong *n)
         if (DevReady((long *)n))
             return 0;
 #endif
-    } // if
+    } 
 
     return os9error(E_NOTRDY);
 } /* pCready */

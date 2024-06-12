@@ -332,7 +332,7 @@ os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         memcpy(buffer, spP->rw_sct + spP->rawPos, *n);
         spP->rawPos += *n;
         return 0;
-    } // if
+    } 
 
     cnt = *n;
     if (cnt == 0)
@@ -383,13 +383,13 @@ os9err pFreadln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             *n = cnt;
             return cnt == 0 ? os9error(E_EOF)
                             : 0; /* return EOF only if on first char */
-        }                        // if
+        }                        
 
         *p++ = c; /* save in the buffer */
         cnt++;
         if (c == CR)
             break; /* abort on CR */
-    }              // while
+    }              
 
     f->readFlag = true;
 
@@ -415,7 +415,7 @@ os9err pFwrite(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         fgetpos(spP->stream, &tmp_pos); /* save current position */
         fsetpos(spP->stream, &tmp_pos); /* restore position */
         f->readFlag = false;
-    } // if
+    } 
 
     /* output to a FILE */
     cnt = fwrite((void *)buffer, 1, *n, spP->stream);
@@ -449,7 +449,7 @@ os9err pFwriteln(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         fgetpos(spP->stream, &tmp_pos); /* save current position */
         fsetpos(spP->stream, &tmp_pos); /* restore position */
         f->readFlag = false;
-    } // if
+    } 
 
     /* output line to a FILE */
     for (ii = 0; ii < *n; ii++)
@@ -503,7 +503,7 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
             volname[ii] = NUL;
             break;
         }
-    } // for
+    } 
 
     // strcpy( volname,spP->fullName ); /* none for Linux, top directory
     // structure is different */
@@ -528,7 +528,7 @@ os9err pHvolnam(_pid_, syspath_typ *spP, char *volname)
     //w= volname + strlen(VV)-1;
     //v= strstr( w, PATHDELIM_STR );
     //if (v!=NULL) *v= NUL;   // Keep "/Volumes/XXX"
-    } // if
+    } 
     else
       strcpy( volname, "" );
     */
@@ -859,13 +859,13 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
                     cnt = fread((void *)buffer, 1, j, tmp__stream);
                     cnt = fwrite((void *)buffer, 1, cnt, spP->stream);
                     i -= cnt;
-                } // while
+                } 
 
                 err = fclose(tmp__stream);
                 err = remove(tmpName);
-            } // if
-        }     // if
-    }         // if
+            } 
+        }     
+    }         
 
     /*
     //fflush     ( spP->stream );                             // unbuffer
@@ -901,7 +901,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
     //spP->stream= fopen ( spP->fullName,"rb+" ); // create for update, use
   binary mode (bfo) !
     //fseek              ( spP->stream, *sizeP,SEEK_SET );
-    }  // if
+    }  
 
   //            curSize= *sizeP;
   //if (tmp_pos>curSize)            tmp_pos= curSize;
@@ -929,13 +929,13 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
                                       p= *sizeP-n;
               err= pFseek( pid, spP, &p );               if (err) break;
               err= pFread( pid, spP,           &n, &b ); if (err) break;
-            } // if
+            } 
           #endif
                                              n= sizeof(b);
                                    p= *sizeP-n;
           err= pFseek ( pid, spP, &p );               if (err) break;
           err= pFwrite( pid, spP,           &n, &b ); if (err) break;
-        } // if
+        } 
         */
 
         if (*sizeP > curSize) {
@@ -947,7 +947,7 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
             err = pFwrite(pid, spP, &n, &b);
             if (err)
                 break;
-        } // if
+        } 
 
         if (tmp_pos > *sizeP)
             tmp_pos = *sizeP; // adapt current pos, if now smaller
@@ -1237,7 +1237,7 @@ os9err pDopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     ok = OpenTDir(pp, &d);
     if (!ok) {
         return E_FNA;
-    } // if
+    } 
 
     spP->dDsc = d;
     strcpy(spP->fullName, adapted); /* for later use with stat function */
@@ -1309,13 +1309,13 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             if (err == E_EOF && cnt < *n)
                 break; // EOF can be handled !!
             return err;
-        } // if
+        } 
 
         if (*pos - offs == 0) { /* if 1st entry, ".." expected */
 
             if (topFlag)
                 strcpy(dEnt->d_name, "..");
-        } // if
+        } 
 
         if (dEnt != NULL) {
             GetEntry(dEnt, os9dirent.name, true);
@@ -1332,7 +1332,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             len = strlen(os9dirent.name);
             os9dirent.name[len - 1] |= 0x80; /* set old-style terminator */
             os9dirent.fdsect = os9_long(fdpos);
-        } // if
+        } 
 
         if (!err) {
             nbytes = (offs + cnt) > DIRENTRYSZ ? DIRENTRYSZ - offs : cnt;
@@ -1354,7 +1354,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
             }
             else
                 return err;
-        } // if
+        } 
     }     
 
     /* sucessful, set number of bytes actually read */
@@ -1366,7 +1366,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
     for (ii=0; ii<*n; ii++) {
       printf( "%02X ", (byte)buffer[ii] );
       if (ii%16==15) printf( "\n" );
-    } // for
+    } 
     */
 
     return 0;
@@ -1563,7 +1563,7 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, ulong *attr)
 
                                      mode= 0x03 | poCreateMask;
         err=      pFopen( pid, spP, &mode, pp );
-      } // for
+      } 
     #endif
     */
 

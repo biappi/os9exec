@@ -134,8 +134,8 @@ false ); if (err) break; // "."
 mP->dirid );
 
         mP->dirid= 0;
-      } // if
-    } // while
+      } 
+    } 
 
     if (err==E_EOF) err= 0;
   } while (false);

@@ -309,7 +309,7 @@ void show_unused(void)
                        f->size);
             n++;
         }
-    } // for
+    } 
 
     sprintf(s, "(%d)", freeinfo.freeN);
     upo_printf("\nTOTAL %6s      $%08lX  %8d\n",
@@ -431,8 +431,8 @@ static ushort install_memblock(ushort pid, void *base, ulong size)
             m->size = size;           // save block size
             LockMemRange(base, size); // keep always paged in !!
             return k;
-        } // if
-    }     // for
+        } 
+    }     
 
     return MAXMEMBLOCKS;
 } /* install_memblock */
@@ -461,11 +461,11 @@ void release_mem(void *membase)
     if (memsz == 0) {
         printf("STRANGE BLOCK at %08X\n", membase);
         return;
-    } // if
+    } 
     if (memsz == 1) {
         printf("UNUSED  BLOCK at %08X\n", membase);
         return;
-    } // if
+    } 
 
     if (release_ok(membase, memsz)) {
         debugprintf(
@@ -579,7 +579,7 @@ void *get_mem(ulong memsz)
                 if (sv_size > memsz) {
                     qq = (char *)pp + memsz;
                     release_ok(qq, sv_size - memsz);
-                } // if
+                } 
 
                 totalMem -= sv_size; /* memory was not really free */
 
@@ -590,9 +590,9 @@ void *get_mem(ulong memsz)
                 //          (freeinfo.freeN-k)*sizeof(memblock_typ), memsz );
                 //          show_unused();
                 break;
-            } // if
-        }     // if
-    }         // for
+            } 
+        }     
+    }         
 #endif
 
     sz = memsz;
@@ -621,7 +621,7 @@ void *get_mem(ulong memsz)
         pp = (void *)calloc((size_t)sz,
                             (size_t)1); /* get memory block, cleared to 0 */
 #endif
-    } // if
+    } 
 
     if (pp != NULL) {
         for (k = 0; k < MAX_MEMALLOC; k++) {
@@ -670,7 +670,7 @@ void *os9malloc(ushort pid, ulong memsz)
         //#ifndef PLUGIN_DLL
         upe_printf("No more memory (MAXMEMBLOCKS) !!!\n");
         //#endif
-    } // if
+    } 
 
     debugprintf(
         dbgMemory,
@@ -705,7 +705,7 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
                 if (m->size == memsz) {
                     release_memblock(pid, k);
                     return 0; /* freed ok */
-                }             // if
+                }             
 
                 // try to free it in smaller pieces ...
                 // NOTE: e.g. OS-9 "dir" is doing it this way !
@@ -718,7 +718,7 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
                             pid,
                             k);   // only release it, if all of them are fitting
                         return 0; /* freed ok */
-                    }             // if
+                    }             
 
                     debugprintf(
                         dbgMemory,
@@ -731,12 +731,12 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
                          memsz,
                          totalMem));
                     break;
-                } // if
+                } 
 
                 return 0; /* freed ok */
-            }             // if
+            }             
         }                 
-    }                     // if
+    }                     
 
     // upe_printf( "bad block %08X size=%d\n", membase, memsz );
     debugprintf(dbgMemory + dbgAnomaly,

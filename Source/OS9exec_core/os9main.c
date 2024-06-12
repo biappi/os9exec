@@ -548,7 +548,7 @@ void os9_main(int argc, char **argv, char **envp)
                     int_help(0, 0, NULL);
 #endif
                     exit(0);
-                } // if
+                } 
 
                 with_intcmds = false;
                 break;
@@ -594,7 +594,7 @@ void os9_main(int argc, char **argv, char **envp)
                     level = *(p + 1) - 0x30;
                     if (level > DEBUGLEVELS)
                         level = 0; /* default to 0 if level invalid */
-                }                  // if
+                }                  
                 usp = &debug[level];
                 goto getmask;
 
@@ -608,7 +608,7 @@ void os9_main(int argc, char **argv, char **envp)
                 if (sscanf(p, "%hx", usp) != 1) {
                     printf("# Error in hex mask '%s'\n", p);
                     exit(1);
-                } // if
+                } 
                 break;
 
             case 'u':
@@ -628,12 +628,12 @@ void os9_main(int argc, char **argv, char **envp)
                         printf("# Error: missing argument for '%s' option!\n",
                                p);
                         exit(1);
-                    } // if
+                    } 
 
                     p        = argv[k];
                     g_ipAddr = malloc(strlen(p) + 1);
                     strcpy(g_ipAddr, p);
-                } // if
+                } 
                 break;
 
             case 'x':
@@ -661,7 +661,7 @@ void os9_main(int argc, char **argv, char **envp)
                 if (k >= argc) {
                     printf("# Error: missing argument for '%s' option!\n", p);
                     exit(1);
-                } // if
+                } 
 
                 p        = argv[k];
                 modifier = 0;
@@ -669,14 +669,14 @@ void os9_main(int argc, char **argv, char **envp)
                     if (sscanf(++p, "%lx%c", ulp, &modifier) < 1) {
                         printf("# Error in hex number '$%s'\n", p);
                         exit(1);
-                    } // if
+                    } 
                 }
                 else {
                     if (sscanf(p, "%ld%c", ulp, &modifier) < 1) {
                         printf("# Error in decimal number '%s'\n", p);
                         exit(1);
-                    } // if
-                }     // if
+                    } 
+                }     
 
                 switch (tolower(modifier)) {
                 case 'm':
@@ -702,8 +702,8 @@ void os9_main(int argc, char **argv, char **envp)
             no_app = false;
             kX     = k;
             break;
-        } // if
-    }     // for
+        } 
+    }     
 
     // not enough arguments
     if (no_app) {
@@ -719,12 +719,12 @@ void os9_main(int argc, char **argv, char **envp)
     }
     else {
         toolname = argv[kX];
-    } // if
+    } 
 
     if (fullScreen) {
         screenW = 0; // full screen mode
         screenH = 0;
-    } // if
+    } 
 
     if (userOpt)
         catch_ctrlC = false;

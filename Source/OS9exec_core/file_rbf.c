@@ -326,11 +326,11 @@ void init_RBF_devs()
     for (ii = 1; ii < MAXRBFDEV; ii++) {
         dev            = &rbfdev[ii];
         dev->installed = false;
-    } // for
+    } 
 
     for (ii = 0; ii < MAXSCSI; ii++) {
         strcpy(scsi[ii].name, "");
-    } // for
+    } 
 } /* init_RBF_devs */
 
 // -----------------------------------------------------------------------
@@ -389,8 +389,8 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
             memset(buffer + len, 0xEE, nBlinds * sect); // fill rest with 0xEE
             //  upo_printf( "nBlinds=%d nSectors=%d len=%d\n",
             //  nBlinds,nSectors,len );
-        } // if
-    }     // if
+        } 
+    }     
 
     do {
         // #ifdef RAM_SUPPORT
@@ -428,14 +428,14 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
 
             //     err= ReadFromSCSI(  dev->scsiAdapt, dev->scsiBus,
             //     dev->scsiID, dev->scsiLUN, sectorNr,nSectors, len,buffer );
-            // } // if
+            // } 
         }
         else {
             // if (rawMode && sectorNr>=60 && sectorLim<=90) {
             //   if (sectorLim-1>sectorNr) upo_printf( "READ  RAW: %d..%d\n",
             //   sectorNr,sectorLim-1 ); else                      upo_printf(
             //   "READ  RAW: %d\n",     sectorNr );
-            // } // if
+            // } 
 
             pos_already  = (pos == dev->currPos);
             dev->currPos = UNDEF_POS; /* invalidate for case of an error */
@@ -448,7 +448,7 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                         break;
                     //  if (dev->imgScts>2097152) upo_printf( "seek err=%d\n",
                     //  err );
-                } // if
+                } 
                 dev->rTot++;
                 cnt = len;
                 err = syspath_read(0, dev->sp_img, &cnt, buffer, false);
@@ -460,7 +460,7 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                     err = E_EOF;
                     break;
                 }; /* if not enough read, make EOF */
-            }      // if
+            }      
 
             // don't set <currPos> behind <img> position
             dev->currPos =
@@ -544,8 +544,8 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                     if (err)
                         return err;
                     pos++;
-                } // while
-            }     // if
+                } 
+            }     
 
             dev->currPos = UNDEF_POS;
             dev->imgScts = sectorLim;
@@ -560,8 +560,8 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                                   NULL,
                                   &img,
                                   NULL);
-        } // if
-    }     // if
+        } 
+    }     
 
     do {
         // #ifdef RAM_SUPPORT
@@ -578,7 +578,7 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
             //   if (sectorLim-1>sectorNr) upo_printf( "WRITE RAW: %d..%d\n",
             //   sectorNr,sectorLim-1 ); else                      upo_printf(
             //   "WRITE RAW: %d\n",     sectorNr );
-            // } // if
+            // } 
 
             pos_already  = (pos == dev->currPos);
             dev->currPos = UNDEF_POS; /* invalidate for case of an error */
@@ -588,7 +588,7 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                 err = syspath_seek(0, dev->sp_img, pos);
                 if (err)
                     break;
-            } // if
+            } 
             dev->wTot++;
             cnt = len;
             err = syspath_write(0, dev->sp_img, &cnt, buffer, false);
@@ -619,7 +619,7 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
                 // dev->currPos ); err= syspath_setstat( 0, dev->sp_img,
                 // SS_Size, NULL,NULL, NULL,NULL,&img,NULL ); upo_printf( "size
                 // is now %d err=%d pos=%d\n", img, err, dev->currPos );
-            } // if
+            } 
         }
     } while (false);
 
@@ -710,7 +710,7 @@ static os9err ReleaseIt(ushort pid, rbfdev_typ *dev)
         dev->installed = false;
         release_mem(dev->tmp_sct);
         dev->tmp_sct = NULL;
-    } // if
+    } 
 
     return err;
 } /* ReleaseIt */
@@ -811,13 +811,13 @@ static os9err GetTop(ushort pid, rbfdev_typ *dev)
             b = dev->tmp_sct[--last];
             if (b)
                 break;
-        } // while
+        } 
 
         if (b)
             break;
         pos -= sect;
         last = sect;
-    } // while
+    } 
 
     while (b) {
         b = b << 1;
@@ -842,7 +842,7 @@ static os9err GetTop(ushort pid, rbfdev_typ *dev)
                               &img,
                               NULL);
         //  upo_printf( "REDUCED err=%d\n", err );
-    } // if
+    } 
 
     // upo_printf( "map=%d sect=%d pos=%d last=%d img=%d rest=%d\n", map, sect,
     // pos, last, img, dev->totScts-img );
@@ -1042,7 +1042,7 @@ static os9err Open_Image(ushort      pid,
     /* if not the complete name at the image */
     if (ustrcmp(&dev->img_name[1], dev->name) == 0) {
         strcpy(dev->img_name, pathName);
-    } // if
+    } 
 
     if (ustrcmp(&dev->img_name[1], dev->name) == 0) {
         strcpy(dev->img_name, startPath);
@@ -1054,7 +1054,7 @@ static os9err Open_Image(ushort      pid,
             MakeOS9Path(dev->img_name);
             strcat(dev->img_name, pathName);
         }
-    } // if
+    } 
 
     EatBack(dev->img_name);
     return 0;
@@ -1183,7 +1183,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
             if (dev->ramBase == NULL)
                 return E_NORAM;
             err = syspath_read(pid, sp, &iSize, dev->ramBase, false);
-        } // if
+        } 
 
         cErr = syspath_close(pid, sp);
         if (!err)
@@ -1200,23 +1200,23 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
         dev->sctSize     = os9_word(*w);
         dev->sas         = DD__MINALLOC;
         return 0;
-    } // if
+    } 
 
     for (ii = 0; ii < 31; ii++) {
         if (1 << ii == clu) {
             ok = true;
             break;
         }
-    } // for
+    } 
     if (!ok) {
         upe_printf("mount: cluster size must be a power of 2\n");
         return 1;
-    } // if
+    } 
 
     if (mnt_ramSize > MaxKB) {
         upe_printf("mount: error - size is too large for this device.\n");
         return 1;
-    } // if
+    } 
 
     if (mnt_sctSize > 0)
         dev->sctSize = mnt_sctSize;
@@ -1236,8 +1236,8 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
         if (ustrcmp(p, "ram") == 0) {
             w            = (ushort *)(&mod->_mdtype + PD_SCT);
             dev->totScts = os9_word(*w);
-        } // if
-    }     // if
+        } 
+    }     
 
     dev->imgScts = dev->totScts;
 
@@ -1251,7 +1251,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
             "mount: error - cluster size is too small for this device.\n");
         upe_printf("cluster size must be at least %d.\n", clu);
         return 1;
-    } // if
+    } 
 
     allocSize = (totBits - 1) / (dev->sctSize * BpB) +
                 1; // nr of allocation sectors, rounded up
@@ -1286,12 +1286,12 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
             v = ii / BpB;
             b = &dev->ramBase[dev->sctSize + v];
             *b |= pt;
-        } // if
+        } 
 
         pt = pt / 2;
         if (pt == 0)
             pt = 0x80; /* prepare the next pattern */
-    }                  // for
+    }                  
 
     u  = (ulong *)&dev->ramBase[TOT_POS];
     *u = os9_long(dev->totScts << BpB);    /* 0x03 overwritten, is 0 anyway */
@@ -1399,7 +1399,7 @@ static os9err DeviceInit(ushort       pid,
                 break;
             }
             return E_DEVBSY;
-        } // if
+        } 
 
         /* existing relative path ? */
         if (!abs && cdv != 0 && mnt_scsiID == NO_SCSI)
@@ -1531,7 +1531,7 @@ static os9err DeviceInit(ushort       pid,
         if (v != NULL)
             *v = NUL;
         strcpy(dev->name, cmp);
-    } // if
+    } 
 
     q = dev->name; /* compare with mnt_name, if available */
     if (fum)
@@ -1643,7 +1643,7 @@ static os9err DeviceInit(ushort       pid,
         if (isRAMDisk) {
             err = PrepareRAM(pid, dev, cmp);
             break; /* no more actions for RAM disk */
-        }          // if
+        }          
                    // #endif
 
         if (IsSCSI(dev))
@@ -1691,12 +1691,12 @@ static os9err DeviceInit(ushort       pid,
             err = GetTop(pid, dev);
             // upo_printf( "TOPALLOC=%d of %d err=%d\n", dev->imgScts,
             // dev->totScts, err );
-        } // if
+        } 
 
         if (dev->imgMode == Img_FullSize) {
             err = GetFull(pid, dev);
-        } // if
-    }     // if
+        } 
+    }     
 
     if (err) {
         if (opened)
@@ -1705,7 +1705,7 @@ static os9err DeviceInit(ushort       pid,
         dev->installed = false;
         release_mem(dev->tmp_sct);
         dev->tmp_sct = NULL;
-    } // if
+    } 
 
     sprintf(ers, "  #000:%03d", err);
     debugprintf(dbgFiles,
@@ -1782,8 +1782,8 @@ os9err MountDev(ushort  pid,
                 strcpy(tmp, PSEP_STR);
                 strncat(tmp, name, OS9NAMELEN - 1);
                 name = tmp;
-            } // if
-        }     // if
+            } 
+        }     
 
         if (AbsPath(mnt_name))
             mnt_name++;
@@ -1826,7 +1826,7 @@ os9err MountDev(ushort  pid,
                      name,
                      mnt_name,
                      err));
-    } // if
+    } 
 
     mnt_wProtect = false; /* switch them off again */
     mnt_imgMode  = Img_Unchanged;
@@ -1891,7 +1891,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
                 if (sscanf(p, "%hd", &scsiID) < 1)
                     scsiID = NO_SCSI;
                 break;
@@ -1904,7 +1904,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
 
                 sscanf(p, "%hd", &scsiLUN);
                 break;
@@ -1917,7 +1917,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
 
                 sscanf(p, "%d", &ramSize);
                 break;
@@ -1930,7 +1930,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
 
                 sscanf(p, "%d", &sctSize);
                 break;
@@ -1943,7 +1943,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
 
                 sscanf(p, "%d", &cluSize);
                 break;
@@ -1956,7 +1956,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
                     if (k >= argc)
                         break;
                     p = argv[k];
-                } // if
+                } 
 
                 strncpy(devCopy, p, OS9PATHLEN);
                 break;
@@ -1986,7 +1986,7 @@ os9err int_mount(ushort pid, int argc, char **argv)
         }
         else
             return _errmsg(E_BPNAM, "can't mount device \"\".\n");
-    } // if
+    } 
 
     /* nargv[0] is the name of the image to be mounted */
     /* nargv[1] is the name of the mounted device */
@@ -2351,7 +2351,7 @@ static os9err FD_Segment(syspath_typ *spP,
             *sect = pos + add;
             *slim = pos + scs;
             done  = true;
-        } // if
+        } 
 
         // if (scs>0) *pref= pos + scs;
         if (scs == 0)
@@ -2360,7 +2360,7 @@ static os9err FD_Segment(syspath_typ *spP,
 
         v += blk;
         ii += SegSize; // goto next entry
-    }                  // while
+    }                  
 
     *totsize = v;
     debugprintf(dbgFiles,
@@ -2555,7 +2555,7 @@ static os9err AllocateBlocks(syspath_typ *spP,
             first = false;
             mploc = 0; /* from now on search from beginning */
         }              /* while (true) */
-    }                  // if
+    }                  
 
     if (*scsP == 0)
         return E_FULL;
@@ -2643,13 +2643,13 @@ static os9err ReleaseBlocks(syspath_typ *spP, ulong lastPos)
                 }
                 else {
                     *sp = os9_word(scs - diff);
-                } // if
+                } 
 
                 broken = true;
                 GetThem(dev, (pos + scs) - diff, diff, false);
-            } // if
-        }     // if
-    }         // for
+            } 
+        }     
+    }         
 
     err = WriteFD(spP);
     return err;
@@ -2688,7 +2688,7 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 
                 lpos += blk - psp;
                 lscs -= blk - psp; /* adjust the number of blocks */
-            }                      // if
+            }                      
 
             if (lscs > 0) {
                 if (ii == First)
@@ -2703,14 +2703,14 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 
                 lpos += blk;
                 lscs -= blk;
-            } // if
+            } 
 
             if (lscs == 0) {
                 err = WriteFD(spP);
                 if (err)
                     return err;
                 return 0;
-            } // if
+            } 
         }     
 
         prev_l  = os9_long(*lp) >> BpB;
@@ -2777,7 +2777,7 @@ static os9err DoAccess(syspath_typ *spP,
             if (!wMode) { // reduce to currect ammount
                 if (*rs < rbf->currPos + remain)
                     remain = *rs - rbf->currPos;
-            } // if
+            } 
 
             if (rbf->currPos >= *rs) {
                 if (wMode) {
@@ -2817,16 +2817,16 @@ static os9err DoAccess(syspath_typ *spP,
                                      wMode ? "write" : "read",
                                      *lenP));
                         return E_EOF;
-                    } // if
+                    } 
                 }
                 else {
                     if (rOK)
                         break; /* reading is ok so far */
                     err = E_EOF;
                     break;
-                } // if
-            }     // if
-        }         // if
+                } 
+            }     
+        }         
 
         offs = rbf->currPos % dev->sctSize; /* get offset within this sector */
 
@@ -2865,12 +2865,12 @@ static os9err DoAccess(syspath_typ *spP,
             n0 = 0;
             d  = 0;
             b  = spP->rw_sct;
-        } // if
+        } 
 
         // if (spP->rawMode && sect>=60 && sect<=90) {
         //   upo_printf( "DoAccess rw_nr=%d sect=%d *mw=%d mlt=%d\n",
         //   spP->rw_nr, sect, *mw, mlt );
-        // } // if
+        // } 
 
         if (spP->rw_nr == 0 ||                /* read only if different one */
             spP->rw_nr != sect || mltFirst) { /* it is important to decide about
@@ -2882,7 +2882,7 @@ static os9err DoAccess(syspath_typ *spP,
                 if (err)
                     break;
                 *mw = 0; /* now it is written */
-            }            // if
+            }            
 
             if (!mlt || !wMode) {
                 err = ReadSector(dev, sect, n, b);
@@ -2907,10 +2907,10 @@ static os9err DoAccess(syspath_typ *spP,
                         if (err)
                             break;
                     }
-                } // if
+                } 
 
-            } // if
-        }     // if
+            } 
+        }     
 
         rOK = true;
         debugprintf(dbgFiles,
@@ -2939,8 +2939,8 @@ static os9err DoAccess(syspath_typ *spP,
                     maxc = ii - coff + 1;
                     break;
                 }
-            } // for
-        }     // if
+            } 
+        }     
 
         /* copy to/from the buffer */
         if (wMode) {
@@ -2953,7 +2953,7 @@ static os9err DoAccess(syspath_typ *spP,
                 if (err)
                     break;
                 spP->rw_nr = *mw;
-            } // if
+            } 
 
             /* if sector in raw mode */
             if (spP->rawMode) {
@@ -2966,11 +2966,11 @@ static os9err DoAccess(syspath_typ *spP,
                     err = WriteSector(dev, sect, 1, spP->rw_sct);
                     if (err)
                         break;
-                } // if
+                } 
 
                 if (sect == 1)
                     dev->last_alloc = 0; /* reset after "format" */
-            }                            // if
+            }                            
 
             *mw = sect;
             if (mlt) {
@@ -2979,12 +2979,12 @@ static os9err DoAccess(syspath_typ *spP,
                     break;
                 spP->rw_nr = sect + n0;
                 *mw        = 0; /* already written */
-            }                   // if
+            }                   
         }
         else {
             if (!mlt)
                 memcpy(buffer + boffs, spP->rw_sct + offs, maxc);
-        } // if
+        } 
 
         rbf->currPos += maxc; /* calculate the new position */
 
@@ -3230,8 +3230,8 @@ CreateNewFile(syspath_typ *spP, byte fileAtt, char *name, ulong csize)
             if (err)
                 return err;
             sTmp += ascs;
-        } // while
-    }     // if
+        } 
+    }     
 
     err = touchfile_RBF(spP, true);
     if (!err)
@@ -3324,7 +3324,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
         strcpy(pathname, PSEP_STR);
         strcat(pathname, mnt_name);  /* the mount name can be different */
         strcpy(dev->name, mnt_name); /* to the root path name */
-    }                                // if
+    }                                
 
     debugprintf(dbgFiles,
                 dbgNorm,
@@ -3355,7 +3355,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                     true; // flush it in fact when closing the path
                 // main_printf( "Flush RBF cache: pathname='%s' id=%d\n",
                 // pathname, pid );
-            } // if
+            } 
 
             spP->rawMode = true;
             strcpy(spP->name, pathname);
@@ -3376,7 +3376,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
             strcpy(spP->fullName, curpath);
             strcat(spP->fullName, PSEP_STR);
             strcat(spP->fullName, pathname);
-        } // if
+        } 
 
         err = FD_ID(spP->fullName, NULL, &fd_hash, &mP);
         if (err)
@@ -3408,7 +3408,7 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                 rbf->lastPos = size; /* last pos is the filesize */
                 rbf->att     = attr; /* save attributes */
                 return 0;
-            }    // if
+            }    
             p++; /* cut root path */
             err = CutOS9Path(&p, (char *)&cmp_entry);
             if (err)
@@ -3543,10 +3543,10 @@ os9err pRopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
                         spP->fullName,
                         mP->dirid,
                         rbf->fd_nr);
-        } // if
+        } 
 
         mP->dirid = rbf->fd_nr;
-    } // if
+    } 
 #endif
 
     //  printf( "RelBuffers %08X %08X %d\n", spP->fd_sct, spP->rw_sct, err );
@@ -3580,7 +3580,7 @@ os9err pRclose(ushort pid, syspath_typ *spP)
             err = WriteSector(dev, spP->mustW, 1, spP->rw_sct);
             if (err)
                 break;
-        } // if
+        } 
 
         if (spP->rawMode)
             break; // no more things to do
@@ -3698,7 +3698,7 @@ os9err pRchd(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
                                       of dev->img_name */
         strcat(curpath, dev->name);
         strcat(curpath, &tmp[n]);
-    } // if
+    } 
     EatBack(curpath);
 
     err = usrpath_close(pid, path);
@@ -3927,7 +3927,7 @@ os9err pRsize(ushort pid, syspath_typ *spP, ulong *sizeP)
     if (spP->rawMode) {
         *sizeP = dev->totScts * dev->sctSize;
         return 0;
-    } // if
+    } 
 
     sv           = rbf->currPos;
     rbf->currPos = 0; /* initialize position to 0 */

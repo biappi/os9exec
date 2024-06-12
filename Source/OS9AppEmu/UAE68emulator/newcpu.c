@@ -253,7 +253,7 @@ void init_m68k (void)
       if (currprefs.cpu_compatible)
           write_log (" (compatible mode)");
       write_log ("\n");
-    } // if
+    } 
     
     read_table68k ();
     do_merges ();

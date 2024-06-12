@@ -127,7 +127,7 @@ void MoveBlk(void *dst, void *src, unsigned long size)
             s--;
             d--;
         }
-    } // if
+    } 
 } // MoveBlk
 
 // case insensitive version of strcmp

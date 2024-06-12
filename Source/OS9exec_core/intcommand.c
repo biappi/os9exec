@@ -229,7 +229,7 @@ static os9err int_stop(ushort pid, _argc_, _argv_)
         upho_printf("OS-9 emulation stopped\n");
         fflush(stdout);
         exit(0);
-    } // if
+    } 
 
     return (E_PERMIT); /* not super user: reject the stop command */
 } /* int_stop */
@@ -266,7 +266,7 @@ void Change_DbgPath(int argc, char **argv, char **pp, ushort *kp)
     if (dbgPath > 0) {
         err     = syspath_close(0, dbgPath);
         dbgPath = 0;
-    } // if
+    } 
 
     v = (*pp) + 1;
     if (*v == '=' || *v == ' ')
@@ -279,7 +279,7 @@ void Change_DbgPath(int argc, char **argv, char **pp, ushort *kp)
         }
 
         *pp = argv[(*kp)];
-    } // if
+    } 
 
     // try as path number first
     if (sscanf(*pp, "%d", &dbgOut) >= 1)
@@ -295,12 +295,12 @@ void Change_DbgPath(int argc, char **argv, char **pp, ushort *kp)
         if (!err) {
             err = syspath_gs_size(0, dbgPath, &size);
             err = syspath_seek(0, dbgPath, size);
-        } // if
+        } 
 
         if (err)
             dbgPath = 0;
         dbgOut = dbgPath;
-    } // if
+    } 
 } // Change_DbgPath
 
 static os9err int_debughalt(ushort pid, int argc, char **argv)
@@ -424,13 +424,13 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                             if (dbgPath>0) {
                               err= syspath_close( 0, dbgPath );
                               dbgPath=  0;
-                            } // if
+                            } 
 
                             if (*(p+1)=='=') p+=2;
                             else {  k++; // next arg
                                 if (k>=argc)  { dbgOut= 0; break; }
                                 p= argv[k];
-                            } // if
+                            } 
 
                             // try as path number first
                             if (sscanf( p,"%d", &dbgOut )>=1) break;
@@ -442,11 +442,11 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                 0x03 ); if  (err==E_PNNF) err= syspath_open( 0, &dbgPath, type,
                 p, poCreateMask|0x03 ); if (!err) { err= syspath_gs_size( 0,
                 dbgPath, &size ); err= syspath_seek   ( 0, dbgPath,  size ); }
-                // if
+                
 
                               if (err) dbgPath= 0;
                               dbgOut=  dbgPath;
-                            } // if
+                            } 
                             break;
                                 */
 
@@ -567,8 +567,8 @@ static os9err int_paths(_pid_, int argc, char **argv)
 
             k = atoi(p);
             nargc++;
-        } // if
-    }     // for
+        } 
+    }     
 
     show_files(k);
     return 0;
@@ -614,7 +614,7 @@ static os9err int_mem(_pid_, int argc, char **argv)
                         break;
                     }
                     p = argv[h];
-                } // if
+                } 
 
                 if (sscanf(p, "%d", &my_pid) < 1)
                     my_pid = MAXPROCESSES;
@@ -640,8 +640,8 @@ static os9err int_mem(_pid_, int argc, char **argv)
             }
 
             nargc++;
-        } // if
-    }     // for
+        } 
+    }     
 
     show_mem(my_pid, mem_unused, mem_fulldisp);
     return 0;
@@ -721,8 +721,8 @@ static os9err int_devs(_pid_, int argc, char **argv)
                 return 1;
             }
             nargc++;
-        } // if
-    }     // for
+        } 
+    }     
 
     upo_printf("%s  %s\n", hw_name, sw_name);
     upo_printf("\n");
@@ -801,7 +801,7 @@ int NumberOfNativeProgs(plug_typ *p)
 
     int i = 0;
     while (p->next_NativeProg(&i, (char *)&iName, (char *)&iOpt)) {
-    } // while
+    } 
     return i;
 } // NumberOfNativeProgs
 
@@ -838,7 +838,7 @@ os9err ConnectDLL(plug_typ *p)
         if (i == 1 || i == 3) {
             strcat(fullName, PATHDELIM_STR); // search at "PLUGINS" first
             strcat(fullName, "PLUGINS");
-        } // if
+        } 
 
         strcat(fullName, PATHDELIM_STR);
         strcat(fullName, p->name);
@@ -884,12 +884,12 @@ os9err ConnectDLL(plug_typ *p)
             err = DLL_Func(p->fDLL,
                            "Call_Intercept",
                            (void **)&p->call_Intercept);
-    } // if
+    } 
 
     if (err) {
         DisconnectDLL(p);
         return err;
-    } // if
+    } 
 
     p->numNativeProgs = NumberOfNativeProgs(p);
     return 0;
@@ -947,7 +947,7 @@ Boolean Native_Possible(Boolean hardCheck)
         enabled = possible;
         if (enabled)
             return true;
-    } // for
+    } 
 #endif
 
     return false;
@@ -974,7 +974,7 @@ Boolean Plugin_Possible(Boolean hardCheck)
         enabled = possible && !isBuiltIn;
         if (enabled)
             return true;
-    } // for
+    } 
 #endif
 
     return false;
@@ -992,7 +992,7 @@ static void native_usage(const char *name, const char *swMode)
         upe_printf("    -d [<native utility>] disable\n");
         upe_printf("    -n [<native utility>] no longer specific\n");
         upe_printf("\n");
-    } // if
+    } 
 
     upe_printf("    -i   display include list\n");
     upe_printf("    -x      \"    exclude   \" \n");
@@ -1018,7 +1018,7 @@ static void display_nativeList(Boolean asInclude)
         n++;
 
         upe_printf(" %-15s", *q);
-    } // for
+    } 
 
     if (Native_Empty(asInclude))
         upe_printf("<none>");
@@ -1058,7 +1058,7 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
         len = strlen(p->name);
         if (maxN < len)
             maxN = len;
-    }          // for
+    }          
     maxN += 2; // apo addition
 
     if (!atStartup)
@@ -1100,18 +1100,18 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
                     tt = "# Connecting plugin module:";
                 else
                     tt = "#                          ";
-            } // if
+            } 
 
             upe_printf(form, tt, nm, ver, rev, p->numNativeProgs);
             done = true;
-        } // for
-    }     // if
+        } 
+    }     
 
     if (!atStartup) {
         if (!done)
             upe_printf("<none>");
         upe_printf("\n");
-    } // if
+    } 
 
     /*
     int       i;
@@ -1126,7 +1126,7 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
 
       upe_printf( " %-30s %08X\n", p->name, p->pVersion );
       done= true;
-    } // for
+    } 
 
     if (!done) upe_printf( "<none>" );
                upe_printf( "\n" );
@@ -1149,7 +1149,7 @@ static void ShiftDown(int i, Boolean addIt)
         if (*r == NULL)
             break;
         q = r;
-    } // for
+    } 
 } // ShiftDown
 
 static void RemoveNativeElement(const char *s, Boolean addIt, Boolean *already)
@@ -1165,7 +1165,7 @@ static void RemoveNativeElement(const char *s, Boolean addIt, Boolean *already)
             release_mem(*q);
             *q = NULL;
             ShiftDown(i, !addIt);
-        } // if
+        } 
 
         // --------------------------------
         q = MyElem(i, addIt);
@@ -1175,11 +1175,11 @@ static void RemoveNativeElement(const char *s, Boolean addIt, Boolean *already)
                 release_mem(*q);
                 *q = NULL;
                 ShiftDown(i, addIt);
-            } // if
+            } 
 
             *already = true; // it's there already
-        }                    // if
-    }                        // for
+        }                    
+    }                        
 } // RemoveNativeElement
 
 void ChangeNativeElement(const char *s, Boolean addIt)
@@ -1203,7 +1203,7 @@ void ChangeNativeElement(const char *s, Boolean addIt)
             found = true;
             break;
         }
-    } // for
+    } 
     if (!found)
         return;
 
@@ -1214,8 +1214,8 @@ void ChangeNativeElement(const char *s, Boolean addIt)
             *q = get_mem(strlen(s));
             strcpy(*q, s);
             return;
-        } // if
-    }     // for
+        } 
+    }     
 } // ChangeNativeElement
 
 static void ChangePluginElement(const char *s, Boolean enable, Boolean removeIt)
@@ -1250,11 +1250,11 @@ static void ChangePluginElement(const char *s, Boolean enable, Boolean removeIt)
 
                 p->pEnabled  = enable;
                 p->pDisabled = !enable;
-            } // if
+            } 
 
             break;
-        } // if
-    }     // for
+        } 
+    }     
 } // ChangePluginElement
 
 static os9err int_xx(int argc, char **argv, Boolean isOn)
@@ -1311,9 +1311,9 @@ static os9err int_xx(int argc, char **argv, Boolean isOn)
             else {
                 if (!dispIn && !dispEx)
                     ChangeNativeElement(p, isOn);
-            } // if
-        }     // if
-    }         // for
+            } 
+        }     
+    }         
 
     if (dispIn || dispEx) {
         if (dispIn)
@@ -1321,11 +1321,11 @@ static os9err int_xx(int argc, char **argv, Boolean isOn)
         if (dispEx)
             display_nativeList(false);
         return 0;
-    } // if
+    } 
 
     if (argc == 1) { // no additional arguments
         nativeActive = isOn;
-    } // if
+    } 
 
     return 0;
 } // int_xx
@@ -1400,9 +1400,9 @@ static os9err int_native(_pid_, int argc, char **argv)
             else if (!dispIn && !dispEx && isOn != isOff) {
                 ChangeNativeElement(p, isOn);
                 specific = true;
-            } // if
-        }     // if
-    }         // for
+            } 
+        }     
+    }         
 
     if (dispIn) {
         display_nativeList(true);
@@ -1415,7 +1415,7 @@ static os9err int_native(_pid_, int argc, char **argv)
 
     if (!specific && isOn != isOff) { // no additional arguments
         nativeActive = isOn;
-    } // if
+    } 
 
     return 0;
 } // int_native
@@ -1485,9 +1485,9 @@ static os9err int_plugin(_pid_, int argc, char **argv)
             else if (!disp && isOn != isOff) {
                 ChangePluginElement(p, isOn, false);
                 specific = true;
-            } // if
-        }     // if
-    }         // for
+            } 
+        }     
+    }         
 
     if (disp) {
         display_pluginList(true, false);
@@ -1496,7 +1496,7 @@ static os9err int_plugin(_pid_, int argc, char **argv)
 
     if (!specific && isOn != isOff) { // no additional arguments
         pluginActive = isOn && Plugin_Possible(true);
-    } // if
+    } 
 
     return 0;
 } // int_plugin
@@ -1552,8 +1552,8 @@ static os9err native_calls(ushort pid, _argc_, char **argv)
         if (enabled && cp->plugElem->is_NativeProg(name, &modBase)) {
             cp->isPlugin = !isBuiltIn;
             break;
-        } // if
-    }     // for
+        } 
+    }     
 
 #ifdef THREAD_SUPPORT
       // mutex unlock for systemcalls
@@ -1569,7 +1569,7 @@ static os9err native_calls(ushort pid, _argc_, char **argv)
         ni.cbP      = &g_cb;
 
         err = cp->plugElem->start_NativeProg(name, &ni);
-    } // if
+    } 
 
     cp->isPlugin = false;
     cp->plugElem = NULL;
@@ -1592,7 +1592,7 @@ static os9err int_hit(_pid_, _argc_, _argv_)
         n += hi * i; // weighted
         if (hi > 0)
             iLast = i;
-    } // for
+    } 
 
     if (diff == 0)
         strcpy(s, "");
@@ -1614,7 +1614,7 @@ static os9err int_hit(_pid_, _argc_, _argv_)
                     strcpy(s, "      ");
                 else
                     sprintf(s, "%5.1f%%", (float)hi / (float)diff * 100);
-            } // if
+            } 
 
             if (hi == 0)
                 sprintf(v, "-");
@@ -1626,8 +1626,8 @@ static os9err int_hit(_pid_, _argc_, _argv_)
 
             if (j == NBlk - 1 && (iLast >= MaxL || iLast >= i))
                 upo_printf("\n");
-        } // for
-    }     // for
+        } 
+    }     
 
     return 0;
 } // int_hit
@@ -1732,7 +1732,7 @@ os9err int_help(ushort pid, _argc_, _argv_)
             break;
 
         upho_printf("  %-14s: %s\n", nm, commandtable[k].iHelpText);
-    } // for
+    } 
 
     if (pid == 0)
         upo_printf("\n");
@@ -1763,7 +1763,7 @@ static int IntCmdIndex(const char *name)
                 strncpy(part, p, q - p);
                 part[q - p] = NUL; /* nul termination */
                 p           = part;
-            } // if
+            } 
 
             if (strcmp(p, name) == 0)
                 return index; // found
@@ -1802,7 +1802,7 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
             break;
         }
         cut--;
-    } // while
+    } 
 
     for (i = 0; i < MAXLIST; i++) {
         q = MyElem(i, !nativeActive);
@@ -1814,7 +1814,7 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
             ok = !ok;
             break;
         }
-    } // for
+    } 
 
     if (ok) {
         ok = false; // start again testing
@@ -1830,8 +1830,8 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
                 ok = true;
                 break;
             }
-        } // for
-    }     // if
+        } 
+    }     
 
     if (!ok)
         *modBaseP = NULL; // just to be sure
@@ -1882,7 +1882,7 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
             if (*p != 0x20) {
                 argc++;
                 scanarg = true; /* now scanning argument */
-            }                   // if
+            }                   
         }
         else {
             if (*p == 0x20)
@@ -1890,7 +1890,7 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
         }
 
         p++;
-    } // while
+    } 
 
     localargv = get_mem((argc + 1) * sizeof(char **));
 
@@ -1909,14 +1909,14 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
                 localargv[argc] = p; /* remember beginning of next arg */
                 argc++;
                 scanarg = true; /* now scanning argument */
-            }                   // if
+            }                   
         }
         else {
             if (*p == 0x20)
                 scanarg = false; /* end of arg found */
         }
         p++;
-    } // while
+    } 
 
     /* p now points behind last arg char */
     localargv[argc] = p; /* save as end pointer */
@@ -1942,7 +1942,7 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
             *(p - 1) = 0;
         else
             *p++ = 0; /* replace space by terminator or append it at end */
-    }                 // for
+    }                 
 
     debugprintf(
         dbgUtils,
@@ -2046,7 +2046,7 @@ PrepareParams(ushort pid, int index, int argc, char **argv, ThreadVars **t)
         size += strlen(argv[i]) + 1;
         if ((size % 2) == 1)
             size++;
-    } // for
+    } 
 
     *t          = malloc(size);
     (*t)->pid   = pid;
@@ -2062,7 +2062,7 @@ PrepareParams(ushort pid, int index, int argc, char **argv, ThreadVars **t)
         p += strlen(p) + 1;
         if (((ulong)p % 2) == 1)
             p++;
-    } // for
+    } 
 } // PrepareParams
 #endif
 
@@ -2137,7 +2137,7 @@ os9err callcommand(char    *name,
 
         if (spC != NULL && !cp->isNative)
             large_pipe_connect(pid, spC);
-    } // if
+    } 
 
     if (logtiming) {
         xxx_to_arb(F_Fork, pid);
@@ -2155,13 +2155,13 @@ os9err callcommand(char    *name,
         PrepareParams(pid, index, argc, argv, &t);
         rslt = pthread_create(&threadID, NULL, IntCmdThread, t);
         err  = 0;
-    } // if
+    } 
 #endif
 
     if (!*asThread) {
         currentpid = pid;
         err        = (commandtable[index].iRoutine)(pid, argc, argv);
-    } // if
+    } 
 
     debugprintf(dbgUtils,
                 dbgNorm,

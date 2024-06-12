@@ -564,7 +564,7 @@ void AssignNewChild(ushort parentid, ushort pid)
                         dbgNorm,
                         ("# Assign new child: pid=%d\n", os9_word(*idp)));
             return;
-        } // if
+        } 
 
         idp = &procs[idp_sv].pd._sid;
         if (os9_word(*idp) == idp_sv)
@@ -650,7 +650,7 @@ os9err kill_process(ushort pid)
             pid,
             pUnused,
             "kill_process"); /* there's no parent => invalidate descriptor */
-    }                        // if
+    }                        
 
     debugprintf(dbgProcess, dbgNorm, ("# kill_process: process killed\n"));
 
@@ -756,7 +756,7 @@ os9err send_signal(ushort spid, ushort signal)
         sigp->exiterr = os9error(E_PRCABT); /* process aborted */
         kill_process(spid);
         return 0;
-    } // if
+    } 
 
     if (signal == S_Wake && spid == currentpid)
         return 0; /* ignore this */
@@ -829,13 +829,13 @@ os9err send_signal(ushort spid, ushort signal)
             if (currentpid == 0 && signal == S_Wake) {
                 // if (sigp->isIntUtil) {
                 //   cp->way_to_icpt= false; return 0; /* don't switch */
-                // } // if
+                // } 
 
                 currentpid = spid;
                 arbitrate  = true;
-            } // if
-        }     // if
-    }         // if
+            } 
+        }     
+    }         
 
     if (signal != S_Wake) {
         /* not wake, additional processing required */
@@ -922,12 +922,12 @@ os9err send_signal(ushort spid, ushort signal)
                         sigp->func = F_RTE;
                         debug_comein(&sigp->os9regs, spid);
                         err = OS9_F_RTE(&sigp->os9regs, spid);
-                    } // if
-                }     // if
+                    } 
+                }     
 
                 currentpid = sv;
                 return 0;
-            } // if
+            } 
 #endif
 
             // debugprintf(dbgSysCall,dbgNorm,("# PREP SIGNAL intUtil=%d pid=%d
@@ -943,7 +943,7 @@ os9err send_signal(ushort spid, ushort signal)
 
                 currentpid = spid;
                 arbitrate  = true;
-            } // if
+            } 
 
             debugprintf(
                 dbgProcess,
@@ -956,7 +956,7 @@ os9err send_signal(ushort spid, ushort signal)
         else {
             // if (sigp->isIntUtil) {
             //   printf( "%d abortli\n", currentpid );  /* %bfo% */
-            // } // if
+            // } 
 
             /* abort process */
             debugprintf(dbgProcess,
@@ -970,7 +970,7 @@ os9err send_signal(ushort spid, ushort signal)
             sigp->way_to_icpt = false; /* don't handle it as intercept */
             cp->way_to_icpt   = false;
         }
-    } // if
+    } 
 
     return 0; /* signal sent successfully */
 } /* send_signal */
@@ -1110,7 +1110,7 @@ void do_arbitrate(ushort allowedIntUtil)
         arbitrate  = true; /* arbitrate anyway, start at first process */
         currentpid = 0;
         cpid       = 0;
-    } // if
+    } 
 
     cp = &procs[cpid];
 
@@ -1120,7 +1120,7 @@ void do_arbitrate(ushort allowedIntUtil)
             cp->state == pUnused ||  /* unused, arbitrating needed */
             cp->state == pWaitRead)
             arbitrate = true; /* give a chance to other processes */
-    }                         // if
+    }                         
 
     /* now arbitrate if needed */
     spid     = currentpid;
@@ -1161,7 +1161,7 @@ void do_arbitrate(ushort allowedIntUtil)
 
                             spid = 0; // do it later
                             break;
-                        } // if
+                        } 
 
                         if (sprocess->state == pSleeping) {
                             if (sprocess->wakeUpTick <= GetSystemTick()) {
@@ -1175,8 +1175,8 @@ void do_arbitrate(ushort allowedIntUtil)
 
                                 spid = 0; // do it later
                                 break;
-                            } // if
-                        }     // if
+                            } 
+                        }     
 
                         spid++;
                         if (spid == MAXPROCESSES) { // no running process found
@@ -1195,7 +1195,7 @@ void do_arbitrate(ushort allowedIntUtil)
 
                             spid = 0; /* process 0 and 1 do not exist */
                             break;
-                        } // if
+                        } 
                     }     // loop
                 }         // if spid>=MAXPROCESSES
 
@@ -1276,8 +1276,8 @@ void do_arbitrate(ushort allowedIntUtil)
                     cpw->state != pDead && cpw->state != pUnused) {
                     cOK = false;
                     break;
-                } // if
-            }     // for
+                } 
+            }     
 
             if (cOK) {
                 // --- search if there is a dead child of that process
@@ -1286,18 +1286,18 @@ void do_arbitrate(ushort allowedIntUtil)
                     if (os9_word(cpw->pd._pid) == spid && cpw->state == pDead) {
                         deadpid = pid;
                         break;
-                    } // if
-                }     // for
+                    } 
+                }     
 
                 if (deadpid < MAXPROCESSES)
                     break; /* yes, there is a dead child, we can unwait */
-            }              // if
+            }              
         }                  
 
         if (sprocess->isIntUtil && spid != allowedIntUtil) {
             arbitrate = true;
             continue; /* don't break as internal utility */
-        }             // if
+        }             
 
         /* --- check if process can be activated */
         if (sprocess->state == pActive)
@@ -1308,16 +1308,16 @@ void do_arbitrate(ushort allowedIntUtil)
             if (!sprocess->isIntUtil)
                 break;
             done = false;
-        } // if
+        } 
 
         if (sprocess->state ==
             pWaitRead) { /* only every nth time for this mode */
             if (sprocess->pW_age-- <= 0) {
                 sprocess->pW_age = NewAge;
                 break;
-            } // if
+            } 
             done = false;
-        } // if
+        } 
 
         if (sprocess->state == pSleeping) {
             atLeast1 =
@@ -1339,7 +1339,7 @@ void do_arbitrate(ushort allowedIntUtil)
                     // isInt=%d pid=%d sig9=%d d1=%d\n",
                     //             cp->isIntUtil, cpid, procs[ 9 ].icpt_signal,
                     //             procs[ 9 ].os9regs.d[1] ));
-                } // if
+                } 
 
                 wait_for_signal(spid);
 
@@ -1353,7 +1353,7 @@ void do_arbitrate(ushort allowedIntUtil)
                     sprocess->os9regs.sr &= ~CARRY; /* error-free return */
                     set_os9_state(spid, pActive, "do_arbitrate");
                     break;
-                } // if
+                } 
 
                 sleepingpid = spid; /* remember sleeping process */
             }                       /* if slow down */
@@ -1375,7 +1375,7 @@ void do_arbitrate(ushort allowedIntUtil)
     // cp= &procs[ justthis_pid ];
     // if (cp->state==pWaitRead) {
     //    debugprintf(dbgTaskSwitch,dbgNorm,("# arbitrate spid=%d\n", spid ));
-    // } // if
+    // } 
 
     // if (done && sprocess->isIntUtil)
     //   printf( "%d ALLARM !!\n", currentpid ); /* %bfo% */
@@ -1410,7 +1410,7 @@ void do_arbitrate(ushort allowedIntUtil)
                           pActive,
                           "do_arbitrate"); /* process is now active */
             cp->os9regs.sr &= ~CARRY;      /* error-free return */
-        }                                  // if
+        }                                  
     }
     else
         currentpid = sleepingpid; /* is there a sleeping process ? */
@@ -1563,7 +1563,7 @@ os9err prepFork(ushort newpid,
         if (pp->pd._cid != 0 &&
             pp->pd._cid != newpid)     /* already children available */
             cp->pd._sid = pp->pd._cid; /* take child as sibling */
-                                       //} // if
+                                       //} 
 
         svid        = currentpid;
         pp->pd._cid = os9_word(newpid); /* this is the child */
@@ -1583,7 +1583,7 @@ os9err prepFork(ushort newpid,
             cp->exiterr = err;
             kill_process(newpid);
             err = 0;
-        } // if
+        } 
 
         return err; /* internal-tool "fork" return value */
     }               /* if isintcommand */

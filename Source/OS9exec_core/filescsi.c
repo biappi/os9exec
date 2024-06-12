@@ -255,7 +255,7 @@ os9err Get_DSize(scsi_dev *scsi, ulong *totScts)
     /* Iomega JAZ does not support the mode sense command */
     if (*totScts == 0) {
         err = ReadCapacity(scsi, totScts, &sctSize);
-    } // if
+    } 
 
     return err;
 } /* Get_DSize */

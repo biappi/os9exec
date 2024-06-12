@@ -401,7 +401,7 @@ static void disp_line(ushort       pid,
             sprintf(aa, "%c>%d:%s", p->broken ? '/' : '-', p->sp_lock, szs);
             if (n > 0)
                 sprintf(aa, "%s:%d", aa, n);
-        } // if
+        } 
 
         upo_printf("%-13s", aa);
         break;

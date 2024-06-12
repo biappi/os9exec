@@ -172,7 +172,7 @@ Boolean out_of_mem(ushort pid, ulong addr)
         if (cm->m[k].base && addr >= (base = (ulong)cm->m[k].base) &&
             addr < base + cm->m[k].size)
             return false; // ok, pointer points within range
-    }                     // for
+    }                     
 
     return true; // out of range
 } // out_of_mem
@@ -188,7 +188,7 @@ Boolean out_of_mods(ulong addr)
         if (mp && addr >= (ulong)mp && // ok, pointer points within range
             addr < (ulong)mp + os9_long(mp->_mh._msize))
             return false; // not out of range
-    }                     // for
+    }                     
 
     return true; // out of range
 } // out_of_mods
@@ -340,13 +340,13 @@ void debug_procdump(process_typ *cp, int cpid)
     if (++depth > 1) {
         upo_printf("*** BUSERR during process dump: Emulation terminated\n");
         exit(0);
-    } // if
+    } 
 
     /* check that the sync bytes are $4afc */
     if (me != NULL) {
         modsync = me->_mh._msync;
         sync_ok = (modsync == sync_id);
-    } // if
+    } 
 
     /* output the module identity line */
     upo_printf("\nProcess   Pid: %d", cpid);

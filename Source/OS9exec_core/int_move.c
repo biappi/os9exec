@@ -472,12 +472,12 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
                 if (!err)
                     break;
                 DoWait();
-            } // for
-        }     // if
+            } 
+        }     
 
         if (err)
             return _errmsg(err, "can't open dest directory \"%s\".", nameD);
-    } // if
+    } 
 
     if (!quiet)
         return _errmsg(0,

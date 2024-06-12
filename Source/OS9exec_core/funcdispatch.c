@@ -723,7 +723,7 @@ void os9_to_xxx(ushort pid)
 
             p = q;
         } // loop
-    }     // if
+    }     
 
     if (!systime_prog_ok) {
         mn  = "      (other progs)";
@@ -755,13 +755,13 @@ void os9_to_xxx(ushort pid)
             s->intern = !eli && cp->isIntUtil;
             s->ticks  = 0;
             s->num    = 0;
-        } // if
+        } 
 
         if (ustrcmp(mn, s->name) == 0) {
             s->ticks += a;
             s->num++;
             break;
-        } // if
+        } 
     }     // outer for
 } // os9_to_xxx
 
@@ -887,7 +887,7 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
                 else {
                     mod = (mod_exec *)cp->os9regs.a[3];
                     p   = Mod_Name(mod);
-                } // if
+                } 
 
                 strcpy(item, "\"");
                 strcat(item, p);
@@ -895,7 +895,7 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
 
                 if (cp->isIntUtil)
                     strcat(item, " (native)");
-            } // if
+            } 
 
             uphe_printf("<<<%cPid=%02d: OS9 %s %s",
                         msk ? '*' : ' ',
@@ -914,7 +914,7 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
             else {
                 show_maskedregs(&cp->os9regs, fdeP->outregs);
                 upe_printf("\n");
-            } // if
+            } 
         }
     } /* if (cwti) */
 } /* debug_return */
@@ -928,7 +928,7 @@ ushort pthread_pid()
     for (i = 0; i < MAXPROCESSES; i++) {
         if (procs[i].tid == tid)
             return i;
-    } // if
+    } 
 #endif
 
     return currentpid;
@@ -958,7 +958,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
         if (ptocThread)
             pthread_mutex_lock(&sysCallMutex);
         currentpid = pid;
-    } // if
+    } 
 #endif
 
     if (logtiming) {
@@ -974,7 +974,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
         // make the debug logging for systemcalls within int commands here
         cp->func = func;
         debug_comein(rp, pid);
-    } // if
+    } 
 
     cp->oerr = (fdeP->func)(rp, pid);
 
@@ -994,8 +994,8 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
 #endif
 
             return cp->oerr;
-        } // if
-    }     // if
+        } 
+    }     
 
     if (logtiming) {
         xxx_to_arb(func, pid);
@@ -1009,7 +1009,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
             if (func < NUMICALLS)
                 os9_long_inc(&pd->_icalls, 1);
         }
-    } // if
+    } 
 
     if (withinIntUtil) {
         if (arbitrate) {
@@ -1019,14 +1019,14 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
         }
         else {
             debug_return(rp, pid, false);
-        } // if
-    }     // if
+        } 
+    }     
 
 #ifdef THREAD_SUPPORT
     if (withinIntUtil) {
         if (ptocThread)
             pthread_mutex_unlock(&sysCallMutex);
-    } // if
+    } 
 #endif
 
     return cp->oerr;
@@ -1043,7 +1043,7 @@ os9err trap0_call(ushort code, Regs_68k *regs)
 
     if (code == I_Write || code == I_WritLn) {
         arbitrate = true;
-    } // if
+    } 
 
     do {
         MoveBlk((void *)&rp.d[0], (void *)regs, RegsSize); // copy forth ...
@@ -1091,7 +1091,7 @@ static void update_L2(ulong t)
             l2.phase  = 1;
             l2.lcount = l2.ratio1;
             ll        = l2.col1;
-        } // if
+        } 
 
         v = os9_word(ll);
         if (v != l2.hw_location)
@@ -1286,7 +1286,7 @@ static void show_syscalltimers(Boolean icalls,
     if (sort) {
         for (k = 0; k < max; k++)
             kDone[k] = false;
-    } // if
+    } 
 
     for (k = 0; k <= max; k++) {
         kInd = k;
@@ -1309,11 +1309,11 @@ static void show_syscalltimers(Boolean icalls,
                         mxNum   = n;
                         kInd    = j;
                     }
-                } // if
-            }     // for
+                } 
+            }     
 
             kDone[kInd] = true;
-        } // if
+        } 
 
         // t= icalls ? icall_time[k] : fcall_time[k];
         // n= icalls ? icall_num [k] : fcall_num [k];
@@ -1358,7 +1358,7 @@ show_os9timers(ushort mode, ulong active, ulong *call, ulong *num, int ticksLim)
     if (sort) {
         for (k = 0; k < MAX_OS9PROGS; k++)
             kDone[k] = false;
-    } // if
+    } 
 
     for (k = 0; k < MAX_OS9PROGS; k++) {
         kInd = k;
@@ -1381,11 +1381,11 @@ show_os9timers(ushort mode, ulong active, ulong *call, ulong *num, int ticksLim)
                         mxNum   = n;
                         kInd    = j;
                     }
-                } // if
-            }     // for
+                } 
+            }     
 
             kDone[kInd] = true;
-        } // if
+        } 
 
         Get_Statistics_tn(kInd, &s, &t, &n);
 
@@ -1461,14 +1461,14 @@ ulong show_timing(ushort mode, int ticksLim, Boolean doDisable)
                    sum_slp_idleticks + sum_rw__idleticks,
                    -1,
                    active);
-    } // if
+    } 
 
     show_sline("TOTAL active", active, osnum, active);
 
     if (sOpt && realtime > active) {
         show_sline("TOTAL realtime", realtime, -1, 0);
         show_sline("lost  ticks", realtime - active, -1, 0);
-    } // if
+    } 
 
     return ticall + tfcall;
 } /* show_timing */
@@ -1591,7 +1591,7 @@ os9err int_systime(ushort pid, int argc, char **argv)
             upe_printf("Error: no arguments allowed\n");
             return 1;
         }
-    } // for
+    } 
 
     if (mode != STIM_NONE)
         show_timing(mode, ticksLim, doDisable);

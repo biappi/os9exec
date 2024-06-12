@@ -429,7 +429,7 @@ void MoveBlk( void* dst, void* src, ulong size )
     s= (byte*)( (ulong)src + size-1 );
     d= (byte*)( (ulong)dst + size-1 );
     for ( n=0; n<size; n++ ) { *d= *s; s--; d--; }
-  } // if
+  } 
 } // MoveBlk
 */
 
@@ -688,7 +688,7 @@ int NextFreeModuleId(char *name)
             if (os9mod(k) == NULL)
                 break;
         }
-    } // if
+    } 
 
     debugprintf(dbgModules,
                 dbgNorm,
@@ -1093,7 +1093,7 @@ static os9err load_module_local(ushort  pid,
             dsize      = os9_long(theModuleP->_mh._msize);
             isBuiltIn  = true;
             break; /* found */
-        }          // if
+        }          
 
         /* no more trials for linking */
         if (linkstyle)
@@ -1120,7 +1120,7 @@ static os9err load_module_local(ushort  pid,
             err = usrpath_open(pid, &path, type, name, mode);
             if (err)
                 return os9error(linkstyle ? E_MNF : err); /* as the real OS-9 */
-        }                                                 // if
+        }                                                 
 
         if (bootSiz == 0) {
             err = usrpath_getstat(pid,
@@ -1136,7 +1136,7 @@ static os9err load_module_local(ushort  pid,
         }
         else {
             dsize = bootSiz;
-        } // if
+        } 
 
         pp = get_mem(dsize);
         if (pp == NULL) {
@@ -1144,7 +1144,7 @@ static os9err load_module_local(ushort  pid,
                 err = usrpath_close(pid, path);
 
             return os9error(E_NORAM); /* not enough memory */
-        }                             // if
+        }                             
 
         loadbytes  = dsize;
         theModuleP = pp;
@@ -1387,7 +1387,7 @@ os9err link_module(ushort pid, const char *name, ushort *midP)
             ("# link_module: internal cmd '%s' => try 'OS9exec' instead\n",
              lName));
         strcpy(lName, OS9exec_name);
-    } // if
+    } 
 #endif
 
     err = load_module_local(pid, lName, midP, true, true, modBase, 0, 0, 0);
@@ -1402,11 +1402,11 @@ os9err link_module(ushort pid, const char *name, ushort *midP)
                     dbgNorm,
                     ("# link_module: 'OS9exec' not found, returned ptr to main "
                      "module\n"));
-    } // if
+    } 
 
     // if (err && isNative) {
     //   *midP= NextFreeModuleId( lName );
-    // } // if
+    // } 
 
     // if    (err==E_MNF && isNative && strcmp( lName,"hello_world" )==0)
     //        err= 0; // native programs can work without an os9 primary module
@@ -1482,7 +1482,7 @@ os9err load_OS9Boot(ushort pid)
             err = usrpath_seek(pid, path, pos * scs);
             if (err)
                 break;
-        } // if
+        } 
 
         err = load_module_local(pid,
                                 name,
@@ -1493,7 +1493,7 @@ os9err load_OS9Boot(ushort pid)
                                 path,
                                 pos,
                                 siz);
-    } while (false); // if
+    } while (false); 
 
     cErr = usrpath_close(pid, path);
     if (!err)
