@@ -1,1 +1,8 @@
-*build*/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+dd
+os9exec
+.vscode
+build/
