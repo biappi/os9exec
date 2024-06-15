@@ -1266,6 +1266,12 @@ static os9err load_module_local(ushort  pid,
             dbgModules,
             dbgNorm,
             ("# load_module: module size: %d\n", modSize));
+        // compatibility with Aesthedes 2's OS-9:
+        // "shell" is 19k but modSize == 65536
+        // "dxfout" is ~80k but modSize == 0
+        if (modSize == 0 || modSize == 0x10000) {
+            modSize = dsize;
+        }
         if (modSize > dsize) {
             debugprintf(
                 dbgModules,
