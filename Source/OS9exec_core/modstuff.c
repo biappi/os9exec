@@ -1262,6 +1262,10 @@ static os9err load_module_local(ushort  pid,
         }
 
         modSize = os9_long(theModuleP->_mh._msize);
+        debugprintf(
+            dbgModules,
+            dbgNorm,
+            ("# load_module: module size: %d\n", modSize));
         if (modSize > dsize) {
             debugprintf(
                 dbgModules,
