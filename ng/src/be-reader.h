@@ -8,6 +8,11 @@ public:
     {
     }
 
+    void reset(int to) {
+        assert(to < data.size());
+        i = to;
+    }
+
     uint8_t read_8() {
         assert(i < data.size());
         return data[i++];

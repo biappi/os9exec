@@ -95,6 +95,66 @@ int main(int argc, char **argv)
     auto header = os9_header(data);
 
     header.dump();
+    char *namestring = (char *)&data[header.names];
+
+    printf(" -\n");
+
+    assert(header.stack != 0xcafebabe);
+
+    const uint32_t data_start   = 0x1000;
+    const uint32_t params_len   = 0x0100;
+    const uint32_t module_align = 0x1000;
+
+    uint32_t stack_start  = data_start + header.mem;
+    uint32_t param_start  = stack_start + header.stack;
+    uint32_t param_end    = param_start + params_len;
+    uint32_t module_start = ((param_end / module_align) + 1) * module_align;
+
+    printf("name:         %s\n",   namestring);
+    printf("stack_start:  %08x\n", stack_start);
+    printf("param_start:  %08x\n", param_start);
+    printf("param_end:    %08x\n", param_end);
+    printf("module_start: %08x\n", module_start);
+
+    printf(" - code refs\n");
+
+    auto r = be_reader(data);
+    r.reset(header.irefs);
+
+
+    while (1) {
+        auto msw    = r.read_16();
+        auto n_lsw  = r.read_16();
+
+        printf("msw:    %04x\n", msw);
+        printf("n_lsw:  %04x\n", n_lsw);
+
+        if (msw == 0 && n_lsw == 0) {
+            break;
+        }
+
+        for (int i = 0; i < n_lsw; i++) {
+            printf("  %03d:  %04x\n", i, r.read_16());
+        }
+    }
+
+    printf(" - data refs\n");
+
+    while (1) {
+        auto msw    = r.read_16();
+        auto n_lsw  = r.read_16();
+
+        printf("msw:    %04x\n", msw);
+        printf("n_lsw:  %04x\n", n_lsw);
+
+        if (msw == 0 && n_lsw == 0) {
+            break;
+        }
+
+        for (int i = 0; i < n_lsw; i++) {
+            printf("  %03d:  %04x\n", i, r.read_16());
+        }
+    }
 
     return 0;
 
