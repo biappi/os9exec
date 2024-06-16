@@ -307,10 +307,10 @@ void init_RBF(fmgr_typ *f)
 
     /* setstat */
     ss->_SS_Size = (pathopfunc_typ)pRsetsz;
-    ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Opt  = IO_Nop; /* ignored */
     ss->_SS_Attr = (pathopfunc_typ)pRsetatt;
     ss->_SS_FD   = (pathopfunc_typ)pRsetFD;
-    ss->_SS_Lock = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Lock = IO_Nop; /* ignored */
     ss->_SS_WTrk = (pathopfunc_typ)pRWTrk;
 
     init_RBF_devs(); /* init RBF devices */

@@ -222,25 +222,25 @@ void init_Net(fmgr_typ *f)
     f->readln  = (pathopfunc_typ)pNreadln;
     f->write   = (pathopfunc_typ)pNwrite;
     f->writeln = (pathopfunc_typ)pNwriteln;
-    f->seek    = (pathopfunc_typ)pBadMode; /* not allowed */
+    f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pUnimp; /* -- not used */
+    gs->_SS_Size  = IO_Unimp; /* -- not used */
     gs->_SS_Opt   = (pathopfunc_typ)pNopt;
     gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
     gs->_SS_Pos   = (pathopfunc_typ)pNpos;
-    gs->_SS_EOF   = (pathopfunc_typ)pNop; /* ignored */
+    gs->_SS_EOF   = IO_Nop; /* ignored */
     gs->_SS_Ready = (pathopfunc_typ)pNready;
 
     gs->_SS_PCmd = (pathopfunc_typ)pNgPCmd; /* network spefic function */
 
     gs->_SS_Undef =
-        (pathopfunc_typ)pUnimp; /* -- not used, if any other function */
+        IO_Unimp; /* -- not used, if any other function */
 
     /* setstat */
-    ss->_SS_Size = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Attr = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Size = IO_Nop; /* ignored */
+    ss->_SS_Opt  = IO_Nop; /* ignored */
+    ss->_SS_Attr = IO_Nop; /* ignored */
 
     ss->_SS_Bind    = (pathopfunc_typ)pNbind; /* network spefic functions */
     ss->_SS_Listen  = (pathopfunc_typ)pNlisten;
@@ -253,7 +253,7 @@ void init_Net(fmgr_typ *f)
     ss->_SS_SendTo  = (pathopfunc_typ)pNsend;
     ss->_SS_PCmd    = (pathopfunc_typ)pNsPCmd;
 
-    ss->_SS_Undef = (pathopfunc_typ)pNop; /* ignored, if any other function */
+    ss->_SS_Undef = IO_Nop; /* ignored, if any other function */
 }
 
 /* ----------------------------------------------- */

@@ -263,10 +263,10 @@ void init_File(fmgr_typ *f)
 
     /* setstat */
     ss->_SS_Size = (pathopfunc_typ)pFsetsz;
-    ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Attr = (pathopfunc_typ)pNop;
+    ss->_SS_Opt  = IO_Nop; /* ignored */
+    ss->_SS_Attr = IO_Nop;
     ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
-    ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
+    ss->_SS_WTrk = IO_Unimp; /* not used */
 }
 
 void init_Dir(fmgr_typ *f)
@@ -280,8 +280,8 @@ void init_Dir(fmgr_typ *f)
     f->close   = (pathopfunc_typ)pDclose;
     f->read    = (pathopfunc_typ)pDread;
     f->readln  = (pathopfunc_typ)pDread;   /* the same as read */
-    f->write   = (pathopfunc_typ)pBadMode; /* not allowed */
-    f->writeln = (pathopfunc_typ)pBadMode; /* not allowed */
+    f->write   = IO_BadMode; /* not allowed */
+    f->writeln = IO_BadMode; /* not allowed */
     f->seek    = (pathopfunc_typ)pDseek;
     f->chd     = (pathopfunc_typ)pDchd;
     f->makdir  = (pathopfunc_typ)pDmakdir;
@@ -292,17 +292,17 @@ void init_Dir(fmgr_typ *f)
     gs->_SS_DevNm = (pathopfunc_typ)pHvolnam;
     gs->_SS_Pos   = (pathopfunc_typ)pDpos;
     gs->_SS_EOF   = (pathopfunc_typ)pDeof;
-    gs->_SS_Ready = (pathopfunc_typ)pUnimp; /* not used */
+    gs->_SS_Ready = IO_Unimp; /* not used */
     gs->_SS_FD    = (pathopfunc_typ)pHgetFD;
     gs->_SS_FDInf = (pathopfunc_typ)pHgetFDInf;
 
     /* setstat */
-    ss->_SS_Size = (pathopfunc_typ)pBadMode; /* not allowed */
-    ss->_SS_Opt  = (pathopfunc_typ)pNop;     /* ignored */
+    ss->_SS_Size = IO_BadMode; /* not allowed */
+    ss->_SS_Opt  = IO_Nop;     /* ignored */
     ss->_SS_Attr = (pathopfunc_typ)pDsetatt;
     ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
-    ss->_SS_Lock = (pathopfunc_typ)pNop;   /* ignored */
-    ss->_SS_WTrk = (pathopfunc_typ)pUnimp; /* not used */
+    ss->_SS_Lock = IO_Nop;   /* ignored */
+    ss->_SS_WTrk = IO_Unimp; /* not used */
 }
 
 /* -------------------------------------------------------- */

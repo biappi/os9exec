@@ -140,22 +140,22 @@ void init_Pipe(fmgr_typ *f)
     f->readln  = (pathopfunc_typ)pPreadln;
     f->write   = (pathopfunc_typ)pPwrite;
     f->writeln = (pathopfunc_typ)pPwriteln;
-    f->seek    = (pathopfunc_typ)pNop; /* ignored */
+    f->seek    = IO_Nop; /* ignored */
     f->del     = (pathopfunc_typ)pPdelete;
 
     /* getstat */
     gs->_SS_Size  = (pathopfunc_typ)pPsize;
     gs->_SS_Opt   = (pathopfunc_typ)pPopt;
     gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pUnimpOk; /* ??? */
+    gs->_SS_Pos   = IO_UnimpOk; /* ??? */
     gs->_SS_EOF   = (pathopfunc_typ)pPeof;
     gs->_SS_Ready = (pathopfunc_typ)pPready;
     gs->_SS_FDInf = (pathopfunc_typ)pPFDInf;
 
     /* setstat */
     ss->_SS_Size = (pathopfunc_typ)pPsetsz;
-    ss->_SS_Opt  = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Attr = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Opt  = IO_Nop; /* ignored */
+    ss->_SS_Attr = IO_Nop; /* ignored */
 }
 
 void init_PTY(fmgr_typ *f)
@@ -171,23 +171,23 @@ void init_PTY(fmgr_typ *f)
     f->readln  = (pathopfunc_typ)pKreadln;
     f->write   = (pathopfunc_typ)pKwrite;
     f->writeln = (pathopfunc_typ)pKwriteln;
-    f->seek    = (pathopfunc_typ)pBadMode; /* not allowed */
+    f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pUnimp; /* not used */
+    gs->_SS_Size  = IO_Unimp; /* not used */
     gs->_SS_Opt   = (pathopfunc_typ)pKopt;
     gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
     gs->_SS_Pos   = (pathopfunc_typ)pKpos;
-    gs->_SS_EOF   = (pathopfunc_typ)pNop; /* ignored */
+    gs->_SS_EOF   = IO_Nop; /* ignored */
     gs->_SS_Ready = (pathopfunc_typ)pKready;
-    gs->_SS_Undef = (pathopfunc_typ)pUnimp; /* not used */
+    gs->_SS_Undef = IO_Unimp; /* not used */
 
     /* setstat */
-    ss->_SS_Size  = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Opt   = (pathopfunc_typ)pNop; /* ignored */
-    ss->_SS_Attr  = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Size  = IO_Nop; /* ignored */
+    ss->_SS_Opt   = IO_Nop; /* ignored */
+    ss->_SS_Attr  = IO_Nop; /* ignored */
     ss->_SS_Lock  = (pathopfunc_typ)pKlock;
-    ss->_SS_Undef = (pathopfunc_typ)pNop; /* ignored */
+    ss->_SS_Undef = IO_Nop; /* ignored */
 }
 
 /* -------------------------------------------------------- */

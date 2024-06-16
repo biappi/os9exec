@@ -197,56 +197,56 @@ void init_None(fmgr_typ *f)
     gs_typ *gs = &f->gs;
     ss_typ *ss = &f->ss;
 
-    f->open    = (pathopfunc_typ)pNoModule; /* E_MNF, as in OS-9 */
-    f->close   = (pathopfunc_typ)pUnimp;
-    f->write   = (pathopfunc_typ)pUnimp;
-    f->writeln = (pathopfunc_typ)pUnimp;
-    f->read    = (pathopfunc_typ)pUnimp;
-    f->readln  = (pathopfunc_typ)pUnimp;
-    f->seek    = (pathopfunc_typ)pUnimp;
-    f->chd     = (pathopfunc_typ)pNoModule; /* E_MNF, as in OS-9 */
-    f->del     = (pathopfunc_typ)pUnimp;
-    f->makdir  = (pathopfunc_typ)pUnimp;
+    f->open    = IO_NoModule; /* E_MNF, as in OS-9 */
+    f->close   = IO_Unimp;
+    f->write   = IO_Unimp;
+    f->writeln = IO_Unimp;
+    f->read    = IO_Unimp;
+    f->readln  = IO_Unimp;
+    f->seek    = IO_Unimp;
+    f->chd     = IO_NoModule; /* E_MNF, as in OS-9 */
+    f->del     = IO_Unimp;
+    f->makdir  = IO_Unimp;
 
     /* driver's getstt */
-    gs->_SS_Size  = (pathopfunc_typ)pUnimp;
-    gs->_SS_Opt   = (pathopfunc_typ)pUnimp;
-    gs->_SS_DevNm = (pathopfunc_typ)pUnimp;
-    gs->_SS_Pos   = (pathopfunc_typ)pUnimp;
-    gs->_SS_EOF   = (pathopfunc_typ)pUnimp;
-    gs->_SS_Ready = (pathopfunc_typ)pUnimp;
-    gs->_SS_FD    = (pathopfunc_typ)pUnimp;
-    gs->_SS_FDInf = (pathopfunc_typ)pUnimp;
-    gs->_SS_DSize = (pathopfunc_typ)pUnimp;
+    gs->_SS_Size  = IO_Unimp;
+    gs->_SS_Opt   = IO_Unimp;
+    gs->_SS_DevNm = IO_Unimp;
+    gs->_SS_Pos   = IO_Unimp;
+    gs->_SS_EOF   = IO_Unimp;
+    gs->_SS_Ready = IO_Unimp;
+    gs->_SS_FD    = IO_Unimp;
+    gs->_SS_FDInf = IO_Unimp;
+    gs->_SS_DSize = IO_Unimp;
 
-    gs->_SS_PCmd = (pathopfunc_typ)pUnimp; /* network specific function  */
+    gs->_SS_PCmd = IO_Unimp; /* network specific function  */
 
-    gs->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
+    gs->_SS_LBlink = IO_Unimp; /* /L2 specific function */
 
-    gs->_SS_Undef = (pathopfunc_typ)pUnimp; /* any other getstat */
+    gs->_SS_Undef = IO_Unimp; /* any other getstat */
 
     /* driver's setstat */
-    ss->_SS_Size = (pathopfunc_typ)pUnimp;
-    ss->_SS_Opt  = (pathopfunc_typ)pUnimp;
-    ss->_SS_Attr = (pathopfunc_typ)pUnimp;
-    ss->_SS_FD   = (pathopfunc_typ)pUnimp;
-    ss->_SS_Lock = (pathopfunc_typ)pUnimp;
-    ss->_SS_WTrk = (pathopfunc_typ)pUnimp;
+    ss->_SS_Size = IO_Unimp;
+    ss->_SS_Opt  = IO_Unimp;
+    ss->_SS_Attr = IO_Unimp;
+    ss->_SS_FD   = IO_Unimp;
+    ss->_SS_Lock = IO_Unimp;
+    ss->_SS_WTrk = IO_Unimp;
 
-    ss->_SS_Bind    = (pathopfunc_typ)pUnimp; /* network specific functions */
-    ss->_SS_Listen  = (pathopfunc_typ)pUnimp;
-    ss->_SS_Connect = (pathopfunc_typ)pUnimp;
-    ss->_SS_Accept  = (pathopfunc_typ)pUnimp;
-    ss->_SS_Recv    = (pathopfunc_typ)pUnimp;
-    ss->_SS_Send    = (pathopfunc_typ)pUnimp;
-    ss->_SS_GNam    = (pathopfunc_typ)pUnimp;
-    ss->_SS_SOpt    = (pathopfunc_typ)pUnimp;
-    ss->_SS_SendTo  = (pathopfunc_typ)pUnimp;
-    ss->_SS_PCmd    = (pathopfunc_typ)pUnimp;
+    ss->_SS_Bind    = IO_Unimp; /* network specific functions */
+    ss->_SS_Listen  = IO_Unimp;
+    ss->_SS_Connect = IO_Unimp;
+    ss->_SS_Accept  = IO_Unimp;
+    ss->_SS_Recv    = IO_Unimp;
+    ss->_SS_Send    = IO_Unimp;
+    ss->_SS_GNam    = IO_Unimp;
+    ss->_SS_SOpt    = IO_Unimp;
+    ss->_SS_SendTo  = IO_Unimp;
+    ss->_SS_PCmd    = IO_Unimp;
 
-    ss->_SS_LBlink = (pathopfunc_typ)pUnimp; /* /L2 specific function */
+    ss->_SS_LBlink = IO_Unimp; /* /L2 specific function */
 
-    ss->_SS_Undef = (pathopfunc_typ)pUnimp; /* any other setstat */
+    ss->_SS_Undef = IO_Unimp; /* any other setstat */
 }
 
 /* --------------------------------------------------------- */

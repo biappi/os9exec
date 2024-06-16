@@ -90,6 +90,14 @@ os9err pBadMode(ushort pid, syspath_typ *);
 os9err pNop(ushort pid, syspath_typ *);
 os9err pNoModule(ushort pid, syspath_typ *);
 
+/* Generic void pointers */
+
+#define IO_Unimp ((void*)pUnimp)
+#define IO_UnimpOk ((void*)pUnimpOk)
+#define IO_BadMode ((void*)pBadMode)
+#define IO_Nop ((void*)pNop)
+#define IO_NoModule ((void*)pNoModule)
+
 /* SCF-like */
 os9err pSCFnam(ushort pid, syspath_typ *, char *volname);
 
