@@ -184,7 +184,7 @@ typedef struct sockaddr_in SOCKADDR_IN;
 /* --- local procedure definitions for object definition ------------------- */
 void init_Net(fmgr_typ *f);
 
-os9err pNopen(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname);
+os9err pNopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname);
 os9err pNclose(ushort pid, syspath_typ *spP);
 os9err pNread(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
 os9err pNreadln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
@@ -203,7 +203,8 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1);
 os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
 os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
 os9err pNGNam(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP);
-os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2);
+/* os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2); */
+os9err pNSOpt(ushort pid, syspath_typ *spP, byte *buffer);
 
 os9err pNgPCmd(ushort pid, syspath_typ *spP, ulong *a0);
 os9err pNsPCmd(ushort pid, syspath_typ *spP, ulong *a0);
@@ -216,23 +217,23 @@ void init_Net(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pNopen;
-    f->close   = (pathopfunc_typ)pNclose;
-    f->read    = (pathopfunc_typ)pNread;
-    f->readln  = (pathopfunc_typ)pNreadln;
-    f->write   = (pathopfunc_typ)pNwrite;
-    f->writeln = (pathopfunc_typ)pNwriteln;
+    f->open    = pNopen;
+    f->close   = pNclose;
+    f->read    = pNread;
+    f->readln  = pNreadln;
+    f->write   = pNwrite;
+    f->writeln = pNwriteln;
     f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
     gs->_SS_Size  = IO_Unimp; /* -- not used */
-    gs->_SS_Opt   = (pathopfunc_typ)pNopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pNpos;
+    gs->_SS_Opt   = pNopt;
+    gs->_SS_DevNm = pSCFnam;
+    gs->_SS_Pos   = pNpos;
     gs->_SS_EOF   = IO_Nop; /* ignored */
-    gs->_SS_Ready = (pathopfunc_typ)pNready;
+    gs->_SS_Ready = pNready;
 
-    gs->_SS_PCmd = (pathopfunc_typ)pNgPCmd; /* network spefic function */
+    gs->_SS_PCmd = pNgPCmd; /* network spefic function */
 
     gs->_SS_Undef =
         IO_Unimp; /* -- not used, if any other function */
@@ -242,16 +243,16 @@ void init_Net(fmgr_typ *f)
     ss->_SS_Opt  = IO_Nop; /* ignored */
     ss->_SS_Attr = IO_Nop; /* ignored */
 
-    ss->_SS_Bind    = (pathopfunc_typ)pNbind; /* network spefic functions */
-    ss->_SS_Listen  = (pathopfunc_typ)pNlisten;
-    ss->_SS_Connect = (pathopfunc_typ)pNconnect;
-    ss->_SS_Accept  = (pathopfunc_typ)pNaccept;
-    ss->_SS_Recv    = (pathopfunc_typ)pNrecv;
-    ss->_SS_Send    = (pathopfunc_typ)pNsend;
-    ss->_SS_GNam    = (pathopfunc_typ)pNGNam;
-    ss->_SS_SOpt    = (pathopfunc_typ)pNSOpt;
-    ss->_SS_SendTo  = (pathopfunc_typ)pNsend;
-    ss->_SS_PCmd    = (pathopfunc_typ)pNsPCmd;
+    ss->_SS_Bind    = pNbind; /* network spefic functions */
+    ss->_SS_Listen  = pNlisten;
+    ss->_SS_Connect = pNconnect;
+    ss->_SS_Accept  = pNaccept;
+    ss->_SS_Recv    = pNrecv;
+    ss->_SS_Send    = pNsend;
+    ss->_SS_GNam    = pNGNam;
+    ss->_SS_SOpt    = pNSOpt;
+    ss->_SS_SendTo  = pNsend;
+    ss->_SS_PCmd    = pNsPCmd;
 
     ss->_SS_Undef = IO_Nop; /* ignored, if any other function */
 }
@@ -376,7 +377,7 @@ static os9err GetBuffers(net_typ *net)
     return 0;
 }
 
-os9err pNopen(_pid_, syspath_typ *spP, _modeP_, char *pathname)
+os9err pNopen(_pid_, syspath_typ *spP, _modeP_, const char *pathname)
 {
     OSStatus err;
     net_typ *net = &spP->u.net;
@@ -954,9 +955,15 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
     return 0;
 }
 
-os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2)
-/* don't know what this is really good for (bfo) */
+;
+/* os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2) */
+os9err pNSOpt(_pid_, syspath_typ *spP, byte *buffer)
 {
+    /* wil: this function doesn't match the call site, commenting */
+
+#if 0
+    /* don't know what this is really good for (bfo) */
+    ulong *d2 = (ulong*)buffer;
     net_typ *net = &spP->u.net;
 
     if (*d2 == 4) {
@@ -965,6 +972,7 @@ os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2)
     }
 
     *d1 = 0;
+#endif
     return 0;
 }
 

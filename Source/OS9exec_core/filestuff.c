@@ -870,6 +870,7 @@ os9err pNop(_pid_, _spP_) { return 0; }
 /* unavailable 'open' function, as in OS-9 */
 os9err pNoModule(_pid_, _spP_) { return os9error(E_MNF); }
 
+
 /* get SCF device name from file */
 os9err pSCFnam(_pid_, syspath_typ *spP, char *volname)
 {
@@ -1361,7 +1362,7 @@ syspath_write(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean wrln)
     os9err         err;
     procid        *pd = &procs[pid].pd;
     fmgr_typ      *f;
-    pathopfunc_typ wproc;
+    os9err (*wproc)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
     syspath_typ   *spP = get_syspathd(pid, spnum);
 
     if (spP == NULL) {
@@ -1552,7 +1553,7 @@ syspath_read(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean rdln)
     procid        *pd = &procs[pid].pd;
     int            prev;
     fmgr_typ      *f;
-    pathopfunc_typ rproc;
+    os9err (*rproc)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
     syspath_typ   *spP = get_syspathd(pid, spnum);
 
     if (spP == NULL)
@@ -1845,7 +1846,7 @@ os9err syspath_setstat(ushort pid,
         err = 0; /* do nothing */
         break;
     case SS_WTrk:
-        err = (s->_SS_WTrk)(pid, spP, d2, *a);
+        err = (s->_SS_WTrk)(pid, spP, d2 /*, *a */);
         break;
 
     case SS_LBlink:
@@ -1857,7 +1858,7 @@ os9err syspath_setstat(ushort pid,
         err = (s->_SS_Bind)(pid, spP, d2, *a);
         break; /* $6C */
     case SS_Listen:
-        err = (s->_SS_Listen)(pid, spP, d2, *a);
+        err = (s->_SS_Listen)(pid, spP /*, d2, *a*/);
         break; /* $6D */
     case SS_Connect:
         err = (s->_SS_Connect)(pid, spP, d2, *a);
@@ -1866,7 +1867,7 @@ os9err syspath_setstat(ushort pid,
         err = 0; /* do nothing at the moment */
         break;   /* $6F */
     case SS_Accept:
-        err = (s->_SS_Accept)(pid, spP, d1, *a);
+        err = (s->_SS_Accept)(pid, spP, d1 /*, *a*/);
         break; /* $70 */
     case SS_Recv:
         err = (s->_SS_Recv)(pid, spP, d1, d2, *a);
@@ -1878,7 +1879,7 @@ os9err syspath_setstat(ushort pid,
         err = (s->_SS_GNam)(pid, spP, d1, d2, *a);
         break; /* $73 */
     case SS_SOpt:
-        err = (s->_SS_SOpt)(pid, spP, d1, d2);
+        err = (s->_SS_SOpt)(pid, spP, d1 /*, d2*/);
         break; /* $74 set socket option   */
     case SS_SendTo:
         err = (s->_SS_SendTo)(pid, spP, d1, d2, *a);
@@ -1996,7 +1997,7 @@ os9err get_locations(ushort      pid,
     return err;
 }
 
-static os9err doCmd(pathopfunc_typ cmd,
+static os9err doCmd(os9err (*cmd)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname),
                     ushort         pid,
                     ptype_typ      type,
                     ushort         mode,

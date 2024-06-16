@@ -116,7 +116,7 @@
 
 /* --- local procedure definitions for object definition ------------------- */
 void   init_Cons(fmgr_typ *f);
-os9err pCopen(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
+os9err pCopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pCclose(ushort pid, syspath_typ *);
 os9err pConsIn(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
 os9err pConsInLn(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
@@ -132,7 +132,7 @@ void   init_NIL(fmgr_typ *f);
 os9err pEOF(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
 
 void   init_SCF(fmgr_typ *f);
-os9err pSopen(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
+os9err pSopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pSclose(ushort pid, syspath_typ *);
 os9err pSBlink(ushort pid, syspath_typ *, ulong *d2);
 os9err pGBlink(ushort pid, syspath_typ *, ulong *d2);
@@ -149,25 +149,25 @@ void init_Cons(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pCopen;
-    f->close   = (pathopfunc_typ)pCclose;
-    f->read    = (pathopfunc_typ)pConsIn;
-    f->readln  = (pathopfunc_typ)pConsInLn;
-    f->write   = (pathopfunc_typ)pConsOut;
-    f->writeln = (pathopfunc_typ)pConsOutLn;
+    f->open    = pCopen;
+    f->close   = pCclose;
+    f->read    = pConsIn;
+    f->readln  = pConsInLn;
+    f->write   = pConsOut;
+    f->writeln = pConsOutLn;
     f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
     gs->_SS_Size  = IO_Unimp; /* -- not used */
-    gs->_SS_Opt   = (pathopfunc_typ)pCopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pCpos;
+    gs->_SS_Opt   = pCopt;
+    gs->_SS_DevNm = pSCFnam;
+    gs->_SS_Pos   = pCpos;
     gs->_SS_EOF   = IO_Nop; /* ignored */
-    gs->_SS_Ready = (pathopfunc_typ)pCready;
+    gs->_SS_Ready = pCready;
 
     /* setstat */
     ss->_SS_Size = IO_Nop; /* ignored */
-    ss->_SS_Opt  = (pathopfunc_typ)pCsetopt;
+    ss->_SS_Opt  = pCsetopt;
     ss->_SS_Attr = IO_Nop; /* ignored */
 }
 
@@ -179,16 +179,16 @@ void init_NIL(fmgr_typ *f)
     /* main procedures */
     f->open    = IO_Nop;     /* ignored */
     f->close   = IO_Nop;     /* ignored */
-    f->read    = (pathopfunc_typ)pEOF;     /* as in OS-9 */
-    f->readln  = (pathopfunc_typ)pEOF;     /* as in OS-9 */
+    f->read    = pEOF;     /* as in OS-9 */
+    f->readln  = pEOF;     /* as in OS-9 */
     f->write   = IO_Nop;     /* ignored */
     f->writeln = IO_Nop;     /* ignored */
     f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
     gs->_SS_Size  = IO_Unimp; /* -- not used */
-    gs->_SS_Opt   = (pathopfunc_typ)pSCFopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
+    gs->_SS_Opt   = pSCFopt;
+    gs->_SS_DevNm = pSCFnam;
     gs->_SS_Pos   = IO_BadMode; /* not allowed */
     gs->_SS_EOF   = IO_Nop;     /* ignored */
     gs->_SS_Ready = IO_BadMode; /* not allowed */
@@ -206,8 +206,8 @@ void init_SCF(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pSopen;
-    f->close   = (pathopfunc_typ)pSclose;
+    f->open    = pSopen;
+    f->close   = pSclose;
     f->read    = IO_BadMode; /* not allowed */
     f->readln  = IO_BadMode; /* not allowed */
     f->write   = IO_BadMode; /* not allowed */
@@ -216,19 +216,19 @@ void init_SCF(fmgr_typ *f)
 
     /* getstat */
     gs->_SS_Size   = IO_Unimp; /* -- not used */
-    gs->_SS_Opt    = (pathopfunc_typ)pSCFopt;
-    gs->_SS_DevNm  = (pathopfunc_typ)pSCFnam;
+    gs->_SS_Opt    = pSCFopt;
+    gs->_SS_DevNm  = pSCFnam;
     gs->_SS_Pos    = IO_BadMode; /* not allowed */
     gs->_SS_EOF    = IO_Nop;     /* ignored */
     gs->_SS_Ready  = IO_BadMode; /* not allowed */
-    gs->_SS_LBlink = (pathopfunc_typ)pGBlink;  /* specific */
-    gs->_SS_Undef  = (pathopfunc_typ)pVMod;
+    gs->_SS_LBlink = pGBlink;  /* specific */
+    gs->_SS_Undef  = pVMod;
 
     /* setstat */
     ss->_SS_Size   = IO_Nop;    /* ignored */
     ss->_SS_Opt    = IO_Nop;    /* ignored */
     ss->_SS_Attr   = IO_Nop;    /* ignored */
-    ss->_SS_LBlink = (pathopfunc_typ)pSBlink; /* specific */
+    ss->_SS_LBlink = pSBlink; /* specific */
     ss->_SS_Undef  = IO_Nop;    /* ignored */
 }
 
@@ -549,7 +549,7 @@ ConsId(char *name, char *family, int range, int offs, int *result)
     return false;
 }
 
-os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, char *name)
+os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, const char *name)
 /* routine for opening serial devices */
 {
     os9err err;
@@ -600,7 +600,7 @@ os9err pCopen(ushort pid, syspath_typ *spP, _modeP_, char *name)
     return 0;
 }
 
-os9err pSopen(_pid_, syspath_typ *spP, _modeP_, char *name)
+os9err pSopen(_pid_, syspath_typ *spP, _modeP_, const char *name)
 /* routine for opening SCF devices */
 {
     int    k;

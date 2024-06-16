@@ -283,35 +283,35 @@ void init_RBF(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pRopen;
-    f->close   = (pathopfunc_typ)pRclose;
-    f->read    = (pathopfunc_typ)pRread;
-    f->readln  = (pathopfunc_typ)pRreadln;
-    f->write   = (pathopfunc_typ)pRwrite;
-    f->writeln = (pathopfunc_typ)pRwriteln;
-    f->seek    = (pathopfunc_typ)pRseek;
-    f->chd     = (pathopfunc_typ)pRchd;
-    f->del     = (pathopfunc_typ)pRdelete;
-    f->makdir  = (pathopfunc_typ)pRmakdir;
+    f->open    = pRopen;
+    f->close   = pRclose;
+    f->read    = pRread;
+    f->readln  = pRreadln;
+    f->write   = pRwrite;
+    f->writeln = pRwriteln;
+    f->seek    = pRseek;
+    f->chd     = pRchd;
+    f->del     = pRdelete;
+    f->makdir  = pRmakdir;
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pRsize;
-    gs->_SS_Opt   = (pathopfunc_typ)pRopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pRnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pRpos;
-    gs->_SS_EOF   = (pathopfunc_typ)pReof;
-    gs->_SS_Ready = (pathopfunc_typ)pRready;
-    gs->_SS_FD    = (pathopfunc_typ)pRgetFD;
-    gs->_SS_FDInf = (pathopfunc_typ)pRgetFDInf;
-    gs->_SS_DSize = (pathopfunc_typ)pRdsize; /* get drive size in sectors */
+    gs->_SS_Size  = pRsize;
+    gs->_SS_Opt   = pRopt;
+    gs->_SS_DevNm = pRnam;
+    gs->_SS_Pos   = pRpos;
+    gs->_SS_EOF   = pReof;
+    gs->_SS_Ready = pRready;
+    gs->_SS_FD    = pRgetFD;
+    gs->_SS_FDInf = pRgetFDInf;
+    gs->_SS_DSize = pRdsize; /* get drive size in sectors */
 
     /* setstat */
-    ss->_SS_Size = (pathopfunc_typ)pRsetsz;
+    ss->_SS_Size = pRsetsz;
     ss->_SS_Opt  = IO_Nop; /* ignored */
-    ss->_SS_Attr = (pathopfunc_typ)pRsetatt;
-    ss->_SS_FD   = (pathopfunc_typ)pRsetFD;
+    ss->_SS_Attr = pRsetatt;
+    ss->_SS_FD   = pRsetFD;
     ss->_SS_Lock = IO_Nop; /* ignored */
-    ss->_SS_WTrk = (pathopfunc_typ)pRWTrk;
+    ss->_SS_WTrk = pRWTrk;
 
     init_RBF_devs(); /* init RBF devices */
 }

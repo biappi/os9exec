@@ -240,32 +240,31 @@ void init_File(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pFopen;
-    f->close   = (pathopfunc_typ)pFclose;
-    f->read    = (pathopfunc_typ)pFread;
-    f->readln  = (pathopfunc_typ)pFreadln;
-    f->write   = (pathopfunc_typ)pFwrite;
-    f->writeln = (pathopfunc_typ)pFwriteln;
-    f->seek    = (pathopfunc_typ)pFseek;
-    f->del     = (pathopfunc_typ)pFdelete;
-    f->makdir  = (pathopfunc_typ)
-        pDmakdir; /* access to directory will be done via fFile */
+    f->open    = pFopen;
+    f->close   = pFclose;
+    f->read    = pFread;
+    f->readln  = pFreadln;
+    f->write   = pFwrite;
+    f->writeln = pFwriteln;
+    f->seek    = pFseek;
+    f->del     = pFdelete;
+    f->makdir  = pDmakdir; /* access to directory will be done via fFile */
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pFsize;
-    gs->_SS_Opt   = (pathopfunc_typ)pFopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pHvolnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pFpos;
-    gs->_SS_EOF   = (pathopfunc_typ)pFeof;
-    gs->_SS_Ready = (pathopfunc_typ)pFready;
-    gs->_SS_FD    = (pathopfunc_typ)pHgetFD;
-    gs->_SS_FDInf = (pathopfunc_typ)pHgetFDInf;
+    gs->_SS_Size  = pFsize;
+    gs->_SS_Opt   = pFopt;
+    gs->_SS_DevNm = pHvolnam;
+    gs->_SS_Pos   = pFpos;
+    gs->_SS_EOF   = pFeof;
+    gs->_SS_Ready = pFready;
+    gs->_SS_FD    = pHgetFD;
+    gs->_SS_FDInf = pHgetFDInf;
 
     /* setstat */
-    ss->_SS_Size = (pathopfunc_typ)pFsetsz;
+    ss->_SS_Size = pFsetsz;
     ss->_SS_Opt  = IO_Nop; /* ignored */
     ss->_SS_Attr = IO_Nop;
-    ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
+    ss->_SS_FD   = pHsetFD;
     ss->_SS_WTrk = IO_Unimp; /* not used */
 }
 
@@ -276,31 +275,31 @@ void init_Dir(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pDopen;
-    f->close   = (pathopfunc_typ)pDclose;
-    f->read    = (pathopfunc_typ)pDread;
-    f->readln  = (pathopfunc_typ)pDread;   /* the same as read */
+    f->open    = pDopen;
+    f->close   = pDclose;
+    f->read    = pDread;
+    f->readln  = pDread;   /* the same as read */
     f->write   = IO_BadMode; /* not allowed */
     f->writeln = IO_BadMode; /* not allowed */
-    f->seek    = (pathopfunc_typ)pDseek;
-    f->chd     = (pathopfunc_typ)pDchd;
-    f->makdir  = (pathopfunc_typ)pDmakdir;
+    f->seek    = pDseek;
+    f->chd     = pDchd;
+    f->makdir  = pDmakdir;
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pDsize;
-    gs->_SS_Opt   = (pathopfunc_typ)pRBFopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pHvolnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pDpos;
-    gs->_SS_EOF   = (pathopfunc_typ)pDeof;
+    gs->_SS_Size  = pDsize;
+    gs->_SS_Opt   = pRBFopt;
+    gs->_SS_DevNm = pHvolnam;
+    gs->_SS_Pos   = pDpos;
+    gs->_SS_EOF   = pDeof;
     gs->_SS_Ready = IO_Unimp; /* not used */
-    gs->_SS_FD    = (pathopfunc_typ)pHgetFD;
-    gs->_SS_FDInf = (pathopfunc_typ)pHgetFDInf;
+    gs->_SS_FD    = pHgetFD;
+    gs->_SS_FDInf = pHgetFDInf;
 
     /* setstat */
     ss->_SS_Size = IO_BadMode; /* not allowed */
     ss->_SS_Opt  = IO_Nop;     /* ignored */
-    ss->_SS_Attr = (pathopfunc_typ)pDsetatt;
-    ss->_SS_FD   = (pathopfunc_typ)pHsetFD;
+    ss->_SS_Attr = pDsetatt;
+    ss->_SS_FD   = pHsetFD;
     ss->_SS_Lock = IO_Nop;   /* ignored */
     ss->_SS_WTrk = IO_Unimp; /* not used */
 }

@@ -96,7 +96,7 @@
 /* --- local procedure definitions for object definition ------------------- */
 /* --- pipes */
 void   init_Pipe(fmgr_typ *f);
-os9err pPopen(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
+os9err pPopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pPclose(ushort pid, syspath_typ *);
 os9err pPreadln(ushort pid, syspath_typ *, ulong *n, char *buffer);
 os9err pPread(ushort pid, syspath_typ *, ulong *n, char *buffer);
@@ -114,7 +114,7 @@ os9err pPsetsz(ushort pid, syspath_typ *, ulong *sizeP);
 
 /* --- ptys */
 void   init_PTY(fmgr_typ *f);
-os9err pKopen(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
+os9err pKopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pKclose(ushort pid, syspath_typ *);
 os9err pKread(ushort pid, syspath_typ *, ulong *n, char *buffer);
 os9err pKreadln(ushort pid, syspath_typ *, ulong *n, char *buffer);
@@ -134,26 +134,26 @@ void init_Pipe(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pPopen;
-    f->close   = (pathopfunc_typ)pPclose;
-    f->read    = (pathopfunc_typ)pPread;
-    f->readln  = (pathopfunc_typ)pPreadln;
-    f->write   = (pathopfunc_typ)pPwrite;
-    f->writeln = (pathopfunc_typ)pPwriteln;
+    f->open    = pPopen;
+    f->close   = pPclose;
+    f->read    = pPread;
+    f->readln  = pPreadln;
+    f->write   = pPwrite;
+    f->writeln = pPwriteln;
     f->seek    = IO_Nop; /* ignored */
-    f->del     = (pathopfunc_typ)pPdelete;
+    f->del     = pPdelete;
 
     /* getstat */
-    gs->_SS_Size  = (pathopfunc_typ)pPsize;
-    gs->_SS_Opt   = (pathopfunc_typ)pPopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
+    gs->_SS_Size  = pPsize;
+    gs->_SS_Opt   = pPopt;
+    gs->_SS_DevNm = pSCFnam;
     gs->_SS_Pos   = IO_UnimpOk; /* ??? */
-    gs->_SS_EOF   = (pathopfunc_typ)pPeof;
-    gs->_SS_Ready = (pathopfunc_typ)pPready;
-    gs->_SS_FDInf = (pathopfunc_typ)pPFDInf;
+    gs->_SS_EOF   = pPeof;
+    gs->_SS_Ready = pPready;
+    gs->_SS_FDInf = pPFDInf;
 
     /* setstat */
-    ss->_SS_Size = (pathopfunc_typ)pPsetsz;
+    ss->_SS_Size = pPsetsz;
     ss->_SS_Opt  = IO_Nop; /* ignored */
     ss->_SS_Attr = IO_Nop; /* ignored */
 }
@@ -165,28 +165,28 @@ void init_PTY(fmgr_typ *f)
     ss_typ *ss = &f->ss;
 
     /* main procedures */
-    f->open    = (pathopfunc_typ)pKopen;
-    f->close   = (pathopfunc_typ)pKclose;
-    f->read    = (pathopfunc_typ)pKread;
-    f->readln  = (pathopfunc_typ)pKreadln;
-    f->write   = (pathopfunc_typ)pKwrite;
-    f->writeln = (pathopfunc_typ)pKwriteln;
+    f->open    = pKopen;
+    f->close   = pKclose;
+    f->read    = pKread;
+    f->readln  = pKreadln;
+    f->write   = pKwrite;
+    f->writeln = pKwriteln;
     f->seek    = IO_BadMode; /* not allowed */
 
     /* getstat */
     gs->_SS_Size  = IO_Unimp; /* not used */
-    gs->_SS_Opt   = (pathopfunc_typ)pKopt;
-    gs->_SS_DevNm = (pathopfunc_typ)pSCFnam;
-    gs->_SS_Pos   = (pathopfunc_typ)pKpos;
+    gs->_SS_Opt   = pKopt;
+    gs->_SS_DevNm = pSCFnam;
+    gs->_SS_Pos   = pKpos;
     gs->_SS_EOF   = IO_Nop; /* ignored */
-    gs->_SS_Ready = (pathopfunc_typ)pKready;
+    gs->_SS_Ready = pKready;
     gs->_SS_Undef = IO_Unimp; /* not used */
 
     /* setstat */
     ss->_SS_Size  = IO_Nop; /* ignored */
     ss->_SS_Opt   = IO_Nop; /* ignored */
     ss->_SS_Attr  = IO_Nop; /* ignored */
-    ss->_SS_Lock  = (pathopfunc_typ)pKlock;
+    ss->_SS_Lock  = pKlock;
     ss->_SS_Undef = IO_Nop; /* ignored */
 }
 
@@ -289,7 +289,7 @@ static void releasePipe_svd(ushort pid, syspath_typ *spP, Boolean forced)
     }
 }
 
-os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, char *name)
+os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
 /* open pipe, make it anonymous if name==NULL, named otherwise */
 {
     os9err  err;
@@ -1072,7 +1072,7 @@ os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
 }
 
 /* ------------------------- packet manager routines --------- */
-os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
+os9err pKopen(ushort pid, syspath_typ *spP, _modeP_, const char *pathname)
 {
     os9err        err;
     syspath_typ  *spK;
