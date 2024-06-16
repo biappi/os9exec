@@ -1,8 +1,15 @@
+#include <assert.h>
 #include <stdio.h>
 #include <string>
 #include <format>
+#include <fstream>
+#include <iterator>
+#include <vector>
 
 #include "musashi/m68k.h"
+#include "os9-header.h"
+
+const auto AE_CPU_TYPE = M68K_CPU_TYPE_68020;
 
 unsigned int m68k_read_memory_8(unsigned int address)
 {
@@ -65,7 +72,7 @@ extern "C" void cpu_instr_callback(unsigned int pc)
 {
     char buff[100];
 
-    auto instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
+    auto instr_size = m68k_disassemble(buff, pc, AE_CPU_TYPE);
     auto hex = make_hex(pc, instr_size);
 
     printf("executing    %08x     %-20s: %s\n", pc, hex.c_str(), buff);
@@ -73,8 +80,26 @@ extern "C" void cpu_instr_callback(unsigned int pc)
 
 int main(int argc, char **argv)
 {
+    const char *mydefault = "/Users/willy/Sources/os9exec-git_code/dd/CMDS/dxfout";
+    const char *path = argc == 2 ? argv[1] : mydefault;
+
+    auto file = std::ifstream(path, std::ios::binary);
+
+    if (!file) {
+        printf("Failed to open file: %s\n", path);
+        return 1;
+    }
+
+    auto buf = std::istreambuf_iterator<char>(file);
+    auto data = std::vector<uint8_t>(buf, {});
+    auto header = os9_header(data);
+
+    header.dump();
+
+    return 0;
+
     m68k_init();
-    m68k_set_cpu_type(M68K_CPU_TYPE_68020);
+    m68k_set_cpu_type(AE_CPU_TYPE);
     m68k_pulse_reset();
 
     auto cycles = 10; // 100000;

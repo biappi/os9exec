@@ -23,6 +23,8 @@ target_compile_definitions(musashi PRIVATE MUSASHI_CNF="../musashi-conf.h")
 
 add_executable(ae-test
     src/musashi-conf.h
+    src/be-reader.h
+    src/os9-header.h
     src/main.cpp
 )
 
