@@ -27,6 +27,8 @@ add_executable(ae-test
     src/os9-header.h
     src/address-space.h
     src/address-space.cpp
+    src/loader.h
+    src/disasm-utils.h
     src/main.cpp
 )
 
