@@ -1680,7 +1680,7 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
             dbgModules + dbgProcess,
             dbgDetail,
             ("# prepData: irefs correction to base address $%08lX\n", offset));
-        while (*((ulong *)pSrc) != 0) {
+        while (*((uint32_t *)pSrc) != 0) {
             pDest = (byte *)((ulong)os9_word(*((ushort *)pSrc)) << 16) +
                 (ulong)destBase; /* calc group's base address */
             pSrc += 2;       /* step over base address word */
