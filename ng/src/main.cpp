@@ -8,51 +8,9 @@
 
 #include "musashi/m68k.h"
 #include "os9-header.h"
+#include "address-space.h"
 
 const auto AE_CPU_TYPE = M68K_CPU_TYPE_68020;
-
-unsigned int m68k_read_memory_8(unsigned int address)
-{
-    printf("reading ( 8) %08x\n", address);
-    return 0;
-}
-
-unsigned int m68k_read_memory_16(unsigned int address)
-{
-    printf("reading (16) %08x\n", address);
-    return 0;
-}
-
-unsigned int m68k_read_memory_32(unsigned int address)
-{
-    printf("reading (32) %08x\n", address);
-    return 0;
-}
-
-unsigned int m68k_read_disassembler_16(unsigned int address) 
-{
-    return m68k_read_memory_16(address);
-}
-
-unsigned int m68k_read_disassembler_32(unsigned int address)
-{
-    return m68k_read_memory_32(address);
-}
-
-void m68k_write_memory_8(unsigned int address, unsigned int value)
-{
-    return;
-}
-
-void m68k_write_memory_16(unsigned int address, unsigned int value)
-{
-    return;
-}
-
-void m68k_write_memory_32(unsigned int address, unsigned int value)
-{
-    return;
-}
 
 std::string make_hex(unsigned int pc, unsigned int length)
 {
@@ -95,9 +53,9 @@ int main(int argc, char **argv)
     auto header = os9_header(data);
 
     header.dump();
-    char *namestring = (char *)&data[header.names];
-
     printf(" -\n");
+
+    char *namestring = (char *)&data[header.names];
 
     assert(header.stack != 0xcafebabe);
 
@@ -110,17 +68,29 @@ int main(int argc, char **argv)
     uint32_t param_end    = param_start + params_len;
     uint32_t module_start = ((param_end / module_align) + 1) * module_align;
 
+    auto &space = address_space::single();
+
+    space.add_zone("data",   data_start,   header.mem);
+    space.add_zone("stack",  stack_start,  header.stack);
+    space.add_zone("params", param_start,  params_len);
+    space.add_zone("code",   module_start, data);
+
     printf("name:         %s\n",   namestring);
     printf("stack_start:  %08x\n", stack_start);
     printf("param_start:  %08x\n", param_start);
     printf("param_end:    %08x\n", param_end);
     printf("module_start: %08x\n", module_start);
+    printf(" -\n");
 
-    printf(" - code refs\n");
+    space.dump();
+    printf(" -\n");
+
+    return 0;
 
     auto r = be_reader(data);
     r.reset(header.irefs);
 
+    printf(" - code refs\n");
 
     while (1) {
         auto msw    = r.read_16();

@@ -25,6 +25,8 @@ add_executable(ae-test
     src/musashi-conf.h
     src/be-reader.h
     src/os9-header.h
+    src/address-space.h
+    src/address-space.cpp
     src/main.cpp
 )
 
