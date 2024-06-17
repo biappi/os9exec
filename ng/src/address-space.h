@@ -46,9 +46,14 @@ public:
         return nullptr;
     }
 
+    void print_oob(uint32_t addr, bool write) {
+        const char * what = write ? "write" : "read";
+        printf("out of bounds %s at %08x\n", what, addr);
+    }
+
     void write8(uint32_t addr, uint8_t data) {
         auto zone = zone_for_addr(addr);
-        if (!zone) return;
+        if (!zone) { print_oob(addr, true); return; }
         zone->data[addr - zone->address] = data;
     }
 
@@ -64,7 +69,7 @@ public:
 
     uint8_t read8(uint32_t addr) {
         auto zone = zone_for_addr(addr);
-        if (!zone) return 0;
+        if (!zone) { print_oob(addr, false); return 0; }
         return zone->data[addr - zone->address];
     }
 
