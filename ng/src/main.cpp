@@ -15,6 +15,14 @@ const auto AE_CPU_TYPE = M68K_CPU_TYPE_68020;
 #include "loader.h"
 #include "disasm-utils.h"
 
+extern "C" void cpu_instr_callback(unsigned int pc) {
+    char dasm[200];
+    disassemble_into(dasm, sizeof(dasm), pc);
+
+    dump_regs();
+    printf("%s\n", dasm);
+}
+
 int main(int argc, char **argv)
 {
     const char *mydefault = "/Users/willy/Sources/os9exec-git_code/dd/CMDS/dxfout";
