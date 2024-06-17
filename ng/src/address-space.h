@@ -51,10 +51,32 @@ public:
         zone->data[addr - zone->address] = data;
     }
 
+    void write16(uint32_t address, uint16_t value) {
+        write8(address + 0, (value & 0xff00) >> 8);
+        write8(address + 1, (value & 0x00ff) >> 0);
+    }
+
+    void write32(uint32_t address, uint32_t value) {
+        write16(address + 0, (value & 0xffff0000) >> 16);
+        write16(address + 2, (value & 0x0000ffff) >>  0);
+    }
+
     uint8_t read8(uint32_t addr) {
         auto zone = zone_for_addr(addr);
         if (!zone) return 0;
         return zone->data[addr - zone->address];
+    }
+
+    uint16_t read16(uint32_t addr) {
+        auto h = read8(addr + 0) << 8;
+        auto l = read8(addr + 1) << 0;
+        return h + l;
+    }
+
+    uint32_t read32(uint32_t addr) {
+        auto h = read16(addr + 0) << 16;
+        auto l = read16(addr + 2) <<  0;
+        return h + l;
     }
 
     void dump() {
