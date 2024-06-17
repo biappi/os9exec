@@ -32,8 +32,9 @@ public:
                   uint32_t address,
                   size_t size)
     {
-        auto zone = zones.emplace_back(name, address, std::vector<uint8_t>());
-        zone.data.resize(size, 0);
+        auto data = std::vector<uint8_t>();
+        data.resize(size, 0);
+        zones.emplace_back(name, address, data);
     }
 
     memory_zone *zone_for_addr(uint32_t addr) {
