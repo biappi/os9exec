@@ -202,6 +202,7 @@ OSErr lowlevel_prepare(void)
     savestate_wanted = 0;
     //  currprefs.cpu_level = 2; // 68020
     currprefs.cpu_level = 3; // 68020+68881
+    memory_init();
     init_m68k();
     compiler_init();
     quit_program = 0; // no reset!

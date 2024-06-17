@@ -51,6 +51,7 @@ add_executable(os9exec
     Source/OS9AppEmu/UAE68emulator/readcpu.c
     Source/OS9AppEmu/UAE68emulator/support.c
     Source/OS9AppEmu/UAE68emulator/cpuemu.c
+    Source/OS9AppEmu/UAE68emulator/memory.c
     Source/OS9AppEmu/UAE68emulator/fpp.c
     Source/Platforms/LINUX/linuxfiles.c
     Source/Platforms/LINUX/net_linux.c

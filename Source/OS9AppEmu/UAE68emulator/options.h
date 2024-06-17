@@ -19,6 +19,7 @@ struct uae_prefs {
     int cpu_level;
     int cpu_compatible;
     int address_space_24;
+    int illegal_mem;
 
 };
 
