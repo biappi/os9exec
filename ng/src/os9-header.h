@@ -76,6 +76,7 @@ struct os9_header {
     uint32_t      exts_off;
     uint16_t      exts_size;
     uint16_t      parity;
+
     uint32_t      exec;
     uint32_t      excpt;
     uint32_t      mem;
