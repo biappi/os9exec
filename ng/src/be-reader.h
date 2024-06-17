@@ -2,10 +2,18 @@
 
 class be_reader {
 public:
+    be_reader(std::vector<uint8_t> &data_, int i_)
+        : data(data_)
+        , i(0)
+    {
+        reset(i_);
+    }
+
     be_reader(std::vector<uint8_t> &data_)
         : data(data_)
         , i(0)
     {
+        reset(0);
     }
 
     void reset(int to) {
