@@ -8,7 +8,7 @@
 
 #include "musashi/m68k.h"
 
-const auto AE_CPU_TYPE = M68K_CPU_TYPE_68020;
+const auto AE_CPU_TYPE = M68K_CPU_TYPE_68030;
 
 #include "os9-header.h"
 #include "address-space.h"
