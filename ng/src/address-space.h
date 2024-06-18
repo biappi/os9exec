@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "musashi/m68k.h"
+
 struct memory_zone {
     std::string name;
     uint32_t address;
@@ -17,9 +19,25 @@ struct memory_zone {
     }
 };
 
+enum class access_type: int {
+    writing = 0,
+    reading = 1,
+};
+
+enum class write_size: int {
+    write8  = 0,
+    write16 = 1,
+    write32 = 2,
+};
+
 class address_space {
 public:
     static address_space &single();
+
+    void log_mem(write_size size,
+                 access_type ro,
+                 uint32_t address,
+                 uint32_t v);
 
     void add_zone(std::string name,
                   uint32_t address,
@@ -46,14 +64,15 @@ public:
         return nullptr;
     }
 
-    void print_oob(uint32_t addr, bool write) {
+    void unmapped_access(uint32_t addr, bool write) {
         const char * what = write ? "write" : "read";
-        printf("out of bounds %s at %08x\n", what, addr);
+        printf("unmapped access (%s) at %08x\n", what, addr);
+        m68k_pulse_bus_error();
     }
 
     void write8(uint32_t addr, uint8_t data) {
         auto zone = zone_for_addr(addr);
-        if (!zone) { print_oob(addr, true); return; }
+        if (!zone) { unmapped_access(addr, true); return; }
         zone->data[addr - zone->address] = data;
     }
 
@@ -69,7 +88,7 @@ public:
 
     uint8_t read8(uint32_t addr) {
         auto zone = zone_for_addr(addr);
-        if (!zone) { print_oob(addr, false); return 0; }
+        if (!zone) { unmapped_access(addr, false); return 0; }
         return zone->data[addr - zone->address];
     }
 
