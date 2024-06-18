@@ -11,13 +11,13 @@ public:
 
     void F$Exit() {
         uint32_t code = m68k_get_reg(NULL, M68K_REG_D1) & 0x0000ffff;
-        printf("\nemulation complete. exit code %d\n\n", code);
+        printf("\n\nemulation complete. exit code %d\n\n", code);
         exit(0);
     }
 
     void F$SRqMem() {
         uint32_t requested_block_size = m68k_get_reg(NULL, M68K_REG_D0);
-        printf("          blocks size: %08x\n",
+        printf("blocks size: %08x\n",
                requested_block_size);
 
         uint32_t actual_size = 0;
@@ -39,7 +39,7 @@ public:
         auto s = access_mode & 0x40;
         auto d = access_mode & 0x80;
 
-        printf("          path: %s - access mode: %c%c...%c%c%c\n",
+        printf("path: %s - access mode: %c%c...%c%c%c\n",
                path.c_str(),
                d ? 'd' : '-',
                s ? 's' : '-',
@@ -55,7 +55,7 @@ public:
 
         auto string = space.read_string(string_ptr);
 
-        printf("          path: %02x - max_len: %08x: %s\n",
+        printf("path: %02x - max_len: %08x: %s\n",
                path,
                max_len,
                string.c_str());
@@ -92,12 +92,12 @@ public:
             default:       m = "unknown"; break;
         }
 
-        printf("          path_nr: %04x %02x: %s\n", path, func, m);
+        printf("path_nr: %04x %02x: %s\n", path, func, m);
     }
 
     void I$Close() {
         uint16_t path = m68k_get_reg(NULL, M68K_REG_D0) & 0x0000ffff;
-        printf("          path: %02x\n", path);
+        printf("path: %02x\n", path);
     }
 
     void dispatch_call() {
@@ -109,9 +109,10 @@ public:
         space.write32(sp + 2, old_return + 2);
 
         auto name = os9_syscall_name(func_code) ?: "UNKNOWN";
-        auto desc = os9_syscall_desc(func_code) ?: "";
+        //auto desc = os9_syscall_desc(func_code) ?: "";
 
-        printf("%08x  ** OS9 trap func code: %x - %s: %s\n", pc, func_code, name, desc);
+        printf("%08x  ** OS9 syscall: %2x - %-8s    ",
+               pc, func_code, name);
 
         switch (func_code) {
 #undef X
@@ -119,6 +120,7 @@ public:
             ENUMERATE_IMPLEMENTED_OS9_SYSCALLS()
 #undef X
             default:
+                printf("\n");
                 dump_regs();
         }
     }
