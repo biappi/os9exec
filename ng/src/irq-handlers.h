@@ -31,7 +31,7 @@ public:
         switch (vector) {
 
             case  2: bus_error(); break;
-            case 32: os9_trap();  break;
+            case 32: os9.dispatch_call();  break;
 
             default:
                 printf("%08x  IRQ handler vector: %x\n", pc, vector);
@@ -49,23 +49,10 @@ public:
         USE_ALL_CYCLES();
     }
 
-    void os9_trap() {
-        uint32_t pc = m68k_get_reg(NULL, M68K_REG_PC);
-        uint32_t sp = m68k_get_reg(NULL, M68K_REG_SP);
-
-        auto old_return = space.read32(sp + 2);
-        auto func_code  = space.read16(old_return);
-        space.write32(sp + 2, old_return + 2);
-
-        auto name = os9_syscall_name(func_code) ?: "UNKNOWN";
-        printf("%08x  ** OS9 trap func code: %x - %s\n", pc, func_code, name);
-
-        dump_regs();
-    }
-
 private:
     irq_handlers(address_space &s)
         : space(s)
+        , os9(s)
     {
         space.add_zone("irqvects", 0, 4 * handlers_count);
         space.add_zone("irqhandlers", handlers_base, handlers_size);
@@ -85,4 +72,5 @@ private:
     }
 
     address_space &space;
+    os9_calls os9;
 };

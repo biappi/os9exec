@@ -1,5 +1,13 @@
 #pragma once
 
+#define ENUMERATE_IMPLEMENTED_OS9_SYSCALLS() \
+    X(0x06, F$Exit,     "Terminate Process") \
+    X(0x28, F$SRqMem,   "System Memory Request") \
+    X(0x84, I$Open,     "Open Existing File") \
+    X(0x8c, I$WritLn,   "Write Line of ASCII Data") \
+    X(0x8d, I$GetStt,   "Get Path Status") \
+    X(0x8f, I$Close,    "Close Path")
+
 #define ENUMERATE_OS9_SYSCALLS() \
     X(0x00, "F$Link",     "Link to Module") \
     X(0x01, "F$Load",     "Load Module from File") \
@@ -108,6 +116,17 @@ inline const char *os9_syscall_name(uint16_t call) {
     switch (call) {
 #undef X
 #define X(id, name, desc) case id: return name;
+        ENUMERATE_OS9_SYSCALLS()
+#undef X
+    }
+
+    return nullptr;
+}
+
+inline const char *os9_syscall_desc(uint16_t call) {
+    switch (call) {
+#undef X
+#define X(id, name, desc) case id: return desc;
         ENUMERATE_OS9_SYSCALLS()
 #undef X
     }
