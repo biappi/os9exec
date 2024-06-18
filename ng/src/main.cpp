@@ -8,6 +8,11 @@
 
 #include "musashi/m68k.h"
 
+bool log_load = true;
+bool log_cpu = true;
+bool log_mem = true;
+bool log_reg = true;
+
 const auto AE_CPU_TYPE = M68K_CPU_TYPE_68030;
 
 #include "os9-header.h"
@@ -16,11 +21,14 @@ const auto AE_CPU_TYPE = M68K_CPU_TYPE_68030;
 #include "disasm-utils.h"
 
 extern "C" void cpu_instr_callback(unsigned int pc) {
-    char dasm[200];
-    disassemble_into(dasm, sizeof(dasm), pc);
+    if (log_reg)
+        dump_regs();
 
-    dump_regs();
-    printf("%s\n", dasm);
+    if (log_cpu) {
+        char dasm[200];
+        disassemble_into(dasm, sizeof(dasm), pc);
+        printf("%s\n", dasm);
+    }
 }
 
 int main(int argc, char **argv)
@@ -41,25 +49,27 @@ int main(int argc, char **argv)
     auto &space = address_space::single();
     auto loaded = loader(data, space);
 
-    loaded.header.dump();
-    printf(" -\n");
+    if (log_load) {
+        loaded.header.dump();
+        printf(" -\n");
 
-    loaded.dump();
-    printf(" -\n");
+        loaded.dump();
+        printf(" -\n");
 
-    space.dump();
-    printf(" -\n");
+        space.dump();
+        printf(" -\n");
 
-    // dump_disasm(loaded.exec(), 20);
-    // printf(" -\n");
+        // dump_disasm(loaded.exec(), 20);
+        // printf(" -\n");
+
+        printf(" === \n");
+    }
 
     assert(loaded.header.exec != 0xcafebabe);
 
     m68k_init();
     m68k_set_cpu_type(AE_CPU_TYPE);
     m68k_pulse_reset();
-
-    printf(" === \n");
 
     auto newpid = 1;
     auto group_user = 0x00020003;

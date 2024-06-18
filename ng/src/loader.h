@@ -51,24 +51,24 @@ struct loader {
             read_relocations(r, code_rel);
             read_relocations(r, data_rel);
 
-            printf("code relocs\n");
+//            printf("code relocs\n");
             for (auto addr : code_rel) {
                 auto address  = data_start + addr;
                 auto original = space.read32(address);
                 auto rebased  = module_start + original;
                 space.write32(address, rebased);
                 auto control = space.read32(address);
-                printf("    %08x: was %08x is %08x (%08x) \n", address, original, rebased, control);
+//                printf("    %08x: was %08x is %08x (%08x) \n", address, original, rebased, control);
             }
 
-            printf("data relocs\n");
+//            printf("data relocs\n");
             for (auto addr : data_rel) {
                 auto address  = data_start + addr;
                 auto original = space.read32(address);
                 auto rebased  = data_start + original;
                 space.write32(address, rebased);
                 auto control = space.read32(address);
-                printf("    %08x: was %08x is %08x (%08x) \n", address, original, rebased, control);
+//                printf("    %08x: was %08x is %08x (%08x) \n", address, original, rebased, control);
             }
         }
     }

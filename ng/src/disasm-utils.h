@@ -19,7 +19,7 @@ int disassemble_into(char *dasm, size_t len, uint32_t addr) {
     auto instr_size = m68k_disassemble(buff, addr, AE_CPU_TYPE);
     auto hex = make_hex(addr, instr_size);
 
-    snprintf(dasm, len, "%08x:     %-20s: %s", addr, hex.c_str(), buff);
+    snprintf(dasm, len, "%08x  :  %-24s :  %s", addr, hex.c_str(), buff);
     return instr_size;
 }
 
