@@ -29,6 +29,8 @@ add_executable(ae-test
     src/address-space.cpp
     src/loader.h
     src/disasm-utils.h
+    src/irq-handlers.h
+    src/os9-syscalls.h
     src/main.cpp
 )
 
