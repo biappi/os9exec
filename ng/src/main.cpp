@@ -8,10 +8,10 @@
 
 #include "musashi/m68k.h"
 
-bool log_load = true;
-bool log_cpu = true;
-bool log_mem = true;
-bool log_reg = true;
+bool log_load = false;
+bool log_cpu = false;
+bool log_mem = false;
+bool log_reg = false;
 
 const auto AE_CPU_TYPE = M68K_CPU_TYPE_68030;
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     m68k_set_reg(M68K_REG_D5, loaded.params_len);
     m68k_set_reg(M68K_REG_D6, data_size);
 
-    auto cycles = 10000; // 100000;
+    auto cycles = 40000; // 100000;
     m68k_execute(cycles);
 
     return 0;
