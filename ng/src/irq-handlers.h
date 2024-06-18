@@ -1,6 +1,7 @@
 #pragma once
 
 #include "os9-syscalls.h"
+#include "musashi/m68kcpu.h"
 
 class irq_handlers {
 public:
@@ -24,13 +25,27 @@ public:
         if (!address_is_irq_handler(pc)) return;
 
         uint32_t sp = m68k_get_reg(NULL, M68K_REG_SP);
-        auto vector = space.read16(sp + 6);
+        auto vector = (pc - handlers_base) >> 4;
 
-        if (vector == 0x80) {
-            os9_trap();
-        } else {
-            printf("IRQ handler vector: %x (at pc: %08x)\n", vector, pc);
+        switch (vector) {
+
+            case  2: bus_error(); break;
+            case 32: os9_trap();  break;
+
+            default:
+                printf("%08x  IRQ handler vector: %x\n", pc, vector);
         }
+    }
+
+    void bus_error() {
+        uint32_t pc = m68k_get_reg(NULL, M68K_REG_PC);
+        uint32_t sp = m68k_get_reg(NULL, M68K_REG_SP);
+
+        printf("%08x  ======\n\n", pc);
+        printf("bus error at pc: %08x\n\n", space.read32(sp +  2));
+
+        m68k_pulse_halt();
+        USE_ALL_CYCLES();
     }
 
     void os9_trap() {
@@ -43,6 +58,8 @@ public:
 
         auto name = os9_syscall_name(func_code) ?: "UNKNOWN";
         printf("%08x  ** OS9 trap func code: %x - %s\n", pc, func_code, name);
+
+        dump_regs();
     }
 
 private:
