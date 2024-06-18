@@ -104,6 +104,18 @@ public:
         return h + l;
     }
 
+    std::string read_string(uint32_t addr) {
+        std::string path;
+        char x = read8(addr);
+
+        while (x != 0) {
+            path += x;
+            x = read8(addr++);
+        }
+
+        return path;
+    }
+
     void dump() {
         printf("%-10s %-8s %-8s %-8s\n"
                "---------------------------------------\n",
