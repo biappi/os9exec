@@ -31,6 +31,7 @@ add_executable(ae-test
     src/disasm-utils.h
     src/irq-handlers.h
     src/os9-syscalls.h
+    src/os9-syscalls-desc.h
     src/main.cpp
 )
 

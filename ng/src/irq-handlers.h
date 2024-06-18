@@ -1,5 +1,6 @@
 #pragma once
 
+#include "os9-syscalls-desc.h"
 #include "os9-syscalls.h"
 #include "musashi/m68kcpu.h"
 
