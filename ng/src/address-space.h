@@ -132,6 +132,13 @@ public:
         return path;
     }
 
+    uint32_t write_string(uint32_t addr, std::string &string) {
+        for (auto &c : string)
+            addr = write8(addr, c);
+
+        return addr;
+    }
+
     void dump() {
         printf("%-10s %-8s %-8s %-8s\n"
                "---------------------------------------\n",
