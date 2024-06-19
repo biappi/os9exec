@@ -1406,6 +1406,12 @@ static void fpgen_rm_reg(uint16 w2)
 			USE_CYCLES(109);
 			break;
 		}
+        case 0x15:      // TAN (copied from os9exec)
+        {
+			REG_FP[dst] = double_to_fx80(tan(fx80_to_double(source)));
+			SET_CONDITION_CODES(REG_FP[dst]);
+            break;
+        }
 		case 0x18:		// FABS
 		{
 			REG_FP[dst] = source;
