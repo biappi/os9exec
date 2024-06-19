@@ -231,7 +231,7 @@ public:
         //auto desc = os9_syscall_desc(func_code) ?: "";
 
         printf("%08x  ** OS9 syscall: %2x - %-8s    ",
-               pc, func_code, name);
+               old_return, func_code, name);
 
         switch (func_code) {
 #undef X
