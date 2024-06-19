@@ -2,12 +2,59 @@
 
 #include "os9-syscalls-desc.h"
 
+class heap {
+public:
+    static const uint32_t heap_start = 0x00100000;
+    static const uint32_t heap_len   = 0x00100000;
+
+    heap(address_space &s)
+        : space(s)
+        , top(heap_start)
+    {
+        space.add_zone("heap", heap_start, heap_len);
+    }
+
+    uint32_t heap_end() {
+        return heap_start + heap_len;
+    }
+
+    uint32_t heap_allocate(uint32_t bytes) {
+        if (top + bytes >= heap_end())
+            return 0xffffffff;
+        uint32_t p = top;
+        top += bytes;
+        return p;
+    }
+
+private:
+    uint32_t top;
+    address_space &space;
+};
+
+std::string repr_char(char c) {
+    char str[7];
+    snprintf(str, sizeof(str), "\\x%02x", c);
+    return str;
+}
+
+std::string repr_string(std::string string) {
+    std::string ret = "";
+
+    for (auto &c : string)
+        if (isprint(c))
+            ret.push_back(c);
+        else
+            ret += repr_char(c);
+
+    return ret;
+}
+
 class os9_calls {
 public:
     os9_calls(address_space &s)
         : space(s)
-    {
-    }
+        , heap(s)
+    { }
 
     void F$Exit() {
         uint32_t code = m68k_get_reg(NULL, M68K_REG_D1) & 0x0000ffff;
@@ -17,11 +64,10 @@ public:
 
     void F$SRqMem() {
         uint32_t requested_block_size = m68k_get_reg(NULL, M68K_REG_D0);
-        printf("blocks size: %08x\n",
-               requested_block_size);
+        printf("blocks size: %08x\n", requested_block_size);
 
-        uint32_t actual_size = 0;
-        uint32_t out_buffer = 0;
+        uint32_t out_buffer  = heap.heap_allocate(requested_block_size);
+        uint32_t actual_size = out_buffer == 0xffffffff ? 0 : requested_block_size;
 
         m68k_set_reg(M68K_REG_D0, actual_size);
         m68k_set_reg(M68K_REG_A2, out_buffer);
@@ -53,7 +99,8 @@ public:
         uint32_t max_len    = m68k_get_reg(NULL, M68K_REG_D1);
         uint32_t string_ptr = m68k_get_reg(NULL, M68K_REG_A0);
 
-        auto string = space.read_string(string_ptr);
+        auto string = space.read_string(string_ptr, max_len);
+        string = repr_string(string);
 
         printf("path: %02x - max_len: %08x: %s\n",
                path,
@@ -127,4 +174,5 @@ public:
 
 private:
     address_space &space;
+    heap heap;
 };

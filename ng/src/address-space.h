@@ -116,6 +116,19 @@ public:
         return path;
     }
 
+    std::string read_string(uint32_t addr, uint32_t max_len) {
+        std::string path;
+        uint32_t end = addr + max_len;
+        char x = read8(addr);
+
+        while ((x != 0) && (addr < end)) {
+            path += x;
+            x = read8(addr++);
+        }
+
+        return path;
+    }
+
     void dump() {
         printf("%-10s %-8s %-8s %-8s\n"
                "---------------------------------------\n",
