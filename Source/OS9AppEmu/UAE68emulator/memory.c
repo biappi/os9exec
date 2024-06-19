@@ -121,9 +121,84 @@ int REGPARAM2 dummy_check (uaecptr addr, uae_u32 size)
     return 0;
 }
 
+/* A bank that is mapped to a 64-bit host memory */
+
+static uae_u32 sixtyfour_lget (uaecptr) REGPARAM;
+static uae_u32 sixtyfour_wget (uaecptr) REGPARAM;
+static uae_u32 sixtyfour_bget (uaecptr) REGPARAM;
+static void sixtyfour_lput (uaecptr, uae_u32) REGPARAM;
+static void sixtyfour_wput (uaecptr, uae_u32) REGPARAM;
+static void sixtyfour_bput (uaecptr, uae_u32) REGPARAM;
+static int sixtyfour_check (uaecptr addr, uae_u32 size) REGPARAM;
+static uae_u8 *sixtyfour_bank_map[65536];
+
+uae_u32 REGPARAM2 sixtyfour_lget (uaecptr addr)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    return do_get_mem_long((uae_u32*)(sixtyfour_bank_map[bank_index] + offset));
+}
+
+uae_u32 REGPARAM2 sixtyfour_wget (uaecptr addr)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    return do_get_mem_word((uae_u16*)(sixtyfour_bank_map[bank_index] + offset));
+}
+
+uae_u32 REGPARAM2 sixtyfour_bget (uaecptr addr)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    return do_get_mem_byte((uae_u8*)(sixtyfour_bank_map[bank_index] + offset));
+}
+
+void REGPARAM2 sixtyfour_lput (uaecptr addr, uae_u32 l)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    do_put_mem_long((uae_u32*)(sixtyfour_bank_map[bank_index] + offset), l);
+}
+
+void REGPARAM2 sixtyfour_wput (uaecptr addr, uae_u32 w)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    do_put_mem_word((uae_u16*)(sixtyfour_bank_map[bank_index] + offset), w);
+}
+
+void REGPARAM2 sixtyfour_bput (uaecptr addr, uae_u32 b)
+{
+    uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
+    uae_u16 offset = addr & 0xffff;
+    do_put_mem_byte((uae_u8*)(sixtyfour_bank_map[bank_index] + offset), b);
+}
+
+int REGPARAM2 sixtyfour_check (uaecptr addr, uae_u32 size)
+{
+    if (currprefs.illegal_mem)
+	write_log ("Illegal check at %08lx\n", addr);
+
+    return 0;
+}
+
+uae_u8 REGPARAM2 *sixtyfour_xlate (uaecptr a)
+{
+    uae_u16 bank_index = ((uae_u32)a >> 16) & 0xffff;
+    uae_u16 offset = a & 0xffff;
+    return (uae_u8*)(sixtyfour_bank_map[bank_index] + offset);
+}
+
+static void init_sixtyfour_map()
+{
+    for (int i = 0; i < 65536; i++)
+    	sixtyfour_bank_map[i] = 0;
+}
+
 uae_u8 REGPARAM2 *default_xlate (uaecptr a)
 {
-    return (uae_u8*)a;
+    write_log("default_xlate called, no no no! a=%p", a);
+    return NULL;
 }
 
 
@@ -135,6 +210,12 @@ addrbank dummy_bank = {
     default_xlate, dummy_check
 };
 
+addrbank sixtyfour_bank = {
+    sixtyfour_lget, sixtyfour_wget, sixtyfour_bget,
+    sixtyfour_lput, sixtyfour_wput, sixtyfour_bput,
+    sixtyfour_xlate, sixtyfour_check
+};
+
 char *address_space, *good_address_map;
 int good_address_fd;
 
@@ -143,12 +224,16 @@ static void init_mem_banks (void)
     int i;
     for (i = 0; i < 65536; i++)
 	put_mem_bank (i<<16, &dummy_bank);
+
+    write_log("init_mem_banks     dummy_bank.xlateaddr=%p\n", dummy_bank.xlateaddr);
+    write_log("init_mem_banks sixtyfour_bank.xlateaddr=%p\n", sixtyfour_bank.xlateaddr);
 }
 
 #define MAKE_USER_PROGRAMS_BEHAVE 1
 void memory_init (void)
 {
     init_mem_banks ();
+    init_sixtyfour_map();
 }
 
 void memory_cleanup( void )
@@ -171,4 +256,33 @@ void map_banks (addrbank *bank, int start, int size)
     for (hioffs = 0; hioffs < endhioffs; hioffs += 0x100)
 	for (bnr = start; bnr < start+size; bnr++)
 	    put_mem_bank ((bnr + hioffs) << 16, bank);
+}
+
+void map_64bit_bank(uae_u8 *base, int size)
+{
+    if (size >= 0x10000) {
+        write_log("TODO support mapping of more than 64k of memory (requested: %d / 0x%x)\n", size, size);
+        exit(1);
+    }
+
+    uae_u16 sixtyfour_bank_index = ((uae_u64)base >> 16) & 0xffff;
+
+    uae_u8 *new_bank = (uae_u8*)((uae_u64)base & 0xffffffffffff0000);
+    uae_u8 *existing_bank = sixtyfour_bank_map[sixtyfour_bank_index];
+    if (new_bank == existing_bank)
+    {
+        return;
+    }
+
+    if (existing_bank != 0)
+    {
+        write_log("map_64bit_bank: mapping 0x%04x is already mapped to %p (requested: %p)\n", sixtyfour_bank_index, existing_bank, base);
+        exit(1);
+    }
+
+    sixtyfour_bank_map[sixtyfour_bank_index] = new_bank;
+    uaecptr *truncated_base = (uaecptr*)((uae_u32)base & 0x00000000ffffffff);
+    put_mem_bank(truncated_base, &sixtyfour_bank);
+
+    write_log("Mapped bank index 0x%04x to 64-bit bank %p\n", sixtyfour_bank_index, new_bank);
 }

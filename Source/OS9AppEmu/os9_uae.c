@@ -185,6 +185,10 @@ Boolean llm_vm_enabled(void) { return vmenabled; }
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
 Boolean llm_runs_in_usermode(void) { return usesusermode; }
 
+void map_64bit_block(void* base, ulong size) {
+    map_64bit_bank(base, size);
+}
+
 /* prepare access to low-level code */
 OSErr lowlevel_prepare(void)
 {

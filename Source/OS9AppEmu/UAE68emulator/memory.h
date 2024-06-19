@@ -107,7 +107,7 @@ extern addrbank mem_banks[65536];
 
 extern void memory_init(void);
 extern void map_banks(addrbank *bank, int first, int count);
-
+extern void map_64bit_bank(uae_u8 *base, int size);
 
 #ifndef NO_INLINE_MEMORY_ACCESS
 

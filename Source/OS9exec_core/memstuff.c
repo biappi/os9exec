@@ -430,6 +430,7 @@ static ushort install_memblock(ushort pid, void *base, ulong size)
             m->base = base;           // save pointer
             m->size = size;           // save block size
             LockMemRange(base, size); // keep always paged in !!
+            map_64bit_block(base, size);
             return k;
         }
     }
@@ -631,6 +632,7 @@ void *get_mem(ulong memsz)
                 memtable[k].base = pp;
                 memtable[k].size = memsz;
                 LockMemRange(pp, memsz); /* keep always paged in !! */
+                map_64bit_block(pp, memsz);
 
                 debugprintf(dbgMemory,
                             dbgNorm,

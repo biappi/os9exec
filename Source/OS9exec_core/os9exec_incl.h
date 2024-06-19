@@ -237,5 +237,7 @@ extern int   errno;
 /* external utilities */
 #include "intcommand.h"
 
+#include "64bit.h"
+
 #endif
 /* eof */
