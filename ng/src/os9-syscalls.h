@@ -92,6 +92,12 @@ public:
                e ? 'e' : '-',
                w ? 'w' : '-',
                r ? 'r' : '-');
+
+        // todo? carry clear
+        auto path_nr = uint16_t(opened_paths.size() & 0xffff);
+        opened_paths.push_back(path);
+
+        m68k_set_reg(M68K_REG_D0, path_nr);
     }
 
     void I$WritLn() {
@@ -175,4 +181,6 @@ public:
 private:
     address_space &space;
     heap heap;
+
+    std::vector<std::string> opened_paths;
 };
