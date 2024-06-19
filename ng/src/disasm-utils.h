@@ -6,7 +6,9 @@ std::string make_hex(unsigned int pc, unsigned int length)
 
     for(; length > 0 ; length -= 2)
     {
-        hex += std::format("{:04x}", m68k_read_disassembler_16(pc));
+        char str[10];
+        snprintf(str, sizeof(str), "%04x", m68k_read_disassembler_16(pc));
+        hex += str;
         pc += 2;
         if(length > 2) hex += " ";
     }

@@ -54,7 +54,7 @@ class os9_calls {
 public:
     os9_calls(address_space &s)
         : space(s)
-        , heap(s)
+        , h(s)
     { 
         opened_paths.push_back("fake 0");
         opened_paths.push_back("fake 1");
@@ -71,7 +71,7 @@ public:
         uint32_t requested_block_size = m68k_get_reg(NULL, M68K_REG_D0);
         printf("blocks size: %08x\n", requested_block_size);
 
-        uint32_t out_buffer  = heap.heap_allocate(requested_block_size);
+        uint32_t out_buffer  = h.heap_allocate(requested_block_size);
         uint32_t actual_size = out_buffer == 0xffffffff ? 0 : requested_block_size;
 
         m68k_set_reg(M68K_REG_D0, actual_size);
@@ -246,7 +246,7 @@ public:
 
 private:
     address_space &space;
-    heap heap;
+    heap h;
 
     std::vector<std::string> opened_paths;
 

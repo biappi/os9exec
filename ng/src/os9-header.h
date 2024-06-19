@@ -42,6 +42,8 @@ const char *module_type_string(module_type type)
         case module_type::devdrvr: return "devdrvr";
         case module_type::devdesc: return "devdesc";
     }
+
+    return "";
 }
 
 const char *language_type_string(language_type type)
@@ -56,6 +58,8 @@ const char *language_type_string(language_type type)
         case language_type::frtncode: return "frtncode";
         case language_type::javacode: return "javacode";
     }
+
+    return "";
 }
 
 struct os9_header {
