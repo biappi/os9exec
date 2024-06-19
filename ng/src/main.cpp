@@ -112,8 +112,10 @@ int main(int argc, char **argv)
     m68k_set_reg(M68K_REG_D5, loaded.params_len);
     m68k_set_reg(M68K_REG_D6, data_size);
 
-    auto cycles = 40000; // 100000;
-    m68k_execute(cycles);
+    while (true) {
+        auto cycles = 100000;
+        m68k_execute(cycles);
+    }
 
     return 0;
 }
