@@ -1,6 +1,7 @@
 #pragma once
 
 #include "os9-syscalls-desc.h"
+#include <stdio.h>
 
 class heap {
 public:
@@ -54,7 +55,11 @@ public:
     os9_calls(address_space &s)
         : space(s)
         , heap(s)
-    { }
+    { 
+        opened_paths.push_back("fake 0");
+        opened_paths.push_back("fake 1");
+        opened_paths.push_back("fake 2");
+    }
 
     void F$Exit() {
         uint32_t code = m68k_get_reg(NULL, M68K_REG_D1) & 0x0000ffff;
@@ -71,6 +76,33 @@ public:
 
         m68k_set_reg(M68K_REG_D0, actual_size);
         m68k_set_reg(M68K_REG_A2, out_buffer);
+    }
+
+    void I$Create() {
+        uint32_t pathname_ptr = m68k_get_reg(NULL, M68K_REG_A0);
+        uint32_t access_mode  = m68k_get_reg(NULL, M68K_REG_D0);
+
+        auto path = space.read_string(pathname_ptr);
+
+        auto r = access_mode & 0x01;
+        auto w = access_mode & 0x02;
+        auto e = access_mode & 0x04;
+        auto s = access_mode & 0x40;
+        auto d = access_mode & 0x80;
+
+        printf("path: %s - access mode: %c%c...%c%c%c\n",
+               path.c_str(),
+               d ? 'd' : '-',
+               s ? 's' : '-',
+               e ? 'e' : '-',
+               w ? 'w' : '-',
+               r ? 'r' : '-');
+
+        // todo? carry clear
+        auto path_nr = uint16_t(opened_paths.size() & 0xffff);
+        opened_paths.push_back(path);
+
+        m68k_set_reg(M68K_REG_D0, path_nr);
     }
 
     void I$Open() {
@@ -97,6 +129,35 @@ public:
         auto path_nr = uint16_t(opened_paths.size() & 0xffff);
         opened_paths.push_back(path);
 
+        m68k_set_reg(M68K_REG_D0, path_nr);
+    }
+
+    void I$Seek() {
+        uint16_t path_nr  = m68k_get_reg(NULL, M68K_REG_D0) & 0x0000ffff;
+        uint32_t file_pos = m68k_get_reg(NULL, M68K_REG_D1);
+
+        printf("path: %02x - pos %08x\n", path_nr, file_pos);
+    }
+
+    void I$Read() {
+        uint16_t path_nr = m68k_get_reg(NULL, M68K_REG_D0) & 0x0000ffff;
+        uint32_t buf_len = m68k_get_reg(NULL, M68K_REG_D1);
+        uint32_t buf_ptr = m68k_get_reg(NULL, M68K_REG_A0);
+
+        printf("path: %02x - buf_len %08x %08x\n", path_nr, buf_len, buf_ptr);
+
+        static FILE * test = fopen("/Users/willy/Sources/os9exec-git_code/dd/ANONYMOUS/ebt", "r");
+
+        auto zone = space.zone_for_addr(buf_ptr);
+        assert(zone);
+
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+
+        auto dst = &zone->data[buf_ptr - zone->start()];
+        auto sz = MIN(buf_len, buf_ptr - zone->start() + buf_len);
+        auto read = fread(dst, 1, sz, test);
+
+        hack__bytes_read = read;
         m68k_set_reg(M68K_REG_D0, path_nr);
     }
 
@@ -129,6 +190,7 @@ public:
 #define SS_201    0x201
 #define SS_Etc    0x3EE
 
+        uint32_t addr = m68k_get_reg(NULL, M68K_REG_A0);
         uint16_t path = m68k_get_reg(NULL, M68K_REG_D0) & 0x0000ffff;
         uint16_t func = m68k_get_reg(NULL, M68K_REG_D1) & 0x0000ffff;
 
@@ -143,6 +205,10 @@ public:
             case SS_FD:    m = "SS_FD: return file descriptor";                 break;
             case SS_FDInf: m = "SS_FDInf: get FD info for specified FD sector"; break;
             default:       m = "unknown"; break;
+        }
+
+        if (func == SS_Pos) {
+            space.write32(addr, hack__bytes_read);
         }
 
         printf("path_nr: %04x %02x: %s\n", path, func, m);
@@ -183,4 +249,6 @@ private:
     heap heap;
 
     std::vector<std::string> opened_paths;
+
+    uint32_t hack__bytes_read;
 };

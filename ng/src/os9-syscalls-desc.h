@@ -3,7 +3,10 @@
 #define ENUMERATE_IMPLEMENTED_OS9_SYSCALLS() \
     X(0x06, F$Exit,     "Terminate Process") \
     X(0x28, F$SRqMem,   "System Memory Request") \
+    X(0x83, I$Create,   "Create New File") \
     X(0x84, I$Open,     "Open Existing File") \
+    X(0x88, I$Seek,     "Change Current Position") \
+    X(0x89, I$Read,     "Read Data") \
     X(0x8c, I$WritLn,   "Write Line of ASCII Data") \
     X(0x8d, I$GetStt,   "Get Path Status") \
     X(0x8f, I$Close,    "Close Path")
