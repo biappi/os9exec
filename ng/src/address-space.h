@@ -70,20 +70,23 @@ public:
         m68k_pulse_bus_error();
     }
 
-    void write8(uint32_t addr, uint8_t data) {
+    uint32_t write8(uint32_t addr, uint8_t data) {
         auto zone = zone_for_addr(addr);
-        if (!zone) { unmapped_access(addr, true); return; }
+        if (!zone) { unmapped_access(addr, true); return addr; }
         zone->data[addr - zone->address] = data;
+        return addr + 1;
     }
 
-    void write16(uint32_t address, uint16_t value) {
-        write8(address + 0, (value & 0xff00) >> 8);
-        write8(address + 1, (value & 0x00ff) >> 0);
+    uint32_t write16(uint32_t address, uint16_t value) {
+        address = write8(address, (value & 0xff00) >> 8);
+        address = write8(address, (value & 0x00ff) >> 0);
+        return address;
     }
 
-    void write32(uint32_t address, uint32_t value) {
-        write16(address + 0, (value & 0xffff0000) >> 16);
-        write16(address + 2, (value & 0x0000ffff) >>  0);
+    uint32_t write32(uint32_t address, uint32_t value) {
+        address = write16(address, (value & 0xffff0000) >> 16);
+        address = write16(address, (value & 0x0000ffff) >>  0);
+        return address;
     }
 
     uint8_t read8(uint32_t addr) {
