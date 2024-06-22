@@ -928,7 +928,7 @@ typedef struct {
     os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, ulong *d2);
 
     /* any other setstat function */
-    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d2, uint8_t *a);
+    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d2, char *a);
 } ss_typ;
 
 typedef struct {
