@@ -9,4 +9,3 @@ WORKDIR /app
 RUN cmake .
 RUN make
 ENTRYPOINT [ "docker/startup.sh" ]
-CMD "./os9exec"

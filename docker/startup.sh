@@ -5,5 +5,4 @@
 # to copy the external root directory first:
 cp -a /dd dd
 
-# This will exec the CMD from the Dockerfile.
-exec "$@"
+exec ./os9exec "$@"
