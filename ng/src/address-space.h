@@ -10,6 +10,9 @@ struct memory_zone {
     uint32_t address;
     std::vector<uint8_t> data;
 
+    memory_zone(std::string name, uint32_t address, std::vector<uint8_t> data) :
+    name(name), address(address), data(data) {};
+
     uint32_t size() { return (uint32_t)data.size(); }
     uint32_t start() { return address; }
     uint32_t end() { return address + size(); }
