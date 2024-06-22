@@ -1147,7 +1147,7 @@ unsigned long m68k_os9go(void)
 		(*cpufunctbl[opcode])(opcode);
 		if (m68k_disp) {
 			upe_printf( "%6d %08p %04x (%p)\n", instrcount, (regs.pc_p - first_pc), opcode, regs.pc_p );
-			if (instrcount >= 41652) {
+			if (instrcount < 4 || instrcount >= 41652) {
 				uaecptr n;
 				m68k_dumpstate(&n,0);
 			}	
