@@ -34,8 +34,6 @@
 |              $$                    <RELEASE_INFO>                     $$  |
 `--------------------------------------------------------------------------*/
 
-#include <stdint.h>
-
 #define VHPCNT (sizeof(struct modhcom) - 2) /* sizeof common header */
 #define MODSYNC 0x4afc                      /* module header sync code */
 #define CRCCON 0x800fe3                     /* crc polynomial constant */
@@ -134,22 +132,22 @@ typedef unsigned short ushort;
 #define MODSIZE(mod) ((u_int32)((Mh_com)mod)->_msize)
 
 struct modhcom {
-    int16_t _msync,    /* sync bytes ($4afc) */
-        _msysrev;      /* system revision check value */
-    int32_t _msize,    /* module size */
-        _mowner,       /* owner id */
-        _mname;        /* offset to module name */
-    int16_t _maccess,  /* access permission */
-        _mtylan,       /* type/lang */
-        _mattrev,      /* rev/attr */
-        _medit;        /* edition */
-    int32_t _musage,   /* comment string offset */
-        _msymbol;      /* symbol table offset */
-    int16_t _mident;   /* ident code */
-    char  _mspare[6];  /* reserved bytes */
-    int32_t  _mhdext;  /* module header extension offset */
-    int16_t _mhdextsz; /* module header extension size */
-    int16_t _mparity;  /* header parity */
+    short _msync,     /* sync bytes ($4afc) */
+        _msysrev;     /* system revision check value */
+    long _msize,      /* module size */
+        _mowner,      /* owner id */
+        _mname;       /* offset to module name */
+    short _maccess,   /* access permission */
+        _mtylan,      /* type/lang */
+        _mattrev,     /* rev/attr */
+        _medit;       /* edition */
+    long _musage,     /* comment string offset */
+        _msymbol;     /* symbol table offset */
+    short _mident;    /* ident code */
+    char  _mspare[6]; /* reserved bytes */
+    long  _mhdext;    /* module header extension offset */
+    short _mhdextsz;  /* module header extension size */
+    short _mparity;   /* header parity */
 };
 
 /* OS-9000 compatible type definition */
@@ -158,7 +156,7 @@ typedef struct modhcom mh_com, *Mh_com;
 /* Executable memory module */
 typedef struct {
     struct modhcom _mh;    /* common header info */
-    int32_t        _mexec, /* offset to execution entry point */
+    long           _mexec, /* offset to execution entry point */
         _mexcpt,           /* offset to exception entry point */
         _mdata,            /* data storage requirement */
         _mstack,           /* stack size */

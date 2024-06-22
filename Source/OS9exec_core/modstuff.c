@@ -1259,10 +1259,6 @@ static os9err load_module_local(ushort  pid,
         }
 
         modSize = os9_long(theModuleP->_mh._msize);
-        debugprintf(
-            dbgModules,
-            dbgNorm,
-            ("# load_module: module size: %d\n", modSize));
         if (modSize > dsize) {
             debugprintf(
                 dbgModules,
@@ -1621,9 +1617,9 @@ void mod_crc(mod_exec *m)
 os9err
 prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
 {
-    ulong memsz, offset;
-    byte *pDest, *pSrc, *destBase;
-    ulong count;
+    ulong memsz, offs;
+    byte *p, *p2, *bp;
+    ulong cnt;
     int   k;
 
     /* -- allocate memory for data */
@@ -1649,67 +1645,67 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
                 dbgNorm,
                 ("# prepData: Adjusted total data size = %ld\n", memsz));
 
-    destBase = os9malloc(pid, memsz); /* allocate OS-9 memory block */
-    if (destBase == NULL)
+    bp = os9malloc(pid, memsz); /* allocate OS-9 memory block */
+    if (bp == NULL)
         return os9error(E_NORAM); /* not enough RAM */
 
     /* -- prepare initialized data */
-    pSrc = (byte *)theModule + os9_long(theModule->_midata); /* idata */
-    pDest  = destBase + os9_long(*((ulong *)pSrc)); /* offset into data space */
-    pSrc += 4;
-    count = os9_long(*((ulong *)pSrc)); /* number of bytes to copy */
-    pSrc += 4;
+    p2 = (byte *)theModule + os9_long(theModule->_midata); /* idata */
+    p  = bp + os9_long(*((ulong *)p2)); /* offset into data space */
+    p2 += 4;
+    cnt = os9_long(*((ulong *)p2)); /* number of bytes to copy */
+    p2 += 4;
 
     debugprintf(dbgModules + dbgProcess,
                 dbgDetail,
                 ("# prepData: idata at $%08lX, data offset start=$%08lX, "
                  "bytecount=$%lX\n",
-                 pSrc,
-                 pDest,
-                 count));
-    while (count-- > 0)
-        *pDest++ = *pSrc++; /* copy initialized data */
+                 p2,
+                 p,
+                 cnt));
+    while (cnt-- > 0)
+        *p++ = *p2++; /* copy initialized data */
     /* -- adjust initialized data and object pointers */
-    pSrc = (byte *)theModule +
+    p2 = (byte *)theModule +
          os9_long(theModule->_midref); /* initalized data references */
-    offset = (ulong)
+    offs = (ulong)
         theModule; /* for first table, use code start address as offset */
 
     for (k = 0; k < 2; k++) {
         debugprintf(
             dbgModules + dbgProcess,
             dbgDetail,
-            ("# prepData: irefs correction to base address $%08lX\n", offset));
-        while (*((uint32_t *)pSrc) != 0) {
-            pDest = (byte *)((ulong)os9_word(*((ushort *)pSrc)) << 16) +
-                (ulong)destBase; /* calc group's base address */
-            pSrc += 2;       /* step over base address word */
+            ("# prepData: irefs correction to base address $%08lX\n", offs));
+        while (*((ulong *)p2) != 0) {
+            p = (byte *)((ulong)os9_word(*((ushort *)p2)) << 16) +
+                (ulong)bp; /* calc group's base address */
+            p2 += 2;       /* step over base address word */
             debugprintf(dbgModules + dbgProcess,
                         dbgDetail,
                         ("# prepData: irefs group at $%08lX, count=%d\n",
-                         (ulong)pDest,
-                         os9_word(*((ushort *)pSrc))));
+                         (ulong)p,
+                         os9_word(*((ushort *)p2))));
 
-            for (count = os9_word(*((ushort *)pSrc)); count > 0; count--) {
-                pSrc += 2; /* step to next offset word */
+            for (cnt = os9_word(*((ushort *)p2)); cnt > 0; cnt--) {
+                p2 += 2; /* step to next offset word */
                 debugprintf(
                     dbgModules + dbgProcess,
                     dbgDetail,
                     ("# prepData: original value at $%08lX = $%08lX; "
                      "offset=$%08lX\n",
-                     (ulong)(pDest + os9_word(*((ushort *)pSrc))),
-                     os9_long(*((ulong *)(pDest + os9_word(*((ushort *)pSrc))))),
-                     offset));
+                     (ulong)(p + os9_word(*((ushort *)p2))),
+                     os9_long(*((ulong *)(p + os9_word(*((ushort *)p2))))),
+                     offs));
                 /* now correct */
-                *((ulong *)(pDest + os9_word(*((ushort *)pSrc)))) = os9_long(
-                    os9_long(*((ulong *)(pDest + os9_word(*((ushort *)pSrc))))) +
-                    offset);
+                *((ulong *)(p + os9_word(*((ushort *)p2)))) = os9_long(
+                    os9_long(*((ulong *)(p + os9_word(*((ushort *)p2))))) +
+                    offs);
             }
-            pSrc += 2;
+            p2 += 2;
         }
-        pSrc += 4; /* skip 0 terminator */
-        offset =
-            (ulong)destBase; /* for second table, use data base pointer as offset */
+        p2 += 4; /* skip 0 terminator */
+        offs =
+            (ulong)bp; /* for second table, use data base pointer as offset */
     }
 
     debugprintf(dbgModules + dbgProcess,
@@ -1718,8 +1714,8 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
                  "at $%lX\n",
                  pid,
                  memsz,
-                 destBase));
-    *mp   = destBase;
+                 bp));
+    *mp   = bp;
     *msiz = memsz;
     return 0;
 }

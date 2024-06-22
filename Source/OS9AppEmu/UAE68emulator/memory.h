@@ -11,16 +11,18 @@
  * better for the cache. My favourite benchmark (PP2) doesn't show a
  * difference, so I leave this enabled. */
 
-#if 1 || defined SAVE_MEMORY
-#define SAVE_MEMORY_BANKS
-#endif
+/*
+//#if 1 || defined SAVE_MEMORY
+//#define SAVE_MEMORY_BANKS
+//#endif
 
-typedef uae_u32 (*mem_get_func)(uaecptr) REGPARAM;
-typedef void (*mem_put_func)(uaecptr, uae_u32) REGPARAM;
-typedef uae_u8 *(*xlate_func)(uaecptr) REGPARAM;
-typedef int (*check_func)(uaecptr, uae_u32) REGPARAM;
+//typedef uae_u32 (*mem_get_func)(uaecptr) REGPARAM;
+//typedef void (*mem_put_func)(uaecptr, uae_u32) REGPARAM;
+//typedef uae_u8 *(*xlate_func)(uaecptr) REGPARAM;
+//typedef int (*check_func)(uaecptr, uae_u32) REGPARAM;
 
-extern char *address_space, *good_address_map;
+//extern char *address_space, *good_address_map;
+//extern uae_u8 *chipmemory;
 
 //extern uae_u32 allocated_chipmem;
 //extern uae_u32 allocated_fastmem;
@@ -28,6 +30,7 @@ extern char *address_space, *good_address_map;
 //extern uae_u32 allocated_gfxmem;
 //extern uae_u32 allocated_z3fastmem;
 //extern uae_u32 allocated_a3000mem;
+*/
 
 #undef DIRECT_MEMFUNCS_SUCCESSFUL
 #include "maccess.h"
@@ -50,6 +53,8 @@ extern char *address_space, *good_address_map;
 
 //extern int ersatzkickfile;
 */
+
+#ifdef NEVER_DEFINED /* %%% LuZ excludes almost everything */
 
 typedef struct {
     /* These ones should be self-explanatory... */
@@ -91,6 +96,7 @@ extern int address_space_24;
 
 /* Default memory access functions */
 
+extern int default_check(uaecptr addr, uae_u32 size) REGPARAM;
 extern uae_u8 *default_xlate(uaecptr addr) REGPARAM;
 
 #define bankindex(addr) (((uaecptr)(addr)) >> 16)
@@ -107,21 +113,42 @@ extern addrbank mem_banks[65536];
 
 extern void memory_init(void);
 extern void map_banks(addrbank *bank, int first, int count);
-extern void map_64bit_bank(uae_u8 *base, int size);
 
-#ifndef NO_INLINE_MEMORY_ACCESS
-
-#define longget(addr)   (call_mem_get_func(get_mem_bank(addr).lget, addr))
-#define wordget(addr)   (call_mem_get_func(get_mem_bank(addr).wget, addr))
-#define byteget(addr)   (call_mem_get_func(get_mem_bank(addr).bget, addr))
-#define longput(addr,l) (call_mem_put_func(get_mem_bank(addr).lput, addr, l))
-#define wordput(addr,w) (call_mem_put_func(get_mem_bank(addr).wput, addr, w))
-#define byteput(addr,b) (call_mem_put_func(get_mem_bank(addr).bput, addr, b))
+#endif // %%% LuZ
 
 
-#else
+//#ifndef NO_INLINE_MEMORY_ACCESS
+//
+//#define longget(addr)   (call_mem_get_func(get_mem_bank(addr).lget, addr))
+//#define wordget(addr)   (call_mem_get_func(get_mem_bank(addr).wget, addr))
+//#define byteget(addr)   (call_mem_get_func(get_mem_bank(addr).bget, addr))
+//#define longput(addr,l) (call_mem_put_func(get_mem_bank(addr).lput, addr, l))
+//#define wordput(addr,w) (call_mem_put_func(get_mem_bank(addr).wput, addr, w))
+//#define byteput(addr,b) (call_mem_put_func(get_mem_bank(addr).bput, addr, b))
+//
+// %%% LuZ: direct mapping to native addresses
 
-#endif
+#define longget(addr)   (do_get_mem_long((uae_u32 *)addr))
+#define wordget(addr)   (do_get_mem_word((uae_u16 *)addr))
+#define byteget(addr)   (do_get_mem_byte((uae_u8  *)addr))
+#define longput(addr,l) (do_put_mem_long((uae_u32 *)addr, l))
+#define wordput(addr,w) (do_put_mem_word((uae_u16 *)addr, w))
+#define byteput(addr,b) (do_put_mem_byte((uae_u8  *)addr, b))
+
+/*
+//%%% LuZ: This case does not seem to be a valid choice any more, as
+//         alongget/awordget is not implemented anywhere!
+//#else */
+
+/*	extern uae_u32 alongget(uaecptr addr);
+	extern uae_u32 awordget(uaecptr addr);
+	extern uae_u32 longget(uaecptr addr);
+	extern uae_u32 wordget(uaecptr addr);
+	extern uae_u32 byteget(uaecptr addr);
+	extern void longput(uaecptr addr, uae_u32 l);
+	extern void wordput(uaecptr addr, uae_u32 w);
+	extern void byteput(uaecptr addr, uae_u32 b);
+#endif */
 
 
 #ifndef MD_HAVE_MEM_1_FUNCS
@@ -162,11 +189,14 @@ static __inline__ void put_byte(uaecptr addr, uae_u32 b)
 
 static __inline__ uae_u8 *get_real_address(uaecptr addr)
 {
-    return get_mem_bank(addr).xlateaddr(addr);
+ /* return get_mem_bank(addr).xlateaddr(addr); */
+    return (uae_u8 *)addr; /* no translation ever %%% */
 }
 
 static __inline__ int valid_address( uaecptr addr, uae_u32 size )
-{ 
-    return get_mem_bank(addr).check(addr, size);
+{
+ 
+ /* return get_mem_bank(addr).check(addr, size); */
+    return 1; /* all addresses can be translated (as there is no translation! %%% */
 }
 

@@ -185,10 +185,6 @@ Boolean llm_vm_enabled(void) { return vmenabled; }
 /* (seems to be the case with newer G3/MacOS8.5 combinations) */
 Boolean llm_runs_in_usermode(void) { return usesusermode; }
 
-void map_64bit_block(void* base, ulong size) {
-    map_64bit_bank(base, size);
-}
-
 /* prepare access to low-level code */
 OSErr lowlevel_prepare(void)
 {
@@ -206,7 +202,6 @@ OSErr lowlevel_prepare(void)
     savestate_wanted = 0;
     //  currprefs.cpu_level = 2; // 68020
     currprefs.cpu_level = 3; // 68020+68881
-    memory_init();
     init_m68k();
     compiler_init();
     quit_program = 0; // no reset!
