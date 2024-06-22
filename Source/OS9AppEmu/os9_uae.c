@@ -147,6 +147,8 @@ void handle_os9exec_exception(int nr, uaecptr oldpc)
     };
 }
 
+uae_u8 *first_pc;
+
 /* enter OS9 context */
 ulong llm_os9_go(regs_type *rp)
 {
@@ -156,6 +158,7 @@ ulong llm_os9_go(regs_type *rp)
     memcpy(&regs, rp, sizeof(regs));
     regs.usp = rp->a[7];
     m68k_setpc(rp->pc); // make sure PC is set ok
+    first_pc = regs.pc_p;
     MakeFromSR();       // make sure condition flags are ok
 
     r = m68k_os9go();

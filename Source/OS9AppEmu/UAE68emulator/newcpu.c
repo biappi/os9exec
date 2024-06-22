@@ -1115,12 +1115,16 @@ static void m68k_run_1 (void)
 //int in_m68k_go = 0;
 
 
-int m68k_os9trace;
-int m68k_disp= 0;
+int m68k_os9trace=0;
+int m68k_disp= 1;
+
+
 
 #undef PROBLEM
 
 ushort debugwait( void ); // WIL
+
+extern uae_u8 *first_pc;
 
 // special emulator call, runs up to next os9_running=0 assignment
 unsigned long m68k_os9go(void)
@@ -1139,8 +1143,9 @@ unsigned long m68k_os9go(void)
     while (os9_running) {
 		uae_u32 opcode = GET_OPCODE;
 		(*cpufunctbl[opcode])(opcode);
-		if (m68k_disp)
-			upe_printf( "%8x %4x\n", regs.pc_p,opcode );
+		if (m68k_disp) {
+			upe_printf( "%016p %4x (%p)\n", (regs.pc_p - first_pc),opcode, regs.pc_p );
+		}
 		if (m68k_os9trace) {
 			uaecptr n;
 		   m68k_dumpstate(&n,0);
