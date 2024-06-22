@@ -157,21 +157,27 @@ void REGPARAM2 sixtyfour_lput (uaecptr addr, uae_u32 l)
 {
     uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
     uae_u16 offset = addr & 0xffff;
-    do_put_mem_long((uae_u32*)(sixtyfour_bank_map[bank_index] + offset), l);
+    uae_u8* real_addr = (uae_u8*)(sixtyfour_bank_map[bank_index] + offset);
+    do_put_mem_long(real_addr, l);
+    write_log("sixtyfour_lput %8x %p\n", l, real_addr);
 }
 
 void REGPARAM2 sixtyfour_wput (uaecptr addr, uae_u32 w)
 {
     uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
     uae_u16 offset = addr & 0xffff;
-    do_put_mem_word((uae_u16*)(sixtyfour_bank_map[bank_index] + offset), w);
+    uae_u8* real_addr = (uae_u8*)(sixtyfour_bank_map[bank_index] + offset);
+    do_put_mem_word(real_addr, w);
+    write_log("sixtyfour_wput %8x %p\n", w, real_addr);
 }
 
 void REGPARAM2 sixtyfour_bput (uaecptr addr, uae_u32 b)
 {
     uae_u16 bank_index = ((uae_u32)addr >> 16) & 0xffff;
     uae_u16 offset = addr & 0xffff;
-    do_put_mem_byte((uae_u8*)(sixtyfour_bank_map[bank_index] + offset), b);
+    uae_u8* real_addr = (uae_u8*)(sixtyfour_bank_map[bank_index] + offset);
+    do_put_mem_byte(real_addr, b);
+    write_log("sixtyfour_bput %8x %p\n", b, real_addr);
 }
 
 int REGPARAM2 sixtyfour_check (uaecptr addr, uae_u32 size)
