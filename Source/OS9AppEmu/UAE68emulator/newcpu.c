@@ -1118,6 +1118,8 @@ static void m68k_run_1 (void)
 int m68k_os9trace=0;
 int m68k_disp= 1;
 
+static int instrcount = 0;
+
 
 
 #undef PROBLEM
@@ -1144,7 +1146,12 @@ unsigned long m68k_os9go(void)
 		uae_u32 opcode = GET_OPCODE;
 		(*cpufunctbl[opcode])(opcode);
 		if (m68k_disp) {
-			upe_printf( "%016p %4x (%p)\n", (regs.pc_p - first_pc),opcode, regs.pc_p );
+			upe_printf( "%6d %08p %04x (%p)\n", instrcount, (regs.pc_p - first_pc), opcode, regs.pc_p );
+			if (instrcount >= 41652) {
+				uaecptr n;
+				m68k_dumpstate(&n,0);
+			}	
+			instrcount++;
 		}
 		if (m68k_os9trace) {
 			uaecptr n;
