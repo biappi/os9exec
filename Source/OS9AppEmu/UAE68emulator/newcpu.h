@@ -66,7 +66,7 @@ typedef char flagtype;
 
 #include "regs_type.h"
 
-regs_type regs, lastint_regs;
+extern regs_type regs, lastint_regs;
 
 #define m68k_dreg(r,num) ((r).regs[(num)])
 #define m68k_areg(r,num) (((r).regs + 8)[(num)])

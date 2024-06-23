@@ -263,8 +263,8 @@ void init_m68k (void)
     build_cpufunctbl ();
 }
 
-struct regstruct regs, lastint_regs;
-static struct regstruct regs_backup[16];
+regs_type regs, lastint_regs;
+static regs_type regs_backup[16];
 static int backup_pointer = 0;
 static long int m68kpc_offset;
 int lastint_no;

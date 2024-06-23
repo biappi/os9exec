@@ -209,9 +209,9 @@ static os9err OS9_TCP_Select(regs_type *rp, _pid_)
 {
     upe_printf("select\n");
 
-    rp->d[0] = 0;
-    rp->d[1] = 0;
-    rp->d[2] = 0;
+    rp->regs[REGS_D + 0] = 0;
+    rp->regs[REGS_D + 1] = 0;
+    rp->regs[REGS_D + 2] = 0;
 
     return 0;
 }
@@ -814,7 +814,7 @@ Boolean Dbg_SysCall(regs_type *rp, ushort pid)
         return false;
 
     // OS9_I_WritLn, special masking provided for "Maloney" system
-    return cp->func != 0x8c || loword(rp->d[0]) < 0x80 ||
+    return cp->func != 0x8c || loword(rp->regs[REGS_D + 0]) < 0x80 ||
            debugcheck(dbgSysCall, dbgDetail);
 }
 
@@ -879,7 +879,7 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
                     p = (char *)&cp->intProcName;
                 }
                 else {
-                    mod = (mod_exec *)cp->os9regs.a[3];
+                    mod = (mod_exec *)cp->os9regs.regs[REGS_A + 3];
                     p   = Mod_Name(mod);
                 }
 
@@ -960,7 +960,7 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
 
         if (fdeP->inregs & SFUNC_STATCALL) /* get the getstat/setstat code as
                                               name for debugging */
-            fSS = get_stat_name(loword(rp->d[1]));
+            fSS = get_stat_name(loword(rp->regs[REGS_D + 1]));
     }
 
     /* execute syscall */
@@ -975,12 +975,12 @@ exec_syscall(ushort func, ushort pid, regs_type *rp, Boolean withinIntUtil)
     if (withinIntUtil) {
         // make the debug logging prep for systemcalls within int commands here
         // memcpy( (void*)&cp->os9regs,   (void*)rp,       sizeof(regs_type) );
-        memcpy((void *)&cp->os9regs.d, (void *)&rp->d, 5 * sizeof(ulong));
-        memcpy((void *)&cp->os9regs.a, (void *)&rp->a, 6 * sizeof(ulong));
+        memcpy((void *)&cp->os9regs.regs[REGS_D], (void *)&rp->regs[REGS_D], 5 * sizeof(uint32_t));
+        memcpy((void *)&cp->os9regs.regs[REGS_A], (void *)&rp->regs[REGS_A], 6 * sizeof(uint32_t));
 
         if (func ==
             F_Exit) { // for internal utilities, F$Exit returns until here !!
-            rp->d[1] = cp->exiterr;
+            rp->regs[REGS_D + 1] = cp->exiterr;
 
 #ifdef THREAD_SUPPORT
             if (ptocThread)
@@ -1040,12 +1040,12 @@ os9err trap0_call(ushort code, Regs_68k *regs)
     }
 
     do {
-        MoveBlk((void *)&rp.d[0], (void *)regs, RegsSize); // copy forth ...
+        MoveBlk((void *)&rp.regs[REGS_D], (void *)regs, RegsSize); // copy forth ...
 
         err = exec_syscall(code, currentpid, &rp, true);
     } while (cp->state == pWaitRead);
 
-    MoveBlk((void *)regs, (void *)&rp.d[0], RegsSize); // ... and back
+    MoveBlk((void *)regs, (void *)&rp.regs[REGS_D], RegsSize); // ... and back
 
     return err;
 } // trap0_call

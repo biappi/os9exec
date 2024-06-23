@@ -76,8 +76,8 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
 {
     os9err err;
     ushort mode =
-        loword(rp->d[0]) & 0x00ff; /* consider only byte => bugfix for the */
-    char *os9_name = (char *)rp->a[0]; /* poCreateMask problem */
+        loword(rp->regs[REGS_D + 0]) & 0x00ff; /* consider only byte => bugfix for the */
+    char *os9_name = (char *)rp->regs[REGS_A + 0]; /* poCreateMask problem */
     char  os9_path[OS9PATHLEN];
     char *pastpath;
 
@@ -91,9 +91,9 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
     pastpath = nullterm(os9_path, os9_name, OS9PATHLEN);
 
     if (xmode & 0x20)
-        size = rp->d[2]; /* initial file size, if size bit is set */
+        size = rp->regs[REGS_D + 2]; /* initial file size, if size bit is set */
 
-    procs[cpid].fileAtt      = loword(rp->d[1]);
+    procs[cpid].fileAtt      = loword(rp->regs[REGS_D + 1]);
     procs[cpid].cre_initsize = size;
 
     type = IO_Type(cpid, os9_path, mode);
@@ -130,8 +130,8 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
     if (err)
         return err;
 
-    retword(rp->d[0]) = path;            /* return path number */
-    rp->a[0]          = (ulong)pastpath; /* return updated pathname pointer */
+    retword(rp->regs[REGS_D + 0]) = path;            /* return path number */
+    rp->regs[REGS_A + 0]          = (ulong)pastpath; /* return updated pathname pointer */
     debugprintf(dbgFiles,
                 dbgNorm,
                 ("# %s successful, path number= %d\n", co, path));
@@ -200,8 +200,8 @@ os9err OS9_I_Delete(regs_type *rp, ushort cpid)
  *                termination characters.
  */
 {
-    ushort mode = lobyte(rp->d[0]); /* take do.b, avoid poCreate bug problem */
-    char  *os9_name = (char *)rp->a[0];
+    ushort mode = lobyte(rp->regs[REGS_D + 0]); /* take do.b, avoid poCreate bug problem */
+    char  *os9_name = (char *)rp->regs[REGS_A + 0];
     char   os9_path[OS9PATHLEN];
     char  *pastpath;
     ptype_typ type;
@@ -234,8 +234,8 @@ os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
  *              - File attributes are not used
  */
 {
-    ushort    mode = loword(rp->d[0]) | poCreateMask; /* internal open used */
-    char     *os9_name = (char *)rp->a[0];
+    ushort    mode = loword(rp->regs[REGS_D + 0]) | poCreateMask; /* internal open used */
+    char     *os9_name = (char *)rp->regs[REGS_A + 0];
     char      os9_path[OS9PATHLEN];
     char     *pastpath;
     ptype_typ type;
@@ -263,8 +263,8 @@ os9err OS9_I_ChgDir(regs_type *rp, ushort cpid)
  *              - Access mode is only used to ignore "chx"-requests
  */
 {
-    ushort    mode     = loword(rp->d[0]) & 0x07 | 0x80; /* ignore some flags */
-    char     *os9_name = (char *)rp->a[0];
+    ushort    mode     = loword(rp->regs[REGS_D + 0]) & 0x07 | 0x80; /* ignore some flags */
+    char     *os9_name = (char *)rp->regs[REGS_A + 0];
     char      os9_path[OS9PATHLEN];
     char     *pastpath;
     ptype_typ type;
@@ -289,7 +289,7 @@ os9err OS9_I_Close(regs_type *rp, ushort cpid)
  *              - Error reporting is rudimentary
  */
 {
-    ushort path = loword(rp->d[0]);
+    ushort path = loword(rp->regs[REGS_D + 0]);
     debugprintf(dbgFiles,
                 dbgNorm,
                 ("# I$Close: close path number = %d\n", path));
@@ -324,17 +324,17 @@ os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
                  "I$WriteLn buffer start",
-                 rp->a[0],
+                 rp->regs[REGS_A + 0],
                  RCHK_DRU + RCHK_ARU + RCHK_MEM + RCHK_MOD);
         regcheck(cpid,
                  "I$WriteLn buffer end",
-                 rp->a[0] + rp->d[1] - 1,
+                 rp->regs[REGS_A + 0] + rp->regs[REGS_D + 1] - 1,
                  RCHK_DRU + RCHK_ARU + RCHK_MEM + RCHK_MOD);
     }
 
-    path = loword(rp->d[0]);
-    cnt  = rp->d[1];
-    buff = (char *)rp->a[0];
+    path = loword(rp->regs[REGS_D + 0]);
+    cnt  = rp->regs[REGS_D + 1];
+    buff = (char *)rp->regs[REGS_A + 0];
 
     path = path & 0x7f; /* mask the specific OS9exec non-debug flag */
 
@@ -349,7 +349,7 @@ os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
 
     /* now write */
     err      = usrpath_write(cpid, path, &cnt, buff, true);
-    rp->d[1] = cnt;
+    rp->regs[REGS_D + 1] = cnt;
     return err;
 }
 
@@ -380,21 +380,21 @@ os9err OS9_I_Write(regs_type *rp, ushort cpid)
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
                  "I$Write buffer start",
-                 rp->a[0],
+                 rp->regs[REGS_A + 0],
                  RCHK_DRU + RCHK_ARU + RCHK_MEM + RCHK_MOD);
         regcheck(cpid,
                  "I$Write buffer end",
-                 rp->a[0] + rp->d[1] - 1,
+                 rp->regs[REGS_A + 0] + rp->regs[REGS_D + 1] - 1,
                  RCHK_DRU + RCHK_ARU + RCHK_MEM + RCHK_MOD);
     }
 
-    path = loword(rp->d[0]);
-    cnt  = rp->d[1];
-    buff = (char *)rp->a[0];
+    path = loword(rp->regs[REGS_D + 0]);
+    cnt  = rp->regs[REGS_D + 1];
+    buff = (char *)rp->regs[REGS_A + 0];
 
     /* now write */
     err      = usrpath_write(cpid, path, &cnt, buff, false);
-    rp->d[1] = cnt;
+    rp->regs[REGS_D + 1] = cnt;
     return err;
 }
 
@@ -423,22 +423,22 @@ os9err OS9_I_ReadLn(regs_type *rp, ushort cpid)
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
                  "I$ReadLn buffer start",
-                 rp->a[0],
+                 rp->regs[REGS_A + 0],
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
         regcheck(cpid,
                  "I$ReadLn buffer end",
-                 rp->a[0] + rp->d[1] - 1,
+                 rp->regs[REGS_A + 0] + rp->regs[REGS_D + 1] - 1,
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
     }
 
-    p    = (char *)rp->a[0];
-    path = loword(rp->d[0]);
-    cnt  = rp->d[1];
+    p    = (char *)rp->regs[REGS_A + 0];
+    path = loword(rp->regs[REGS_D + 0]);
+    cnt  = rp->regs[REGS_D + 1];
 
     err = usrpath_read(cpid, path, &cnt, p, true);
     if (err)
         return err;
-    rp->d[1] = cnt; /* return # of chars actually read */
+    rp->regs[REGS_D + 1] = cnt; /* return # of chars actually read */
     return 0;
 }
 
@@ -462,22 +462,22 @@ os9err OS9_I_Read(regs_type *rp, ushort cpid)
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
                  "I$Read buffer start",
-                 rp->a[0],
+                 rp->regs[REGS_A + 0],
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
         regcheck(cpid,
                  "I$Read buffer end",
-                 rp->a[0] + rp->d[1] - 1,
+                 rp->regs[REGS_A + 0] + rp->regs[REGS_D + 1] - 1,
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
     }
 
-    p    = (char *)rp->a[0];
-    path = loword(rp->d[0]);
-    cnt  = rp->d[1];
+    p    = (char *)rp->regs[REGS_A + 0];
+    path = loword(rp->regs[REGS_D + 0]);
+    cnt  = rp->regs[REGS_D + 1];
 
     err = usrpath_read(cpid, path, &cnt, p, false);
     if (err)
         return err;
-    rp->d[1] = cnt; /* return # of chars actually read */
+    rp->regs[REGS_D + 1] = cnt; /* return # of chars actually read */
     return 0;
 }
 
@@ -492,8 +492,8 @@ os9err OS9_I_Seek(regs_type *rp, ushort cpid)
  */
 {
     os9err err;
-    ushort path = loword(rp->d[0]);
-    ulong  pos  = rp->d[1];
+    ushort path = loword(rp->regs[REGS_D + 0]);
+    ulong  pos  = rp->regs[REGS_D + 1];
 
     err = usrpath_seek(cpid, path, pos);
     debugprintf(
@@ -516,12 +516,12 @@ os9err OS9_I_SetStt(regs_type *rp, ushort cpid)
  * Restrictions:-
  */
 {
-    ulong *a0 = (ulong *)&rp->a[0];
-    ulong *a1 = (ulong *)&rp->a[1];
-    ulong *d0 = (ulong *)&rp->d[0];
-    ulong *d1 = (ulong *)&rp->d[1];
-    ulong *d2 = (ulong *)&rp->d[2];
-    ulong *d3 = (ulong *)&rp->d[3];
+    ulong *a0 = (ulong *)&rp->regs[REGS_A + 0];
+    ulong *a1 = (ulong *)&rp->regs[REGS_A + 1];
+    ulong *d0 = (ulong *)&rp->regs[REGS_D + 0];
+    ulong *d1 = (ulong *)&rp->regs[REGS_D + 1];
+    ulong *d2 = (ulong *)&rp->regs[REGS_D + 2];
+    ulong *d3 = (ulong *)&rp->regs[REGS_D + 3];
 
     ushort path = loword(*d0);
     ushort func = loword(*d1);
@@ -541,11 +541,11 @@ os9err OS9_I_GetStt(regs_type *rp, ushort cpid)
  *             E$BPNUM: this path is not open
  */
 {
-    ulong *a0 = (ulong *)&rp->a[0];
-    ulong *d0 = (ulong *)&rp->d[0];
-    ulong *d1 = (ulong *)&rp->d[1];
-    ulong *d2 = (ulong *)&rp->d[2];
-    ulong *d3 = (ulong *)&rp->d[3];
+    ulong *a0 = (ulong *)&rp->regs[REGS_A + 0];
+    ulong *d0 = (ulong *)&rp->regs[REGS_D + 0];
+    ulong *d1 = (ulong *)&rp->regs[REGS_D + 1];
+    ulong *d2 = (ulong *)&rp->regs[REGS_D + 2];
+    ulong *d3 = (ulong *)&rp->regs[REGS_D + 3];
 
     ushort path = loword(*d0);
     ushort func = loword(*d1);
@@ -566,11 +566,11 @@ os9err OS9_I_SGetSt(regs_type *rp, ushort cpid)
  *             E$BPNUM: this path is not open
  */
 {
-    ulong *a0 = (ulong *)&rp->a[0];
-    ulong *d0 = (ulong *)&rp->d[0];
-    ulong *d1 = (ulong *)&rp->d[1];
-    ulong *d2 = (ulong *)&rp->d[2];
-    ulong *d3 = (ulong *)&rp->d[3];
+    ulong *a0 = (ulong *)&rp->regs[REGS_A + 0];
+    ulong *d0 = (ulong *)&rp->regs[REGS_D + 0];
+    ulong *d1 = (ulong *)&rp->regs[REGS_D + 1];
+    ulong *d2 = (ulong *)&rp->regs[REGS_D + 2];
+    ulong *d3 = (ulong *)&rp->regs[REGS_D + 3];
 
     ushort path = loword(*d0);
     ushort func = loword(*d1);
@@ -590,7 +590,7 @@ os9err OS9_I_Dup(regs_type *rp, ushort cpid)
     ushort  k, up, sp;
     ushort *spN;
 
-    up = loword(rp->d[0]);
+    up = loword(rp->regs[REGS_D + 0]);
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);
 
@@ -606,7 +606,7 @@ os9err OS9_I_Dup(regs_type *rp, ushort cpid)
             *spN = sp;             /* copy syspath number */
 
             usrpath_link(cpid, k, "dup  "); /* increase link */
-            retword(rp->d[0]) = k; /* return new path number for same path */
+            retword(rp->regs[REGS_D + 0]) = k; /* return new path number for same path */
 
             debugprintf(
                 dbgFiles,
@@ -630,17 +630,17 @@ os9err OS9_I_Attach(regs_type *rp, _pid_)
  * table entry
  */
 {
-    char *name = (char *)rp->a[0];
+    char *name = (char *)rp->regs[REGS_A + 0];
 
     if (ustrcmp(name, "/L2") == 0) {
-        rp->a[2] = 0x22002200; /* %%% /L2 identifier */
+        rp->regs[REGS_A + 2] = 0x22002200; /* %%% /L2 identifier */
         return 0;
     }
 
     debugprintf((dbgPartial + dbgFiles),
                 dbgNorm,
                 ("# I$Attach, simply returned dummy pointer\n"));
-    rp->a[2] = 0xFF00FF00; /* dummy return pointer */
+    rp->regs[REGS_A + 2] = 0xFF00FF00; /* dummy return pointer */
     return 0;
 }
 
@@ -656,7 +656,7 @@ os9err OS9_I_Detach(regs_type *rp, _pid_)
  */
 {
     /* special handling for "/L2" */
-    if (rp->a[2] == 0x22002200) {
+    if (rp->regs[REGS_A + 2] == 0x22002200) {
         init_L2(); /* switch off /L2 completely */
         return 0;
     }
@@ -664,7 +664,7 @@ os9err OS9_I_Detach(regs_type *rp, _pid_)
     debugprintf((dbgPartial + dbgFiles),
                 dbgNorm,
                 ("# I$Detach, expects dummy pointer\n"));
-    if (rp->a[2] != 0xFF00FF00)
+    if (rp->regs[REGS_A + 2] != 0xFF00FF00)
         return os9error(E_DAMAGE); /* bad dummy pointer value */
 
     return 0;

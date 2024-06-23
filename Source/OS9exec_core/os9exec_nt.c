@@ -1462,10 +1462,10 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
                 /* there is an installed handler */
                 crp->pc = cp->ErrorTraps[vect - FIRSTEXCEPTION]
                               .handleraddr; /* set handler routine address */
-                crp->a[6] = cp->memstart + 0x8000; /* set A6 base */
+                crp->regs[REGS_A + 6] = cp->memstart + 0x8000; /* set A6 base */
 
                 if (cp->ErrorTraps[vect - FIRSTEXCEPTION].handlerstack != 0) {
-                    crp->a[7] =
+                    crp->regs[REGS_A + 7] =
                         cp->ErrorTraps[vect - FIRSTEXCEPTION].handlerstack;
                 }
                 if (debugcheck(dbgTrapHandler, dbgDetail)) {
@@ -1564,7 +1564,7 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
         else {
             /* --- trap handler is installed for this vector, call it */
             crp->pc   = tp->trapentry; /* continue in trap handler */
-            crp->a[6] = tp->trapmem +
+            crp->regs[REGS_A + 6] = tp->trapmem +
                         0x8000; /* pass trap handler data pointer with offset */
             debugprintf(dbgTrapHandler,
                         dbgDeep,
@@ -1787,7 +1787,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                     debug_retsystask(crp, cpid);
 
                 if (cp->oerr) {
-                    retword(crp->d[1]) = cp->oerr;
+                    retword(crp->regs[REGS_D + 1]) = cp->oerr;
                     crp->sr |= CARRY;
                 }
                 else
@@ -1831,21 +1831,21 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
 
                 // --- safeguarding
                 if (debugcheck(dbgWarnings, dbgDeep)) {
-                    if (cp->memstart + 0x8000 != crp->a[6]) {
+                    if (cp->memstart + 0x8000 != crp->regs[REGS_A + 6]) {
                         uphe_printf(">>> Warning [pid=%d]: A6 has changed from "
                                     "$%08lX to $%08lX !\n",
                                     cpid,
                                     cp->memstart + 0x8000,
-                                    crp->a[6]);
+                                    crp->regs[REGS_A + 6]);
                         debug_halt(dbgWarnings);
                     }
 
-                    if ((crp->a[7] > cp->memtop) ||
-                        (crp->a[7] < cp->memstart)) {
+                    if ((crp->regs[REGS_A + 7] > cp->memtop) ||
+                        (crp->regs[REGS_A + 7] < cp->memstart)) {
                         uphe_printf(">>> Warning [pid=%d]: A7=$%08lX is out of "
                                     "data area ($%08lX - $%08lX) !\n",
                                     cpid,
-                                    crp->a[7],
+                                    crp->regs[REGS_A + 7],
                                     cp->memstart,
                                     cp->memtop);
                         debug_halt(dbgWarnings);
@@ -1955,14 +1955,14 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                         if ((cp->oerr & 0xFF00) == E_OKFLAG)
                             cp->oerr &= 0x00FF; // ensure that silent errors are
                                                 // restored to normal error code
-                        retword(crp->d[1]) = cp->oerr;
+                        retword(crp->regs[REGS_D + 1]) = cp->oerr;
                         crp->sr |= CARRY;
                     }
                 }
 
                 if (cwti && cp->icpt_signal != S_Wake && sigp->state != pDead) {
                     sigp->masklevel = 1; // not interrupteable during intercept
-                    sigp->os9regs.d[1] =
+                    sigp->os9regs.regs[REGS_D + 1] =
                         cp->icpt_signal; // get signal code at icpt routine
                     sigp->rtevector = sigp->vector;
                     sigp->rtefunc   = sigp->func;
@@ -2053,7 +2053,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
                 }
 
                 if (cp->icpt_signal != S_Wake) {
-                    cp->os9regs.d[1] =
+                    cp->os9regs.regs[REGS_D + 1] =
                         cp->icpt_signal; // get signal code at icpt routine
                 }
 

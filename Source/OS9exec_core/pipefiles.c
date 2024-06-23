@@ -359,7 +359,7 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
     pipesz = DEFAULTPIPESZ;
     if (cre && *modeP & 0x20) {
         /* special size */
-        pipesz = procs[pid].os9regs.d[2];
+        pipesz = procs[pid].os9regs.regs[REGS_D + 2];
         if (pipesz < MINPIPESZ)
             pipesz = MINPIPESZ;
     }
@@ -619,8 +619,8 @@ static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
     ulong  dd = procs[pid].systask_offs;
-    char  *a0 = (char *)(rp->a[0] + dd);
-    ulong  d1 = rp->d[1] - dd;
+    char  *a0 = (char *)(rp->regs[REGS_A + 0] + dd);
+    ulong  d1 = rp->regs[REGS_D + 1] - dd;
 
     err      = pWriteSysTaskExe(pid,
                            spP,
@@ -628,7 +628,7 @@ static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
                            a0,
                            false,
                            (systaskfunc_typ)pWriteSysTask);
-    rp->d[1] = d1 + dd;
+    rp->regs[REGS_D + 1] = d1 + dd;
     return err;
 }
 
@@ -636,8 +636,8 @@ static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
     ulong  dd = procs[pid].systask_offs;
-    char  *a0 = (char *)(rp->a[0] + dd);
-    ulong  d1 = rp->d[1] - dd;
+    char  *a0 = (char *)(rp->regs[REGS_A + 0] + dd);
+    ulong  d1 = rp->regs[REGS_D + 1] - dd;
 
     err      = pWriteSysTaskExe(pid,
                            spP,
@@ -645,7 +645,7 @@ static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
                            a0,
                            true,
                            (systaskfunc_typ)pWriteSysTaskLn);
-    rp->d[1] = d1 + dd;
+    rp->regs[REGS_D + 1] = d1 + dd;
     return err;
 }
 
@@ -819,8 +819,8 @@ static os9err pReadSysTaskExe(ushort          pid,
 static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    char  *a0 = (char *)(rp->a[0]);
-    ulong  d1 = rp->d[1];
+    char  *a0 = (char *)(rp->regs[REGS_A + 0]);
+    ulong  d1 = rp->regs[REGS_D + 1];
 
     err      = pReadSysTaskExe(pid,
                           spP,
@@ -829,15 +829,15 @@ static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
                           false,
                           false,
                           (systaskfunc_typ)pReadSysTask);
-    rp->d[1] = d1;
+    rp->regs[REGS_D + 1] = d1;
     return err;
 }
 
 static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    char  *a0 = (char *)(rp->a[0]);
-    ulong  d1 = rp->d[1];
+    char  *a0 = (char *)(rp->regs[REGS_A + 0]);
+    ulong  d1 = rp->regs[REGS_D + 1];
 
     err      = pReadSysTaskExe(pid,
                           spP,
@@ -846,7 +846,7 @@ static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
                           true,
                           false,
                           (systaskfunc_typ)pReadSysTaskLn);
-    rp->d[1] = d1;
+    rp->regs[REGS_D + 1] = d1;
     return err;
 }
 

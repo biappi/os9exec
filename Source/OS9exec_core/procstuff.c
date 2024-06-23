@@ -398,8 +398,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                                 (llm_runs_in_usermode() ? FLAGS_UM : 0);
             /* initialize registers */
             for (k = 0; k < 8; k++) {
-                cp->os9regs.d[k] = 0xDDDDDDD0 + k;
-                cp->os9regs.a[k] = 0xAAAAAAA0 + k;
+                cp->os9regs.regs[REGS_D + k] = 0xDDDDDDD0 + k;
+                cp->os9regs.regs[REGS_A + k] = 0xAAAAAAA0 + k;
                 cp->os9regs.pc   = 0xCCCCCCCC;
             }
             /* make sure that ISP ist ready for exception stack frames */
@@ -672,8 +672,8 @@ os9err kill_process(ushort pid)
                     dbgNorm,
                     ("# kill_process: new d0=%d d1=%d\n", pid, cp->exiterr));
                 rp                = &procs[currentpid].os9regs;
-                retword(rp->d[0]) = pid;         /* ID of dead child */
-                retword(rp->d[1]) = cp->exiterr; /* exit error of child */
+                retword(rp->regs[REGS_D + 0]) = pid;         /* ID of dead child */
+                retword(rp->regs[REGS_D + 1]) = cp->exiterr; /* exit error of child */
             }
 
             arbitrate = false; /* don't arbitrate, simply wake/unwait current if
@@ -814,7 +814,7 @@ os9err send_signal(ushort spid, ushort signal)
                     dbgNorm,
                     ("# send_signal: waking pid=%d from sleep\n", spid));
         set_os9_state(spid, pActive, "send_signal");
-        sigp->os9regs.d[0] = 0;     /* %%% return # of remaining ticks! */
+        sigp->os9regs.regs[REGS_D + 0] = 0;     /* %%% return # of remaining ticks! */
         sigp->os9regs.sr &= ~CARRY; /* error-free return */
 
         if (!sigp->isIntUtil) {
@@ -846,10 +846,10 @@ os9err send_signal(ushort spid, ushort signal)
                 dbgProcess,
                 dbgDetail,
                 ("# send_signal: receiving pid=%d was waiting\n", spid));
-            retword(sigp->os9regs.d[0]) =
+            retword(sigp->os9regs.regs[REGS_D + 0]) =
                 0; /* return 0 means that no process has died (pid=0's death
                       can't be awaited) */
-            retword(sigp->os9regs.d[1]) =
+            retword(sigp->os9regs.regs[REGS_D + 1]) =
                 0; /* no signal code !!! returning signal code is wrong (bfo) */
             sigp->os9regs.sr &= ~CARRY; /* error-free return */
         }
@@ -894,8 +894,8 @@ os9err send_signal(ushort spid, ushort signal)
             set_os9_state(spid, pActive, "send_signal"); /* now activate it */
 
             sigp->os9regs.pc   = os9_long((ulong)sigp->pd._sigvec);
-            sigp->os9regs.a[6] = sigp->icpta6;
-            sigp->os9regs.d[1] = signal;
+            sigp->os9regs.regs[REGS_A + 6] = sigp->icpta6;
+            sigp->os9regs.regs[REGS_D + 1] = signal;
             sigp->icpt_signal  = signal;
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
@@ -1163,7 +1163,7 @@ void do_arbitrate(ushort allowedIntUtil)
 
                         if (sprocess->state == pSleeping) {
                             if (sprocess->wakeUpTick <= GetSystemTick()) {
-                                //  sprocess->os9regs.d[0]= 0;
+                                //  sprocess->os9regs.regs[REGS_D + 0]= 0;
                                 //  sprocess->os9regs.sr &= ~CARRY; //
                                 //  error-free return
                                 // set_os9_state( spid, pActive, "do_arbitrate"
@@ -1331,12 +1331,12 @@ void do_arbitrate(ushort allowedIntUtil)
                     // debugprintf(dbgSysCall,dbgNorm,("# SIGNAL HANDLED1
                     // isInt=%d pid=%d sig9=%d d1=%d\n",
                     //             cp->isIntUtil, cpid, procs[ 9 ].icpt_signal,
-                    //             procs[ 9 ].os9regs.d[1] ));
+                    //             procs[ 9 ].os9regs.regs[REGS_D + 1] ));
                     sig_mask(spid, 0); /* pending signals */
                     // debugprintf(dbgSysCall,dbgNorm,("# SIGNAL HANDLED2
                     // isInt=%d pid=%d sig9=%d d1=%d\n",
                     //             cp->isIntUtil, cpid, procs[ 9 ].icpt_signal,
-                    //             procs[ 9 ].os9regs.d[1] ));
+                    //             procs[ 9 ].os9regs.regs[REGS_D + 1] ));
                 }
 
                 wait_for_signal(spid);
@@ -1347,7 +1347,7 @@ void do_arbitrate(ushort allowedIntUtil)
 
                 // if (sprocess->wakeUpTick!=MAX_SLEEP &&
                 if (sprocess->wakeUpTick <= GetSystemTick()) {
-                    sprocess->os9regs.d[0] = 0;     /* no remaining ticks */
+                    sprocess->os9regs.regs[REGS_D + 0] = 0;     /* no remaining ticks */
                     sprocess->os9regs.sr &= ~CARRY; /* error-free return */
                     set_os9_state(spid, pActive, "do_arbitrate");
                     break;
@@ -1391,8 +1391,8 @@ void do_arbitrate(ushort allowedIntUtil)
         cp = &procs[currentpid];
         if (cp->state == pWaiting && deadpid < MAXPROCESSES) {
             /* -- we need to terminate waiting first */
-            retword(cp->os9regs.d[0]) = deadpid; /* ID of dead child */
-            retword(cp->os9regs.d[1]) =
+            retword(cp->os9regs.regs[REGS_D + 0]) = deadpid; /* ID of dead child */
+            retword(cp->os9regs.regs[REGS_D + 1]) =
                 procs[deadpid].exiterr; /* exit error of child */
             AssignNewChild(currentpid, deadpid);
 
@@ -1608,23 +1608,23 @@ os9err prepFork(ushort newpid,
     /* -- prepare registers */
     rp->sr   = 0; /* everything cleared, USER state */
     rp->pc   = os9_long(theModule->_mexec) + (ulong)theModule; /* entry point */
-    rp->a[3] = (ulong)theModule; /* primary module pointer */
-    rp->d[0] = newpid;           /* assign process ID */
-    rp->d[1] = os9_word(cp->pd._group) << (2 * BpB) |
+    rp->regs[REGS_A + 3] = (ulong)theModule; /* primary module pointer */
+    rp->regs[REGS_D + 0] = newpid;           /* assign process ID */
+    rp->regs[REGS_D + 1] = os9_word(cp->pd._group) << (2 * BpB) |
                os9_word(cp->pd._user); /* inherited group/user */
-    rp->d[2] = prior;                  /* priority */
-    rp->d[3] = numpaths;               /* number of paths inherited */
+    rp->regs[REGS_D + 2] = prior;                  /* priority */
+    rp->regs[REGS_D + 3] = numpaths;               /* number of paths inherited */
 
     cp->memstart = (ulong)mp;          /* save static storage start address */
-    rp->a[6]     = (ulong)mp + 0x8000; /* biased A6 */
+    rp->regs[REGS_A + 6]     = (ulong)mp + 0x8000; /* biased A6 */
     rp->membase  = mp;                 /* unbiased static storage pointer */
 
     /* set up parameter area regs */
-    rp->a[5] = cp->my_args;
-    rp->a[7] = rp->a[5];                          /* top of stack */
-    rp->a[1] = cp->memtop = (ulong)(mp + memsiz); /* memory end */
-    rp->d[5]              = paramsiz;             /* parameter size */
-    rp->d[6]              = memsiz; /* total initial memory allocation */
+    rp->regs[REGS_A + 5] = cp->my_args;
+    rp->regs[REGS_A + 7] = rp->regs[REGS_A + 5];                          /* top of stack */
+    rp->regs[REGS_A + 1] = cp->memtop = (ulong)(mp + memsiz); /* memory end */
+    rp->regs[REGS_D + 5]              = paramsiz;             /* parameter size */
+    rp->regs[REGS_D + 6]              = memsiz; /* total initial memory allocation */
 
     /* prepare sigdat content */
     a  = (ulong *)&cp->sigdat[0x12];

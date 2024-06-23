@@ -437,7 +437,7 @@ void debug_procdump(process_typ *cp, int cpid)
                 upo_printf("                  ");
 
             for (j = 0; j < 4; j++)
-                upo_printf("%08X ", rp->d[i * 4 + j]);
+                upo_printf("%08X ", rp->regs[REGS_D + i * 4 + j]);
 
             upo_printf("\n");
         }
@@ -449,7 +449,7 @@ void debug_procdump(process_typ *cp, int cpid)
                 upo_printf("                  ");
 
             for (j = 0; j < 4; j++)
-                upo_printf("%08X ", rp->a[i * 4 + j]);
+                upo_printf("%08X ", rp->regs[REGS_A + i * 4 + j]);
 
             upo_printf("\n");
         }
@@ -576,11 +576,11 @@ void dumpregs(ushort pid)
 
     uphe_printf(" Dn=");
     for (k = 0; k < 8; k++)
-        upe_printf("%08X ", rp->d[k]);
+        upe_printf("%08X ", rp->regs[REGS_D + k]);
     upe_printf("\n");
     uphe_printf(" An=");
     for (k = 0; k < 8; k++)
-        upe_printf("%08X ", rp->a[k]);
+        upe_printf("%08X ", rp->regs[REGS_A + k]);
     upe_printf("\n");
     uphe_printf(" PC=%08X SR=%04X\n", rp->pc, rp->sr);
 
@@ -872,21 +872,21 @@ void show_maskedregs(regs_type *rp, ulong regmask)
     ushort k;
 
     if (regmask & SEVENT_CALL) {
-        upe_printf("%s ", get_ev_name(loword(rp->d[1])));
+        upe_printf("%s ", get_ev_name(loword(rp->regs[REGS_D + 1])));
     }
     if (regmask & SFUNC_STATCALL) {
-        upe_printf("%s ", get_stat_name(loword(rp->d[1])));
+        upe_printf("%s ", get_stat_name(loword(rp->regs[REGS_D + 1])));
     }
 
     regmask &= REGMASK_REGBITS;
     for (k = 0; k < 8; k++) {
         /* show data regs */
-        showonereg(rp->d[k], false, k, regmask & 0x03);
+        showonereg(rp->regs[REGS_D + k], false, k, regmask & 0x03);
         regmask >>= 2;
     }
     for (k = 0; k < 7; k++) {
         /* show address regs */
-        showonereg(rp->a[k], true, k, regmask & 0x03);
+        showonereg(rp->regs[REGS_A + k], true, k, regmask & 0x03);
         regmask >>= 2;
     }
 }

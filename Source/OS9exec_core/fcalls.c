@@ -220,7 +220,7 @@ os9err OS9_F_Exit(regs_type *rp, ushort cpid)
 {
     // -- save exit code
     process_typ   *cp      = &procs[cpid];
-    unsigned short exiterr = loword(rp->d[1]);
+    unsigned short exiterr = loword(rp->regs[REGS_D + 1]);
 
     // -- kill the process
     arbitrate   = true;
@@ -257,13 +257,13 @@ os9err OS9_F_Load(regs_type *rp, ushort cpid)
     mod_exec *theModule; /* OS-9 module header */
     char      mpath[OS9PATHLEN], *p;
     ushort    mid;
-    ushort    mode   = loword(rp->d[0]); /* attributes */
+    ushort    mode   = loword(rp->regs[REGS_D + 0]); /* attributes */
     Boolean   exedir = IsExec(mode) || (mode == 0) || (mode == 0x80);
     /* mode=0 is a strange default, */
     /* but seems to be correct as default for exedir in 'load' */
     /* Attention !!! Colored memory (bit 7) is %%% ignored. */
 
-    p = nullterm(mpath, (char *)rp->a[0], OS9PATHLEN);
+    p = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$Load: requested %sload of '%s', mode=$%04X\n",
@@ -277,12 +277,12 @@ os9err OS9_F_Load(regs_type *rp, ushort cpid)
         return err;
 
     theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->d[0]) = os9_word(theModule->_mh._mtylan);
-    retword(rp->d[1]) = os9_word(theModule->_mh._mattrev);
+    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
+    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
 
-    rp->a[0] = (ulong)p;
-    rp->a[2] = (ulong)theModule;
-    rp->a[1] = (ulong)theModule + os9_long(theModule->_mexec);
+    rp->regs[REGS_A + 0] = (ulong)p;
+    rp->regs[REGS_A + 2] = (ulong)theModule;
+    rp->regs[REGS_A + 1] = (ulong)theModule + os9_long(theModule->_mexec);
     return 0;
 }
 
@@ -306,9 +306,9 @@ os9err OS9_F_Link(regs_type *rp, ushort cpid)
     mod_exec *theModule; /* OS-9 module header */
     char      mname[OS9NAMELEN], *p;
     ushort    mid;
-    ushort    tylan = loword(rp->d[0]); /* wanted attrs */
+    ushort    tylan = loword(rp->regs[REGS_D + 0]); /* wanted attrs */
 
-    p = nullterm(mname, (char *)rp->a[0], OS9NAMELEN);
+    p = nullterm(mname, (char *)rp->regs[REGS_A + 0], OS9NAMELEN);
     debugprintf(
         dbgModules,
         dbgNorm,
@@ -320,19 +320,19 @@ os9err OS9_F_Link(regs_type *rp, ushort cpid)
         return err; /* link-style errors */
 
     theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->d[0]) = os9_word(theModule->_mh._mtylan);
+    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
     debugprintf(dbgModules,
                 dbgNorm,
-                ("# F$Link: actual type/lang=$%04X\n", loword(rp->d[0])));
+                ("# F$Link: actual type/lang=$%04X\n", loword(rp->regs[REGS_D + 0])));
 
     /* module does not match request, forget it */
     if (tylan != 0 && tylan != os9_word(theModule->_mh._mtylan))
         return os9error(E_MNF); /* no such module found */
 
-    retword(rp->d[1]) = os9_word(theModule->_mh._mattrev);
-    rp->a[0]          = (ulong)p;
-    rp->a[2]          = (ulong)theModule;
-    rp->a[1]          = (ulong)theModule + os9_long(theModule->_mexec);
+    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
+    rp->regs[REGS_A + 0]          = (ulong)p;
+    rp->regs[REGS_A + 2]          = (ulong)theModule;
+    rp->regs[REGS_A + 1]          = (ulong)theModule + os9_long(theModule->_mexec);
 
     return 0;
 }
@@ -346,11 +346,11 @@ os9err OS9_F_UnLink(regs_type *rp, _pid_)
  *             none possible
  */
 {
-    ushort mid = get_mid((void *)rp->a[2]);
+    ushort mid = get_mid((void *)rp->regs[REGS_A + 2]);
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$Unlink: Module at $%08lX has mid=%d%s\n",
-                 rp->a[2],
+                 rp->regs[REGS_A + 2],
                  mid,
                  mid < MAXMODULES ? "" : "=MAXMODULES"));
 
@@ -363,7 +363,7 @@ os9err OS9_F_UnLink(regs_type *rp, _pid_)
         dbgNorm,
         ("# F$Unlink: module found at mdir entry #%d at $%08lX, newlink=%d\n",
          mid,
-         rp->a[2],
+         rp->regs[REGS_A + 2],
          os9modules[mid].linkcount));
     return 0; /* returns ok, as long as module found */
 }
@@ -380,12 +380,12 @@ os9err OS9_F_UnLoad(regs_type *rp, _pid_)
 {
     char mname[OS9NAMELEN];
 
-    char *p   = nullterm(mname, (char *)rp->a[0], OS9NAMELEN);
+    char *p   = nullterm(mname, (char *)rp->regs[REGS_A + 0], OS9NAMELEN);
     int   mid = find_mod_id(mname);
     if (mid >= MAXMODULES)
         return os9error(E_MNF); /* module not found */
 
-    rp->a[0] = (ulong)p;
+    rp->regs[REGS_A + 0] = (ulong)p;
     unlink_module(mid);
     debugprintf(dbgModules,
                 dbgNorm,
@@ -408,7 +408,7 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
 {
 #define MxV 0xFFFFFFF0
     void *bp;
-    ulong memsz = rp->d[0];
+    ulong memsz = rp->regs[REGS_D + 0];
 
     if (memsz == 0xFFFFFFFF) { /* get max mem */
         memsz = 0x00800000;    /* %%% a large portion */
@@ -420,8 +420,8 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
     /* %%% E_MEMFUL is never returned, even if only pointer list is full */
     if (bp == NULL)
         return os9error(E_NORAM); /* not enough RAM */
-    rp->d[0] = memsz;             /* return actual block size */
-    rp->a[2] = (ulong)bp;         /* return block pointer */
+    rp->regs[REGS_D + 0] = memsz;             /* return actual block size */
+    rp->regs[REGS_A + 2] = (ulong)bp;         /* return block pointer */
     return 0;
 }
 
@@ -439,8 +439,8 @@ os9err OS9_F_SRtMem(regs_type *rp, ushort cpid)
     void *bp;
     ulong memsz;
 
-    memsz = rp->d[0];
-    bp    = (void *)rp->a[2];
+    memsz = rp->regs[REGS_D + 0];
+    bp    = (void *)rp->regs[REGS_A + 2];
     memsz = (memsz + 15) & 0xFFFFFFF0; /* round up to next 16-byte boundary */
     return os9free(cpid, bp, memsz);
 }
@@ -456,7 +456,7 @@ os9err OS9_F_STrap(regs_type *rp, ushort cpid)
  * will be ignored, as well as all FPU exceptions.
  */
 {
-    ushort      *itab = (ushort *)rp->a[1];
+    ushort      *itab = (ushort *)rp->regs[REGS_A + 1];
     ushort       vect;
     process_typ *cp = &procs[cpid];
 
@@ -477,7 +477,7 @@ os9err OS9_F_STrap(regs_type *rp, ushort cpid)
                 cp->ErrorTraps[vect - FIRSTEXCEPTION].handleraddr =
                     *(itab + 1) + (ulong)itab; /* install routine pointer */
                 cp->ErrorTraps[vect - FIRSTEXCEPTION].handlerstack =
-                    rp->a[0]; /* stack */
+                    rp->regs[REGS_A + 0]; /* stack */
                 debugprintf(
                     dbgTrapHandler,
                     dbgNorm,
@@ -511,7 +511,7 @@ os9err OS9_F_Time(regs_type *rp, _pid_)
  *               - other restrictions that apply to Mac ticks (lost ticks, etc.)
  */
 {
-    ushort  mode        = loword(rp->d[0]);
+    ushort  mode        = loword(rp->regs[REGS_D + 0]);
     Boolean asGregorian = (mode & 0x1) == 0;
     Boolean withTicks   = (mode & 0x2) != 0;
     ulong   aTime, aDate;
@@ -519,14 +519,14 @@ os9err OS9_F_Time(regs_type *rp, _pid_)
 
     Get_Time(&aTime, &aDate, &dayOfWk, &currentTick, asGregorian, withTicks);
 
-    rp->d[0]          = aTime;
-    rp->d[1]          = aDate;
-    retword(rp->d[2]) = dayOfWk; /* day of week, 0=sunday, 1=monday... */
+    rp->regs[REGS_D + 0]          = aTime;
+    rp->regs[REGS_D + 1]          = aDate;
+    retword(rp->regs[REGS_D + 2]) = dayOfWk; /* day of week, 0=sunday, 1=monday... */
 
     if (withTicks) {
         /* we need some ticks, too */
-        hiword(rp->d[3]) = TICKS_PER_SEC;
-        loword(rp->d[3]) = currentTick;
+        hiword(rp->regs[REGS_D + 3]) = TICKS_PER_SEC;
+        loword(rp->regs[REGS_D + 3]) = currentTick;
     }
 
     return 0;
@@ -541,8 +541,8 @@ os9err OS9_F_STime(regs_type *rp, ushort cpid)
  *          d1.w = error
  */
 {
-    ulong secs = rp->d[0];                      // get time
-    long  days = rp->d[1] - j_date(1, 1, 1904); // get date
+    ulong secs = rp->regs[REGS_D + 0];                      // get time
+    long  days = rp->regs[REGS_D + 1] - j_date(1, 1, 1904); // get date
     OS9_F_Julian(rp, cpid);
 
     if (days < 0) {
@@ -558,8 +558,8 @@ os9err OS9_F_STime(regs_type *rp, ushort cpid)
 os9err OS9_F_Event(regs_type *rp, ushort cpid)
 {
     os9err       err    = 0;
-    char        *p      = (char *)rp->a[0];
-    short        evCode = loword(rp->d[1]);
+    char        *p      = (char *)rp->regs[REGS_A + 0];
+    short        evCode = loword(rp->regs[REGS_D + 1]);
     process_typ *cp     = &procs[cpid];
 
     int   evValue;
@@ -571,36 +571,36 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
     case Ev_Link:
         err = evLink(p, &evId);
         if (!err)
-            rp->d[0] = evId;
+            rp->regs[REGS_D + 0] = evId;
         break;
 
     case Ev_UnLnk:
-        evId = rp->d[0];
+        evId = rp->regs[REGS_D + 0];
         err  = evUnLnk(evId);
         break;
 
     case Ev_Creat:
-        evValue = rp->d[0];
-        wIncr   = loword(rp->d[2]);
-        sIncr   = loword(rp->d[3]);
+        evValue = rp->regs[REGS_D + 0];
+        wIncr   = loword(rp->regs[REGS_D + 2]);
+        sIncr   = loword(rp->regs[REGS_D + 3]);
 
         err = evCreat(p, evValue, wIncr, sIncr, &evId);
         if (err)
             break;
 
-        rp->a[0] = (ulong)(p + strlen(p));
-        rp->d[0] = evId;
+        rp->regs[REGS_A + 0] = (ulong)(p + strlen(p));
+        rp->regs[REGS_D + 0] = evId;
         break;
 
     case Ev_Delet:
         err      = evDelet(p);
-        rp->a[0] = (ulong)(p + strlen(p));
+        rp->regs[REGS_A + 0] = (ulong)(p + strlen(p));
         break;
 
     case Ev_Wait:
-        evId = rp->d[0];
-        minV = rp->d[2];
-        maxV = rp->d[3];
+        evId = rp->regs[REGS_D + 0];
+        minV = rp->regs[REGS_D + 2];
+        maxV = rp->regs[REGS_D + 3];
 
         if (cp->state == pWaitRead)
             set_os9_state(cpid, cp->saved_state, "OS9_F_Event");
@@ -611,11 +611,11 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
             set_os9_state(cpid, pWaitRead, "OS9_F_Event");
         }
 
-        rp->d[1] = evValue;
+        rp->regs[REGS_D + 1] = evValue;
         break;
 
     case Ev_Signl:
-        evId = rp->d[0];
+        evId = rp->regs[REGS_D + 0];
         err  = evSignl(evId);
         break;
 
@@ -639,11 +639,11 @@ os9err OS9_F_Julian(regs_type *rp, _pid_)
     byte   tc[4];
     ulong *tcp = (ulong *)&tc[0];
 
-    *tcp     = os9_long(rp->d[0]);                /* get time */
-    rp->d[0] = tc[1] * 3600 + tc[2] * 60 + tc[3]; /* seconds since midnight */
+    *tcp     = os9_long(rp->regs[REGS_D + 0]);                /* get time */
+    rp->regs[REGS_D + 0] = tc[1] * 3600 + tc[2] * 60 + tc[3]; /* seconds since midnight */
 
-    *tcp     = os9_long(rp->d[1]); /* get date */
-    rp->d[1] = j_date(tc[3], tc[2], hiword(rp->d[1]));
+    *tcp     = os9_long(rp->regs[REGS_D + 1]); /* get date */
+    rp->regs[REGS_D + 1] = j_date(tc[3], tc[2], hiword(rp->regs[REGS_D + 1]));
 
     return 0;
 }
@@ -663,17 +663,17 @@ os9err OS9_F_Gregor(regs_type *rp, _pid_)
     int    d, m, y;
 
     tc[0]    = 0;
-    tc[1]    = rp->d[0] / 3600;      /* hours   */
-    tc[2]    = (rp->d[0] / 60) % 60; /* minutes */
-    tc[3]    = rp->d[0] % 60;        /* seconds */
-    rp->d[0] = os9_long(*tcp);
+    tc[1]    = rp->regs[REGS_D + 0] / 3600;      /* hours   */
+    tc[2]    = (rp->regs[REGS_D + 0] / 60) % 60; /* minutes */
+    tc[3]    = rp->regs[REGS_D + 0] % 60;        /* seconds */
+    rp->regs[REGS_D + 0] = os9_long(*tcp);
 
-    g_date(rp->d[1], &d, &m, &y); /* convert the date */
+    g_date(rp->regs[REGS_D + 1], &d, &m, &y); /* convert the date */
     tc[0]    = y / 256;
     tc[1]    = y % 256;
     tc[2]    = m;
     tc[3]    = d;
-    rp->d[1] = os9_long(*tcp);
+    rp->regs[REGS_D + 1] = os9_long(*tcp);
 
     return 0;
 }
@@ -690,9 +690,9 @@ os9err OS9_F_ID(regs_type *rp, ushort cpid)
 {
     procid *pd = &procs[cpid].pd;
 
-    rp->d[0] = cpid; /* return current process' ID */
-    rp->d[1] = os9_word(pd->_group) << BpB | os9_word(pd->_user);
-    rp->d[2] = os9_word(pd->_prior);
+    rp->regs[REGS_D + 0] = cpid; /* return current process' ID */
+    rp->regs[REGS_D + 1] = os9_word(pd->_group) << BpB | os9_word(pd->_user);
+    rp->regs[REGS_D + 2] = os9_word(pd->_prior);
     return 0;
 }
 
@@ -706,8 +706,8 @@ os9err OS9_F_SUser(regs_type *rp, ushort cpid)
 {
     procid *pd = &procs[cpid].pd;
 
-    pd->_group = os9_word(hiword(rp->d[1]));
-    pd->_user  = os9_word(loword(rp->d[1]));
+    pd->_group = os9_word(hiword(rp->regs[REGS_D + 1]));
+    pd->_user  = os9_word(loword(rp->regs[REGS_D + 1]));
     return 0;
 }
 
@@ -727,9 +727,9 @@ os9err OS9_F_Send(regs_type *rp, ushort cpid)
                 dbgNorm,
                 ("# F$Send: pid=%d is sending signal %d to pid=%d\n",
                  cpid,
-                 loword(rp->d[1]),
-                 loword(rp->d[0])));
-    return send_signal(loword(rp->d[0]), loword(rp->d[1]));
+                 loword(rp->regs[REGS_D + 1]),
+                 loword(rp->regs[REGS_D + 0])));
+    return send_signal(loword(rp->regs[REGS_D + 0]), loword(rp->regs[REGS_D + 1]));
 }
 
 os9err OS9_F_Icpt(regs_type *rp, ushort cpid)
@@ -746,8 +746,8 @@ os9err OS9_F_Icpt(regs_type *rp, ushort cpid)
     process_typ *cp = &procs[cpid];
 
     cp->pd._sigvec =
-        (byte *)os9_long(rp->a[0]); /* set address of intercept routine */
-    cp->icpta6 = rp->a[6];          /* set data pointer for intercept routine */
+        (byte *)os9_long(rp->regs[REGS_A + 0]); /* set address of intercept routine */
+    cp->icpta6 = rp->regs[REGS_A + 6];          /* set data pointer for intercept routine */
     debugprintf(dbgProcess,
                 dbgNorm,
                 ("# F$Icpt: set intercept of pid=%d to pc=$%08lx, a6=$%08lx\n",
@@ -809,7 +809,7 @@ os9err OS9_F_RTE(_rp_, ushort cpid)
             /* but the process will be woken up after intercept !!! */
             pds = os9_word(cp->pd._signal);
             if (pds > 0 && pds <= 32) {
-                cp->os9regs.d[1] = pds;
+                cp->os9regs.regs[REGS_D + 1] = pds;
                 cp->os9regs.sr |= CARRY;
                 set_os9_state(cpid,
                               pActive,
@@ -821,15 +821,15 @@ os9err OS9_F_RTE(_rp_, ushort cpid)
 
         cp->pd._signal = 0; /* intercept done */
         if (cp->os9regs.sr & CARRY)
-            err = cp->os9regs.d[1];
+            err = cp->os9regs.regs[REGS_D + 1];
 
         /* in case of F_Sleep, return remaining ticks */
         if (cp->func == F_Sleep) {
-            cp->os9regs.d[0] = 0;
+            cp->os9regs.regs[REGS_D + 0] = 0;
             if (cp->wakeUpTick < MAX_SLEEP) {
                 syt = GetSystemTick();
                 if (cp->wakeUpTick > syt)
-                    cp->os9regs.d[0] = cp->wakeUpTick - syt;
+                    cp->os9regs.regs[REGS_D + 0] = cp->wakeUpTick - syt;
             }
         }
     }
@@ -852,8 +852,8 @@ os9err OS9_F_GPrDBT(regs_type *rp, _pid_)
     ulong *ptr, *lim;
     short *s, *sl;
 
-    ptr = (ulong *)rp->a[0];
-    lim = (ulong *)(rp->d[1] + (long)ptr);
+    ptr = (ulong *)rp->regs[REGS_A + 0];
+    lim = (ulong *)(rp->regs[REGS_D + 1] + (long)ptr);
 
     s  = (short *)ptr;
     sl = (short *)lim;
@@ -879,7 +879,7 @@ os9err OS9_F_GPrDBT(regs_type *rp, _pid_)
         ptr++;
     }
 
-    rp->d[1] = (long)ptr - rp->a[0];
+    rp->regs[REGS_D + 1] = (long)ptr - rp->regs[REGS_A + 0];
     return 0;
 }
 
@@ -898,7 +898,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     procid pd; // this is a local construction buffer for the Process descriptor
     int    k;
     ulong  memsz;
-    ushort id           = (ushort)loword(rp->d[0]);
+    ushort id           = (ushort)loword(rp->regs[REGS_D + 0]);
     process_typ     *cp = &procs[id];
     pmem_typ        *cm = &pmem[id];
     traphandler_typ *tp;
@@ -909,7 +909,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
 
     memcpy(&pd, &cp->pd, sizeof(procid));
 
-    pd._usp = (byte *)os9_long(rp->a[7]);
+    pd._usp = (byte *)os9_long(rp->regs[REGS_A + 7]);
 
     // <_state> and <queueid> will be assigned directly
     if (id == cpid)
@@ -951,7 +951,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     }
     pd._blksiz[0] = os9_long(memsz);
 
-    memcpy((byte *)rp->a[0], &pd, loword(rp->d[1]));
+    memcpy((byte *)rp->regs[REGS_A + 0], &pd, loword(rp->regs[REGS_D + 1]));
     // upe_printf( "pmodul2=%08X\n", os9_long( (ulong)pd._pmodul ) );
     return 0;
 } // OS9_F_GPrDsc
@@ -976,18 +976,18 @@ os9err OS9_F_GBlkMp(regs_type *rp, _pid_)
     //  Gestalt( gestaltPhysicalRAMSize, &totalMem ); /* not all defs visible
     //  for MPW ... */ Gestalt( FOUR_CHAR_CODE('ram '), &totalMem ); #endif
 
-    rp->d[0] = OS9MINSYSALLOC;
-    rp->d[1] = 0;
+    rp->regs[REGS_D + 0] = OS9MINSYSALLOC;
+    rp->regs[REGS_D + 1] = 0;
 
     /* MaxBlock() will not be reduced on Mac OS X */
     /* Take the larger one, to avoid > Mem 100%   */
     memsz = max_mem();
     if (memsz > totalMem)
         totalMem = memsz;
-    rp->d[2] = totalMem;
-    rp->d[3] = memsz;
+    rp->regs[REGS_D + 2] = totalMem;
+    rp->regs[REGS_D + 3] = memsz;
 
-    b  = (ulong **)rp->a[0];
+    b  = (ulong **)rp->regs[REGS_A + 0];
     *b = NULL; /* no segments available */
     return 0;
 }
@@ -1029,8 +1029,8 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 #define D_UserOpt 0x1010  /* User defined option -u                   */
 #define D_IPAddr 0x1014   /* Open MGR screen at IP address: option -g */
 
-    ulong        offs = loword(rp->d[0]);
-    int          size = (int)rp->d[1];
+    ulong        offs = loword(rp->regs[REGS_D + 0]);
+    int          size = (int)rp->regs[REGS_D + 1];
     ulong        b    = (ulong)&mdirField;
     process_typ *cp   = &procs[cpid];
 
@@ -1209,10 +1209,10 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
 
     switch (size) {
     case -1:
-        rp->d[2] = v << 24;
+        rp->regs[REGS_D + 2] = v << 24;
         break; /* two different ways to read them */
     case -2:
-        rp->d[2] = v << 16;
+        rp->regs[REGS_D + 2] = v << 16;
         break;
     case -4:
     case 1:
@@ -1221,7 +1221,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     case 0x80000001:
     case 0x80000002:
     case 0x80000004:
-        rp->d[2] = v;
+        rp->regs[REGS_D + 2] = v;
         break;
     }
 
@@ -1236,8 +1236,8 @@ os9err OS9_F_GModDr(regs_type *rp, _pid_)
  *
  */
 {
-    byte *b   = (byte *)rp->a[0];
-    ulong cnt = rp->d[1];
+    byte *b   = (byte *)rp->regs[REGS_A + 0];
+    ulong cnt = rp->regs[REGS_D + 1];
     ulong mx  = sizeof(mdirField);
     if (cnt > mx)
         cnt = mx;
@@ -1247,7 +1247,7 @@ os9err OS9_F_GModDr(regs_type *rp, _pid_)
 
     debugprintf(dbgProcess, dbgNorm, ("# F$GModDr: get module directory\n"));
 
-    rp->d[1] = cnt; /* return parameter */
+    rp->regs[REGS_D + 1] = cnt; /* return parameter */
     return 0;
 }
 
@@ -1261,9 +1261,9 @@ os9err OS9_F_CpyMem(regs_type *rp, _pid_)
  *
  */
 {
-    byte *src = (byte *)rp->a[0];
-    byte *dst = (byte *)rp->a[1];
-    ulong cnt = (ulong)rp->d[1];
+    byte *src = (byte *)rp->regs[REGS_A + 0];
+    byte *dst = (byte *)rp->regs[REGS_A + 1];
+    ulong cnt = (ulong)rp->regs[REGS_D + 1];
 
     MoveBlk(dst, src, cnt);
     debugprintf(
@@ -1292,39 +1292,39 @@ os9err OS9_F_TLink(regs_type *rp, ushort cpid)
     ulong           *sp;
     process_typ     *cp = &procs[cpid];
 
-    trapidx = rp->d[0] - 1;
+    trapidx = rp->regs[REGS_D + 0] - 1;
     if (trapidx >= NUMTRAPHANDLERS)
         return os9error(E_ITRAP); /* invalid trap code */
 
-    if ((rp->a[0] != 0) && (*((char *)rp->a[0]) != 0)) {
+    if ((rp->regs[REGS_A + 0] != 0) && (*((char *)rp->regs[REGS_A + 0]) != 0)) {
         /* install trap handler */
-        p = nullterm(mpath, (char *)rp->a[0], OS9PATHLEN);
+        p = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
 
-        err = install_traphandler(cpid, trapidx, mpath, rp->d[1], &tp);
+        err = install_traphandler(cpid, trapidx, mpath, rp->regs[REGS_D + 1], &tp);
         if (!err) {
             trapmodP = tp->trapmodule;
 
             /* --- D0.W is still the trap no, D1.L is the additional memory */
-            rp->a[0] = (ulong)p;
-            rp->a[2] = (ulong)trapmodP; /* pointer to the trap module */
-            rp->a[1] = (ulong)trapmodP + os9_long(trapmodP->progmod._mexec);
+            rp->regs[REGS_A + 0] = (ulong)p;
+            rp->regs[REGS_A + 2] = (ulong)trapmodP; /* pointer to the trap module */
+            rp->regs[REGS_A + 1] = (ulong)trapmodP + os9_long(trapmodP->progmod._mexec);
 
             /* --- now modify stack and PC to return through trapinit routine to
              * program */
-            sp = (ulong *)rp->a[7]; // get current stack pointer as *ulong
+            sp = (ulong *)rp->regs[REGS_A + 7]; // get current stack pointer as *ulong
             if (!cp->isIntUtil) {   // workaround for built-in utilities: not
                                     // really used
                 *(--sp) = os9_long(
                     rp->pc);  // save PC pointing to instruction after F$TLink
                 *(--sp)  = 0; // save two dummy null words
-                *(--sp)  = os9_long(rp->a[6]); // save "caller's A6"
-                rp->a[7] = (ulong)sp;          // update stack pointer
+                *(--sp)  = os9_long(rp->regs[REGS_A + 6]); // save "caller's A6"
+                rp->regs[REGS_A + 7] = (ulong)sp;          // update stack pointer
             }
 
             /* --- modify registers to continue execution in traphandler's init
              * routine */
             rp->pc = (ulong)trapmodP + os9_long(trapmodP->_mtrapinit);
-            rp->a[6] =
+            rp->regs[REGS_A + 6] =
                 tp->trapmem +
                 0x8000; /* set pointer to traphandler's data with offset */
             debugprintf(dbgTrapHandler,
@@ -1342,7 +1342,7 @@ os9err OS9_F_TLink(regs_type *rp, ushort cpid)
         debugprintf(dbgTrapHandler,
                     dbgNorm,
                     ("# F$TLink: traphandler at $%08lX for pid=%d released\n",
-                     rp->a[2],
+                     rp->regs[REGS_A + 2],
                      cpid));
     }
     return err;
@@ -1381,14 +1381,14 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     void  *pp;
     short  access, tylan, attrev;
 
-    size = rp->d[0];
-    p    = nullterm(mpath, (char *)rp->a[0], OS9PATHLEN);
+    size = rp->regs[REGS_D + 0];
+    p    = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$DatMod: for '%s', size=%d, mode=$%04X\n",
                  mpath,
                  size,
-                 loword(rp->d[3])));
+                 loword(rp->regs[REGS_D + 3])));
 
     /* Is there already a module with the same name ? */
     if ((mid = find_mod_id(mpath)) < MAXMODULES)
@@ -1427,9 +1427,9 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     os9modules[mid].isBuiltIn = false;
     //  #endif
 
-    access = loword(rp->d[2]);
+    access = loword(rp->regs[REGS_D + 2]);
     tylan  = 0x0400; /*this is the data module type */
-    attrev = loword(rp->d[1]);
+    attrev = loword(rp->regs[REGS_D + 1]);
 
     FillTemplate(theModule, access, tylan, attrev); /* fill module body */
     xpos = (ulong)&theModule->_mexcpt;
@@ -1454,12 +1454,12 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     os9modules[mid].linkcount = 1; /* module is created and linked */
 
     theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->d[0]) = os9_word(theModule->_mh._mtylan);
-    retword(rp->d[1]) = os9_word(theModule->_mh._mattrev);
+    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
+    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
 
-    rp->a[0] = (ulong)p;
-    rp->a[2] = (ulong)theModule;
-    rp->a[1] = (ulong)theModule + os9_long(theModule->_mexec);
+    rp->regs[REGS_A + 0] = (ulong)p;
+    rp->regs[REGS_A + 2] = (ulong)theModule;
+    rp->regs[REGS_A + 1] = (ulong)theModule + os9_long(theModule->_mexec);
 
     return 0;
 }
@@ -1486,13 +1486,13 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     ushort       newpid, newmid;
     long         n;
     os9err       err;
-    ushort       numpaths = loword(rp->d[3]);
+    ushort       numpaths = loword(rp->regs[REGS_D + 3]);
     ushort       grp, usr, prior;
     process_typ *cp = &procs[cpid];
     process_typ *np;
 
     /* get module name */
-    rp->a[0] = (ulong)nullterm(mpath, (char *)rp->a[0], OS9PATHLEN);
+    rp->regs[REGS_A + 0] = (ulong)nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
 
     /* now fork */
     if (dummyfork) {
@@ -1505,8 +1505,8 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         printf("%s ", mpath); /* show program name */
 
         /* --- scan and display parameters */
-        p = (char *)rp->a[1];
-        n = rp->d[2];
+        p = (char *)rp->regs[REGS_A + 1];
+        n = rp->regs[REGS_D + 2];
 
         while (n-- > 0) {
             if (*p < ' ')
@@ -1520,7 +1520,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         fflush(stdout);
 
         /* --- fake return values */
-        retword(rp->d[0]) = cpid + 1; /* next process ID */
+        retword(rp->regs[REGS_D + 0]) = cpid + 1; /* next process ID */
         return 0;
     }
 
@@ -1529,7 +1529,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     grp = os9_word(cp->pd._group); /* inherit grp.usr from parent's process */
     usr = os9_word(cp->pd._user);
 
-    prior = loword(rp->d[4]);
+    prior = loword(rp->regs[REGS_D + 4]);
     if (prior == 0)
         prior = os9_word(cp->pd._prior);
 
@@ -1537,7 +1537,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     err = new_process(cpid, &newpid, numpaths);
     if (err)
         return err;
-    retword(rp->d[0]) =
+    retword(rp->regs[REGS_D + 0]) =
         newpid;          // return forked process' ID, assign early enough
     np = &procs[newpid]; // is valid, even if error
 
@@ -1548,9 +1548,9 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         err = prepFork(newpid,
                        mpath,
                        newmid,
-                       (byte *)rp->a[1],
-                       rp->d[2],
-                       rp->d[1],
+                       (byte *)rp->regs[REGS_A + 1],
+                       rp->regs[REGS_D + 2],
+                       rp->regs[REGS_D + 1],
                        numpaths,
                        grp,
                        usr,
@@ -1576,7 +1576,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
                           "OS9_F_Fork"); /* make this process active */
         }
 
-        retword(rp->d[0]) =
+        retword(rp->regs[REGS_D + 0]) =
             newpid; // return forked process' ID, in case it has been changed
         arbitrate = true; /* really needed ! */
         return 0;
@@ -1596,7 +1596,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     /*
               err= link_load ( cpid,mpath,&newmid );
     if (!err) err= prepFork( newpid,mpath, newmid,
-                             (byte*)rp->a[1],rp->d[2],rp->d[1],
+                             (byte*)rp->regs[REGS_A + 1],rp->regs[REGS_D + 2],rp->regs[REGS_D + 1],
                              numpaths, grp,usr, prior );
 
     np= &procs[ newpid ]; // is valid, even if error
@@ -1659,17 +1659,17 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     err = 0;
 
     /* get module name */
-    rp->a[0] = (ulong)nullterm(mpath, (char *)rp->a[0], OS9PATHLEN);
-    numpaths = loword(rp->d[3]);
+    rp->regs[REGS_A + 0] = (ulong)nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+    numpaths = loword(rp->regs[REGS_D + 3]);
 
-    paramsiz = rp->d[2];
+    paramsiz = rp->regs[REGS_D + 2];
     paramptr = get_mem(paramsiz);
 
     if (paramptr == NULL)
         err = os9error(E_NORAM);
     if (!err) {
         /* save a copy of the parameter area */
-        MoveBlk(paramptr, (char *)rp->a[1], paramsiz);
+        MoveBlk(paramptr, (char *)rp->regs[REGS_A + 1], paramsiz);
 
         /* user paths higher than numpaths must be closed */
         for (k = numpaths; k < MAXUSRPATHS; k++) {
@@ -1695,7 +1695,7 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     usr = os9_word(cp->pd._user);
     sib = os9_word(cp->pd._sid); /* save it */
 
-    prior = loword(rp->d[4]);
+    prior = loword(rp->regs[REGS_D + 4]);
     if (prior == 0)
         prior = os9_word(cp->pd._prior);
 
@@ -1706,8 +1706,8 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
                        mpath,
                        newmid,
                        paramptr,
-                       rp->d[2],
-                       rp->d[1],
+                       rp->regs[REGS_D + 2],
+                       rp->regs[REGS_D + 1],
                        numpaths,
                        grp,
                        usr,
@@ -1752,9 +1752,9 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
 
     if (dummyfork) {
         /* wait for dummy fork */
-        retword(rp->d[0]) =
+        retword(rp->regs[REGS_D + 0]) =
             cpid + 1;          /* previously "forked" child's process ID */
-        retword(rp->d[1]) = 0; /* exit status */
+        retword(rp->regs[REGS_D + 1]) = 0; /* exit status */
         return 0;
     }
 
@@ -1765,8 +1765,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
         if (cp->state == pDead &&
             os9_word(cp->pd._pid) == cpid) { // this is a child
             // child is dead, report that
-            retword(rp->d[0]) = k;           // ID of dead child
-            retword(rp->d[1]) = cp->exiterr; // exit error of child
+            retword(rp->regs[REGS_D + 0]) = k;           // ID of dead child
+            retword(rp->regs[REGS_D + 1]) = cp->exiterr; // exit error of child
             AssignNewChild(cpid, k);
 
             /*
@@ -1809,8 +1809,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
     cp = &procs[cpid];
     if (activeChild < MAXPROCESSES) { /* there is (at least) one child, but it's
                                          not yet dead */
-        retword(rp->d[0]) = 0;        /* no child, should never be used !! */
-        retword(rp->d[1]) = 0;        /* no error */
+        retword(rp->regs[REGS_D + 0]) = 0;        /* no child, should never be used !! */
+        retword(rp->regs[REGS_D + 1]) = 0;        /* no error */
 
         debugprintf(
             dbgProcess,
@@ -1832,8 +1832,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
 
                 cp = &procs[currentpid];
                 if (cp->state == pActive) {
-                    retword(rp->d[0]) = cp->os9regs.d[0];
-                    retword(rp->d[1]) = cp->os9regs.d[1]; // exit error of child
+                    retword(rp->regs[REGS_D + 0]) = cp->os9regs.regs[REGS_D + 0];
+                    retword(rp->regs[REGS_D + 1]) = cp->os9regs.regs[REGS_D + 1]; // exit error of child
                     return 0; // it's done already !!
                 }
 
@@ -1842,8 +1842,8 @@ os9err OS9_F_Wait(regs_type *rp, ushort cpid)
                     if (cp->state == pDead &&
                         os9_word(cp->pd._pid) == cpid) { // this is a child
                         // child is dead, report that
-                        retword(rp->d[0]) = k; // ID of dead child
-                        retword(rp->d[1]) =
+                        retword(rp->regs[REGS_D + 0]) = k; // ID of dead child
+                        retword(rp->regs[REGS_D + 1]) =
                             procs[k].exiterr; // exit error of child
                         debugprintf(dbgProcess,
                                     dbgNorm,
@@ -1880,7 +1880,7 @@ os9err OS9_F_Sleep(regs_type *rp, ushort cpid)
  */
 {
     process_typ *cp        = &procs[cpid];
-    int          sleeptime = rp->d[0];
+    int          sleeptime = rp->regs[REGS_D + 0];
     int          sleep_x   = sleeptime & 0x7fffffff;
     int          ticks;
 
@@ -1931,11 +1931,11 @@ os9err OS9_F_Alarm(regs_type *rp, ushort cpid)
  */
 {
     os9err err;
-    ulong  aId   = rp->d[0];
-    short  aFunc = loword(rp->d[1]);
-    ushort sig   = rp->d[2];
-    ulong  aTime = rp->d[3];
-    ulong  aDate = rp->d[4];
+    ulong  aId   = rp->regs[REGS_D + 0];
+    short  aFunc = loword(rp->regs[REGS_D + 1]);
+    ushort sig   = rp->regs[REGS_D + 2];
+    ulong  aTime = rp->regs[REGS_D + 3];
+    ulong  aDate = rp->regs[REGS_D + 4];
 
     err = Alarm(cpid, &aId, aFunc, sig, aTime, aDate);
     debugprintf(
@@ -1950,14 +1950,14 @@ os9err OS9_F_Alarm(regs_type *rp, ushort cpid)
          err));
 
     if (!err)
-        rp->d[0] = aId; /* get back <aId> */
+        rp->regs[REGS_D + 0] = aId; /* get back <aId> */
     return err;
 }
 
 os9err OS9_F_Sigmask(regs_type *rp, ushort cpid)
 /* F$SigMask */
 {
-    int level = rp->d[1];
+    int level = rp->regs[REGS_D + 1];
     sig_mask(cpid, level);
     return 0;
 }
@@ -1970,15 +1970,15 @@ os9err OS9_F_CRC(regs_type *rp, _pid_)
  * Output:  d1.l=updated CRC accumulator
  */
 {
-    if (rp->a[0] == 0) {
+    if (rp->regs[REGS_A + 0] == 0) {
         /* add single 0 byte to CRC */
-        rp->d[1] = calc_crc((byte *)"\0",
+        rp->regs[REGS_D + 1] = calc_crc((byte *)"\0",
                             1,
-                            rp->d[1]); /* update with one additional 0 byte */
+                            rp->regs[REGS_D + 1]); /* update with one additional 0 byte */
     }
     else {
         /* update CRC over given area */
-        rp->d[1] = calc_crc((byte *)rp->a[0], rp->d[0], rp->d[1]);
+        rp->regs[REGS_D + 1] = calc_crc((byte *)rp->regs[REGS_A + 0], rp->regs[REGS_D + 0], rp->regs[REGS_D + 1]);
     }
 
     return 0;
@@ -1990,7 +1990,7 @@ os9err OS9_F_SetCRC(regs_type *rp, _pid_)
  * Output:  module image with updated CRC
  */
 {
-    mod_exec *m = (mod_exec *)rp->a[0];
+    mod_exec *m = (mod_exec *)rp->regs[REGS_A + 0];
     ulong     modsize;
     ushort    hpar;
 
@@ -2027,10 +2027,10 @@ os9err OS9_F_PrsNam(regs_type *rp, _pid_)
     char  *p;
     ushort n;
 
-    p = (char *)rp->a[0];
+    p = (char *)rp->regs[REGS_A + 0];
     debugprintf(dbgFiles, dbgDeep, ("# F$PrsNam: input string='%s'\n", p));
     if (*p == '/')
-        rp->a[0] = (ulong)(++p); /* assign updated ptr to path element */
+        rp->regs[REGS_A + 0] = (ulong)(++p); /* assign updated ptr to path element */
     n = 0;                       /* pathlist size=0 */
     while (isalnum(*p) || *p == '.' || *p == '_' || *p == '$' || *p == '{' ||
            *p == '}') {
@@ -2042,12 +2042,12 @@ os9err OS9_F_PrsNam(regs_type *rp, _pid_)
     debugprintf(dbgFiles,
                 dbgDeep,
                 ("# F$PrsNam: a0='%s', a1='%s', terminator='%c'\n",
-                 (char *)rp->a[0],
+                 (char *)rp->regs[REGS_A + 0],
                  p,
                  *p));
-    rp->a[1]          = (ulong)p;          /* pointer to terminator */
-    retbyte(rp->d[0]) = (unsigned char)*p; /* terminator */
-    retword(rp->d[1]) = n;                 /* size of path element */
+    rp->regs[REGS_A + 1]          = (ulong)p;          /* pointer to terminator */
+    retbyte(rp->regs[REGS_D + 0]) = (unsigned char)*p; /* terminator */
+    retword(rp->regs[REGS_D + 1]) = n;                 /* size of path element */
     return 0;
 }
 
@@ -2066,9 +2066,9 @@ os9err OS9_F_CmpNam(regs_type *rp, _pid_)
     Boolean match;
 
     /* get pointers */
-    pat    = (char *)rp->a[0];
-    targ   = (char *)rp->a[1];
-    patend = pat + loword(rp->d[1]); /* attention, high word can be <> 0 */
+    pat    = (char *)rp->regs[REGS_A + 0];
+    targ   = (char *)rp->regs[REGS_A + 1];
+    patend = pat + loword(rp->regs[REGS_D + 1]); /* attention, high word can be <> 0 */
     spat   = NULL;
 
     /* start comparison */
@@ -2140,7 +2140,7 @@ os9err OS9_F_PErr(regs_type *rp, _pid_)
     char  *nam, *desc;
     char   msgbuffer[255];
 
-    err = loword(rp->d[1]);
+    err = loword(rp->regs[REGS_D + 1]);
     get_error_strings(err, &nam, &desc);
 
     sprintf(msgbuffer,
@@ -2184,8 +2184,8 @@ os9err OS9_F_SSvc(_rp_, _pid_)
  * Restrictions: system-state system call
  */
 {
-    // ulong sqtab= rp->a[ 1 ]; /* %%% no nothing at the moment: 0x61 hardwired
-    // */ ulong suser= rp->a[ 3 ];
+    // ulong sqtab= rp->regs[REGS_A +  1 ]; /* %%% no nothing at the moment: 0x61 hardwired
+    // */ ulong suser= rp->regs[REGS_A +  3 ];
     return 0;
 }
 
@@ -2210,7 +2210,7 @@ os9err OS9_F_SPrior(regs_type *rp, _pid_)
  * Output:  none
  */
 {
-    return setprior(loword(rp->d[0]), loword(rp->d[1]));
+    return setprior(loword(rp->regs[REGS_D + 0]), loword(rp->regs[REGS_D + 1]));
 }
 
 /* --------------------------------------------------------- */

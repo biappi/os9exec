@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+typedef struct traphandler_typ_s traphandler_typ;
+
 /* register context:
    !!!!!!!! must be STRUCTURALLY EQUAL to regs_type in os9_uae.h */
 /* register context:
@@ -48,29 +50,11 @@ typedef struct {
     uint32_t prefetch;
 
     /* --- link to traphandler entry of TRAP #1 */
-    struct traphandler_typ *ttP;
+    traphandler_typ *ttP;
 
     /* --- base address of process' static storage */
     void *membase; /* used to fool StackSniffer via modified ApplLimit */
 } regs_type;
 
-inline void regs_set_d(regs_type *r, int index, uint32_t value)
-{
-    r->regs[index] = value;
-}
-
-inline void regs_set_a(regs_type *r, int index, uint32_t value)
-{
-    r->regs[index + 8] = value;
-}
-
-inline uint32_t regs_get_d(regs_type *r, int index)
-{
-    return r->regs[index];
-}
-
-inline uint32_t regs_get_a(regs_type *r, int index)
-{
-    return r->regs[index + 8];
-}
-
+#define REGS_D 0
+#define REGS_A 8

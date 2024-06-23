@@ -153,7 +153,7 @@ typedef struct {
 } mod_trap;
 
 /* traphandler description */
-typedef struct {
+typedef struct traphandler_typ_s {
     /* don't move these 2, they are used by low-level code */
     ulong trapentry;
     ulong trapmem;
