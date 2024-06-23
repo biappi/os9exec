@@ -429,7 +429,6 @@ static ushort install_memblock(ushort pid, void *base, ulong size)
         if (m->base == NULL) {
             m->base = base;           // save pointer
             m->size = size;           // save block size
-            LockMemRange(base, size); // keep always paged in !!
             return k;
         }
     }
@@ -519,10 +518,6 @@ static void release_memblock(ushort pid, ushort memblocknum)
          m->size,
          totalMem,
          pid));
-
-#ifndef MACMEM
-    UnlockMemRange(m->base, m->size);
-#endif
 
     release_mem(m->base);
 
@@ -630,7 +625,6 @@ void *get_mem(ulong memsz)
 
                 memtable[k].base = pp;
                 memtable[k].size = memsz;
-                LockMemRange(pp, memsz); /* keep always paged in !! */
 
                 debugprintf(dbgMemory,
                             dbgNorm,

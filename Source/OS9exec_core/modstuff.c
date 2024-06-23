@@ -588,7 +588,6 @@ void release_module(ushort mid, Boolean modOK)
     // %%% simply forget the memory of the resources !!
     //  #ifdef macintosh
     //    if (os9modules[mid].isBuiltIn) {
-    //        UnlockMemRange(mod,(unsigned long)
     //        GetHandleSize(os9modules[mid].modulehandle));
     //        ReleaseResource(os9modules[mid].modulehandle); /* forget the block
     //        */
@@ -597,7 +596,6 @@ void release_module(ushort mid, Boolean modOK)
 
     // NOTE: The handle part is now invisible (bfo) !!!
     //  #ifdef macintosh
-    //    UnlockMemRange(mod,(unsigned long)
     //    GetHandleSize(os9modules[mid].modulehandle)); if
     //    (os9modules[mid].isBuiltIn)                 /* release the resource */
     //        ReleaseResource(os9modules[mid].modulehandle); /* forget the block
@@ -1230,9 +1228,6 @@ static os9err load_module_local(ushort  pid,
                      os9_long(*(ulong *)theModuleP)));
 
         os9modules[mid].linkcount = 1; /* module is loaded and linked */
-
-        /* don't forget to flush the CodeRange !! */
-        Flush68kCodeRange(theModuleP, dsize);
 
         /* make sure that module is ok */
         /* --- check module SYNC parity and CRC */

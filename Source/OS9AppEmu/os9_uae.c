@@ -52,11 +52,6 @@ static Boolean vmenabled;
 static Boolean fullcache;
 static Boolean usesusermode;
 
-/* dummies for UAE */
-void Flush68kCodeRange(_bufferV_, _size_) {}
-void LockMemRange(_bufferV_, _size_) {}
-void UnlockMemRange(_bufferV_, _size_) {}
-
 /* current regs as per last call of llm_os9_go */
 static regs_type *currentrp;
 

@@ -1420,8 +1420,6 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     //
     //    /* now make sure it stays swapped in */
     //    hsize=(ulong) GetHandleSize(theModuleH);
-    //    LockMemRange              (*theModuleH,hsize);
-    //    Flush68kCodeRange         (*theModuleH,hsize);
     //    theModule=    (mod_exec *) *theModuleH;
     //
     //  #else
