@@ -133,7 +133,6 @@ Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
         }
     }
 
-    closedir(d);
 
     if (ok)
         strcpy(filename, dEnt->d_name); /* overwrite it */
@@ -141,6 +140,9 @@ Boolean CaseSens(char *pathname, char *filename, Boolean *reduS)
     debugprintf(dbgFiles,
                 dbgNorm,
                 ("# CaseSens: (out) '%s' %d\n", pathname, ok));
+
+    closedir(d);
+
     return ok;
 }
 
