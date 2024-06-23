@@ -610,11 +610,11 @@ static os9err prepParams(mod_exec *theModule,
                          byte    **pap)
 {
     ulong  paramsiz, argsiz, envsiz;
-    int    os9envc, h;
+    int    os9envc;
     byte  *p, *pp, *hp;
     ulong *alp, *elp;
     char  *modnam;
-    int    k;
+    size_t    h, k;
 
     debugprintf(dbgStartup,
                 dbgDeep,
@@ -988,8 +988,8 @@ GetCurPaths(char *envname, ushort mode, dir_type *drP, Boolean recursive)
 // Test, if upshifted string <str> begins with <cmp>
 static Boolean SameBegin(const char *str, const char *cmp)
 {
-    int sLen = strlen(str);
-    int cLen = strlen(cmp);
+    size_t sLen = strlen(str);
+    size_t cLen = strlen(cmp);
     if (sLen < cLen)
         return false; // too short ?
 
@@ -999,8 +999,8 @@ static Boolean SameBegin(const char *str, const char *cmp)
 // Test, if upshifted string <str> ends with <cmp>
 static Boolean SameEnd(const char *str, const char *cmp)
 {
-    int sLen = strlen(str);
-    int cLen = strlen(cmp);
+    size_t sLen = strlen(str);
+    size_t cLen = strlen(cmp);
     if (sLen < cLen)
         return false; // too short ?
 
@@ -1021,7 +1021,7 @@ static Boolean DbgSuff(const char *str, const char *suff)
 Boolean OtherThere(const char *str, const char *suff)
 {
     char      nm[OS9PATHLEN];
-    int       len = strlen(str) - strlen(suff);
+    size_t       len = strlen(str) - strlen(suff);
     int       i;
     plug_typ *p;
 
