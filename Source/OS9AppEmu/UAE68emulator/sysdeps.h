@@ -1,4 +1,39 @@
- /*
+#pragma once
+
+#include "assert.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/errno.h>
+
+typedef uint8_t  uae_u8;
+typedef uint16_t uae_u16;
+typedef uint32_t uae_u32;
+
+typedef int8_t  uae_s8;
+typedef int16_t uae_s16;
+typedef int32_t uae_s32;
+
+typedef uae_u32 uaecptr;
+
+extern int   in_m68k_go;
+extern void *xmalloc(size_t);
+
+#define REGPARAM
+#define REGPARAM2
+
+#define ASM_SYM_FOR_FUNC(a)
+#define ENUMDECL typedef enum
+#define ENUMNAME(name) name
+
+
+#if 0
+
+/*
   * UAE - The Un*x Amiga Emulator
   *
   * Try to include the right system headers and get other system-specific
@@ -323,3 +358,4 @@ extern void mallocemu_free (void *ptr);
 #define O_BINARY 0
 #endif
 
+#endif
