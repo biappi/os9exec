@@ -64,41 +64,9 @@ typedef char flagtype;
 #endif
 
 
+#include "regs_type.h"
 
-
-/* register context:
-   !!!!!!!! must be STRUCTURALLY EQUAL to regs_type in os9_uae.h */
-extern struct regstruct
-{
-    uae_u32 regs[16];
-    uaecptr  usp,isp,msp;
-    uae_u16 sr;
-    flagtype t1;
-    flagtype t0;
-    flagtype s;
-    flagtype m;
-    flagtype x;
-    flagtype stopped;
-    int intmask;
-
-    uae_u32 pc;
-    uae_u8 *pc_p;
-    uae_u8 *pc_oldp;
-
-    uae_u32 vbr,sfc,dfc;
-
-    double fp[8];
-    uae_u32 fpcr,fpsr,fpiar;
-
-
-    /* Fellow sources say this is 4 longwords. That's impossible. It needs
-     * to be at least a longword. The HRM has some cryptic comment about two
-     * instructions being on the same longword boundary.
-     * The way this is implemented now seems like a good compromise.
-     */
-    uae_u32 prefetch;
-    
-} regs, lastint_regs;
+regs_type regs, lastint_regs;
 
 #define m68k_dreg(r,num) ((r).regs[(num)])
 #define m68k_areg(r,num) (((r).regs + 8)[(num)])

@@ -176,52 +176,7 @@ typedef struct {
 typedef char flagtype;
 #endif
 
-/* register context:
-   !!!!!!!! must be STRUCTURALLY EQUAL to regstruct in newcpu.h */
-typedef struct {
-
-    /* common in UAE and os9exec */
-    ulong d[8]; /* data registers */
-    ulong a[8]; /* address registers */
-
-    /* UAE only */
-    uae_u32 usp, isp, msp;
-
-    /* common */
-    unsigned short sr;    /* status register */
-    unsigned short flags; /* divs OS9exec specific flags */
-
-    /* UAE only */
-    flagtype t1;
-    flagtype t0;
-    flagtype s;
-    flagtype m;
-    flagtype x;
-    flagtype stopped;
-    int      intmask;
-
-    /* common */
-    ulong pc; /* program counter */
-
-    /* UAE only */
-    uae_u8 *pc_p;
-    uae_u8 *pc_oldp;
-    uae_u32 vbr, sfc, dfc;
-
-    /* common */
-    fp_typ fp[8]; /* FPU data registers */
-    ulong  fpcr;
-    ulong  fpsr;
-    ulong  fpiar; /* FPU control registers */
-
-    /* UAE only */
-    uae_u32 prefetch;
-
-    /* --- link to traphandler entry of TRAP #1 */
-    traphandler_typ *ttP;
-    /* --- base address of process' static storage */
-    void *membase; /* used to fool StackSniffer via modified ApplLimit */
-} regs_type;
+#include "regs_type.h"
 
 /* high level interface */
 /* -------------------- */

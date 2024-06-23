@@ -55,6 +55,8 @@ add_executable(os9exec
     Source/Platforms/LINUX/linuxfiles.c
     Source/Platforms/LINUX/net_linux.c
 
+    Source/OS9exec_core/regs_type.h
+
     Source/OS9AppEmu/UAE68emulator/compiler.h
     Source/OS9AppEmu/UAE68emulator/config.h
     Source/OS9AppEmu/UAE68emulator/cputbl.h
