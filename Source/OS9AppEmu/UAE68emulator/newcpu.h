@@ -71,7 +71,7 @@ extern regs_type regs, lastint_regs;
 #define m68k_dreg(r,num) ((r).regs[(num)])
 #define m68k_areg(r,num) (((r).regs + 8)[(num)])
 
-#define get_ibyte(o) do_get_mem_byte((uae_u8  *)(regs.pc_p + (o) + 1))
+#define get_ibyte(o) get_byte(regs.pc_p + (o) + 1)
 #define get_iword(o) get_word(regs.pc_p + (o))
 #define get_ilong(o) get_long(regs.pc_p + (o))
 
@@ -84,9 +84,9 @@ extern regs_type regs, lastint_regs;
 static __inline__ uae_u32 get_ibyte_prefetch (uae_s32 o)
 {
     if (o > 3 || o < 0)
-	return do_get_mem_byte((uae_u8 *)(regs.pc_p + o + 1));
+	return get_byte((uae_u8 *)(regs.pc_p + o + 1));
 
-    return do_get_mem_byte((uae_u8 *)(((uae_u8 *)&regs.prefetch) + o + 1));
+    return get_byte((uae_u8 *)(((uae_u8 *)&regs.prefetch) + o + 1));
 }
 static __inline__ uae_u32 get_iword_prefetch (uae_s32 o)
 {
