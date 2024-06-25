@@ -1429,12 +1429,8 @@ static void titles(void)
 #endif /* terminal */
 
     /* - what kind of 68k */
-#ifdef USE_UAEMU
     upho_printf("- Using 68k-Emulator from UAE - Un*x Amiga Emulator (c) 1995 "
                 "B. Schmidt\n");
-#else
-    upho_printf("- Using currently no 68k-Emulator\n");
-#endif
 
     fflush(stderr);
     fflush(stdout);

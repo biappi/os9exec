@@ -72,17 +72,12 @@ typedef int OSErr;
 #endif
 #endif
 
-#ifdef USE_UAEMU
 /* include file os9_uae.h */
 #include "sysconfig.h"
 #include "sysdeps.h"
 
 #ifdef _in_uae_c
 #define extern
-#endif
-#else
-/* include file for empty interface */
-#include <time.h>
 #endif
 
 #include <sys/types.h> /* according to Martin Gregorie's proposal */
@@ -139,17 +134,11 @@ typedef int OSErr;
 #endif
 
 /* floating point register */
-#ifdef USE_UAEMU
 typedef double fp_typ;
-#else
-typedef unsigned char fp_typ[12];
-#endif
 
-#ifdef USE_UAEMU
 /* buffer for interupt stack */
 #define TRAPFRAMEBUFLEN 128 /* should be fairly enough for all stack frames */
 extern ulong trapframebuf[TRAPFRAMEBUFLEN];
-#endif
 
 /* definitions for user traphandlers */
 #define NUMTRAPHANDLERS 15
@@ -183,34 +172,25 @@ typedef struct {
 #define FLAGS_IRQ 0x0002 /* allow IRQs for this process */
 #define FLAGS_UM 0x0004  /* Mac context runs in user mode */
 
-#ifdef USE_UAEMU
 #ifndef flagtype
 typedef char flagtype;
-#endif
 #endif
 
 /* register context:
    !!!!!!!! must be STRUCTURALLY EQUAL to regstruct in newcpu.h */
-#ifdef USE_UAEMU
 typedef struct {
-#else
-typedef volatile struct {
-#endif
 
     /* common in UAE and os9exec */
     ulong d[8]; /* data registers */
     ulong a[8]; /* address registers */
 
-#ifdef USE_UAEMU
     /* UAE only */
     uae_u32 usp, isp, msp;
-#endif
 
     /* common */
     unsigned short sr;    /* status register */
     unsigned short flags; /* divs OS9exec specific flags */
 
-#ifdef USE_UAEMU
     /* UAE only */
     flagtype t1;
     flagtype t0;
@@ -219,17 +199,14 @@ typedef volatile struct {
     flagtype x;
     flagtype stopped;
     int      intmask;
-#endif
 
     /* common */
     ulong pc; /* program counter */
 
-#ifdef USE_UAEMU
     /* UAE only */
     uae_u8 *pc_p;
     uae_u8 *pc_oldp;
     uae_u32 vbr, sfc, dfc;
-#endif
 
     /* common */
     fp_typ fp[8]; /* FPU data registers */
@@ -237,10 +214,8 @@ typedef volatile struct {
     ulong  fpsr;
     ulong  fpiar; /* FPU control registers */
 
-#ifdef USE_UAEMU
     /* UAE only */
     uae_u32 prefetch;
-#endif
 
     /* --- link to traphandler entry of TRAP #1 */
     traphandler_typ *ttP;
@@ -251,9 +226,7 @@ typedef volatile struct {
 /* high level interface */
 /* -------------------- */
 
-#ifdef USE_UAEMU
 extern void handle_os9exec_exception(int nr, uaecptr oldpc);
-#endif
 
 ulong llm_os9_go(regs_type *rp);
 void  llm_os9_copyback(regs_type *rp);
@@ -270,9 +243,7 @@ void UnlockMemRange(void *address, ulong size);
 OSErr lowlevel_prepare(void);
 void  lowlevel_release(void);
 
-#ifdef USE_UAEMU
 #undef extern
-#endif
 
 #endif
 

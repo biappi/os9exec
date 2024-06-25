@@ -1060,9 +1060,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         v = 0; /* FPU not yet supported */
 #endif
 
-#ifdef USE_UAEMU /* 68881 FPU available with emulator */
         v = 1;   /* still some problems ? */
-#endif
         break;
 
     case D_ModDir:

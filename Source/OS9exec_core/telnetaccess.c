@@ -214,11 +214,7 @@ void WindowTitle(char *title, Boolean vmod)
     char cons[40];
 #endif
 
-#ifdef USE_UAEMU
     p = " (UAE)";
-#else
-    p = "";
-#endif
 
     sprintf(title, "%s%s", OS9exec_Name(), p);
 

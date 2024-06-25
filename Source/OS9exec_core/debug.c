@@ -124,7 +124,6 @@
 
 #include "os9exec_incl.h"
 
-#ifdef USE_UAEMU
 #include "config.h"
 #include "options.h"
 #include "luzstuff.h"
@@ -132,7 +131,6 @@
 #include "readcpu.h"
 #include "newcpu.h"
 #include "compiler.h"
-#endif
 
 #include <ctype.h>
 
@@ -332,9 +330,7 @@ void debug_procdump(process_typ *cp, int cpid)
     mod_exec                 *tme;
     pmem_typ                 *cm = &pmem[cpid];
 
-#ifdef USE_UAEMU
     uaecptr aa;
-#endif
 
     /* trap segfaults within this function to avoid looping*/
     if (++depth > 1) {
@@ -461,12 +457,10 @@ void debug_procdump(process_typ *cp, int cpid)
         upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
 
 /* Show the failing instruction. */
-#ifdef USE_UAEMU
         upo_printf(" Executing: -->");
         m68k_disasm(rp->pc, &aa, 1, (dbg_func)upo_printf);
         upo_printf("               ");
         m68k_disasm(aa, &aa, 1, (dbg_func)upo_printf);
-#endif
     }
 
     /* Static memory */
@@ -569,18 +563,11 @@ void dumpregs(ushort pid)
     int        k;
     regs_type *rp;
 
-#ifdef USE_UAEMU
     uaecptr aa;
-#endif
 
     if (pid >= MAXPROCESSES) {
-#ifdef USE_UAEMU
         rp = (regs_type *)&regs; /* UAE */
         uphe_printf("UAE current Register Dump:\n");
-#else
-        uphe_printf("No current process to show regs for\n");
-        return;
-#endif
     }
     else {
         rp = &procs[pid].os9regs;
@@ -597,10 +584,8 @@ void dumpregs(ushort pid)
     upe_printf("\n");
     uphe_printf(" PC=%08X SR=%04X\n", rp->pc, rp->sr);
 
-#ifdef USE_UAEMU
     if (pid < MAXPROCESSES)
         m68k_disasm(rp->pc, &aa, 2, (dbg_func)console_out);
-#endif
 }
 
 /* show memory */
@@ -630,9 +615,7 @@ static void regs_in_debugger(regs_type *rp)
     uphe_printf("Non-Macintosh: No low level debugger\n");
 }
 
-#ifdef USE_UAEMU
 extern int m68k_os9trace;
-#endif
 
 static ulong listbase = 0;
 static int   disasm   = 0;
@@ -651,9 +634,7 @@ ushort debugwait(void)
     ushort extra = false;
     ushort k     = 0;
 
-#ifdef USE_UAEMU
     m68k_os9trace = false;
-#endif
 
     do {
         uphe_printf("Pid=%d%s: dbgmsk=$%04X,$%04X,$%04X stop=$%04X "
@@ -766,7 +747,6 @@ ushort debugwait(void)
             extra = true;
             goto goon;
 
-#ifdef USE_UAEMU
         /* %%% hacky */
         case 'i':
             if (sscanf(&inp[1], "%lx", &listbase) < 1) {
@@ -797,19 +777,10 @@ ushort debugwait(void)
             m68k_os9trace = true;
             goto goon; /* %%% make this one better */
 
-#else
-        case '.':
-            dumpmem(&listbase, 8);
-            break;
-#endif
 
         case 'l':
             if (sscanf(&inp[1], "%lx", &listbase) < 1) {
-#ifdef USE_UAEMU
                 listbase = m68k_areg(regs, 7);
-#else
-                listbase = procs[currentpid].os9regs.a[7];
-#endif
             }
             disasm = 0;
             dumpmem(&listbase, 8);
@@ -841,10 +812,8 @@ ushort debugwait(void)
             upe_printf("[L[xxx]] list 8 memory lines from xxx, default=A7, [.] "
                        "continue list/disasm\n");
 
-#ifdef USE_UAEMU
             upe_printf(
                 "[I[xxx]] disassemble 10 instructions from xxx, default=PC\n");
-#endif
 
             upe_printf("[D]bg hlp, [D[y,]xx]] set dbg mask=xx (of level=y, "
                        "def=0), [Sx] set stop mask=x\n");

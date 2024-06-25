@@ -500,11 +500,7 @@ void os9_main(int argc, char **argv, char **envp)
     get_hw(); // make this very very early in program
     getversion(&exec_version, &exec_revision);
 
-#ifdef USE_UAEMU
     sw_name = "OS-9/68k Emu UAE";
-#else
-    sw_name = "OS-9/68k Emulator";
-#endif
 
     sec0 = 0;
 

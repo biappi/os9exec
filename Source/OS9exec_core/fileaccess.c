@@ -306,13 +306,6 @@ void init_Dir(fmgr_typ *f)
 
 /* -------------------------------------------------------- */
 
-#ifndef USE_UAEMU
-static void assert(Boolean b)
-{
-    if (!b)
-        printf("Assert Error\n");
-}
-#endif
 
 /* input from file */
 os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)

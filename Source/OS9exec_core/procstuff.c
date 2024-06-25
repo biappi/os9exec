@@ -402,10 +402,8 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                 cp->os9regs.a[k] = 0xAAAAAAA0 + k;
                 cp->os9regs.pc   = 0xCCCCCCCC;
             }
-#ifdef USE_UAEMU
             /* make sure that ISP ist ready for exception stack frames */
             cp->os9regs.isp = (ulong)&trapframebuf[TRAPFRAMEBUFLEN];
-#endif
 
             /* there was no last systemcall */
             cp->func        = STARTCALL;
