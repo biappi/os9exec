@@ -84,9 +84,9 @@ extern regs_type regs, lastint_regs;
 static __inline__ uae_u32 get_ibyte_prefetch (uae_s32 o)
 {
     if (o > 3 || o < 0)
-	return get_byte((uae_u8 *)(regs.pc_p + o + 1));
+	return get_byte(regs.pc_p + o + 1);
 
-    return get_byte((uae_u8 *)(((uae_u8 *)&regs.prefetch) + o + 1));
+    return get_byte(((uae_u8 *)&regs.prefetch) + o + 1);
 }
 static __inline__ uae_u32 get_iword_prefetch (uae_s32 o)
 {
@@ -98,10 +98,10 @@ static __inline__ uae_u32 get_iword_prefetch (uae_s32 o)
 static __inline__ uae_u32 get_ilong_prefetch (uae_s32 o)
 {
     if (o > 3 || o < 0)
-	return get_long((uae_u32 *)(regs.pc_p + o));
+	return get_long(regs.pc_p + o);
     if (o == 0)
 	return get_long(&regs.prefetch);
-    return (get_word (((uae_u16 *)&regs.prefetch) + 1) << 16) | get_word ((uae_u16 *)(regs.pc_p + 4));
+    return (get_word (((uae_u16 *)&regs.prefetch) + 1) << 16) | get_word (regs.pc_p + 4);
 }
 
 #define m68k_incpc(o) (regs.pc_p += (o))
@@ -113,7 +113,7 @@ static __inline__ void fill_prefetch_0 (void)
     r = *(uae_u32 *)regs.pc_p;
     regs.prefetch = r;
 #else
-    r = get_long ((uae_u32 *)regs.pc_p);
+    r = get_long (regs.pc_p);
     put_long (&regs.prefetch, r);
 #endif
 }
@@ -161,12 +161,12 @@ static __inline__ void m68k_setpc (uaecptr newpc)
 
 static __inline__ uaecptr m68k_getpc (void)
 {
-    return regs.pc + ((char *)regs.pc_p - (char *)regs.pc_oldp);
+    return regs.pc + (regs.pc_p - regs.pc_oldp);
 }
 
-static __inline__ uaecptr m68k_getpc_p (uae_u8 *p)
+static __inline__ uaecptr m68k_getpc_p (uaecptr p)
 {
-    return regs.pc + ((char *)p - (char *)regs.pc_oldp);
+    return regs.pc + (p - regs.pc_oldp);
 }
 
 #define m68k_setpc_fast m68k_setpc

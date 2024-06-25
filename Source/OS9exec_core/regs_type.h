@@ -30,8 +30,8 @@ typedef struct {
     uint32_t intmask;
 
     uint32_t pc;
-    uint8_t *pc_p;
-    uint8_t *pc_oldp;
+    uint32_t pc_p;
+    uint32_t pc_oldp;
 
     uint32_t vbr;
     uint32_t sfc;
