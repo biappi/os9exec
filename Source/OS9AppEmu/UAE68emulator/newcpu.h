@@ -73,7 +73,7 @@ extern regs_type regs, lastint_regs;
 
 #define get_ibyte(o) do_get_mem_byte((uae_u8  *)(regs.pc_p + (o) + 1))
 #define get_iword(o) do_get_mem_word((uae_u16 *)(regs.pc_p + (o)))
-#define get_ilong(o) do_get_mem_long((uae_u32 *)(regs.pc_p + (o)))
+#define get_ilong(o) get_long((uae_u32 *)(regs.pc_p + (o)))
 
 #ifdef HAVE_GET_WORD_UNSWAPPED
 #define GET_OPCODE (do_get_mem_word_unswapped (regs.pc_p))
@@ -98,9 +98,9 @@ static __inline__ uae_u32 get_iword_prefetch (uae_s32 o)
 static __inline__ uae_u32 get_ilong_prefetch (uae_s32 o)
 {
     if (o > 3 || o < 0)
-	return do_get_mem_long((uae_u32 *)(regs.pc_p + o));
+	return get_long((uae_u32 *)(regs.pc_p + o));
     if (o == 0)
-	return do_get_mem_long(&regs.prefetch);
+	return get_long(&regs.prefetch);
     return (do_get_mem_word (((uae_u16 *)&regs.prefetch) + 1) << 16) | do_get_mem_word ((uae_u16 *)(regs.pc_p + 4));
 }
 
@@ -113,7 +113,7 @@ static __inline__ void fill_prefetch_0 (void)
     r = *(uae_u32 *)regs.pc_p;
     regs.prefetch = r;
 #else
-    r = do_get_mem_long ((uae_u32 *)regs.pc_p);
+    r = get_long ((uae_u32 *)regs.pc_p);
     do_put_mem_long (&regs.prefetch, r);
 #endif
 }
