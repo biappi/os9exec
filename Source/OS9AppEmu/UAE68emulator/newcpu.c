@@ -333,7 +333,7 @@ uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_ou
 	    if (dp & 4) base += dispreg;
 
 	    addr = base + outer;
-	    sprintf (buffer,"(%s%c%d.%c*%d+%ld)+%ld == $%08lx", name,
+	    sprintf (buffer,"(%s%c%d.%c*%d+%d)+%d == $%08lx", name,
 		    dp & 0x8000 ? 'A' : 'D', (int)r, dp & 0x800 ? 'L' : 'W',
 		    1 << ((dp >> 9) & 3),
 		    disp,outer,
@@ -380,7 +380,7 @@ uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_ou
 	    if (dp & 4) base += dispreg;
 
 	    addr = base + outer;
-	    sprintf (buffer,"(%s%c%d.%c*%d+%ld)+%ld == $%08lx", name,
+	    sprintf (buffer,"(%s%c%d.%c*%d+%d)+%d == $%08lx", name,
 		    dp & 0x8000 ? 'A' : 'D', (int)r, dp & 0x800 ? 'L' : 'W',
 		    1 << ((dp >> 9) & 3),
 		    disp,outer,
