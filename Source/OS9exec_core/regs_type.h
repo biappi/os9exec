@@ -42,13 +42,6 @@ typedef struct {
     uint32_t fpsr;
     uint32_t fpiar;
 
-    /* Fellow sources say this is 4 longwords. That's impossible. It needs
-     * to be at least a longword. The HRM has some cryptic comment about two
-     * instructions being on the same longword boundary.
-     * The way this is implemented now seems like a good compromise.
-     */
-    uint32_t prefetch;
-
     /* --- link to traphandler entry of TRAP #1 */
     traphandler_typ *ttP;
 

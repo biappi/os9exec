@@ -81,54 +81,23 @@ extern regs_type regs, lastint_regs;
 #define GET_OPCODE (get_iword (0))
 #endif
 
+static __inline__ void fill_prefetch_0 (void) { }
+static __inline__ void fill_prefetch_2 (void) { }
+
 static __inline__ uae_u32 get_ibyte_prefetch (uae_s32 o)
 {
-    if (o > 3 || o < 0)
 	return get_byte(regs.pc_p + o + 1);
-
-    return get_byte(((uae_u8 *)&regs.prefetch) + o + 1);
 }
 static __inline__ uae_u32 get_iword_prefetch (uae_s32 o)
 {
-    if (o > 3 || o < 0)
 	return get_word(regs.pc_p + o);
-
-    return get_word(((uae_u8 *)&regs.prefetch) + o);
 }
 static __inline__ uae_u32 get_ilong_prefetch (uae_s32 o)
 {
-    if (o > 3 || o < 0)
 	return get_long(regs.pc_p + o);
-    if (o == 0)
-	return get_long(&regs.prefetch);
-    return (get_word (((uae_u16 *)&regs.prefetch) + 1) << 16) | get_word (regs.pc_p + 4);
 }
 
 #define m68k_incpc(o) (regs.pc_p += (o))
-
-static __inline__ void fill_prefetch_0 (void)
-{
-    uae_u32 r;
-#ifdef UNALIGNED_PROFITABLE
-    r = *(uae_u32 *)regs.pc_p;
-    regs.prefetch = r;
-#else
-    r = get_long (regs.pc_p);
-    put_long (&regs.prefetch, r);
-#endif
-}
-
-#if 0
-static __inline__ void fill_prefetch_2 (void)
-{
-    uae_u32 r  = do_get_mem_long (&regs.prefetch) << 16;
-    uae_u32 r2 = do_get_mem_word (((uae_u16 *)regs.pc_p) + 1);
-    r |= r2;
-    do_put_mem_long (&regs.prefetch, r);
-}
-#else
-#define fill_prefetch_2 fill_prefetch_0
-#endif
 
 /* These are only used by the 68020/68881 code, and therefore don't
  * need to handle prefetch.  */
