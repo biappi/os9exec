@@ -6,11 +6,6 @@
   * Copyright 1995 Bernd Schmidt
   */
 
-static __inline__ void do_put_mem_byte(uae_u8 *a, uae_u8 v)
-{
-    *a = v;
-}
-
 static __inline__ uae_u32 get_long(uaecptr addr)
 {
     uae_u8 *a = (uae_u8 *)addr;
@@ -48,9 +43,10 @@ static __inline__ void put_word(uaecptr addr, uae_u32 v)
     *b = v >> 8;
     *(b+1) = (uae_u8)v;
 }
-static __inline__ void put_byte(uaecptr addr, uae_u32 b)
+static __inline__ void put_byte(uaecptr addr, uae_u32 v)
 {
-    do_put_mem_byte((uae_u8  *)addr, b);
+    uae_u8 *a = (uae_u8 *)addr;
+    *a = v;
 }
 
 static __inline__ uae_u8 *get_real_address(uaecptr addr)
