@@ -48,17 +48,3 @@ static __inline__ void put_byte(uaecptr addr, uae_u32 v)
     uae_u8 *a = (uae_u8 *)addr;
     *a = v;
 }
-
-static __inline__ uae_u8 *get_real_address(uaecptr addr)
-{
- /* return get_mem_bank(addr).xlateaddr(addr); */
-    return (uae_u8 *)addr; /* no translation ever %%% */
-}
-
-static __inline__ int valid_address( uaecptr addr, uae_u32 size )
-{
- 
- /* return get_mem_bank(addr).check(addr, size); */
-    return 1; /* all addresses can be translated (as there is no translation! %%% */
-}
-

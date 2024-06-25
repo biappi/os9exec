@@ -155,7 +155,7 @@ static __inline__ uae_u32 next_ilong (void)
 
 static __inline__ void m68k_setpc (uaecptr newpc)
 {
-    regs.pc_p = regs.pc_oldp = get_real_address(newpc);
+    regs.pc_p = regs.pc_oldp = newpc;
     regs.pc = newpc;
 }
 
