@@ -114,7 +114,7 @@ static __inline__ void fill_prefetch_0 (void)
     regs.prefetch = r;
 #else
     r = get_long ((uae_u32 *)regs.pc_p);
-    do_put_mem_long (&regs.prefetch, r);
+    put_long (&regs.prefetch, r);
 #endif
 }
 
