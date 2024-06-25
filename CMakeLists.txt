@@ -61,7 +61,6 @@ add_executable(os9exec
     Source/OS9AppEmu/UAE68emulator/config.h
     Source/OS9AppEmu/UAE68emulator/cputbl.h
     Source/OS9AppEmu/UAE68emulator/m68k.h
-    Source/OS9AppEmu/UAE68emulator/memory.h
     Source/OS9AppEmu/UAE68emulator/newcpu.h
     Source/OS9AppEmu/UAE68emulator/options.h
     Source/OS9AppEmu/UAE68emulator/readcpu.h
