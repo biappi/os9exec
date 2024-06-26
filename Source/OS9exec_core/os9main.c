@@ -682,7 +682,8 @@ void os9_main(int argc, char **argv, char **envp)
                     break;
                 default:
                     printf("# Error in modifier: '%c', must be 'k', 'M' or "
-                           "none\n");
+                           "none\n",
+                           modifier);
                     exit(1);
                 } // switch
                 break;

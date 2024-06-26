@@ -1162,20 +1162,20 @@ void init_syscalltimers(void)
 static char *time_disp(ulong t)
 {
     static char tbuf[13];
-    ulong       ms, secs, mins;
+    uint32_t    ms, secs, mins;
 
     /* calc milliseconds */
-    ms   = (ulong)((double)t / (double)TICKS_PER_SEC * 1000.0);
+    ms   = (uint32_t)((double)t / (double)TICKS_PER_SEC * 1000.0);
     secs = ms / 1000;
     mins = secs / 60;
 
     if (ms == 0)
-        sprintf(tbuf, "");
+        tbuf[0] = 0;
     else {
         if (mins == 0)
-            sprintf(tbuf, "%2d.%03d\"", secs % 60, ms % 1000);
+            sprintf(tbuf, "%2d.%03d", secs % 60, ms % 1000);
         else
-            sprintf(tbuf, "%0d'%02d.%03d\"", mins, secs % 60, ms % 1000);
+            sprintf(tbuf, "%0d'%02d.%03d", mins, secs % 60, ms % 1000);
     }
 
     return tbuf;

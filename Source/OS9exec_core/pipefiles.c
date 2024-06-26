@@ -1230,7 +1230,7 @@ os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
     syspath_typ *spPX;
     syspath_typ *spPY;
     syspath_typ *spK; /* must be declared separately, don't know why ?! */
-    char         ind[5];
+    char         ind[20];
     char         pty[OS9PATHLEN];
     char         tty[OS9PATHLEN];
     int          k, newPty = 0;

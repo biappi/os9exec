@@ -174,7 +174,7 @@ void UIntToStr(char *s, unsigned int i) { sprintf(s, "%X", i); } // UIntToStr
 
 void UIntToStrN(char *s, unsigned int i, int n)
 {
-    char form[20]; // format string
+    char form[40]; // format string
     int  r = 0;
 
     if (n == MAXINTEGER) {

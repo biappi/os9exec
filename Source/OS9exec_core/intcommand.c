@@ -464,7 +464,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                     p = argv[k];
                 }
 
-                if (sscanf(p, "%d", &screenW) < 1)
+                if (sscanf(p, "%ld", &screenW) < 1)
                     screenW = 0;
                 break;
 
@@ -478,7 +478,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                     p = argv[k];
                 }
 
-                if (sscanf(p, "%d", &screenH) < 1)
+                if (sscanf(p, "%ld", &screenH) < 1)
                     screenH = 0;
                 break;
 

@@ -396,11 +396,14 @@ static void disp_line(ushort       pid,
             if (p->size >= 1000)
                 sprintf(szs, "%1.0fk", (float)(p->size / 1024));
             else
-                sprintf(szs, "%3d", p->size);
+                sprintf(szs, "%3d", (int)p->size);
 
             sprintf(aa, "%c>%d:%s", p->broken ? '/' : '-', p->sp_lock, szs);
-            if (n > 0)
-                sprintf(aa, "%s:%d", aa, n);
+            if (n > 0) {
+                char suffix[20];
+                snprintf(suffix, sizeof(suffix), ":%d", n);
+                strcat(aa, suffix);
+            }
         }
 
         upo_printf("%-13s", aa);

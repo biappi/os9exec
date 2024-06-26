@@ -937,7 +937,7 @@ void Console_Name(int term_id, char *consname)
 
 char *OS9exec_Name(void)
 {
-    static char theName[15];
+    static char theName[20];
 
     sprintf(theName, "OS9exec V%x.%02x", exec_version, exec_revision);
     return theName;
@@ -1390,7 +1390,7 @@ os9err Flush_Dir(ushort cpid, ushort *pathP, const char *nmS)
 {
     os9err          err;
     os9direntry_typ d;
-    size_t          dir_size;
+    ulong           dir_size;
     syspath_typ    *spP;
     char            fullName[OS9PATHLEN];
     int             oLen;

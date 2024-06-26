@@ -273,7 +273,7 @@ void _debugprintf(char *format, ...)
     va_end(vp);
 
     if (cp->isIntUtil && !cp->isNative)
-        printf(buffer);
+        printf("%s", buffer);
     else
         upe_printf(buffer);
 

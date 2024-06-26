@@ -498,7 +498,7 @@ void show_modules(char *cmp)
             if (cmp == NULL || ustrcmp(nam, cmp) == 0) {
                 debugprintf(dbgUtils, dbgNorm, ("# imdir: %3d '%s'\n", k, nam));
 
-                sprintf(exeo, "%8lX", os9_long(mod->_mexec));
+                sprintf(exeo, "%8X", os9_long(mod->_mexec));
                 sprintf(dats, "%7.2fk", (float)os9_long(mod->_mdata) / KByte);
                 sprintf(stck, "%7.2fk", (float)os9_long(mod->_mstack) / KByte);
 
@@ -869,7 +869,7 @@ static void adapt_inetdb(mod_exec *mh,
     d = os9_long(dns1);
     h = (byte *)&d;
     sprintf(bp,
-            "%d.%d.%d.%d\0",
+            "%d.%d.%d.%d",
             h[0],
             h[1],
             h[2],
@@ -880,7 +880,7 @@ static void adapt_inetdb(mod_exec *mh,
         d = os9_long(dns2);
         h = (byte *)&d;
         sprintf(bp,
-                "%d.%d.%d.%d\0",
+                "%d.%d.%d.%d",
                 h[0],
                 h[1],
                 h[2],

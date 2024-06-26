@@ -1333,7 +1333,7 @@ static os9err DeviceInit(ushort       pid,
 /* Make Connection to SCSI system or to an TBF image file */
 {
     os9err err = 0;
-    char cmp[OS9PATHLEN], ali[OS9PATHLEN], tmp[OS9PATHLEN], ers[10], *q, *p, *v;
+    char cmp[OS9PATHLEN], ali[OS9PATHLEN], tmp[OS9PATHLEN], ers[20], *q, *p, *v;
     rbfdev_typ *dev;
     ptype_typ   type;
     int         ii, n;
@@ -2147,7 +2147,7 @@ static void Disp_RBF_DevsLine(rbfdev_typ *rb, char *name, Boolean statistic)
     char s[OS9NAMELEN];
     char u[OS9PATHLEN];
     char vI[20], vT[20];
-    char v[20], w[20];
+    char v[40], w[20];
 
     long long sizeI = (long long)rb->imgScts * rb->sctSize;
     long long sizeT = (long long)rb->totScts * rb->sctSize;
