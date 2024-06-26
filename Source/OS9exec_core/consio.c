@@ -526,10 +526,10 @@ static os9err ConsRead(ushort       pid,
 
 /* returns index for numbered descriptors like tty00,01,02... */
 static Boolean
-ConsId(char *name, char *family, int range, int offs, int *result)
+ConsId(const char *name, char *family, int range, int offs, int *result)
 {
     int   flen = strlen(family);
-    char *nInd;
+    const char *nInd;
     int   ii;
 
     if (ustrncmp(name, family, flen) != 0)
