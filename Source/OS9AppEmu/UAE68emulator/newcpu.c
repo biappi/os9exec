@@ -118,14 +118,7 @@ void dump_counts (void)
 
 int broken_in;
 
-static __inline__ unsigned int cft_map (unsigned int f)
-{
-#ifndef HAVE_GET_WORD_UNSWAPPED
-    return f;
-#else
-    return ((f >> 8) & 255) | ((f & 255) << 8);
-#endif
-}
+#define cft_map(f) f
 
 static unsigned long op_illg_1 (uae_u32 opcode) REGPARAM;
 
@@ -266,12 +259,20 @@ void init_m68k (void)
 regs_type regs, lastint_regs;
 static regs_type regs_backup[16];
 static int backup_pointer = 0;
-static long int m68kpc_offset;
+uaecptr m68kpc_offset;
 int lastint_no;
 
-#define get_ibyte_1(o) get_byte(regs.pc + (regs.pc_p - regs.pc_oldp) + (o) + 1)
-#define get_iword_1(o) get_word(regs.pc + (regs.pc_p - regs.pc_oldp) + (o))
-#define get_ilong_1(o) get_long(regs.pc + (regs.pc_p - regs.pc_oldp) + (o))
+uae_u8 get_ibyte_1(uaecptr o) {
+    return get_byte(regs.pc + (regs.pc_p - regs.pc_oldp) + (o) + 1);
+}
+
+uae_u16 get_iword_1(uaecptr o) {
+    return get_word(regs.pc + (regs.pc_p - regs.pc_oldp) + (o));
+}
+
+uae_u32 get_ilong_1(uaecptr o) {
+    get_long(regs.pc + (regs.pc_p - regs.pc_oldp) + (o));
+}
 
 uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_out)() )
 {
@@ -1087,7 +1088,7 @@ static int do_specialties (void)
 static void m68k_run_1 (void)
 {
     for (;;) {
-		int cycles;
+        unsigned long cycles;
 		uae_u32 opcode = GET_OPCODE;
 		#if 0
 		if (get_ilong (0) != do_get_mem_long (&regs.prefetch)) {
