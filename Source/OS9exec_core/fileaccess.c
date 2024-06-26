@@ -828,7 +828,10 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
             while (i >= 0 && tmpName[i] != '/')
                 i--;
             tmpName[i + 1] = NUL;
-            sprintf(tmpName, "%s.tmpfile.%d", tmpName, pid);
+
+            char suffix[20];
+            snprintf(suffix, sizeof(suffix), ".tmpflie.%d", pid);
+            strcat(tmpName, suffix);
 
             err = fclose(spP->stream);
             err = remove(tmpName);
