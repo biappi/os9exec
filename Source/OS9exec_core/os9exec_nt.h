@@ -917,18 +917,30 @@ typedef struct {
     os9err (*_SS_Listen)(ushort pid, syspath_typ *spP);
     os9err (*_SS_Connect)(ushort pid, syspath_typ *spP, ulong *d1, byte *ispP);
     os9err (*_SS_Accept)(ushort pid, syspath_typ *spP, ulong *d1);
-    os9err (*_SS_Recv)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
-    os9err (*_SS_Send)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
+    os9err (*_SS_Recv)(ushort       pid,
+                       syspath_typ *spP,
+                       ulong       *d1,
+                       ulong       *d2,
+                       uint8_t     *a0);
+    os9err (*_SS_Send)(ushort       pid,
+                       syspath_typ *spP,
+                       ulong       *d1,
+                       ulong       *d2,
+                       uint8_t     *a0);
     os9err (*_SS_GNam)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP);
-    os9err (*_SS_SOpt)(ushort pid, syspath_typ *spP, byte *buffer);
-    os9err (*_SS_SendTo)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
-    os9err (*_SS_PCmd)(ushort pid, syspath_typ *spP, ulong *a0);
+    os9err (*_SS_SOpt)(ushort pid, syspath_typ *spP, ulong *buffer);
+    os9err (*_SS_SendTo)(ushort       pid,
+                         syspath_typ *spP,
+                         ulong       *d1,
+                         ulong       *d2,
+                         uint8_t     *a0);
+    os9err (*_SS_PCmd)(ushort pid, syspath_typ *spP, uint8_t *a0);
 
     /* L2 support */
     os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, ulong *d2);
 
     /* any other setstat function */
-    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d2, char *a);
+    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d2, uint8_t *a);
 } ss_typ;
 
 typedef struct {

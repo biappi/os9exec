@@ -1702,7 +1702,7 @@ os9err syspath_getstat(ushort pid,
 
     /* $7A protocol direct command */
     case SS_PCmd:
-        err = (g->_SS_PCmd)(pid, spP, *a);
+        err = (g->_SS_PCmd)(pid, spP, (ulong *)*a);
         break;
 
     /* $80 + 32: "/L2" specific */

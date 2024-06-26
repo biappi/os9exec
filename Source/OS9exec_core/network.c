@@ -200,14 +200,13 @@ os9err pNbind(ushort pid, syspath_typ *spP, ulong *n, byte *ispP);
 os9err pNlisten(ushort pid, syspath_typ *spP);
 os9err pNconnect(ushort pid, syspath_typ *spP, ulong *n, byte *ispP);
 os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1);
-os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
-os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0);
+os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0);
+os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0);
 os9err pNGNam(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP);
-/* os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2); */
-os9err pNSOpt(ushort pid, syspath_typ *spP, byte *buffer);
+os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *buffer);
 
 os9err pNgPCmd(ushort pid, syspath_typ *spP, ulong *a0);
-os9err pNsPCmd(ushort pid, syspath_typ *spP, ulong *a0);
+os9err pNsPCmd(ushort pid, syspath_typ *spP, uint8_t *a0);
 /* ------------------------------------------------------------------------- */
 
 void init_Net(fmgr_typ *f)
@@ -428,8 +427,11 @@ os9err pNclose(_pid_, syspath_typ *spP)
     return 0;
 }
 
-static os9err
-netRead(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer, Boolean lnmode)
+static os9err netRead(ushort       pid,
+                      syspath_typ *spP,
+                      ulong       *lenP,
+                      uint8_t     *buffer,
+                      Boolean      lnmode)
 {
     OSStatus     err = 0;
     net_typ     *net = &spP->u.net;
@@ -891,7 +893,7 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
     return err;
 }
 
-os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
+os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info will be received */
 {
     os9err err;
@@ -899,15 +901,15 @@ os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
     ulong  len  = *d2;
     ushort n; /* the length fill be filled in here */
 
-    err = netRead(pid, spP, &lenB, (char *)&n, false);
-    err = netRead(pid, spP, &len, (char *)a0, false);
+    err = netRead(pid, spP, &lenB, (uint8_t *)&n, false);
+    err = netRead(pid, spP, &len, a0, false);
 
     if (!err)
         *d1 = len;
     return err;
 }
 
-os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
+os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info must be sent */
 {
     os9err err;
@@ -915,8 +917,8 @@ os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, char **a0)
     ulong  len  = *d2;
     ushort n    = os9_word((ushort)len);
 
-    err = netWrite(pid, spP, &lenB, (char *)&n, false);
-    err = netWrite(pid, spP, &len, (char *)a0, false);
+    err = netWrite(pid, spP, &lenB, (uint8_t *)&n, false);
+    err = netWrite(pid, spP, &len, a0, false);
 
     if (!err)
         *d1 = len;
@@ -957,7 +959,7 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
 
 ;
 /* os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2) */
-os9err pNSOpt(_pid_, syspath_typ *spP, byte *buffer)
+os9err pNSOpt(_pid_, syspath_typ *spP, ulong *buffer)
 {
     /* wil: this function doesn't match the call site, commenting */
 
@@ -995,7 +997,7 @@ static ushort checksum(ushort *buffer, int size)
     return (ushort)(~cksum);
 }
 
-os9err pNsPCmd(_pid_, syspath_typ *spP, ulong *a0)
+os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
 {
     OSStatus   err = 0;
     net_typ   *net = &spP->u.net;
