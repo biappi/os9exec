@@ -187,11 +187,9 @@ os9err get_locations(ushort      pid,
                      ulong      *dcpP,
                      ulong      *sSct);
 
-os9err
-change_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode);
-os9err
-delete_file(ushort pid, ptype_typ type, const char *pathname, ushort mode);
-os9err make_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode);
+os9err change_dir(ushort pid, ptype_typ type, char *pathname, ushort mode);
+os9err delete_file(ushort pid, ptype_typ type, char *pathname, ushort mode);
+os9err make_dir(ushort pid, ptype_typ type, char *pathname, ushort mode);
 
 void         init_syspaths(void);
 void         init_usrpaths(ushort pid);

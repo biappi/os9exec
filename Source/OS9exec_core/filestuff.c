@@ -2000,12 +2000,13 @@ os9err get_locations(ushort      pid,
     return err;
 }
 
-static os9err doCmd(os9err (*cmd)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname),
-                    ushort         pid,
-                    ptype_typ      type,
-                    ushort         mode,
-                    const char    *pathname,
-                    const char    *txt)
+static os9err doCmd(
+    os9err (*cmd)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname),
+    ushort      pid,
+    ptype_typ   type,
+    ushort      mode,
+    char       *pathname,
+    const char *txt)
 {
     os9err err = (cmd)(pid, NULL, &mode, pathname); /* specific call */
     debugprintf(
@@ -2015,20 +2016,19 @@ static os9err doCmd(os9err (*cmd)(ushort pid, syspath_typ *spP, ushort *modeP, c
     return err;
 }
 
-os9err change_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode)
+os9err change_dir(ushort pid, ptype_typ type, char *pathname, ushort mode)
 /* Change a directory */
 {
     return doCmd(fmgr_op[type]->chd, pid, type, mode, pathname, "change_dir");
 }
 
-os9err
-delete_file(ushort pid, ptype_typ type, const char *pathname, ushort mode)
+os9err delete_file(ushort pid, ptype_typ type, char *pathname, ushort mode)
 /* Delete a file */
 {
     return doCmd(fmgr_op[type]->del, pid, type, mode, pathname, "delete_file");
 }
 
-os9err make_dir(ushort pid, ptype_typ type, const char *pathname, ushort mode)
+os9err make_dir(ushort pid, ptype_typ type, char *pathname, ushort mode)
 /* Create a directory */
 {
     return doCmd(fmgr_op[type]->makdir, pid, type, mode, pathname, "make_dir");
