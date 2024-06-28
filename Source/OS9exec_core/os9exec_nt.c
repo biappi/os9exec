@@ -847,7 +847,7 @@ static void cleanup(void)
 
     if (debugcheck(dbgAllInfo, dbgNorm)) {
         /* --- avoid endless messages only for cleanup */
-        debug[dbgNorm] = debug[dbgNorm] && 0xfdff; /* without error display */
+        debug[dbgNorm] = debug[dbgNorm] & 0xfdff; /* without error display */
     }
 
     if (debugcheck(dbgAllInfo, dbgDetail)) {

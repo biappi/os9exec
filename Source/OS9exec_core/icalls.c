@@ -263,7 +263,7 @@ os9err OS9_I_ChgDir(regs_type *rp, ushort cpid)
  *              - Access mode is only used to ignore "chx"-requests
  */
 {
-    ushort    mode     = loword(rp->regs[REGS_D + 0]) & 0x07 | 0x80; /* ignore some flags */
+    ushort    mode     = (loword(rp->regs[REGS_D + 0]) & 0x07) | 0x80; /* ignore some flags */
     char     *os9_name = (char *)rp->regs[REGS_A + 0];
     char      os9_path[OS9PATHLEN];
     char     *pastpath;
