@@ -324,32 +324,8 @@ static void SetDefaultEndpointModes(SOCKET s)
 // blocking, synchronous, and using synch idle events with
 // the standard YieldingNotifier.
 {
-#if defined powerc && !defined MACOSX
-    OSStatus junk;
-
-    /* %%% workaround for the moment */
-
-    junk = OTSetNonBlocking(s);
-    //    junk= OTSetBlocking      ( s );
-    OTAssert("SetDefaultEndpointModes: Could not set blocking", junk == noErr);
-
-    junk = OTSetSynchronous(s);
-    OTAssert("SetDefaultEndpointModes: Could not set synchronous",
-             junk == noErr);
-
-    junk = OTInstallNotifier(s, &YieldingNotifier, nil);
-    OTAssert("SetDefaultEndpointModes: Could not install notifier",
-             junk == noErr);
-
-    junk = OTUseSyncIdleEvents(s, true);
-    OTAssert("SetDefaultEndpointModes: Could not use sync idle events",
-             junk == noErr);
-
-#else
     ulong nonblocking = true;
     int   err         = ioctl(s, FIONBIO, &nonblocking);
-
-#endif
 }
 
 static os9err GetBuffers(net_typ *net)
@@ -579,28 +555,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
     if (net->ipAddress.fAddressType == 0)
         fPort = ALLOC_PORT;
 
-#if defined powerc && !defined MACOSX
-    bindReq.addr.buf = (UInt8 *)&net->ipAddress;
-    bindReq.addr.len = sizeof(net->ipAddress);
-    bindReq.qlen     = 1;
-#endif
-
     while (true) {
-#if defined powerc && !defined MACOSX
-        net->ipAddress.fPort =
-            os9_word(fPort); /* don't forget to save it back */
-
-        err = OTBind(net->ep, &bindReq, nil);
-        if (!err || err == kEACCESErr)
-            break;
-        if (err == kEADDRINUSEErr || err == kOTNoAddressErr ||
-            net->ipAddress.fAddressType == 0)
-            ; /* do nothing */
-        else
-            break;
-
-#else
-
         name.sin_family      = os9_word(net->ipAddress.fAddressType);
         name.sin_port        = os9_word(fPort);
         name.sin_addr.s_addr = net->ipAddress.fHost; /* my own address */
@@ -613,7 +568,6 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
         //                                  os9_long(name.sin_addr.s_addr));
         if (!err)
             break;
-#endif
 
         if (net->ipAddress.fAddressType == 0) {
             if (fPort < ALLOC_PORT) /* dynamically */
@@ -640,15 +594,6 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
         }
     }
 
-#if defined powerc && !defined MACOSX
-    if (err == kEADDRNOTAVAILErr)
-        return OS9_ENETUNREACH;
-    if (err == kEACCESErr)
-        return E_PERMIT;
-    if (err)
-        return OS9_EADDRINUSE;
-#endif
-
     net->bound           = true;
     net->fAddT           = net->ipAddress.fAddressType;
     net->ipAddress.fPort = os9_word(fPort);
@@ -665,10 +610,6 @@ os9err pNlisten(ushort pid, syspath_typ *spP)
     net_typ     *net = &spP->u.net;
     process_typ *cp  = &procs[pid];
 
-#if defined powerc && !defined MACOSX
-    InetAddress ipRemote;
-#endif
-
 #ifndef NET_SUPPORT
     return E_UNKSVC;
 #endif
@@ -676,19 +617,7 @@ os9err pNlisten(ushort pid, syspath_typ *spP)
     if (cp->state == pWaitRead)
         set_os9_state(pid, cp->saved_state, "pNlisten");
 
-#if defined powerc && !defined MACOSX
-    OTMemzero(&net->call, sizeof(TCall));
-    net->call.addr.buf    = (UInt8 *)&ipRemote;
-    net->call.addr.maxlen = sizeof(ipRemote);
-
-    err = OTListen(net->ep, &net->call);
-    if (err == kOTNoDataErr)
-        err = 0; /* this is not an error */
-
-#else
     err             = listen(net->ep, SOMAXCONN);
-
-#endif
 
     if (err) {
         cp->saved_state = cp->state;
@@ -777,25 +706,6 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
     //  /* the domain service is now implemented */
     //  if (fPort==53) return OS9_ENETUNREACH;
 
-#if defined powerc && !defined MACOSX
-    debugprintf(dbgSpecialIO,
-                dbgNorm,
-                ("connect fAddT=%d fPort=%d\n", net->fAddT, fPort));
-    sndCall.addr.buf  = (UInt8 *)&net->ipRemote;
-    sndCall.addr.len  = sizeof(net->ipRemote);
-    sndCall.opt.buf   = nil; // no connection options
-    sndCall.opt.len   = 0;
-    sndCall.udata.buf = nil; // no connection data
-    sndCall.udata.len = 0;
-    sndCall.sequence  = 0; // ignored by OTConnect
-    err               = OTConnect(net->ep, &sndCall, nil);
-
-    if (err == kOTLookErr) {
-        lookResult = OTLook(net->ep);
-        debugprintf(dbgSpecialIO, dbgNorm, ("connect look=%d\n", lookResult));
-    }
-
-#else
     name.sin_family = os9_word(net->ipRemote.fAddressType);
     name.sin_port   = net->ipRemote.fPort;
     name.sin_addr.s_addr =
@@ -808,7 +718,6 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
         cp->state       = pWaitRead;
         return E_NOTRDY;
     }
-#endif
 
     debugprintf(dbgSpecialIO,
                 dbgNorm,
@@ -943,11 +852,7 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
         return 0;
 
     c = (char *)ispP; /* type casting */
-#ifdef powerc
-    strcpy(c, "bfomac");
-#else
     strcpy(c, "bfolinux");
-#endif
 
     //  upe_printf( "gnam '%s'\n", c );
     return 0;
@@ -1001,17 +906,7 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
     byte      *h;
     IcmpHeader icmp;
 
-#if defined powerc && !defined MACOSX
-    TUnitData udata;
-
-#else
-    //    #define DEF_PACKET_SIZE  32        // Default packet size
-
     struct sockaddr_in name;
-
-    //    char icmp_data[ MAX_PACKET ];
-    //    int datasize = DEF_PACKET_SIZE + sizeof(IcmpHeader); ;
-#endif
 
 #ifndef NET_SUPPORT
     return E_UNKSVC;
@@ -1029,17 +924,6 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
     icmp.i_magic = kOurMagic;
     icmp.i_cksum = checksum((ushort *)&icmp, sizeof(icmp));
 
-#if defined powerc && !defined MACOSX
-    udata.addr.buf  = (byte *)&net->ipRemote;
-    udata.addr.len  = sizeof(net->ipRemote);
-    udata.opt.buf   = nil;
-    udata.opt.len   = 0;
-    udata.udata.buf = (UInt8 *)&icmp;
-    udata.udata.len = sizeof(icmp);
-
-    err = OTSndUData(net->ep, &udata);
-
-#else
     memset((char *)&name, NUL, sizeof(name));
     name.sin_family = os9_word(net->ipRemote.fAddressType);
     name.sin_port   = net->ipRemote.fPort;
@@ -1066,7 +950,6 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
     //    upe_printf( "sendto err=%d\n", err );
     if (err > 0)
         err = 0;
-#endif
 
     debugprintf(dbgSpecialIO,
                 dbgNorm,
@@ -1090,22 +973,12 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
     IcmpHeader *icmp;
     //#endif
 
-#if defined powerc && !defined MACOSX
-    TUnitData   udata;
-    InetAddress src_addr;
-    OTResult    lookResult;
-
-    // we use this buffer to hold incoming ICMP packets
-    UInt8 icmp_data[5000];
-
-#else
     char               icmp_data[MAX_PACKET];
     struct sockaddr_in from;
     int                fromlen = sizeof(from);
     int                n;
     IpHeader          *iphdr;
     ushort             iphdrlen;
-#endif
 
 #ifndef NET_SUPPORT
 #pragma unused(a0)
@@ -1114,36 +987,7 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
 
     start_time = GetSystemTick();
     do {
-#if defined powerc && !defined MACOSX
-        // Set up the received...
-        udata.addr.buf     = (UInt8 *)&src_addr;
-        udata.addr.maxlen  = sizeof(src_addr);
-        udata.opt.buf      = nil;
-        udata.opt.maxlen   = 0;
-        udata.udata.buf    = icmp_data;
-        udata.udata.maxlen = sizeof(icmp_data);
 
-        // Look for a packet...
-        err = OTRcvUData(net->ep, &udata, nil);
-        if (err == noErr) {
-            icmp = (IcmpHeader *)&icmp_data[20];
-            if (icmp->i_type == ICMP_ECHOREPLY && icmp->i_magic == kOurMagic) {
-                *a0 = icmp->i_ISP;
-                return 0;
-            }
-        }
-        else {
-            if (err == kOTNoDataErr) {
-                err = 0;
-            }
-
-            if (err == kOTLookErr) {
-                lookResult = OTLook(net->ep);
-                // upe_printf( "lookResult=%d\n", lookResult );
-            }
-        }
-
-#else
         do {
                         err = ioctl(net->ep, FIONREAD, &n);
                         debugprintf(dbgSpecialIO,
@@ -1188,8 +1032,6 @@ os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
 
                         usleep(1000000); /* sleep in microseconds */
         } while (GetSystemTick() < start_time + 5 * 60);
-
-#endif
     } while (!err && GetSystemTick() < start_time + 5 * 60);
 
     return OS9_ENETUNREACH;
@@ -1226,10 +1068,6 @@ os9err pNpos(_pid_, _spP_, ulong *posP)
 
 os9err pNready(_pid_, syspath_typ *spP, ulong *n)
 {
-#if defined powerc && !defined MACOSX
-    OTResult lookResult;
-#endif
-
     OSStatus err = 0;
     net_typ *net = &spP->u.net;
 
@@ -1237,17 +1075,6 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
     //    WSANETWORKEVENTS ev;
     //  #endif
 
-#if defined powerc && !defined MACOSX
-    err = OTCountDataBytes(net->ep, n);
-    if (err == kOTLookErr) {
-        lookResult = OTLook(net->ep);
-        if (lookResult == T_DISCONNECT) {
-            err = OTRcvDisconnect(net->ep, nil);
-            *n  = 1;
-        }
-    }
-
-#else
     err = ioctl(net->ep, FIONREAD, n);
     if (*n == 0) {
         //       err= WSAEnumNetworkEvents( net->ep, net->hEventObj, &ev );
@@ -1256,8 +1083,6 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
         //  ev.lNetworkEvents );
         err = -1;
     }
-
-#endif
 
     if (err)
         *n = 0; /* nothing in buffer if error ! */
@@ -1271,10 +1096,6 @@ os9err pNready(_pid_, syspath_typ *spP, ulong *n)
 
 os9err pNask(ushort pid, syspath_typ *spP)
 {
-#if defined powerc && !defined MACOSX
-    OSStatus state;
-#endif
-
     net_typ *net = &spP->u.net;
     os9err   sig, err;
     ulong    n;
@@ -1285,13 +1106,7 @@ os9err pNask(ushort pid, syspath_typ *spP)
 #endif
 
     if (net->check) {
-#if defined powerc && !defined MACOSX
-        state = OTGetEndpointState(net->ep);
-        ok    = (state == T_INCON);
-
-#else
         ok = true;
-#endif
     }
     else {
         err = pNready(pid, spP, &n);
