@@ -172,15 +172,6 @@
 
 typedef struct sockaddr_in SOCKADDR_IN;
 
-// Newer socket libraries require these types
-#if !defined __SOCKADDR_ARG
-#define __SOCKADDR_ARG SOCKADDR_IN *
-#endif
-
-#if !defined __CONST_SOCKADDR_ARG
-#define __CONST_SOCKADDR_ARG SOCKADDR_IN *
-#endif
-
 /* --- local procedure definitions for object definition ------------------- */
 void init_Net(fmgr_typ *f);
 
@@ -430,10 +421,10 @@ os9err pNclose(_pid_, syspath_typ *spP)
 static os9err netRead(ushort       pid,
                       syspath_typ *spP,
                       ulong       *lenP,
-                      uint8_t     *buffer,
+                      void     *buffer,
                       Boolean      lnmode)
 {
-    OSStatus     err = 0;
+    ssize_t     err = 0;
     net_typ     *net = &spP->u.net;
     process_typ *cp  = &procs[pid];
     int          ii;
@@ -503,13 +494,14 @@ os9err pNreadln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
 static os9err netWrite(ushort       pid,
                        syspath_typ *spP,
                        ulong       *lenP,
-                       char        *buffer,
+                       void        *buffer_,
                        Boolean      lnmode)
 {
-    OSStatus err = 0;
+    ssize_t err = 0;
     net_typ *net = &spP->u.net;
     ulong    remain, nBytes;
     int      ii;
+    char    *buffer = (char *)buffer_;
     char    *pp;
 
     if (lnmode) {
@@ -613,7 +605,7 @@ os9err pNbind(_pid_, syspath_typ *spP, _d2_, byte *ispP)
         name.sin_port        = os9_word(fPort);
         name.sin_addr.s_addr = net->ipAddress.fHost; /* my own address */
 
-        err = bind(net->ep, (__CONST_SOCKADDR_ARG)&name, sizeof(name));
+        err = bind(net->ep, (const struct sockaddr *)&name, sizeof(name));
 
         // upe_printf( "bind %d %d: %d %d %x\n", err, net->ls,
         //                                           name.sin_family,
@@ -767,11 +759,15 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
             dbgSpecialIO,
             dbgNorm,
             ("connect %d %d %d %d %d\n", net->ep, af, ty, proto, fPort));
-        if (net->ep == INVALID_SOCKET)
-            if (isRaw)
+        if (net->ep == INVALID_SOCKET) {
+            if (isRaw) {
                 return E_PERMIT;
-            else
+            }
+            else {
                 return E_FNA;
+            }
+        }
+
 
         net->bound = true;
         if (isRaw)
@@ -805,7 +801,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
     name.sin_addr.s_addr =
         net->ipRemote.fHost; /* no big/little endian change */
 
-    err = connect(net->ep, (__CONST_SOCKADDR_ARG)&name, sizeof(name));
+    err = connect(net->ep, (const struct sockaddr *)&name, sizeof(name));
 
     if (err && cp->wTimeOut > 0) {
         cp->saved_state = cp->state;
@@ -852,7 +848,7 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
         set_os9_state(pid, cp->saved_state, "pNaccept");
 
     len   = sizeof(name);
-    epNew = accept(net->ep, (__SOCKADDR_ARG)&name, (unsigned int *)&len);
+    epNew = accept(net->ep, (struct sockaddr *)&name, (unsigned int *)&len);
     if (epNew == INVALID_SOCKET) {
         cp->saved_state = cp->state;
         set_os9_state(pid, pWaitRead, "pNaccept");
@@ -917,7 +913,7 @@ os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
     ulong  len  = *d2;
     ushort n    = os9_word((ushort)len);
 
-    err = netWrite(pid, spP, &lenB, (uint8_t *)&n, false);
+    err = netWrite(pid, spP, &lenB, &n, false);
     err = netWrite(pid, spP, &len, a0, false);
 
     if (!err)
@@ -999,9 +995,9 @@ static ushort checksum(ushort *buffer, int size)
 
 os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
 {
-    OSStatus   err = 0;
+    ssize_t    err = 0;
     net_typ   *net = &spP->u.net;
-    ulong     *u;
+    in_addr_t *u;
     byte      *h;
     IcmpHeader icmp;
 
@@ -1086,7 +1082,7 @@ os9err pNsPCmd(_pid_, syspath_typ *spP, uint8_t *a0)
 
 os9err pNgPCmd(_pid_, syspath_typ *spP, ulong *a0)
 {
-    OSStatus err = 0;
+    ssize_t err = 0;
     long     start_time;
     net_typ *net = &spP->u.net;
 

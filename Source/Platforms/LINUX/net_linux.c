@@ -189,10 +189,10 @@ MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName)
     return 0;
 }
 
-OSStatus netReadBlock(_pid_, net_typ *net, ulong *nBytes)
+ssize_t netReadBlock(_pid_, net_typ *net, ulong *nBytes)
 // platform specific reading
 {
-    OSStatus err;
+    ssize_t err;
     int      flags = 0;
 
     err = recv(net->ep, net->transferBuffer, *nBytes, flags);
@@ -207,10 +207,10 @@ OSStatus netReadBlock(_pid_, net_typ *net, ulong *nBytes)
     return 0;
 }
 
-OSStatus netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
+ssize_t netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
 // platform specific reading
 {
-    OSStatus err;
+    ssize_t err;
     int      flags = 0;
 
     err = send(net->ep, net->transferBuffer, *nBytes, flags);

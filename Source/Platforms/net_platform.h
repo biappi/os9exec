@@ -76,14 +76,14 @@ os9err
 MyInetAddr(ulong *inetAddr, ulong *dns1Addr, ulong *dns2Addr, char *domainName);
 /* Returns <inetAddr>, DNS addresses and <domainName> of this host */
 
-OSStatus netReadBlock(ushort pid, net_typ *net, ulong *nBytes);
+ssize_t netReadBlock(ushort pid, net_typ *net, ulong *nBytes);
 /* Read <nBytes> of data at <net->transferBuffer> from <net->ep> */
 /* Result is <err> >0 -> number of bytes read                    */
 /*                 =0 -> no data                                 */
 /*                 <0 -> error (OS dependent)                    */
 /* <net->closeit> will be set to true in case of EOF             */
 
-OSStatus netWriteBlock(ushort pid, net_typ *net, ulong *nBytes);
+ssize_t netWriteBlock(ushort pid, net_typ *net, ulong *nBytes);
 /* Write <nBytes> of data of <net->transferBuffer> to <net->ep>  */
 /* Result is <err> >0 -> number of bytes written                 */
 /*                 =0 -> no data                                 */

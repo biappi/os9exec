@@ -781,7 +781,7 @@ typedef struct {
 } scsi_dev;
 
 #ifdef NET_SUPPORT
-typedef ulong SOCKET; /* make it visible for linux as std type */
+typedef int SOCKET;
 
 #define nil 0
 typedef char *Ptr;
@@ -790,7 +790,7 @@ typedef int   OSStatus;
 struct InetAddress {
     ushort fAddressType; // always AF_INET
     ushort fPort;        // Port number
-    ulong  fHost;        // Host address in net byte order
+    in_addr_t  fHost;        // Host address in net byte order
     byte   fUnused[8];   // Traditional unused bytes
 };
 
