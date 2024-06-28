@@ -1259,7 +1259,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
     dev->ramBase = get_mem(dev->sctSize * dev->totScts);
     if (dev->ramBase == NULL)
         return E_NORAM;
-    memset(dev->ramBase, dev->sctSize * dev->totScts, 0); // clear all
+    memset(dev->ramBase, 0, dev->sctSize * dev->totScts); // clear all
     memcpy(dev->ramBase, RAM_zero, dev->sctSize);
 
     // f= allocClu*clu;
