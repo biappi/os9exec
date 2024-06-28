@@ -6,6 +6,9 @@
   * Copyright 1995 Bernd Schmidt
   */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wint-to-pointer-cast"
+
 static __inline__ uae_u32 get_long(uaecptr addr)
 {
     uae_u8 *a = (uae_u8 *)addr;
@@ -48,3 +51,4 @@ static __inline__ void put_byte(uaecptr addr, uae_u32 v)
     uae_u8 *a = (uae_u8 *)addr;
     *a = v;
 }
+#pragma clang diagnostic pop
