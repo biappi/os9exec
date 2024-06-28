@@ -335,7 +335,7 @@ static void disp_line(ushort       pid,
                       Boolean      nameflag,
                       char        *typenam)
 {
-    int           n;
+    ulong         n;
     mod_exec     *mod;
     process_typ  *cp = &procs[pid];
     pipechan_typ *p;
@@ -401,7 +401,7 @@ static void disp_line(ushort       pid,
             sprintf(aa, "%c>%d:%s", p->broken ? '/' : '-', p->sp_lock, szs);
             if (n > 0) {
                 char suffix[20];
-                snprintf(suffix, sizeof(suffix), ":%d", n);
+                snprintf(suffix, sizeof(suffix), ":%lu", n);
                 strcat(aa, suffix);
             }
         }
@@ -1677,7 +1677,7 @@ os9err syspath_getstat(ushort pid,
         err = (g->_SS_Opt)(pid, spP, *a);
         break;
     case SS_DevNm:
-        err = (g->_SS_DevNm)(pid, spP, *a);
+        err = (g->_SS_DevNm)(pid, spP, *a0);
         break;
     case SS_Pos:
         err = (g->_SS_Pos)(pid, spP, d2);
