@@ -324,7 +324,7 @@ void ConsPutcEdit(char c, Boolean alf, char eorch)
 /* get char from console and perform CR/LF conversion */
 Boolean ConsGetc(char *c)
 {
-    int n;
+    long n;
 
     // other terminal ?
     if (gConsoleID >= TTY_Base) {

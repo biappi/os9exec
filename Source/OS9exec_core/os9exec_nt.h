@@ -1147,7 +1147,7 @@ typedef struct {
     void      *filtermem;    /* the process' filter function's static storage */
 
     /* Stdin saved buffer */
-    int        saved_cnt;
+    ulong      saved_cnt;
     pstate_typ saved_state; /* saved process' state */
 
     ulong my_args; /* arguments pointer */
