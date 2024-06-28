@@ -291,8 +291,8 @@ int pustrcmp(const char *s1, const char *s2)
         len = len1;
     len = len2;
 
-    *(s1++); /* start with 1st char */
-    *(s2++);
+    s1++; /* start with 1st char */
+    s2++;
 
     for (n = 1; n <= len; n++) {
         if ((diff = toupper(c = *(s1++)) - toupper(*(s2++))) != 0)
