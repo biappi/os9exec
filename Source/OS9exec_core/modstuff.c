@@ -944,7 +944,7 @@ static os9err load_module_local(ushort  pid,
 #define MODNLEN 33
     char realmodname[MODNLEN];
 
-    ulong     modSize; /* OS-9 module size */
+    uint32_t  modSize; /* OS-9 module size */
     ushort    mode, sync;
     ptype_typ type; /* distinguish which file manager to be used */
 
@@ -1561,10 +1561,10 @@ ushort calc_parity(ushort *p, ushort numwords)
     return parity;
 }
 
-ulong calc_crc(byte *p, ulong size, ulong accum)
+uint32_t calc_crc(byte *p, uint32_t size, uint32_t accum)
 /* calculate CRC over <size> bytes at <p>, starting with <accum> */
 {
-    ulong count, b, b1;
+    uint32_t count, b, b1;
     int   i, j;
 
     for (count = 0; count < size; count++) {
@@ -1588,8 +1588,8 @@ ulong calc_crc(byte *p, ulong size, ulong accum)
 
 void mod_crc(mod_exec *m)
 {
-    ulong modsize = os9_long(m->_mh._msize);
-    ulong crc;
+    uint32_t modsize = os9_long(m->_mh._msize);
+    uint32_t crc;
 
     crc = calc_crc((byte *)m, modsize - 4, 0xFFFFFFFF);
     crc =

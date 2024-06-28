@@ -1205,10 +1205,11 @@ static uint32_t HashF(char *name)
 {
     const uint32_t AccStart = 0xffffffff;
     uint32_t       rslt;
-    size_t         i, len;
+    uint32_t        len;
+    int i;
     char            ups[MAX_PATH]; // let the original be case sensitive for Linux
 
-    len = strlen(name);
+    len = (uint32_t)strlen(name);
     for (i = 0; i < len + 1; i++) {
         ups[i] = toupper(name[i]); // make comparisons more "the same"
     }
