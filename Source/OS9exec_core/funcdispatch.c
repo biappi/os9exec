@@ -1202,7 +1202,7 @@ static void show_line(Boolean show,
                       char    c,
                       char   *name,
                       ulong   t,
-                      int     n,
+                      ulong   n,
                       ulong   active,
                       int     ticksLim)
 {
@@ -1227,7 +1227,7 @@ static void show_line(Boolean show,
     if (n == -1)
         strcpy(nnnn, "");
     else
-        sprintf(nnnn, "%d", n);
+        sprintf(nnnn, "%d", (int)n);
     if (f < Lim)
         strcpy(perc, "-");
     // else       sprintf( perc,"%c%1.1f%%", ustrcmp( "TOTAL idle",name )==0 ?
@@ -1244,13 +1244,13 @@ static void show_line(Boolean show,
                time_disp(t));
 }
 
-static void show_sline(char *name, ulong t, int n, ulong active)
+static void show_sline(char *name, ulong t, ulong n, ulong active)
 {
     show_line(true, 0, ' ', name, t, n, active, 1);
 }
 
 /* show system call timers */
-static void Get_FI_tn(ushort k, Boolean icalls, int *t, int *n)
+static void Get_FI_tn(ushort k, Boolean icalls, ulong *t, ulong *n)
 {
     *t = icalls ? icall_time[k] : fcall_time[k];
     *n = icalls ? icall_num[k] : fcall_num[k];
@@ -1265,7 +1265,7 @@ static void show_syscalltimers(Boolean icalls,
 {
     ushort  k, j, kInd;
     ulong   mxTicks, mxNum;
-    int     t, n;
+    ulong   t, n;
     char   *name;
     Boolean kDone[NUMFCALLS]; // NUMFALLS is larger than NUMICALLS
     Boolean sort = mode & STIM_ORDERED;
@@ -1327,7 +1327,7 @@ static void show_syscalltimers(Boolean icalls,
 }
 
 /* show system call timers */
-static void Get_Statistics_tn(ushort k, st_typ **s, int *t, int *n)
+static void Get_Statistics_tn(ushort k, st_typ **s, ulong *t, ulong *n)
 {
     *s = &statistics[k];
     *t = (*s)->ticks;
@@ -1340,7 +1340,7 @@ show_os9timers(ushort mode, ulong active, ulong *call, ulong *num, int ticksLim)
     ushort  k, j, kInd;
     ulong   mxTicks, mxNum;
     st_typ *s;
-    int     t, n;
+    ulong   t, n;
     Boolean kDone[MAX_OS9PROGS];
     Boolean sort = mode & STIM_ORDERED;
     Boolean show = mode & STIM_OS9;
