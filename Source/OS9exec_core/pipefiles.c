@@ -452,7 +452,7 @@ static os9err pWriteSysTaskExe(ushort          pid,
                                systaskfunc_typ wr_func)
 {
     os9err        err = 0;
-    int           numfree, remaining, bytes, nn;
+    ulong         numfree, remaining, bytes, nn;
     byte         *buf;
     pipechan_typ *p = spP->u.pipe.pchP;
     char          c;

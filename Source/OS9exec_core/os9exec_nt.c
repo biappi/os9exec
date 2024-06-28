@@ -534,7 +534,7 @@ jmp_buf main_env;
 /* tickCount at start of the program */
 ulong startTick = 0;
 ulong lastTick  = 0;
-int   syCorr    = 0;
+ulong syCorr    = 0;
 
 ulong sec0;
 

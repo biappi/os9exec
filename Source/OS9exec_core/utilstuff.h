@@ -125,8 +125,8 @@ os9err host2os9err(OSErr hosterr, ushort suggestion);
 os9err c2os9err(int cliberr, ushort suggestion);
 os9err os9error(os9err err);
 
-ulong j_date(int d, int m, int y);
-void  g_date(ulong jdn, int *dp, int *mp, int *yp);
+int   j_date(int d, int m, int y);
+void  g_date(int jdn, int *dp, int *mp, int *yp);
 
 void   TConv(time_t u, struct tm *tim);
 time_t UConv(struct tm *tim);

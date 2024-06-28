@@ -330,7 +330,7 @@
 
 /* day since 1.1.0000 + days between 1.1.0000 and 1.1.4713 B.C. */
 /* question is still open whether year 0 exists ... */
-#define DAYS_SINCE_0000 1721059L
+#define DAYS_SINCE_0000 1721059
 #define SecsPerDay (24 * 60 * 60)
 
 /* 16 bit integer */
@@ -1291,7 +1291,7 @@ extern jmp_buf main_env;
 /* tickCount at start of the program */
 extern ulong startTick;
 extern ulong lastTick;
-extern int   syCorr;
+extern ulong syCorr;
 
 extern ulong sec0;
 

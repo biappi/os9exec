@@ -457,14 +457,14 @@ os9err c2os9err(int cliberr, ushort suggestion)
     return os9error(err);
 }
 
-ulong j_date(int d, int m, int y)
+int j_date(int d, int m, int y)
 /* this routine returns the number of days
  * since January 1, 4713 B.C.
  * it is used by the F$Time call.
  * expected <d>: 1..31 / <m>: 1..12 / <y>: XXXX
  */
 {
-    long fct = 365 * y + 31 * (m - 1) + d;
+    int  fct = 365 * y + 31 * (m - 1) + d;
     int  yb  = y - 1; /* the year before */
     ;
 
@@ -476,10 +476,10 @@ ulong j_date(int d, int m, int y)
     return fct + DAYS_SINCE_0000;
 }
 
-void g_date(ulong jdn, int *dp, int *mp, int *yp)
+void g_date(int jdn, int *dp, int *mp, int *yp)
 /* this routine returns the date from julian day number */
 {
-    long fct;
+    int  fct;
     int  d, m, y, yb, fb;
     int  marr[12];
 
@@ -580,7 +580,8 @@ void Get_Time(ulong  *cTime,
                    // byte   tc[4];
     // ulong* tcp= (ulong*)&tc[0];
     ulong ct0;
-    int   y, m, d, tsm, ssm, syTick;
+    int y, m, d;
+    ulong tsm, ssm, syTick;
 
     // process_typ* cp= &procs[ currentpid ];
 
@@ -656,7 +657,7 @@ tc[3]= tim.tm_sec;
     else {
         /* julian format */
         *cTime = ssm;             /* seconds since midnight */
-        *cDate = j_date(d, m, y); /* julian date, intenral clock starts 1904 */
+        *cDate = (int)j_date(d, m, y); /* julian date, intenral clock starts 1904 */
     }
 
     *dayOfWk = tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
@@ -1658,7 +1659,7 @@ ulong DirSize(syspath_typ *spP)
     int         cnt = 0;
     dirent_typ *dEnt;
 
-    int sv = telldir(spP->dDsc);
+    long sv = telldir(spP->dDsc);
 
     seekD0(spP);   /* start at the beginning */
     while (true) { /* search for the nth entry */
@@ -2072,7 +2073,7 @@ os9err GetRBFName(char *os9path, ushort mode, Boolean *isFolder, char *rbfname)
     char       *pp, *qq;
     struct stat info;
     FILE       *stream;
-    int         cnt;
+    size_t      cnt;
     char        bb[STD_SECTSIZE]; /* one sector */
 
     strcpy(sv, os9path);
