@@ -1512,7 +1512,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
             if (*p < ' ')
                 break;
             if (*p == '/')
-                putchar('¶'); /* quote slashes, as they are MPW shell quotes */
+                putchar('|'); /* quote slashes, as they are MPW shell quotes */
             putchar(*p++);
         }
 
