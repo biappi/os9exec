@@ -310,6 +310,7 @@
 #include <types.h>
 #endif
 
+#include <netinet/in.h>
 #include <setjmp.h>
 
 /* XCode does not know about macintosh */

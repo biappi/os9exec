@@ -1677,7 +1677,7 @@ os9err syspath_getstat(ushort pid,
         err = (g->_SS_Opt)(pid, spP, *a);
         break;
     case SS_DevNm:
-        err = (g->_SS_DevNm)(pid, spP, *a0);
+        err = (g->_SS_DevNm)(pid, spP, (char *)*a0);
         break;
     case SS_Pos:
         err = (g->_SS_Pos)(pid, spP, d2);
