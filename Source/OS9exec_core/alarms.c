@@ -200,7 +200,7 @@ Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 {
     ulong  iTime, iDate, aTicks;
     int    dayOfWk, currentTick;
-    int    mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
+    ulong  mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
     byte   tc[4];
     ulong *tcp = (ulong *)&tc[0];
 
@@ -230,7 +230,7 @@ Alarm_AtJul(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 {
     ulong iTime, iDate, aTicks;
     int   dayOfWk, currentTick;
-    int   mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
+    ulong mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
 
     Get_Time(&iTime, &iDate, &dayOfWk, &currentTick, false, false);
 
