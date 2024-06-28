@@ -528,7 +528,7 @@ static os9err ConsRead(ushort       pid,
 static Boolean
 ConsId(const char *name, char *family, int range, int offs, int *result)
 {
-    int   flen = strlen(family);
+    size_t   flen = strlen(family);
     const char *nInd;
     int   ii;
 

@@ -945,7 +945,7 @@ static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
 
 static void CutPath(char *s)
 {
-    int ii, len = strlen(s);
+    size_t ii, len = strlen(s);
     for (ii = len - 1; ii >= 0; ii--) {
         if (s[ii] == PSEP) {
             strcpy(s, &s[ii + 1]);
@@ -1336,7 +1336,7 @@ static os9err DeviceInit(ushort       pid,
     char cmp[OS9PATHLEN], ali[OS9PATHLEN], tmp[OS9PATHLEN], ers[20], *q, *p, *v;
     rbfdev_typ *dev;
     ptype_typ   type;
-    int         ii, n;
+    size_t      ii, n;
     Boolean     abs, isSCSI, isRAMDisk = false, wProtect;
     Boolean     isFolder;
 
@@ -2221,7 +2221,7 @@ static void AdaptPath(rbfdev_typ *dev, char **pathP)
 {
     char  tmp[OS9PATHLEN];
     char *p    = *pathP;
-    int   ilen = strlen(dev->img_name);
+    size_t   ilen = strlen(dev->img_name);
 
     if (!AbsPath(p))
         return;
@@ -2740,7 +2740,7 @@ static os9err DoAccess(syspath_typ *spP,
     byte   *bb;
     byte    attr;
     byte   *bp;
-    int     ii;
+    size_t  ii;
     Boolean done  = false;         // break condition for readln
     Boolean rOK   = (remain == 0); // is true, if nothing to read
     Boolean first = true;
@@ -3654,7 +3654,7 @@ os9err pRchd(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname)
     Boolean      exedir = IsExec(*modeP);
     process_typ *cp     = &procs[pid];
     rbfdev_typ  *dev;
-    int          n;
+    size_t       n;
     char        *curpath;
     char         tmp[OS9PATHLEN];
 

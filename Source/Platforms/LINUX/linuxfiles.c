@@ -65,7 +65,7 @@ void Conv_to_2e(char *pathname, char **qP, char **qsP)
 /* ":2e" must be treated as "." and vice versa */
 {
     int     L_Plen = strlen(L_P);
-    int     blk    = *qsP - *qP;
+    ptrdiff_t  blk    = *qsP - *qP;
     Boolean fnd;
 
     debugprintf(dbgFiles, dbgNorm, ("# Conv_to_2e  ~>  '%s'\n", pathname));
@@ -155,7 +155,7 @@ os9err AdjustPath(const char *pathname, char *adname, Boolean creFile)
 #define Prev "/."
 
     os9err  err = 0;
-    int     len;
+    size_t     len;
     Boolean fnd, reduS;
     char   *v, *q, *qs, *qc;
 

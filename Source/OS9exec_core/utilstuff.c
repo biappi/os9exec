@@ -1200,12 +1200,12 @@ void EatBack(char *pathname)
 
 // Take the CRC algorithm as hash function
 // static int HashF( char* name, char* fName )
-static int HashF(char *name)
+static uint32_t HashF(char *name)
 {
-    const ulong AccStart = 0xffffffff;
-    ulong       rslt;
-    int         i, len;
-    char        ups[MAX_PATH]; // let the original be case sensitive for Linux
+    const uint32_t AccStart = 0xffffffff;
+    uint32_t       rslt;
+    size_t         i, len;
+    char            ups[MAX_PATH]; // let the original be case sensitive for Linux
 
     len = strlen(name);
     for (i = 0; i < len + 1; i++) {
@@ -1393,7 +1393,7 @@ os9err Flush_Dir(ushort cpid, ushort *pathP, const char *nmS)
     ulong           dir_size;
     syspath_typ    *spP;
     char            fullName[OS9PATHLEN];
-    int             oLen;
+    size_t          oLen;
     dirtable_entry *mP = NULL;
     ulong           fd_hash;
 
@@ -1706,7 +1706,7 @@ DirName(const char *pathname, ulong fdsect, char *result, Boolean useInodes)
     char        sv[OS9PATHLEN];
     struct stat qInfo;
     struct stat pInfo;
-    int         len, err;
+    size_t      len, err;
 
     strcpy(sv, result);
 #endif
@@ -1886,7 +1886,7 @@ static void CutRaw(char **pP)
 
 Boolean SamePathBegin(const char *pathname, const char *cmp)
 {
-    int len = strlen(cmp);
+    size_t len = strlen(cmp);
     return len > 0 && ustrncmp(pathname, cmp, len) == 0 &&
            (pathname[len] == NUL || pathname[len] == '@' ||
             pathname[len] == PSEP);

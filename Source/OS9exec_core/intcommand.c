@@ -1032,13 +1032,13 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
     char        nm[OS9PATHLEN];
     char        form[40];
 
-    int       maxN        = 0;
+    size_t    maxN        = 0;
     Boolean   withBuiltIn = false;
     Boolean   isBuiltIn   = false;
     Boolean   done        = false;
     Boolean   enabled;
     plug_typ *p;
-    int       i, len;
+    size_t    i, len;
     long      ver;
     ushort    rev;
 
@@ -1092,7 +1092,7 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
             if (!enabled)
                 tt = " (disabled)";
 
-            sprintf(form, "%s %s%ds %s%s\n", "%s", "%", -maxN, "V%d.%02x", tt);
+            sprintf(form, "%s %s%zus %s%s\n", "%s", "%", -maxN, "V%d.%02x", tt);
 
             tt = "";
             if (atStartup) {

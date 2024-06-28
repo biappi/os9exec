@@ -562,7 +562,7 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     char     *p;
     char     *pp;
     char     *vn;
-    int       len;
+    size_t    len;
 
     FILE *stream;
 
@@ -796,7 +796,8 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, ulong *sizeP)
 
     long curSize;
 
-    int   fd, i, j, cnt;
+    int   fd;
+    size_t i, j, cnt;
     OSErr oserr = 0;
     char  tmpName[OS9PATHLEN];
     FILE *tmp__stream;
@@ -1282,7 +1283,7 @@ os9err pDread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
 
     dirent_typ     *dEnt;
     dirtable_entry *mP = NULL;
-    int             len;
+    size_t          len;
     ulong           fdpos;
     Boolean         topFlag = false;
 
@@ -1386,7 +1387,8 @@ os9err pDsize(_pid_, syspath_typ *spP, ulong *sizeP)
 /* set read position */
 os9err pDseek(ushort pid, syspath_typ *spP, ulong *posP)
 {
-    int         cnt, n;
+    ulong       cnt;
+    int         n;
     dirent_typ *dEnt;
 
     seekD0(spP); /* start at the beginning */

@@ -853,7 +853,7 @@ static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 static os9err ShowPipeDir(syspath_typ *spP, char *buffer)
 {
     os9direntry_typ os9dirent;
-    int             len, k, n = 0;
+    size_t          len, k, n = 0;
     Boolean         found = false;
     syspath_typ    *spK;
 
