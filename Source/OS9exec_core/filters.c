@@ -59,17 +59,10 @@
 /* global includes */
 #include "os9exec_incl.h"
 
-void releasefilter(void **memoryPP)
-/* release filter and its memory */
-{
-    /* return the memory */
-    if (*memoryPP != NULL) {
-        release_mem(*memoryPP);
-        *memoryPP = NULL; /* no memory any more */
-    }
-}
-
 #ifndef MPW_FILTERS
+
+void releasefilter(void **memoryPP) {}
+
 /* no filters available */
 /* get pointer to filter function for module name returns NULL if no filter
  * found
@@ -86,6 +79,16 @@ void printfilters(void)
 }
 
 #else
+
+void releasefilter(void **memoryPP)
+/* release filter and its memory */
+{
+    /* return the memory */
+    if (*memoryPP != NULL) {
+        release_mem(*memoryPP);
+        *memoryPP = NULL; /* no memory any more */
+    }
+}
 
 /* output filter for Omegasoft pascal */
 /* ================================== */
@@ -229,11 +232,11 @@ static void icc_filter(char *linebuf, FILE *stream, void *fmv)
             stream);
         /*      if (thiscol<50) {
                     fprintf(stream,"    File \"%s\"; Line
-           Æ%d!%d:%dÆ\n",thisfile,thisline,thiscol,thisline);
+           ï¿½%d!%d:%dï¿½\n",thisfile,thisline,thiscol,thisline);
                 }
                 else {
                     fprintf(stream,"    File \"%s\"; Line
-           Æ%d:¤!%d\n",thisfile,thisline,thiscol,thisline);
+           ï¿½%d:ï¿½!%d\n",thisfile,thisline,thiscol,thisline);
                 }
         */
         fprintf(stream, "    File \"%s\"; Line %d\n", thisfile, thisline);

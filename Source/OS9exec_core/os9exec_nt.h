@@ -313,15 +313,12 @@
 #include <netinet/in.h>
 #include <setjmp.h>
 
-/* XCode does not know about macintosh */
-#if !defined macintosh && defined __MACH__
-#define macintosh
-#define powerc
-#endif
-
 #ifdef __GNUC__
 #define UNIX
 #endif
+
+#include "memory.h"
+#include <stdbool.h>
 
 /* constants */
 /* ========= */
@@ -448,8 +445,8 @@
 
 // definition of an allocated memory block
 typedef struct {
-    void *base;
-    ulong size;
+    addrpair_typ base;
+    uint32_t     size;
 } memblock_typ;
 
 // per process memory blocks
@@ -555,7 +552,7 @@ typedef struct {
 
 /* an (internal) module directory entry */
 typedef struct {
-    void   *modulebase;
+    addrpair_typ modulebase;
     Boolean isBuiltIn; /* set, if module compiled into code (such as 'OS9exec'
                           module) */
     short linkcount;
@@ -705,6 +702,7 @@ typedef struct {
  * pipe) */
 typedef struct {
     ulong     size;      /* size of pipe buffer */
+    addrpair_typ bufp;      /* pointer to pipe buffer */
     byte     *buf;       /* pointer to pipe buffer */
     byte     *prp;       /* pipe read pointer */
     byte     *pwp;       /* pipe write pointer */
@@ -720,6 +718,7 @@ typedef struct {
 
 /* variant for pipes */
 typedef struct {
+    addrpair_typ  pchPP;
     pipechan_typ *pchP;       /* (named or unnamed) pipe, tty/pty pairs */
     pipechan_typ *i_svd_pchP; /* saved pipe during internal commands */
     Boolean       locked_open;
@@ -802,10 +801,10 @@ typedef struct InetAddress InetAddress;
 /* variant for network objects */
 typedef struct {
     SOCKET      ep;             /* end point reference */
-    Ptr         transferBuffer; /* OpenTransport's network buffer */
-    Ptr         b_local;        /* local buffer */
+    addrpair_typ transferBuffer; /* OpenTransport's network buffer */
+    addrpair_typ b_local;        /* local buffer */
     ulong       bsize;          /* local buffer size */
-    Ptr         bpos;           /* local buffer access */
+    uint8_t     *bpos;           /* local buffer access */
     InetAddress ipAddress;      /* my  own    host's address */
     InetAddress ipRemote;       /* the remote host's address */
     ushort      fAddT;
@@ -833,7 +832,7 @@ typedef struct {
     ushort    nr;               /* the own syspath number */
     ushort    linkcount;        /* the link count */
     char      name[OS9NAMELEN]; /* file name */
-    mod_exec *mh;               /* according module, if available */
+    addrpair_typ mh;               /* according module, if available */
     byte      opt[OPTSECTSIZE]; /* path's option section */
     ushort    signal_to_send;   /* send signal on data ready */
     ushort    signal_pid;       /* signal has to be sent to this process */
@@ -842,11 +841,11 @@ typedef struct {
     Boolean   rawMode;          /* raw mode /xx@ */
     ulong     rawPos;           /* the (emulated) sector 0 position */
 
-    byte   *fd_sct;     /* FD  sector buffer */
-    byte   *rw_sct;     /* R/W sector buffer */
-    ulong   rw_nr;      /* current R/W sector nr */
-    ulong   mustW;      /* current sector to be written */
-    Boolean fullsearch; /* recursive mode for "babushka" */
+    addrpair_typ fd_sct;     /* FD  sector buffer */
+    addrpair_typ rw_sct;     /* R/W sector buffer */
+    ulong        rw_nr;      /* current R/W sector nr */
+    ulong        mustW;      /* current sector to be written */
+    Boolean      fullsearch; /* recursive mode for "babushka" */
 
     // %%%luz: many of these should be in the union below...
     FILE *stream; /* the associated stream */
@@ -1053,7 +1052,7 @@ typedef os9err (*Call_Intercept_Typ)(void *routine, short code, ulong ptr);
 
 // The plugin element
 typedef struct {
-    char *name;           // the plugin's name
+    addrpair_typ name;           // the plugin's name
     void *fDLL;           // the plugin's reference
     long  pVersion;       // the plugin's version
     int   numNativeProgs; // number of internal progs
@@ -1170,7 +1169,7 @@ extern ushort currentpid;
 /* the "module directory" */
 extern module_typ os9modules[MAXMODULES];
 extern mod_exec  *init_module;
-extern ulong      totalMem;
+extern uint32_t   totalMem;
 extern mdir_entry mdirField[MAXMODULES];
 
 /* the system paths */
@@ -1209,10 +1208,9 @@ extern int            hittable[MAXDIRHIT];
 
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
 /* the include/exclude list for internal commands */
-extern char    *includeList[MAXLIST];
-extern char    *excludeList[MAXLIST];
-extern plug_typ pluginList[MAXLIST];
-
+extern addrpair_typ includeList[MAXLIST]; /* char * */
+extern addrpair_typ excludeList[MAXLIST]; /* char * */
+extern plug_typ     pluginList[MAXLIST];
 extern callback_typ g_cb;
 #endif
 
@@ -1413,4 +1411,5 @@ ushort os9exec_nt(const char *toolname,
                   ushort      prior);
 
 #endif
+
 /* eof */

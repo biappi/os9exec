@@ -195,7 +195,7 @@ ssize_t netReadBlock(_pid_, net_typ *net, ulong *nBytes)
     ssize_t err;
     int      flags = 0;
 
-    err = recv(net->ep, net->transferBuffer, *nBytes, flags);
+    err = recv(net->ep, net->transferBuffer.host, *nBytes, flags);
     if (err == 0)
         net->closeIt = true;
     if (err < 0) {
@@ -213,7 +213,7 @@ ssize_t netWriteBlock(_pid_, net_typ *net, ulong *nBytes)
     ssize_t err;
     int      flags = 0;
 
-    err = send(net->ep, net->transferBuffer, *nBytes, flags);
+    err = send(net->ep, net->transferBuffer.host, *nBytes, flags);
     if (err == 0)
         net->closeIt = true;
     if (err < 0) {

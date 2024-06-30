@@ -74,23 +74,18 @@ extern memblock_typ memtable[MAX_MEMALLOC];
 // memory blocks for all processes
 extern pmem_typ pmem[MAXPROCESSES];
 
-
-#if defined __cplusplus
-extern "C" {
-#endif
-
 void init_all_mem(void);
 void init_mem(ushort pid);
 
-ulong max_mem(void);
+uint32_t max_mem(void);
 void  show_mem(ushort pid, Boolean mem_unused, Boolean mem_fulldisp);
 void  show_unused(void);
 
-void *get_mem(ulong memsz);
-void  release_mem(void *membase);
-void  free_mem(ushort pid); // release all memory of process
+addrpair_typ get_mem(uint32_t memsz);
+void         release_mem(addrpair_typ membase);
+void         free_mem(ushort pid); // release all memory of process
 
-void  *os9malloc(ushort pid, ulong memsz);
-os9err os9free(ushort pid, void *membase, ulong memsz);
+addrpair_typ os9malloc(ushort pid, uint32_t memsz);
+os9err       os9free(ushort pid, void *membase, uint32_t memsz);
 
 /* eof */

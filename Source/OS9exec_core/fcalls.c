@@ -406,22 +406,21 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
  *             E$NORAM: no memory free
  */
 {
-#define MxV 0xFFFFFFF0
-    void *bp;
     ulong memsz = rp->regs[REGS_D + 0];
 
     if (memsz == 0xFFFFFFFF) { /* get max mem */
         memsz = 0x00800000;    /* %%% a large portion */
     }
 
-    memsz = (memsz + 15) & MxV; /* round up to next 16-byte boundary */
-    bp    = os9malloc(cpid, memsz);
+    memsz = (memsz + 15) & 0xFFFFFFF0; /* round up to next 16-byte boundary */
+
+    addrpair_typ bp = os9malloc(cpid, memsz);
 
     /* %%% E_MEMFUL is never returned, even if only pointer list is full */
-    if (bp == NULL)
-        return os9error(E_NORAM); /* not enough RAM */
-    rp->regs[REGS_D + 0] = memsz;             /* return actual block size */
-    rp->regs[REGS_A + 2] = (ulong)bp;         /* return block pointer */
+    if (bp.host == NULL)
+        return os9error(E_NORAM);    /* not enough RAM */
+    rp->regs[REGS_D + 0] = memsz;    /* return actual block size */
+    rp->regs[REGS_A + 2] = bp.guest; /* return block pointer */
     return 0;
 }
 
@@ -916,7 +915,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
         pd._queueid = '*';
 
     pd._scall  = os9_byte(cp->lastsyscall);
-    pd._pmodul = (mod_exec *)os9_long((ulong)os9mod(cp->mid));
+    pd._pmodul = (mod_exec *)os9_long((ulong)os9mod(cp->mid).host);
     // upe_printf( "pmodul1=%08X\n", os9_long( (ulong)pd._pmodul ) );
 
     // get the list of the currently connected trap handlers (bfo)
@@ -944,8 +943,9 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     memsz = 0;
 
     for (k = 0; k < MAXMEMBLOCKS; k++) {
-        if (cm->m[k].base != NULL) {
-            pd._memimg[0] = (unsigned char *)os9_long((ulong)cm->m[k].base);
+        if (cm->m[k].base.host != NULL) {
+            pd._memimg[0] =
+                (unsigned char *)os9_long((ulong)cm->m[k].base.guest);
             memsz += cm->m[k].size;
         }
     }
@@ -1365,12 +1365,6 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
  *          d1.w = error
  */
 {
-
-    //  #ifdef macintosh
-    //    Handle    theModuleH;
-    //    ulong     hsize;
-    //  #endif
-
     mod_exec *theModule; /* OS-9 module header */
 
     char   mpath[OS9PATHLEN], *p;
@@ -1378,7 +1372,6 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     ulong  size, namsize, msz, xpos, npos, usz;
     ulong *k;
     ushort hpar;
-    void  *pp;
     short  access, tylan, attrev;
 
     size = rp->regs[REGS_D + 0];
@@ -1402,30 +1395,13 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
         namsize++; /* align needed */
     msz = DatMod_Size(namsize, size);
 
-    pp = get_mem(msz);
-    if (pp == NULL)
+    addrpair_typ pp = get_mem(msz);
+    if (pp.host == NULL)
         return os9error(E_NORAM); /* not enough memory */
 
-    //  #ifdef macintosh
-    //    theModuleH= pp;
-    //
-    //    MoveHHi (theModuleH); /* move at highest possible location */
-    //    HNoPurge(theModuleH); /* prevent purging */
-    //    HLock   (theModuleH); /* prevent moving around */
-    //
-    //    os9modules[mid].modulehandle= theModuleH; /* enter handle in free
-    //    table entry */ os9modules[mid].isBuiltIn   = false;
-    //
-    //    /* now make sure it stays swapped in */
-    //    hsize=(ulong) GetHandleSize(theModuleH);
-    //    theModule=    (mod_exec *) *theModuleH;
-    //
-    //  #else
-    theModule = pp;
-    os9modules[mid].modulebase =
-        theModule; /* enter pointer in free table entry */
-    os9modules[mid].isBuiltIn = false;
-    //  #endif
+    theModule                  = pp.host;
+    os9modules[mid].modulebase = pp; /* enter pointer in free table entry */
+    os9modules[mid].isBuiltIn  = false;
 
     access = loword(rp->regs[REGS_D + 2]);
     tylan  = 0x0400; /*this is the data module type */
@@ -1548,7 +1524,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         err = prepFork(newpid,
                        mpath,
                        newmid,
-                       (byte *)rp->regs[REGS_A + 1],
+                       rp->regs[REGS_A + 1],
                        rp->regs[REGS_D + 2],
                        rp->regs[REGS_D + 1],
                        numpaths,
@@ -1652,7 +1628,7 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     ushort       newmid;
     os9err       err;
     ushort       numpaths, k, grp, usr, prior, sp, sib;
-    byte        *paramptr;
+    addrpair_typ paramptr;
     ulong        paramsiz;
 
     /* no error so far */
@@ -1665,11 +1641,11 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     paramsiz = rp->regs[REGS_D + 2];
     paramptr = get_mem(paramsiz);
 
-    if (paramptr == NULL)
+    if (paramptr.host == NULL)
         err = os9error(E_NORAM);
     if (!err) {
         /* save a copy of the parameter area */
-        MoveBlk(paramptr, (char *)rp->regs[REGS_A + 1], paramsiz);
+        MoveBlk(paramptr.host, (char *)rp->regs[REGS_A + 1], paramsiz);
 
         /* user paths higher than numpaths must be closed */
         for (k = numpaths; k < MAXUSRPATHS; k++) {
@@ -1705,7 +1681,7 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
         err = prepFork(cpid,
                        mpath,
                        newmid,
-                       paramptr,
+                       paramptr.guest,
                        rp->regs[REGS_D + 2],
                        rp->regs[REGS_D + 1],
                        numpaths,
@@ -1715,7 +1691,7 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     cp->pd._sid = os9_word(sib); /* restore it */
 
     /* return the parameter memory block, it is now allocated at the process */
-    if (paramptr != NULL)
+    if (paramptr.host != NULL)
         release_mem(paramptr);
 
     if (err) {

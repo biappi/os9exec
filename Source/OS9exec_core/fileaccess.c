@@ -321,7 +321,7 @@ os9err pFread(_pid_, syspath_typ *spP, ulong *n, char *buffer)
         if (spP->rawPos + *n > STD_SECTSIZE)
             *n = STD_SECTSIZE - spP->rawPos;
 
-        memcpy(buffer, spP->rw_sct + spP->rawPos, *n);
+        memcpy(buffer, spP->rw_sct.host + spP->rawPos, *n);
         spP->rawPos += *n;
         return 0;
     }
@@ -586,7 +586,8 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     if (spP->rawMode) { /* rawmode allows only reading of 1st sector */
         spP->rw_sct = get_mem(STD_SECTSIZE); /* for some info procs */
         spP->rawPos = 0;
-        vn          = (char *)&spP->rw_sct[31];
+        char *rwsect = (char *)&spP->rw_sct.host;
+        vn           = &rwsect[31];
         VolInfo(pp, vn); /* this is the correct position */
 
         return 0;
@@ -669,8 +670,9 @@ os9err pFclose(_pid_, syspath_typ *spP)
 
     if (spP->rawMode) {
         release_mem(spP->rw_sct);
-        spP->rw_sct  = NULL;
-        spP->rawMode = false;
+        spP->rw_sct.host  = NULL;
+        spP->rw_sct.guest = 0;
+        spP->rawMode      = false;
         return 0;
     }
 

@@ -1484,16 +1484,16 @@ os9err setprior(ushort pid, ushort newprior)
 /* prepare OS9 program module for fork
  * Note: procs[pid] must be already prepared (by new_process())
  */
-os9err prepFork(ushort newpid,
-                char  *mpath,
-                ushort mid,
-                byte  *paramptr,
-                ulong  paramsiz,
-                ulong  memplus,
-                ushort numpaths,
-                ushort grp,
-                ushort usr,
-                ushort prior)
+os9err prepFork(ushort   newpid,
+                char    *mpath,
+                ushort   mid,
+                os9ptr   paramptr,
+                uint32_t paramsiz,
+                uint32_t memplus,
+                ushort   numpaths,
+                ushort   grp,
+                ushort   usr,
+                ushort   prior)
 {
     byte        *mp, *p, *p2;
     ulong       *a;
@@ -1507,8 +1507,9 @@ os9err prepFork(ushort newpid,
     void        *modBase;
 
 #ifdef INT_CMD
-    ushort argc;
-    char **arguments;
+    ushort       argc;
+    addrpair_typ arguments_ptr;
+    char       **arguments;
 #endif
 
     /* save main module ID */
@@ -1520,7 +1521,7 @@ os9err prepFork(ushort newpid,
     cp->pd._user  = os9_word(usr);
 
     /* -- get pointer to main module */
-    theModule = os9mod(mid);
+    theModule = os9mod(mid).host;
 
     /* -- prepare data area, for internal commands as well */
     debugprintf(
@@ -1535,7 +1536,7 @@ os9err prepFork(ushort newpid,
         return err; /* no room for data */
 
     /* -- copy parameter area, for internal commands as well */
-    p           = paramptr;
+    p           = get_pointer(paramptr);
     p2          = mp + memsiz - paramsiz;
     cp->my_args = (ulong)p2; /* parameter area start */
 
@@ -1554,7 +1555,9 @@ os9err prepFork(ushort newpid,
             cp->mid = 0; // assign "OS9exec" module, for non-PtoC modules
 
         /* prepare args */
-        prepArgs((char *)paramptr, &argc, &arguments);
+
+        prepArgs(get_pointer(paramptr), &argc, &arguments_ptr);
+        arguments    = arguments_ptr.host;
         arguments[0] = (char *)mpath; /* set module name */
 
         // if  (!cp->isNative) {
@@ -1569,7 +1572,7 @@ os9err prepFork(ushort newpid,
 
         /* execute command */
         err = callcommand(mpath, newpid, svid, argc, arguments, &asThread);
-        release_mem(arguments);
+        release_mem(arguments_ptr);
 
         if (asThread)
             currentpid = svid; // don't change current pid for threads
@@ -1631,9 +1634,12 @@ os9err prepFork(ushort newpid,
     *a = os9_long(cp->memtop - paramsiz);
 
     /* check for stdout filter and init */
+    /*
+    WIL: no filters (!)
     cp->stdoutfilter = initfilterfunc(Mod_Name(theModule),
                                       (char *)paramptr,
                                       (void **)&cp->filtermem);
+    */
     debugprintf(dbgProcess,
                 dbgNorm,
                 ("# prepFork: stdoutfilter=$%lX, filtermem=$%lX\n",

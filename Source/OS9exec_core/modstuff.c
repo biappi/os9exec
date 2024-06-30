@@ -314,39 +314,14 @@ mod_exec *Le0_ptr = (mod_exec *)Le0_mod; /* ptr to le0 module */
 #define OFFS_HOSTS 0x34 /* "hosts" location */
 #define OFFS_DNS 0x4c   /*  DNS    location */
 
-// NOTE: The handles are no longer supported (bfo) !!!
-// /* get modulehandle/modulebase, indepentently of system */
-// #ifdef macintosh
-//   static Handle os9h( int k )
-//   {
-//  	 if (k>=MAXMODULES) return NULL;
-//       return os9modules[k].modulehandle;
-//   }
-//
-// #else
-//   static mod_exec* os9h( int k )
-//   {
-//       if (k>=MAXMODULES) return NULL;
-//       return os9modules[k].modulebase;
-//   }
-
-// #endif
-
-// NOTE: The handles are no longer supported (bfo) !!!
-// /* get module pointer, indepentently of system */
-mod_exec *os9mod(int k)
+addrpair_typ os9mod(int k)
 {
-    //  if (os9h(k)==NULL) return NULL;
-    //
-    //  #ifdef macintosh
-    //      return *(os9modules[k].modulehandle);
-    //  #else
+    static addrpair_typ null_pair = {0, 0};
 
     if (k < 0 || k >= MAXMODULES)
-        return NULL;
-    return os9modules[k].modulebase;
+        return null_pair;
 
-    //  #endif
+    return os9modules[k].modulebase;
 }
 
 char *Mod_Name(mod_exec *mod)
@@ -365,7 +340,7 @@ void Update_MDir(void)
     for (k = 0; k < MAXMODULES; k++) {
         en = &mdirField[k];
 
-        mod = os9mod(k);
+        mod = os9mod(k).host;
         ok  = (mod != NULL);
         if (ok) {
             modK      = &os9modules[k];
@@ -491,7 +466,7 @@ void show_modules(char *cmp)
                "----------------------------\n");
 
     for (k = 0; k < MAXMODULES; k++) {
-        mod = os9mod(k);
+        mod = os9mod(k).host;
         if (mod != NULL) {
             nam = Mod_Name(mod);
 
@@ -528,15 +503,9 @@ void show_modules(char *cmp)
 /* initialize internal "module directory" */
 void init_modules()
 {
-    int k;
-
-    for (k = 0; k < MAXMODULES; k++) {
-        //      #ifdef macintosh
-        //        os9modules[k].modulehandle= NULL; /* no modules yet */
-        //      #else
-        os9modules[k].modulebase = NULL; /* no modules yet */
-                                         //      #endif
-
+    for (int k = 0; k < MAXMODULES; k++) {
+        os9modules[k].modulebase.host  = NULL;
+        os9modules[k].modulebase.guest = 0;
         os9modules[k].isBuiltIn = false;
         os9modules[k].linkcount = 0;
     }
@@ -554,7 +523,9 @@ void release_module(ushort mid, Boolean modOK)
     traphandler_typ *tp;
     mod_trap        *tMod;
 
-    mod_exec *mod = os9mod(mid);
+    addrpair_typ modp = os9mod(mid);
+    mod_exec    *mod  = modp.host;
+
     if (mod == NULL)
         return;
 
@@ -585,35 +556,11 @@ void release_module(ushort mid, Boolean modOK)
             init_module = NULL;
     }
 
-    // %%% simply forget the memory of the resources !!
-    //  #ifdef macintosh
-    //    if (os9modules[mid].isBuiltIn) {
-    //        GetHandleSize(os9modules[mid].modulehandle));
-    //        ReleaseResource(os9modules[mid].modulehandle); /* forget the block
-    //        */
-    //    }
-    //  #endif
-
-    // NOTE: The handle part is now invisible (bfo) !!!
-    //  #ifdef macintosh
-    //    GetHandleSize(os9modules[mid].modulehandle)); if
-    //    (os9modules[mid].isBuiltIn)                 /* release the resource */
-    //        ReleaseResource(os9modules[mid].modulehandle); /* forget the block
-    //        */
-    //    else      /* module was not loaded from a resource, just return memory
-    //    */
-    //        DisposeHandle  (os9modules[mid].modulehandle);
-    //
-    //    os9modules[mid].modulehandle= NULL;
-    //
-    //  #else
-
     if (!os9modules[mid].isBuiltIn)
-        release_mem(mod); /* free only if not built-in */
-    os9modules[mid].modulebase = NULL;
+        release_mem(modp);
 
-    //  #endif
-
+    os9modules[mid].modulebase.host  = NULL;
+    os9modules[mid].modulebase.guest = 0;
     os9modules[mid].isBuiltIn = false;
     os9modules[mid].linkcount = 0;
 }
@@ -623,7 +570,7 @@ mod_exec *get_module_ptr(int mid)
 {
     if (mid >= MAXMODULES)
         return NULL;
-    return os9mod(mid);
+    return os9mod(mid).host;
 }
 
 int get_mid(void *modptr)
@@ -680,7 +627,7 @@ int NextFreeModuleId(char *name)
     }
     else { /* this one is still empty => ok */
         for (k = 1; k < MAXMODULES; k++) {
-            if (os9mod(k) == NULL)
+            if (os9mod(k).host == NULL)
                 break;
         }
     }
@@ -843,13 +790,14 @@ static void adapt_inetdb(mod_exec *mh,
          os9_long(*(ulong *)bL); /* get end   position of "hosts" field */
 
     size = bL - b0;
-    v0   = get_mem(size);
+    addrpair_typ v0p = get_mem(size);
+    v0               = v0p.host;
     memcpy(v0, b0, size);
     memset(b0, 0, size); /* clear the whole original field */
 
     go_thru_list(v0, b0, inetAddr); /* rearrange the field */
 
-    release_mem(v0);
+    release_mem(v0p);
 
     /* ------- DNS field adaption --------- */
     bp = (char *)mh + OFFS_DNS;
@@ -927,12 +875,14 @@ static os9err load_module_local(ushort  pid,
 
     mod_exec *theRemainP;
     mod_exec *theModuleP;
+    addrpair_typ theModulePP;
 
     char    datapath[OS9PATHLEN];
     char    domainName[OS9PATHLEN];
     Boolean isPath;
     char   *pn;
     void   *pp;
+    addrpair_typ ppp;
 
     FILE *stream;
 
@@ -1013,7 +963,9 @@ static os9err load_module_local(ushort  pid,
                 OS9exec_ptr = (mod_exec *)OS9exec_mod;
                 dsize       = sizeof_OS9exec_mod;
                 theModuleP  = OS9exec_ptr;
-                isBuiltIn   = true;
+                theModulePP.host  = OS9exec_ptr;
+                theModulePP.guest = (os9ptr)OS9exec_ptr;
+                isBuiltIn         = true;
                 break; /* found */
             }          /* if built-in OS9exec module */
 
@@ -1024,9 +976,11 @@ static os9err load_module_local(ushort  pid,
 
                 /* it can't be const def, because it wil be changed afterwards
                  */
-                pp = get_mem(dsize);
+                ppp = get_mem(dsize);
+                pp  = ppp.host;
 
                 theModuleP = pp;
+                theModulePP = ppp;
                 memcpy(theModuleP, Init_ptr, dsize);
 
                 isBuiltIn = true;
@@ -1038,7 +992,9 @@ static os9err load_module_local(ushort  pid,
                 Socket_ptr = (mod_exec *)Socket_mod;
                 dsize      = sizeof_Socket_mod;
                 theModuleP = Socket_ptr;
-                isBuiltIn  = true;
+                theModulePP.host  = Socket_ptr;
+                theModulePP.guest = (os9ptr)Socket_ptr;
+                isBuiltIn         = true;
                 break; /* found */
             }          /* if built-in socket module */
 
@@ -1049,9 +1005,11 @@ static os9err load_module_local(ushort  pid,
 
                 /* it can't be const def, because it wil be changed afterwards
                  */
-                pp = get_mem(dsize);
+                ppp = get_mem(dsize);
+                pp  = ppp.host;
 
                 theModuleP = pp;
+                theModulePP = ppp;
                 memcpy(theModuleP, Le0_ptr, dsize);
 
                 isBuiltIn = true;
@@ -1085,7 +1043,9 @@ static os9err load_module_local(ushort  pid,
                 modBase = OS9exec_ptr;
 
             theModuleP = modBase;
-            dsize      = os9_long(theModuleP->_mh._msize);
+            theModulePP.host  = modBase;
+            theModulePP.guest = (os9ptr)modBase;
+            dsize             = os9_long(theModuleP->_mh._msize);
             isBuiltIn  = true;
             break; /* found */
         }
@@ -1133,7 +1093,9 @@ static os9err load_module_local(ushort  pid,
             dsize = bootSiz;
         }
 
-        pp = get_mem(dsize);
+        ppp = get_mem(dsize);
+        pp  = ppp.host;
+
         if (pp == NULL) {
             if (bootPos == 0)
                 err = usrpath_close(pid, path);
@@ -1143,6 +1105,7 @@ static os9err load_module_local(ushort  pid,
 
         loadbytes  = dsize;
         theModuleP = pp;
+        theModulePP = ppp;
 
         err = usrpath_read(pid, path, &loadbytes, theModuleP, false);
         if (err || loadbytes < dsize) {
@@ -1176,13 +1139,17 @@ static os9err load_module_local(ushort  pid,
                         dbgDetail,
                         ("# load_module: module file size = %ld\n", dsize));
 
-            pp = get_mem(dsize);
+            ppp = get_mem(dsize);
+            pp  = ppp.host;
+
             if (pp == NULL) {
                 fclose(stream);
                 return os9error(E_NORAM); /* not enough memory */
             }
 
             theModuleP = pp;
+            theModulePP = ppp;
+
             debugprintf(dbgModules,
                         dbgNorm,
                         ("# load_module: allocated memory %ld @ $%08lX\n",
@@ -1216,29 +1183,29 @@ static os9err load_module_local(ushort  pid,
 
     mid0 = mid; /* take the first one if using module groups */
     while (true) {
-        os9modules[mid].modulebase =
-            theModuleP; /* enter pointer in free table entry */
-        os9modules[mid].isBuiltIn = isBuiltIn;
-        debugprintf(dbgModules,
-                    dbgNorm,
-                    ("# load_module: (found) mid=%d, theModuleP=%08lX, "
-                     "^theModuleP=%08lX\n",
-                     mid,
-                     (ulong)theModuleP,
-                     os9_long(*(ulong *)theModuleP)));
+        /* enter pointer in free table entry */
+         os9modules[mid].modulebase = theModulePP;
+         os9modules[mid].isBuiltIn  = isBuiltIn;
+         debugprintf(dbgModules,
+                     dbgNorm,
+                     ("# load_module: (found) mid=%d, theModuleP=%08lX, "
+                      "^theModuleP=%08lX\n",
+                      mid,
+                      (ulong)theModuleP,
+                      os9_long(*(ulong *)theModuleP)));
 
-        os9modules[mid].linkcount = 1; /* module is loaded and linked */
+         os9modules[mid].linkcount = 1; /* module is loaded and linked */
 
-        /* make sure that module is ok */
-        /* --- check module SYNC parity and CRC */
-        sync = os9_word(theModuleP->_mh._msync);
-        if (sync != MODSYNC) {
-            /* bad module sync */
-            debugprintf(dbgModules,
-                        dbgNorm,
-                        ("# load_module: bad modsync: %04x, E_BMID\n", sync));
-            err = E_BMID;
-            break;
+         /* make sure that module is ok */
+         /* --- check module SYNC parity and CRC */
+         sync = os9_word(theModuleP->_mh._msync);
+         if (sync != MODSYNC) {
+             /* bad module sync */
+             debugprintf(dbgModules,
+                         dbgNorm,
+                         ("# load_module: bad modsync: %04x, E_BMID\n", sync));
+             err = E_BMID;
+             break;
         }
 
         par = calc_parity((ushort *)theModuleP, 24);
@@ -1284,19 +1251,20 @@ static os9err load_module_local(ushort  pid,
             ("# load_module: Name of module loaded='%s'\n", realmodname));
 
         /* %%% replacement with higher revision number is not yet implemented */
-        os9modules[mid].modulebase = 0; /* temporarily disable entry */
+        os9modules[mid].modulebase.host  = NULL; /* temporarily disable entry */
+        os9modules[mid].modulebase.guest = 0;
 
         oldmid = find_mod_id(realmodname);
         if (oldmid < MAXMODULES) {
             /* there is already another module with the same name */
             os9modules[oldmid].linkcount++;          /* link the old one */
-            os9modules[mid].modulebase = theModuleP; /* re-enable entry */
+            os9modules[mid].modulebase = theModulePP; /* re-enable entry */
             release_module(mid, false);              /* forget it again */
             *midP = oldmid;
             return 0; /* ... and throw away just loaded module */
         }
 
-        os9modules[mid].modulebase = theModuleP; /* re-enable entry */
+        os9modules[mid].modulebase = theModulePP; /* re-enable entry */
 
         /* special treatment for the "le0" and "inetdb" module: set internet
          * address */
@@ -1334,7 +1302,9 @@ static os9err load_module_local(ushort  pid,
         if (mid >= MAXMODULES)
             return os9error(E_DIRFUL); /* module directory is full */
 
-        pp = get_mem(dsize); /* get the memory */
+        ppp = get_mem(dsize);
+        pp  = ppp.host;
+
         if (pp == NULL)
             return os9error(E_NORAM); /* not enough memory */
 
@@ -1498,7 +1468,7 @@ void unlink_module(ushort mid)
 {
     if (mid >= MAXMODULES)
         return;
-    if (os9mod(mid) == NULL)
+    if (os9mod(mid).host == NULL)
         return;
 
     if (os9modules[mid].linkcount > 1) { /* still used by other processes */
@@ -1640,7 +1610,9 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
                 dbgNorm,
                 ("# prepData: Adjusted total data size = %ld\n", memsz));
 
-    bp = os9malloc(pid, memsz); /* allocate OS-9 memory block */
+    addrpair_typ bpp = os9malloc(pid, memsz); /* allocate OS-9 memory block */
+    bp               = bpp.host;
+
     if (bp == NULL)
         return os9error(E_NORAM); /* not enough RAM */
 

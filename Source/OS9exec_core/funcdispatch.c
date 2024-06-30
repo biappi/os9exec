@@ -687,7 +687,7 @@ void os9_to_xxx(ushort pid)
     os9_long_inc(&pd->_uticks, a); /* info for F$GPrDsc */
 
     mid = cp->mid;
-    mod = os9mod(mid);
+    mod = os9mod(mid).host;
     if (mid == 0 || mod == NULL)
         mn = (char *)&cp->intProcName;
     else

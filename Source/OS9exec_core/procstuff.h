@@ -90,15 +90,15 @@ void stop_os9exec(void);
 void lw_pid(ttydev_typ *mco);
 
 os9err setprior(ushort pid, ushort newprior);
-os9err prepFork(ushort pid,
-                char  *mpath,
-                ushort mid,
-                byte  *paramptr,
-                ulong  paramsiz,
-                ulong  memplus,
-                ushort numpaths,
-                ushort grp,
-                ushort usr,
-                ushort prior);
+os9err prepFork(ushort   newpid,
+                char    *mpath,
+                ushort   mid,
+                os9ptr   paramptr,
+                uint32_t paramsiz,
+                uint32_t memplus,
+                ushort   numpaths,
+                ushort   grp,
+                ushort   usr,
+                ushort   prior);
 
 /* eof */

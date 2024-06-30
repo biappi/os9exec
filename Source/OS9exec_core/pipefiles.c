@@ -194,16 +194,23 @@ void init_PTY(fmgr_typ *f)
 
 os9err getPipe(_pid_, syspath_typ *spP, ulong buffsize)
 {
-    pipechan_typ *p   = get_mem(sizeof(pipechan_typ));
-    byte         *buf = get_mem(buffsize);
+    addrpair_typ pipep = get_mem(sizeof(pipechan_typ));
+    addrpair_typ buffp = get_mem(buffsize);
+
+    pipechan_typ *p   = pipep.host;
+    byte         *buf = buffp.host;
+
     if (buf == NULL)
         return os9error(E_NORAM);
 
-    spP->u.pipe.pchP = p; /* assign pipe structure */
+    spP->u.pipe.pchPP = pipep; /* assign pipe structure */
+    spP->u.pipe.pchP  = p;
+
     //  printf( "GET     PIPE     %08X %08X %d\n", p,spP->u.pipe.i_svd_pchP,
     //  buffsize );
 
     p->size      = buffsize; /* assign it */
+    p->bufp      = buffp;
     p->buf       = buf;
     p->prp       = buf; /* nothing to read */
     p->pwp       = buf; /* nothing written yet */
@@ -262,12 +269,12 @@ os9err releasePipe(ushort pid, syspath_typ *spP)
         }
     }
 
-    release_mem(p->buf);
+    release_mem(p->bufp);
     debugprintf(dbgFiles,
                 dbgDetail,
                 ("# releasePipe: (name='%s') @ $%lX\n", spP->name, p->buf));
 
-    release_mem(p);
+    release_mem(spP->u.pipe.pchPP);
     spP->u.pipe.pchP = NULL; /* and make it invisible */
     return 0;
 }

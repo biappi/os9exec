@@ -160,31 +160,29 @@ Boolean debugcheck(ushort mask, ushort level)
 #endif
 
 // check if address is outside process' allocated memory
-Boolean out_of_mem(ushort pid, ulong addr)
+bool out_of_mem(ushort pid, os9ptr addr)
 {
-    ulong     base;
+    os9ptr    base;
     pmem_typ *cm = &pmem[pid];
 
     ushort k;
     for (k = 0; k < MAXMEMBLOCKS; k++) {
-        if (cm->m[k].base && addr >= (base = (ulong)cm->m[k].base) &&
+        if (cm->m[k].base.host && addr >= (base = cm->m[k].base.guest) &&
             addr < base + cm->m[k].size)
             return false; // ok, pointer points within range
     }
 
-    return true; // out of range
-} // out_of_mem
+    return true;
+}
 
 // check if address is outside any OS9 module
 Boolean out_of_mods(ulong addr)
 {
-    ushort    k;
-    mod_exec *mp;
-
-    for (k = 0; k < MAXMODULES; k++) {
-        mp = os9mod(k);
-        if (mp && addr >= (ulong)mp && // ok, pointer points within range
-            addr < (ulong)mp + os9_long(mp->_mh._msize))
+    for (int k = 0; k < MAXMODULES; k++) {
+        addrpair_typ mp   = os9mod(k);
+        mod_exec    *modp = mp.host;
+        if (mp.host && addr >= mp.guest && // ok, pointer points within range
+            addr < mp.guest + os9_long(modp->_mh._msize))
             return false; // not out of range
     }
 
@@ -476,12 +474,14 @@ void debug_procdump(process_typ *cp, int cpid)
     for (i = 0; i < MAXMEMBLOCKS; i++) {
         // mb= &cp->os9memblocks[i];
         mb = &cm->m[i];
-        if (mb->base != 0) {
-            upo_printf("              %12s %03d %08X - %08X %7ld bytes\n",
+        if (mb->base.host != 0) {
+            upo_printf("              %12s %03d %08X - (os9: %08X host: %p) "
+                       "%7ld bytes\n",
                        prefix,
                        i,
-                       mb->base,
-                       (ulong)mb->base + mb->size,
+                       mb->base.guest,
+                       mb->base.host,
+                       mb->base.guest + mb->size,
                        mb->size);
             prefix = "";
         }

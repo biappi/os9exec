@@ -90,6 +90,8 @@ typedef unsigned short ushort;
 extern "C" {
 #endif
 
+#include "memory.h"
+
 #define No_Module (void *)1 // predefined value for 'no module'
 
 // 68k registers
@@ -119,7 +121,7 @@ extern callback_typ *cbP;
 
 typedef struct {
     ushort       *pid;
-    void         *modBase;
+    addrpair_typ  modBase;
     void         *os9_args;
     callback_typ *cbP;
 } nativeinfo_typ;

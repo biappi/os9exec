@@ -925,8 +925,10 @@ void init_syspaths()
         spP            = &syspaths[k];
         spP->type      = fNone; /* no paths yet */
         spP->linkcount = 0;
-        spP->fd_sct    = NULL;
-        spP->rw_sct    = NULL;
+        spP->fd_sct.host  = NULL;
+        spP->fd_sct.guest = 0;
+        spP->rw_sct.host  = NULL;
+        spP->rw_sct.guest = 0;
         syspth[k]      = 0; /* structure as it is in "real" OS-9 (bfo) */
     }
 
@@ -1202,12 +1204,15 @@ os9err syspath_new(ushort *sp, ptype_typ type)
         if (spK->type == fNone) {   /* this is a free syspath */
             spK->type      = type;  /* assign new type */
             spK->linkcount = 1;     /* link it (once) */
-            spK->mh        = NULL;  /* no underlying module by default */
+            spK->mh.host      = NULL;  /* no underlying module by default */
+            spK->mh.guest     = 0;
             spK->nr        = k;     /* store it also in itself */
             spK->rawMode   = false; /* by default it is not raw mode */
             spK->mustW     = 0;     /* last sector to be written */
-            spK->fd_sct    = NULL;
-            spK->rw_sct    = NULL;
+            spK->fd_sct.host          = NULL;
+            spK->fd_sct.guest         = 0;
+            spK->rw_sct.host          = NULL;
+            spK->rw_sct.guest         = 0;
             *sp            = k; /* return new syspath's number */
 
             spK->signal_to_send  = 0; /* send signal on data ready: none */

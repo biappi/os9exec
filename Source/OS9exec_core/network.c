@@ -332,12 +332,12 @@ static os9err GetBuffers(net_typ *net)
 /* Get the transfer buffers for the net devices */
 {
     net->transferBuffer = get_mem(kTransferBufferSize);
-    if (net->transferBuffer == NULL)
+    if (net->transferBuffer.host == NULL)
         return E_NORAM;
 
     /* common for all operating systems */
     net->b_local = get_mem(kTransferBufferSize);
-    if (net->b_local == NULL)
+    if (net->b_local.host == NULL)
         return E_NORAM;
 
     return 0;
@@ -426,8 +426,8 @@ static os9err netRead(ushort       pid,
             }
 
             net->bsize = nBytes; /* bytesReceived */
-            net->bpos  = net->b_local;
-            memcpy(net->bpos, net->transferBuffer, net->bsize);
+            net->bpos  = net->b_local.host;
+            memcpy(net->bpos, net->transferBuffer.host, net->bsize);
         }
 
         // upe_printf( "netread: nBytes=%d *lenP=%d bsize=%d\n", nBytes, *lenP,
@@ -497,7 +497,7 @@ static os9err netWrite(ushort       pid,
         nBytes = remain;
         if (nBytes > kTransferBufferSize)
             nBytes = kTransferBufferSize; /* not more than buffer */
-        memcpy(net->transferBuffer, pp, nBytes);
+        memcpy(net->transferBuffer.host, pp, nBytes);
 
         HandleEvent(); /* allow cooperative multitasking */
         if (net->closeIt)

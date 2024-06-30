@@ -114,7 +114,8 @@ os9err _errmsg(os9err err, char *format, ...);
 
 int isintcommand(const char *name, Boolean *isNative, void **modBaseP);
 
-os9err prepArgs(char *arglist, ushort *argcP, char ***argP);
+os9err prepArgs(char *arglist, ushort *argcP, addrpair_typ *arguments_ptr);
+
 os9err callcommand(char    *name,
                    ushort   pid,
                    ushort   parentid,

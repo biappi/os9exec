@@ -1902,7 +1902,7 @@ Boolean IsDesc(const char *dvn, mod_dev **mod, char **p)
     if (mid == MAXMODULES)
         return false; /* no such module found */
 
-    *mod = (mod_dev *)os9mod(mid);
+    *mod = (mod_dev *)os9mod(mid).host;
     mty  = os9_word((*mod)->_mh._mtylan) >> BpB;
     if (mty != MT_DEVDESC)
         return false; /* not the right type */

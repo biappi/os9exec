@@ -410,6 +410,7 @@
 
 #include <signal.h>
 #include "os9exec_incl.h"
+#include "os9exec_nt.h"
 
 #ifdef PTOC_SUPPORT
 #include "native_interface.h"
@@ -421,7 +422,7 @@
 /* the "module directory" */
 module_typ os9modules[MAXMODULES];
 mod_exec  *init_module;
-ulong      totalMem;
+uint32_t   totalMem;
 mdir_entry mdirField[MAXMODULES];
 
 /* the system paths */
@@ -451,10 +452,9 @@ int            hittable[MAXDIRHIT];
 
 /* the include/exclude/dll list for internal commands */
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-char                                 *includeList[MAXLIST];
-char                                 *excludeList[MAXLIST];
-plug_typ                              pluginList[MAXLIST];
-
+addrpair_typ includeList[MAXLIST]; /* char * */
+addrpair_typ excludeList[MAXLIST]; /* char * */
+plug_typ     pluginList[MAXLIST];
 callback_typ g_cb;
 #endif
 
@@ -602,19 +602,19 @@ pthread_mutex_t sysCallMutex;
  * Note: If routine exits w/o error, it has malloc()-ed a block at pap
  *       containing the parameter structure which must be freed afterwards.
  */
-static os9err prepParams(mod_exec *theModule,
-                         char    **argv,
-                         int       argc,
-                         char    **envp,
-                         ulong    *psiz,
-                         byte    **pap)
+static os9err prepParams(mod_exec     *theModule,
+                         char        **argv,
+                         int           argc,
+                         char        **envp,
+                         ulong        *psiz,
+                         addrpair_typ *param_ptr)
 {
     ulong  paramsiz, argsiz, envsiz;
     int    os9envc;
     byte  *p, *pp, *hp;
     ulong *alp, *elp;
     char  *modnam;
-    size_t    h, k;
+    size_t h, k;
 
     debugprintf(dbgStartup,
                 dbgDeep,
@@ -675,12 +675,8 @@ static os9err prepParams(mod_exec *theModule,
                 strlen(modnam); /* add module name plus pointer spaces */
                                 /* -- allocate buffer for it */
 
-    // #ifdef MACMEM
-    //   pp=NewPtr(paramsiz);
-    // #else
-    //   pp=malloc((size_t)paramsiz);
-    // #endif
-    pp = get_mem(paramsiz);
+    *param_ptr = get_mem(paramsiz);
+    pp         = param_ptr->host;
     if (pp == NULL)
         return os9error(E_NORAM);
 
@@ -777,7 +773,6 @@ static os9err prepParams(mod_exec *theModule,
         k++;
     }
     *psiz = paramsiz; /* return parameter size */
-    *pap  = pp;       /* return pointer to prepared parameter area */
     return 0;
 }
 
@@ -794,7 +789,7 @@ static os9err prepLaunch(char  *toolname,
                          ushort prior)
 {
     ulong  psiz;
-    byte  *pap;
+    addrpair_typ pap;
     os9err err;
     ushort newpid;
     ushort mid;
@@ -810,7 +805,7 @@ static os9err prepLaunch(char  *toolname,
     if (err)
         return err;
 
-    err = prepParams(os9mod(mid), argv, argc, envp, &psiz, &pap);
+    err = prepParams(os9mod(mid).host, argv, argc, envp, &psiz, &pap);
     if (err)
         return err;
 
@@ -818,7 +813,7 @@ static os9err prepLaunch(char  *toolname,
     err = prepFork(newpid,
                    toolname,
                    mid,
-                   pap,
+                   pap.guest,
                    psiz,
                    memplus,
                    numpaths,
@@ -1039,10 +1034,10 @@ Boolean OtherThere(const char *str, const char *suff)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
 
-        if (ustrcmp(p->name, nm) == 0)
+        if (ustrcmp(p->name.host, nm) == 0)
             return true;
     }
 
@@ -1063,7 +1058,7 @@ static os9err SearchDLLs(ushort      pid,
     process_typ    *cp = &procs[pid];
     char            pathName[OS9PATHLEN];
     os9direntry_typ dEnt;
-    char          **m;
+    addrpair_typ   *m;
     Boolean         cond;
 
     const char *suff = DLL_Suffix();
@@ -1101,7 +1096,7 @@ static os9err SearchDLLs(ushort      pid,
             // upe_printf( "hello='%s'\n", dEnt.name );
             m  = &pluginList[*i].name;
             *m = get_mem(strlen(dEnt.name) + 1);
-            strcpy(*m, dEnt.name);
+            strcpy(m->host, dEnt.name);
             (*i)++;
         }
     }
@@ -1138,7 +1133,7 @@ static void DispList(int last)
     upe_printf("last=%d\n", last);
     for (i = 0; i <= last; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             continue;
 
         upe_printf("%d '%s' (n=%d)\n", i, p->name, p->numNativeProgs);
@@ -1169,7 +1164,7 @@ static int PLast(void)
     int last = MAXLIST - 1;
     while (last >= 0) {
         p = &pluginList[last];
-        if (p->name != NULL)
+        if (p->name.host != NULL)
             break;
         last--;
     }
@@ -1188,12 +1183,13 @@ static void SortedPluginList(void)
     last = PLast();
     for (i = 0; i <= last; i++) {
         p = &pluginList[i];
-        if (p->name == NULL) {
+        if (p->name.host == NULL) {
             for (j = i + 1; j <= last; j++) {
                 q = &pluginList[j];
-                if (q->name != NULL) {
+                if (q->name.host != NULL) {
                     MoveBlk(p, q, sizeof(plug_typ));
-                    q->name = NULL;
+                    q->name.host  = NULL;
+                    q->name.guest = 0;
                     break;
                 }
             }
@@ -1206,7 +1202,7 @@ static void SortedPluginList(void)
         for (j = i + 1; j <= last; j++) {
             p = &pluginList[i];
             q = &pluginList[j];
-            if (strcmp(p->name, q->name) > 0)
+            if (strcmp(p->name.host, q->name.host) > 0)
                 SwapElements(i, j);
         }
     }
@@ -1278,7 +1274,7 @@ static void PluginLoader(ushort cpid)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
 
         err = ConnectDLL(p);
@@ -1286,7 +1282,8 @@ static void PluginLoader(ushort cpid)
             continue; // at least one native prog must be there
 
         release_mem(p->name);
-        p->name = NULL;
+        p->name.host  = NULL;
+        p->name.guest = 0;
     }
 
     SortedPluginList();
@@ -1315,7 +1312,7 @@ static void PluginLoader(ushort cpid)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
         Init_NativeProgs(p);
     }
@@ -1654,13 +1651,15 @@ int StrToDouble(double *d, const char *str)
 static void init_plugins(void)
 {
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-    int i;
-    for (i = 0; i < MAXLIST; i++)
-        includeList[i] = NULL;
-    for (i = 0; i < MAXLIST; i++)
-        excludeList[i] = NULL;
-    for (i = 0; i < MAXLIST; i++) {
-        pluginList[i].name           = NULL;
+    for (int i = 0; i < MAXLIST; i++) {
+        includeList[i].host  = NULL;
+        includeList[i].guest = 0;
+
+        excludeList[i].host  = NULL;
+        excludeList[i].guest = 0;
+
+        pluginList[i].name.host      = NULL;
+        pluginList[i].name.guest     = 0;
         pluginList[i].numNativeProgs = 0;
         pluginList[i].pEnabled       = false;
         pluginList[i].pDisabled      = false;

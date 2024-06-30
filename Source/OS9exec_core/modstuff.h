@@ -55,7 +55,7 @@
 
 /* Memory modules */
 
-mod_exec *os9mod(int k);
+addrpair_typ os9mod(int k);
 char     *Mod_Name(mod_exec *mod);
 void      Update_MDir(void);
 

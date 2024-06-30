@@ -112,7 +112,7 @@ extern char triggername[TRIGNAMELEN]; /* debug trigger name */
 #define RCHK_MOD 0x08
 
 Boolean out_of_mods(ulong addr);
-Boolean out_of_mem(ushort pid, ulong addr);
+bool    out_of_mem(ushort pid, os9ptr addr);
 
 #if defined NODEBUG
 /* avoid code generation (and argument preparation) at all */

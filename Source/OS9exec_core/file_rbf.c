@@ -188,14 +188,14 @@ typedef struct {
     ushort sp_img;               /* syspath number of image file */
     char   img_name[OS9PATHLEN]; /* full path name of image file */
 
-    byte   *tmp_sct;    /* temporary buffer sector */
+    addrpair_typ tmp_sct;    /* temporary buffer sector */
     Boolean wProtected; /* true, if write  protected */
     Boolean fProtected; /* true, if format protected */
     Boolean imgMode;    /* true, if reduced img size is allowed/supported */
     Boolean multiSct;   /* true, if multi sector support */
 
     Boolean isRAM;   /* true, if RAM disk */
-    byte   *ramBase; /* start address of RAM disk */
+    addrpair_typ ramBase; /* start address of RAM disk */
 
     scsi_dev scsi;      /* SCSI device variables */
     Boolean  installed; /* true, if device is already installed */
@@ -337,6 +337,26 @@ void init_RBF_devs()
 
 static Boolean IsSCSI(rbfdev_typ *dev) { return dev->scsi.ID != NO_SCSI; }
 
+static inline uint8_t *rambase(rbfdev_typ *dev)
+{
+    return (uint8_t *)dev->ramBase.host;
+}
+
+static inline uint8_t *tmp_sect(rbfdev_typ *dev)
+{
+    return (uint8_t *)dev->tmp_sct.host;
+}
+
+static inline uint8_t *fd_sect(syspath_typ *sp)
+{
+    return (uint8_t *)sp->fd_sct.host;
+}
+
+static inline uint8_t *rw_sect(syspath_typ *sp)
+{
+    return (uint8_t *)sp->rw_sct.host;
+}
+
 static os9err
 ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
 /* Read sectors, either from SCSI or from an RBF image file */
@@ -392,7 +412,7 @@ ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
     do {
         // #ifdef RAM_SUPPORT
         if (dev->isRAM) {
-            memcpy(buffer, dev->ramBase + (sectorNr * sect), nSectors * sect);
+            memcpy(buffer, rambase(dev) + (sectorNr * sect), nSectors * sect);
             break;
         }
         // #endif
@@ -563,7 +583,7 @@ WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
     do {
         // #ifdef RAM_SUPPORT
         if (dev->isRAM) {
-            memcpy(dev->ramBase + (sectorNr * sect), buffer, nSectors * sect);
+            memcpy(rambase(dev) + (sectorNr * sect), buffer, nSectors * sect);
             break;
         }
         // #endif
@@ -671,9 +691,9 @@ static void GetBuffers(_rbf_, syspath_typ *spP)
     // if (spP->rw_sct==NULL) spP->rw_sct= get_mem( dev->sctSize, false );
 
     /* %%% there is currently an allocation bug, use always 2048 bytes */
-    if (spP->fd_sct == NULL)
+    if (spP->fd_sct.host == NULL)
         spP->fd_sct = get_mem(2048);
-    if (spP->rw_sct == NULL)
+    if (spP->rw_sct.host == NULL)
         spP->rw_sct = get_mem(2048);
 
     // if (pp) upe_printf( "Getbuffers %d %d %08X %08X\n",
@@ -685,12 +705,15 @@ static void ReleaseBuffers(syspath_typ *spP)
     // upe_printf( "Relbuffers %d %08X %08X\n", spP->nr,
     // spP->fd_sct,spP->rw_sct);
 
-    if (spP->fd_sct != NULL)
+    if (spP->fd_sct.host != NULL)
         release_mem(spP->fd_sct);
-    spP->fd_sct = NULL;
-    if (spP->rw_sct != NULL)
+    spP->fd_sct.host  = NULL;
+    spP->fd_sct.guest = 0;
+
+    if (spP->rw_sct.host != NULL)
         release_mem(spP->rw_sct);
-    spP->rw_sct = NULL;
+    spP->rw_sct.host  = NULL;
+    spP->rw_sct.guest = 0;
 }
 
 static os9err ReleaseIt(ushort pid, rbfdev_typ *dev)
@@ -706,7 +729,8 @@ static os9err ReleaseIt(ushort pid, rbfdev_typ *dev)
     if (!err) {
         dev->installed = false;
         release_mem(dev->tmp_sct);
-        dev->tmp_sct = NULL;
+        dev->tmp_sct.host  = NULL;
+        dev->tmp_sct.guest = 0;
     }
 
     return err;
@@ -800,12 +824,12 @@ static os9err GetTop(ushort pid, rbfdev_typ *dev)
         if (err)
             return err;
         len = sect;
-        err = syspath_read(pid, sp, &len, dev->tmp_sct, false);
+        err = syspath_read(pid, sp, &len, dev->tmp_sct.host, false);
         if (err)
             return err;
 
         while (last > 0) {
-            b = dev->tmp_sct[--last];
+            b = tmp_sect(dev)[--last];
             if (b)
                 break;
         }
@@ -881,12 +905,13 @@ static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
             if (err)
                 return err;
         }
-        err = ReadSector(dev, 0, 1, dev->tmp_sct);
+        err = ReadSector(dev, 0, 1, dev->tmp_sct.host);
         if (err)
             return err;
 
         /* get the sector size of the device */
-        cruz = (strcmp((char *)&dev->tmp_sct[CRUZ_POS], Cruz_Str) == 0);
+        char *cruz_s = tmp_sect(dev) + CRUZ_POS;
+        cruz         = (strcmp(cruz_s, Cruz_Str) == 0);
         debugprintf(dbgFiles,
                     dbgNorm,
                     ("# RootLSN: sectorsize %d %s\n",
@@ -894,8 +919,9 @@ static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
                      cruz ? "(cruz)" : ""));
 
         if (cruz) {
-            w       = (ushort *)&dev->tmp_sct[SECT_POS];
-            sctSize = os9_word(*w);
+            uint8_t *t = tmp_sect(dev) + SECT_POS;
+            w          = (ushort *)t;
+            sctSize    = os9_word(*w);
         }
         else {
             if (dev->sctSize == 0)
@@ -925,21 +951,21 @@ static os9err RootLSN(_pid_, rbfdev_typ *dev, syspath_typ *spP, Boolean ignore)
 
         dev->totScts    = 0; /* must be set to correct value */
         dev->last_alloc = 0; /* initialize allocater pointer */
-    }                        /* loop */
+    } /* loop */
 
-    l            = (ulong *)&dev->tmp_sct[TOT_POS];
+    l            = (ulong *)(tmp_sect(dev) + TOT_POS);
     dev->totScts = os9_long(*l) >> BpB;
     if (dev->imgScts == 0)
         dev->imgScts = dev->totScts;
-    w                = (ushort *)&dev->tmp_sct[MAP_POS];
+    w                = (ushort *)(tmp_sect(dev) + MAP_POS);
     dev->mapSize     = os9_word(*w);
-    w                = (ushort *)&dev->tmp_sct[BIT_POS];
+    w                = (ushort *)(tmp_sect(dev) + BIT_POS);
     dev->clusterSize = os9_word(*w);
-    l                = (ulong *)&dev->tmp_sct[DIR_POS];
+    l                = (ulong *)(tmp_sect(dev) + DIR_POS);
     dev->root_fd_nr  = os9_long(*l) >> BpB;
 
     spP->u.rbf.fd_nr = dev->root_fd_nr;
-    err              = ChkIntegrity(dev, spP, dev->tmp_sct, ignore);
+    err              = ChkIntegrity(dev, spP, dev->tmp_sct.host, ignore);
     return err;
 }
 
@@ -1177,9 +1203,9 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
         if (!err && iSize > 0) {
             // upe_printf( "size=%d\n", iSize );
             dev->ramBase = get_mem(iSize);
-            if (dev->ramBase == NULL)
+            if (dev->ramBase.host == NULL)
                 return E_NORAM;
-            err = syspath_read(pid, sp, &iSize, dev->ramBase, false);
+            err = syspath_read(pid, sp, &iSize, dev->ramBase.host, false);
         }
 
         cErr = syspath_close(pid, sp);
@@ -1188,12 +1214,12 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
         if (err)
             return err;
 
-        u                = (ulong *)&dev->ramBase[TOT_POS];
+        u                = (ulong *)(rambase(dev) + TOT_POS);
         dev->totScts     = os9_long(*u) >> BpB;
         dev->imgScts     = dev->totScts;
-        w                = (ushort *)&dev->ramBase[BIT_POS];
+        w                = (ushort *)(rambase(dev) + BIT_POS);
         dev->clusterSize = os9_word(*w);
-        w                = (ushort *)&dev->ramBase[SECT_POS];
+        w                = (ushort *)(rambase(dev) + SECT_POS);
         dev->sctSize     = os9_word(*w);
         dev->sas         = DD__MINALLOC;
         return 0;
@@ -1257,10 +1283,10 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
         allocSize / clu + 1; // nr of allocated clusters ( including sect 0 )
 
     dev->ramBase = get_mem(dev->sctSize * dev->totScts);
-    if (dev->ramBase == NULL)
+    if (dev->ramBase.host == NULL)
         return E_NORAM;
-    memset(dev->ramBase, 0, dev->sctSize * dev->totScts); // clear all
-    memcpy(dev->ramBase, RAM_zero, dev->sctSize);
+    memset(dev->ramBase.host, 0, dev->sctSize * dev->totScts); // clear all
+    memcpy(dev->ramBase.host, RAM_zero, dev->sctSize);
 
     // f= allocClu*clu;
 
@@ -1281,7 +1307,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
     for (ii = 0; ii < allocN; ii++) {
         if (ii <= r / clu || ii >= totBits) { // including fd + dir
             v = ii / BpB;
-            b = &dev->ramBase[dev->sctSize + v];
+            b = (rambase(dev) + dev->sctSize + v);
             *b |= pt;
         }
 
@@ -1290,31 +1316,32 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
             pt = 0x80; /* prepare the next pattern */
     }
 
-    u  = (ulong *)&dev->ramBase[TOT_POS];
+    uint8_t *base = rambase(dev);
+    u             = (ulong *)(&base[TOT_POS]);
     *u = os9_long(dev->totScts << BpB);    /* 0x03 overwritten, is 0 anyway */
-    dev->ramBase[TRK_POS] = SectsPerTrack; /* number of sector per track */
-    w                     = (ushort *)&dev->ramBase[MAP_POS];
+    base[TRK_POS]         = SectsPerTrack; /* number of sector per track */
+    w                     = (ushort *)(&base[MAP_POS]);
     *w                    = (ushort)os9_word(mapSize);
-    w                     = (ushort *)&dev->ramBase[BIT_POS];
+    w                     = (ushort *)(&base[BIT_POS]);
     *w                    = (ushort)os9_word(clu);
-    u                     = (ulong *)&dev->ramBase[DIR_POS];
+    u                     = (ulong *)(&base[DIR_POS]);
     *u = os9_long(f << BpB); /* 0x0b overwritten, is 0 anyway */
-    w  = (ushort *)&dev->ramBase[SECT_POS];
+    w                     = (ushort *)(&base[SECT_POS]);
     *w = (ushort)os9_word(dev->sctSize);
 
-    dev->ramBase[fN]        = 0xbf; /* prepare the fd sector */
-    dev->ramBase[fN + 0x08] = 0x01;
-    dev->ramBase[fN + 0x0C] = 0x40;
-    u                       = (ulong *)&dev->ramBase[fN + 0x10];
+    base[fN]        = 0xbf; /* prepare the fd sector */
+    base[fN + 0x08] = 0x01;
+    base[fN + 0x0C] = 0x40;
+    u               = (ulong *)(&base[fN + 0x10]);
     *u = os9_long(r << BpB); /* fN+0x14 overwritten, is 0 anyway */
-    dev->ramBase[fN + 0x14] = cluRest;
+    base[fN + 0x14] = cluRest;
 
-    dev->ramBase[rN]        = 0x2e; /* prepare the directory entry */
-    dev->ramBase[rN + 0x01] = 0xae;
-    w                       = (ushort *)&dev->ramBase[rN + 0x1e];
+    base[rN]                = 0x2e; /* prepare the directory entry */
+    base[rN + 0x01]         = 0xae;
+    w                       = (ushort *)(&base[rN + 0x1e]);
     *w                      = (ushort)os9_word(f);
-    dev->ramBase[rN + 0x20] = 0xae;
-    w                       = (ushort *)&dev->ramBase[rN + 0x3e];
+    base[rN + 0x20]         = 0xae;
+    w                       = (ushort *)(&base[rN + 0x3e]);
     *w                      = (ushort)os9_word(f);
 
     strcpy(dev->img_name, cmp);
@@ -1701,7 +1728,8 @@ static os9err DeviceInit(ushort       pid,
 
         dev->installed = false;
         release_mem(dev->tmp_sct);
-        dev->tmp_sct = NULL;
+        dev->tmp_sct.host  = NULL;
+        dev->tmp_sct.guest = 0;
     }
 
     sprintf(ers, "  #000:%03d", err);
@@ -2269,7 +2297,7 @@ os9err ReadFD(syspath_typ *spP)
     rbfdev_typ *dev = &rbfdev[rbf->devnr];
 
     if (fd != 0)
-        return ReadSector(dev, fd, 1, spP->fd_sct);
+        return ReadSector(dev, fd, 1, spP->fd_sct.host);
     return 0;
 }
 
@@ -2281,26 +2309,31 @@ static os9err WriteFD(syspath_typ *spP)
     rbfdev_typ *dev = &rbfdev[rbf->devnr];
 
     if (fd != 0)
-        return WriteSector(dev, fd, 1, spP->fd_sct);
+        return WriteSector(dev, fd, 1, spP->fd_sct.host);
     return 0;
 }
 
 static ulong FDSize(syspath_typ *spP)
 /* get the file size  */
 {
-    ulong *lp = (ulong *)&spP->fd_sct[9];
+    uint8_t *fdsect = fd_sect(spP);
+    ulong   *lp     = (ulong *)(&fdsect[9]);
     return os9_long(*lp);
 }
 
 static void Set_FDSize(syspath_typ *spP, ulong size)
 /* set the file size  */
 {
-    ulong *lp = (ulong *)&spP->fd_sct[9];
+    uint8_t *fdsect = fd_sect(spP);
+    ulong   *lp     = (ulong *)(&fdsect[9]);
     *lp       = os9_long(size);
 }
 
 static byte FDAtt(syspath_typ *spP)
-/* get the file attributes  */ { return spP->fd_sct[0]; }
+/* get the file attributes  */ {
+    uint8_t *fdsect = fd_sect(spP);
+    return fdsect[0];
+}
 
 static void Set_FDAtt(syspath_typ *spP, byte att)
 /* set the file attributes  */
@@ -2309,12 +2342,17 @@ static void Set_FDAtt(syspath_typ *spP, byte att)
     rbf_typ    *rbf = &spP->u.rbf;
     rbfdev_typ *dev = &rbfdev[rbf->devnr];
 
-    if (rbf->fd_nr != dev->root_fd_nr)
-        spP->fd_sct[0] = att;
+    if (rbf->fd_nr != dev->root_fd_nr) {
+        uint8_t *fdsect = fd_sect(spP);
+        fdsect[0]       = att;
+    }
 }
 
 static void Set_FDLnk(syspath_typ *spP, byte lnk)
-/* set the link count */ { spP->fd_sct[8] = lnk; }
+/* set the link count */ {
+    uint8_t *fdsect = fd_sect(spP);
+    fdsect[8]       = lnk;
+}
 
 static os9err FD_Segment(syspath_typ *spP,
                          byte        *attr,
@@ -2337,9 +2375,11 @@ static os9err FD_Segment(syspath_typ *spP,
     v  = 0;
     ii = FD_Header_Size;
     while (ii + SegSize <= dev->sctSize) {
-        lp  = (ulong *)&spP->fd_sct[ii];
+        uint8_t *fdsect = fd_sect(spP);
+
+        lp  = (ulong *)&fdsect[ii];
         pos = os9_long(*lp) >> BpB;
-        sp  = (ushort *)&spP->fd_sct[ii + 3];
+        sp  = (ushort *)&fdsect[ii + 3];
         scs = os9_word(*sp);
         blk = scs * dev->sctSize;
 
@@ -2398,7 +2438,7 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
                      asct,
                      pos,
                      scs));
-        err = ReadSector(dev, asct, 1, dev->tmp_sct);
+        err = ReadSector(dev, asct, 1, dev->tmp_sct.host);
         if (err)
             return err;
 
@@ -2410,8 +2450,9 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
                     break;
             }
 
-            imask = 255 - mask;          /* invert it */
-            ba    = &dev->tmp_sct[apos]; /* current buffer field */
+            uint8_t *tmpsect = tmp_sect(dev);
+            imask            = 255 - mask;     /* invert it */
+            ba               = &tmpsect[apos]; /* current buffer field */
             if (get_them)
                 rslt = *ba | mask; /* set   bit */
             else
@@ -2425,7 +2466,7 @@ static os9err GetThem(rbfdev_typ *dev, ulong pos, ulong scs, Boolean get_them)
             kk -= dev->clusterSize;
         }
 
-        err = WriteSector(dev, asct, 1, dev->tmp_sct);
+        err = WriteSector(dev, asct, 1, dev->tmp_sct.host);
         if (err)
             return err;
         asct++;   /* prepare for the next sector */
@@ -2459,12 +2500,13 @@ static os9err BlkSearch(rbfdev_typ *dev,
     *scs = 0;
 
     *found = false;
-    err    = ReadSector(dev, mpsct, 1, dev->tmp_sct);
+    err    = ReadSector(dev, mpsct, 1, dev->tmp_sct.host);
     if (err)
         return err;
 
     for (ii = mploc; ii < dev->sctSize; ii++) { /* go through the sector */
-        vv   = dev->tmp_sct[ii];
+        uint8_t *tmpsect = tmp_sect(dev);
+        vv               = tmpsect[ii];
         mask = 0x80;
 
         for (jj = 0; jj <= 7; jj++) {
@@ -2573,9 +2615,10 @@ static os9err DeallocateBlocks(syspath_typ *spP)
     ushort     *sp, scs;
 
     for (ii = 16; ii + SegSize <= dev->sctSize; ii += SegSize) {
-        lp  = (ulong *)&spP->fd_sct[ii];
+        uint8_t *fdsect = fd_sect(spP);
+        lp              = (ulong *)&fdsect[ii];
         pos = os9_long(*lp) >> BpB;
-        sp  = (ushort *)&spP->fd_sct[ii + 3];
+        sp              = (ushort *)&fdsect[ii + 3];
         scs = os9_word(*sp);
 
         /* if the fd sector is allocated alone -> dealloc it alone */
@@ -2615,9 +2658,11 @@ static os9err ReleaseBlocks(syspath_typ *spP, ulong lastPos)
 
     // go through the fs segment list
     for (ii = 16; ii + SegSize <= dev->sctSize; ii += SegSize) {
-        lp  = (ulong *)&spP->fd_sct[ii];
+        uint8_t *fdsect = fd_sect(spP);
+
+        lp  = (ulong *)&fdsect[ii];
         pos = os9_long(*lp) >> BpB;
-        sp  = (ushort *)&spP->fd_sct[ii + 3];
+        sp  = (ushort *)&fdsect[ii + 3];
         scs = os9_word(*sp);
 
         if (scs == 0)
@@ -2668,8 +2713,9 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 
     prev_sp = &size; /* initial value */
     for (ii = First; ii + SegSize <= dev->sctSize; ii += SegSize) {
-        lp = (ulong *)&spP->fd_sct[ii];
-        sp = (ushort *)&spP->fd_sct[ii + 3];
+        uint8_t *fdsect = fd_sect(spP);
+        lp              = (ulong *)&fdsect[ii];
+        sp              = (ushort *)&fdsect[ii + 3];
 
         if (*sp == 0) { /* zero is zero for big/little endian */
             psp = os9_word(*prev_sp);
@@ -2861,7 +2907,7 @@ static os9err DoAccess(syspath_typ *spP,
             n  = 1;
             n0 = 0;
             d  = 0;
-            b  = spP->rw_sct;
+            b  = spP->rw_sct.host;
         }
 
         // if (spP->rawMode && sect>=60 && sect<=90) {
@@ -2875,7 +2921,7 @@ static os9err DoAccess(syspath_typ *spP,
             if (*mw != 0) {
                 //  if (dev->multiSct) upe_printf( "Tsct slm n n0 offs d len %7d
                 //  %7d %7d %7d %7d %7d %7d\n", sect,slim,n,n0,offs,d,*lenP );
-                err = WriteSector(dev, *mw, 1, spP->rw_sct);
+                err = WriteSector(dev, *mw, 1, spP->rw_sct.host);
                 if (err)
                     break;
                 *mw = 0; /* now it is written */
@@ -2891,7 +2937,7 @@ static os9err DoAccess(syspath_typ *spP,
 
                 if (mlt) {
                     if (n > n0) { /* the full sector has been read */
-                        memcpy(spP->rw_sct,
+                        memcpy(spP->rw_sct.host,
                                b + n0 * dev->sctSize,
                                dev->sctSize); /* update rw_sct */
                     }
@@ -2925,7 +2971,7 @@ static os9err DoAccess(syspath_typ *spP,
                 coff = boffs;
             }
             else {
-                bb   = spP->rw_sct;
+                bb   = spP->rw_sct.host;
                 coff = offs;
             }
 
@@ -2941,11 +2987,11 @@ static os9err DoAccess(syspath_typ *spP,
         /* copy to/from the buffer */
         if (wMode) {
             if (!mlt) {
-                memcpy(spP->rw_sct + offs, buffer + boffs, maxc);
+                memcpy(spP->rw_sct.host + offs, buffer + boffs, maxc);
             }
 
             if (*mw != 0 && *mw != sect) { /* if sector nr has changed */
-                err = WriteSector(dev, *mw, 1, spP->rw_sct);
+                err = WriteSector(dev, *mw, 1, spP->rw_sct.host);
                 if (err)
                     break;
                 spP->rw_nr = *mw;
@@ -2954,12 +3000,13 @@ static os9err DoAccess(syspath_typ *spP,
             /* if sector in raw mode */
             if (spP->rawMode) {
                 if (sect == 0) {
-                    w = (ushort *)&spP->rw_sct[14]; /* get the new disk ID */
+                    uint8_t *rwsect = rw_sect(spP);
+                    w = (ushort *)&rwsect[14];      /* get the new disk ID */
                     dev->last_diskID = *w;          /* must be done */
                     rbf->diskID      = *w;
 
                     /* write sector 0 always */
-                    err = WriteSector(dev, sect, 1, spP->rw_sct);
+                    err = WriteSector(dev, sect, 1, spP->rw_sct.host);
                     if (err)
                         break;
                 }
@@ -2979,7 +3026,7 @@ static os9err DoAccess(syspath_typ *spP,
         }
         else {
             if (!mlt)
-                memcpy(buffer + boffs, spP->rw_sct + offs, maxc);
+                memcpy(buffer + boffs, rw_sect(spP) + offs, maxc);
         }
 
         rbf->currPos += maxc; /* calculate the new position */
@@ -3017,10 +3064,11 @@ static os9err DoAccess(syspath_typ *spP,
 static os9err Create_FD(syspath_typ *spP, byte att, ulong size)
 {
     rbfdev_typ *dev = &rbfdev[spP->u.rbf.devnr];
+    uint8_t    *fdsect = fd_sect(spP);
 
-    int ii;
-    for (ii = 0; ii < dev->sctSize; ii++) { /* clear sector */
-        spP->fd_sct[ii] = NUL;
+    for (int ii = 0; ii < dev->sctSize; ii++) {
+        /* clear sector */
+        fdsect[ii] = 0;
     }
 
     Set_FDAtt(spP, att);   /* attributes */
@@ -3040,8 +3088,10 @@ static os9err OpenDir(rbfdev_typ *dev, ulong dfd, ushort *sp)
         return err;
 
     spP         = &syspaths[*sp];
-    spP->fd_sct = NULL; /* prepare them locally */
-    spP->rw_sct = NULL;
+    spP->fd_sct.host  = NULL; /* prepare them locally */
+    spP->fd_sct.guest = 0;
+    spP->rw_sct.host  = NULL;
+    spP->rw_sct.guest = 0;
     spP->rw_nr  = 0;      /* undefined */
     GetBuffers(dev, spP); /* dev must be assigned before */
 
@@ -3160,17 +3210,17 @@ static os9err touchfile_RBF(syspath_typ *spP, Boolean creDat)
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
 
     GetTim(&tim);
-    spP->fd_sct[3] = tim.tm_year;
-    spP->fd_sct[4] = tim.tm_mon + 1; /* somewhat different month notation */
-    spP->fd_sct[5] = tim.tm_mday;
-    spP->fd_sct[6] = tim.tm_hour;
-    spP->fd_sct[7] = tim.tm_min;
+    uint8_t *fdsect = fd_sect(spP);
+    fdsect[3]       = tim.tm_year;
+    fdsect[4]       = tim.tm_mon + 1; /* somewhat different month notation */
+    fdsect[5]       = tim.tm_mday;
+    fdsect[6]       = tim.tm_hour;
+    fdsect[7]       = tim.tm_min;
 
     if (creDat) {
-        spP->fd_sct[13] = tim.tm_year;
-        spP->fd_sct[14] =
-            tim.tm_mon + 1; /* somewhat different month notation */
-        spP->fd_sct[15] = tim.tm_mday;
+        fdsect[13] = tim.tm_year;
+        fdsect[14] = tim.tm_mon + 1; /* somewhat different month notation */
+        fdsect[15] = tim.tm_mday;
     }
 
     return WriteFD(spP);
@@ -3573,7 +3623,7 @@ os9err pRclose(ushort pid, syspath_typ *spP)
             break; /* no change in read mode */
 
         if (spP->mustW) { /* write the last cached sector */
-            err = WriteSector(dev, spP->mustW, 1, spP->rw_sct);
+            err = WriteSector(dev, spP->mustW, 1, spP->rw_sct.host);
             if (err)
                 break;
         }
@@ -3877,7 +3927,7 @@ os9err pRgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
         dbgNorm,
         ("# RBF getFD (fd/bytes): $%x %d\n", spP->u.rbf.fd_nr, *maxbytP));
 
-    memcpy(buffer, spP->fd_sct, *maxbytP); /* copy to the buffer */
+    memcpy(buffer, spP->fd_sct.host, *maxbytP); /* copy to the buffer */
     return 0;
 }
 
@@ -3892,10 +3942,10 @@ pRgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
                 dbgNorm,
                 ("# RBF getFDInf (fd/bytes): $%x %d\n", *fdinf, *maxbytP));
 
-    err = ReadSector(dev, *fdinf, 1, dev->tmp_sct);
+    err = ReadSector(dev, *fdinf, 1, dev->tmp_sct.host);
     if (err)
         return err;
-    memcpy(buffer, dev->tmp_sct, *maxbytP); /* copy to the buffer */
+    memcpy(buffer, dev->tmp_sct.host, *maxbytP); /* copy to the buffer */
     return 0;
 }
 
@@ -3907,7 +3957,7 @@ os9err pRsetFD(_pid_, syspath_typ *spP, byte *buffer)
                 dbgNorm,
                 ("# RBF setFD (fd/bytes): $%x %d\n", spP->u.rbf.fd_nr, maxbyt));
 
-    memcpy(spP->fd_sct, buffer, maxbyt); /* copy to the buffer */
+    memcpy(spP->fd_sct.host, buffer, maxbyt); /* copy to the buffer */
     return WriteFD(spP);
 }
 
@@ -3999,14 +4049,15 @@ os9err pRWTrk(ushort pid, syspath_typ *spP, ulong *trackNr)
     int         ii;
     ulong       sctNr, scts, dtype;
 
+    uint8_t *tmpsect = tmp_sect(dev);
     for (ii = 0; ii < dev->sctSize; ii++)
-        dev->tmp_sct[ii] = 0xE5; /* fill with formatting pattern */
+        tmpsect[ii] = 0xE5; /* fill with formatting pattern */
 
     err = pRdsize(pid, spP, &scts, &dtype);
 
     for (ii = 0; ii < scts; ii++) {
         sctNr = *trackNr * DEFAULT_SCT + ii;
-        err   = WriteSector(dev, sctNr, 1, dev->tmp_sct);
+        err   = WriteSector(dev, sctNr, 1, dev->tmp_sct.host);
         if (err)
             return err;
     }

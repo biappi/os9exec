@@ -841,7 +841,7 @@ os9err ConnectDLL(plug_typ *p)
         }
 
         strcat(fullName, PATHDELIM_STR);
-        strcat(fullName, p->name);
+        strcat(fullName, p->name.host);
         // upe_printf( "connectDLL='%s'\n", fullName );
         //  now we have the complete path name
 
@@ -896,32 +896,32 @@ os9err ConnectDLL(plug_typ *p)
 } // ConnectDLL
 
 // ---------------------------------------------------------------------------------
-static char **MyElem(int i, Boolean addIt)
+
 // Get an element, dependent on <addIt>
+static addrpair_typ *MyElem(int i, bool addIt)
 {
     if (addIt)
         return &includeList[i];
     else
         return &excludeList[i];
-} // MyElem
+}
 
 // Check, if include list ( <asInclude> = true  ) or
 //           exclude list ( <asInclude> = false ) is empty
-static Boolean Native_Empty(Boolean asInclude)
+static bool Native_Empty(bool asInclude)
 {
-    Boolean found = false;
-
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
-    char **q = MyElem(0, asInclude);
-    found    = (*q != NULL);
+    addrpair_typ *q     = MyElem(0, asInclude);
+    bool          found = (q->host != NULL);
 #endif
 
     return !found;
-} // Native_Empty
+}
 
 static Boolean Native_Enabled(plug_typ *p)
 {
-    Boolean isBuiltIn = p->name[0] == NUL; // built-in has no name
+    char   *name      = p->name.host;
+    Boolean isBuiltIn = name == NUL; // built-in has no name
     Boolean bp        = isBuiltIn || pluginActive;
     return (bp || p->pEnabled) && !p->pDisabled;
 } // Native_Enabled
@@ -939,7 +939,7 @@ Boolean Native_Possible(Boolean hardCheck)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
 
         possible = hardCheck || (nativeActive && Native_Enabled(p));
@@ -966,9 +966,10 @@ Boolean Plugin_Possible(Boolean hardCheck)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
-        isBuiltIn = p->name[0] == NUL; // built-in has no name
+        char *name = p->name.host;
+        isBuiltIn  = name[0] == NUL; // built-in has no name
         possible  = hardCheck || (natAny && Native_Enabled(p));
 
         enabled = possible && !isBuiltIn;
@@ -1000,8 +1001,7 @@ static void native_usage(const char *name, const char *swMode)
 
 static void display_nativeList(Boolean asInclude)
 {
-    int    i, n = 0;
-    char **q;
+    int i, n = 0;
 
     if (asInclude)
         upe_printf("Include list:\n");
@@ -1009,15 +1009,15 @@ static void display_nativeList(Boolean asInclude)
         upe_printf("Exclude list:\n");
 
     for (i = 0; i < MAXLIST; i++) {
-        q = MyElem(i, asInclude);
-        if (*q == NULL)
+        addrpair_typ *q = MyElem(i, asInclude);
+        if (q->host == NULL)
             break;
 
         if (n > 0 && (n % 5) == 0)
             upe_printf("\n");
         n++;
 
-        upe_printf(" %-15s", *q);
+        upe_printf(" %-15s", q->host);
     }
 
     if (Native_Empty(asInclude))
@@ -1052,10 +1052,10 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
     // get the max length
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
 
-        len = strlen(p->name);
+        len = strlen(p->name.host);
         if (maxN < len)
             maxN = len;
     }
@@ -1067,15 +1067,16 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
     if (dispTitle) {
         for (i = 0; i < MAXLIST; i++) {
             p = &pluginList[i];
-            if (p->name == NULL)
+            if (p->name.host == NULL)
                 break;
-            isBuiltIn = p->name[0] == NUL;
+            char *name = p->name.host;
+            isBuiltIn  = name[0] == NUL;
 
             if (isBuiltIn)
                 strcpy(nm, bb);
             else {
                 strcpy(nm, "'"); // Apo
-                strcat(nm, p->name);
+                strcat(nm, name);
                 strcat(nm, "'");
             }
 
@@ -1136,17 +1137,12 @@ void display_pluginList(Boolean dispTitle, Boolean atStartup)
 static void ShiftDown(int i, Boolean addIt)
 // Close the gap of a removed element
 {
-    int    j;
-    char **q;
-    char **r;
+    addrpair_typ *q = MyElem(i, addIt);
 
-    q = MyElem(i, addIt);
-
-    for (j = i + 1; j < MAXLIST; j++) {
-        r = MyElem(j, addIt);
-
+    for (int j = i + 1; j < MAXLIST; j++) {
+        addrpair_typ *r = MyElem(j, addIt);
         *q = *r;
-        if (*r == NULL)
+        if (r->host == NULL)
             break;
         q = r;
     }
@@ -1154,38 +1150,40 @@ static void ShiftDown(int i, Boolean addIt)
 
 static void RemoveNativeElement(const char *s, Boolean addIt, Boolean *already)
 {
-    int    i;
-    char **q;
+    int i;
 
     *already = false;
     for (i = 0; i < MAXLIST; i++) {
+        addrpair_typ *q;
+
         // Extract, if already in the other list
         q = MyElem(i, !addIt);
-        if (*q != NULL && ustrcmp(*q, s) == 0) {
+        if (q->host != NULL && ustrcmp(q->host, s) == 0) {
             release_mem(*q);
-            *q = NULL;
+            q->host  = NULL;
+            q->guest = 0;
             ShiftDown(i, !addIt);
         }
 
         // --------------------------------
         q = MyElem(i, addIt);
-        if (*q != NULL && ustrcmp(*q, s) == 0) {
+        if (q->host != NULL && ustrcmp(q->host, s) == 0) {
             if (*already) {
                 // Extract if more than once
                 release_mem(*q);
-                *q = NULL;
+                q->host  = NULL;
+                q->guest = 0;
                 ShiftDown(i, addIt);
             }
 
             *already = true; // it's there already
         }
     }
-} // RemoveNativeElement
+}
 
 void ChangeNativeElement(const char *s, Boolean addIt)
 {
     int       i;
-    char    **q;
     plug_typ *p;
     Boolean   already;
     Boolean   found = false;
@@ -1197,7 +1195,7 @@ void ChangeNativeElement(const char *s, Boolean addIt)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break; // it must be at least once available as native prog
         if (p->is_NativeProg(s, &modBase)) {
             found = true;
@@ -1209,10 +1207,10 @@ void ChangeNativeElement(const char *s, Boolean addIt)
 
     // Insert new element
     for (i = 0; i < MAXLIST - 1; i++) { // last element will not be used
-        q = MyElem(i, addIt);
-        if (*q == NULL) {
+        addrpair_typ *q = MyElem(i, addIt);
+        if (q->host == NULL) {
             *q = get_mem(strlen(s));
-            strcpy(*q, s);
+            strcpy(q->host, s);
             return;
         }
     }
@@ -1229,12 +1227,13 @@ static void ChangePluginElement(const char *s, Boolean enable, Boolean removeIt)
 
     for (i = 0; i < MAXLIST; i++) {
         p = &pluginList[i];
-        if (p->name == NULL)
+        if (p->name.host == NULL)
             break;
-        if (p->name[0] == NUL)
+        char *name = p->name.host;
+        if (name[0] == NUL)
             continue;
 
-        if (ustrcmp(p->name, s) == 0 || ustrcmp(p->name, suffName) == 0) {
+        if (ustrcmp(name, s) == 0 || ustrcmp(name, suffName) == 0) {
             if (removeIt) {
                 p->pEnabled  = false;
                 p->pDisabled = false;
@@ -1544,9 +1543,10 @@ static os9err native_calls(ushort pid, _argc_, char **argv)
 
     for (i = 0; i < MAXLIST; i++) {
         cp->plugElem = &pluginList[i];
-        if (cp->plugElem->name == NULL)
+        if (cp->plugElem->name.host == NULL)
             break;
-        isBuiltIn = cp->plugElem->name[0] == NUL; // built-in has no name
+        char *name = cp->plugElem->name.host;
+        isBuiltIn  = name[0] == NUL; // built-in has no name
 
         enabled = Native_Enabled(cp->plugElem);
         if (enabled && cp->plugElem->is_NativeProg(name, &modBase)) {
@@ -1562,7 +1562,7 @@ static os9err native_calls(ushort pid, _argc_, char **argv)
 #endif
 
     err = E_MNF; // default, if not found
-    if (cp->plugElem->name) {
+    if (cp->plugElem->name.host) {
         ni.pid      = &currentpid;
         ni.modBase  = os9modules[cp->mid].modulebase;
         ni.os9_args = (void *)cp->my_args;
@@ -1776,7 +1776,6 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
 {
 #if defined NATIVE_SUPPORT || defined PTOC_SUPPORT
     int         i;
-    char      **q;
     plug_typ   *p;
     Boolean     ok = nativeActive;
     Boolean     isBuiltIn, enabled;
@@ -1798,12 +1797,12 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
     }
 
     for (i = 0; i < MAXLIST; i++) {
-        q = MyElem(i, !nativeActive);
-        if (*q == NULL)
+        addrpair_typ *q = MyElem(i, !nativeActive);
+        if (q->host == NULL)
             break;
 
         // Consider include/exclude list
-        if (ustrcmp(*q, cut) == 0) {
+        if (ustrcmp(q->host, cut) == 0) {
             ok = !ok;
             break;
         }
@@ -1814,9 +1813,10 @@ int isintcommand(const char *name, Boolean *isNative, void **modBaseP)
 
         for (i = 0; i < MAXLIST; i++) {
             p = &pluginList[i];
-            if (p->name == NULL)
+            if (p->name.host == NULL)
                 break;
-            isBuiltIn = p->name[0] == NUL; // built-in has no name
+            char *name = p->name.host;
+            isBuiltIn  = name[0] == NUL; // built-in has no name
 
             enabled = Native_Enabled(p);
             if (enabled && p->is_NativeProg(name, modBaseP)) {
@@ -1851,21 +1851,19 @@ os9err _errmsg(os9err err, char *format, ...)
     return err;
 }
 
-os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
+os9err prepArgs(char *arglist, ushort *argcP, addrpair_typ *arguments_ptr)
 /* prepare arguments for internal commands
  * will return a allocated block of memory with argv[] and args
  * Note: only simple arg checking is used (argv[] is built from space
  *       delimiter information.
  */
 {
-    ushort argc, k;
-    char  *p, *cp;
-    char **pp;
-    //#define MAXARGS 20
-    // char *localargv[MAXARGS];
-    int    scanarg;
-    char **localargv;
-
+    ushort       argc, k;
+    char        *p, *cp;
+    char       **pp;
+    int          scanarg;
+    addrpair_typ localargv_ptr;
+    char       **localargv;
     argc    = 0; /* none found yet */
     p       = arglist;
     scanarg = false;
@@ -1885,7 +1883,8 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
         p++;
     }
 
-    localargv = get_mem((argc + 1) * sizeof(char **));
+    localargv_ptr = get_mem((argc + 1) * sizeof(char **));
+    localargv     = localargv_ptr.host;
 
     debugprintf(
         dbgUtils,
@@ -1914,7 +1913,8 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
     /* p now points behind last arg char */
     localargv[argc] = p; /* save as end pointer */
 
-    pp = get_mem(p - arglist + (argc + 1) * sizeof(char **) + 1);
+    *arguments_ptr = get_mem(p - arglist + (argc + 1) * sizeof(char **) + 1);
+    pp             = arguments_ptr->host;
     if (pp == NULL)
         return os9error(E_NORAM);
 
@@ -1942,10 +1942,9 @@ os9err prepArgs(char *arglist, ushort *argcP, char ***argP)
         dbgDeep,
         ("# prepArgs: prepared argc=%d, params @ $%08lX\n", argc, (ulong)pp));
 
-    release_mem(localargv);
+    release_mem(localargv_ptr);
 
     /* return args */
-    *argP  = &pp[0];
     *argcP = argc + 1; /* include argv[ 0 ] */
     return 0;
 }

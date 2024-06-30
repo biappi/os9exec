@@ -123,22 +123,19 @@
 memblock_typ memtable[MAX_MEMALLOC];
 pmem_typ     pmem[MAXPROCESSES];
 
+const os9ptr memory_top = 0x00010000;
 
 /* prepare the memory handling for use */
 void init_all_mem(void)
 {
-    int k;
-
     totalMem = 0; /* initialize startup memory */
 
-
-    for (k = 0; k < MAX_MEMALLOC; k++) {
-        memtable[k].base = NULL;
-        memtable[k].size = 0;
-
+    for (int k = 0; k < MAX_MEMALLOC; k++) {
+        memtable[k].base.host  = NULL;
+        memtable[k].base.guest = 0;
+        memtable[k].size       = 0;
     }
 }
-
 
 /* show memory blocks */
 void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
@@ -172,14 +169,15 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
                 for (k = 0; k < MAXMEMBLOCKS; k++) {
                     //  m= &procs[pid].os9memblocks[k];
                     m = &pmem[pid].m[k];
-                    if (m->base != NULL) {
-                        upo_printf("%2d%c  %5d  $%08lX  $%08lX  $%08lX\n",
+                    if (m->base.host != NULL) {
+                        upo_printf("%2d%c  %5d  $%08lX  $%08lX  $%08lX - %p\n",
                                    pid,
                                    pid == currentpid ? '*' : ' ',
                                    k,
-                                   m->base,
+                                   m->base.guest,
                                    m->size,
-                                   (ulong)m->base + m->size);
+                                   (char *)m->base.guest + m->size,
+                                   m->base.host);
                     }
                 }
             }
@@ -187,43 +185,31 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
     }
 }
 
-void show_unused(void)
-{
-} // show_unused
+void show_unused(void) {}
 
 /* initialize process' memory block list */
 void init_mem(ushort pid)
 {
-    int k;
-    for (k = 0; k < MAXMEMBLOCKS; k++)
-        pmem[pid].m[k].base = NULL; // no memory yet
+    for (int k = 0; k < MAXMEMBLOCKS; k++) {
+        // no memory yet
+        addrpair_typ *addr = &pmem[pid].m[k].base;
+        addr->host         = NULL;
+        addr->guest        = 0;
+    }
 }
 
-
-ulong max_mem()
 /* the currently max available memory */
-{
-    ulong memsz;
-
-    memsz = 0;
-
-
-    return memsz;
-}
+uint32_t max_mem() { return 0; }
 
 // --------------------------------------------------------------------------------------
 // install a memory area as memory block
-static ushort install_memblock(ushort pid, void *base, ulong size)
+static ushort install_memblock(ushort pid, addrpair_typ base, ulong size)
 {
-    pmem_typ     *cm = &pmem[pid];
-    memblock_typ *m;
-
-    int k;
-    for (k = 0; k < MAXMEMBLOCKS; k++) {
-        m = &cm->m[k];
-        if (m->base == NULL) {
-            m->base = base;           // save pointer
-            m->size = size;           // save block size
+    for (int k = 0; k < MAXMEMBLOCKS; k++) {
+        memblock_typ *m = &pmem[pid].m[k];
+        if (m->base.host == NULL) {
+            m->base = base; // save pointer
+            m->size = size; // save block size
             return k;
         }
     }
@@ -231,26 +217,24 @@ static ushort install_memblock(ushort pid, void *base, ulong size)
     return MAXMEMBLOCKS;
 }
 
-void release_mem(void *membase)
+void release_mem(addrpair_typ membase)
 /* process independent part of memory deallocation */
 {
-    ulong         memsz = 1;
-    int           k;
-    memblock_typ *m;
+    ulong memsz = 1;
 
-    for (k = 0; k < MAX_MEMALLOC; k++) {
-        m = &memtable[k];
-        if (m->base == membase) { /* search for a segment to be released */
-            memsz = m->size;
+    for (int k = 0; k < MAX_MEMALLOC; k++) {
+        memblock_typ *m = &memtable[k];
+        if (m->base.host == membase.host) {
+            memsz = m->size; /* search for a segment to be released */
 
             totalMem -= memsz;
 
-            m->base = NULL; /* and release the segment */
-            m->size = 0;
+            m->base.host  = NULL; /* and release the segment */
+            m->base.guest = 0;
+            m->size       = 0;
             break;
         }
     }
-
 
     debugprintf(dbgMemory,
                 dbgNorm,
@@ -259,7 +243,7 @@ void release_mem(void *membase)
                  memsz,
                  totalMem));
 
-    free(membase);
+    free(membase.host);
 }
 
 /* free an allocated memory block */
@@ -268,7 +252,7 @@ static void release_memblock(ushort pid, ushort memblocknum)
     pmem_typ     *cm = &pmem[pid];
     memblock_typ *m  = &cm->m[memblocknum];
 
-    if (m->base == NULL)
+    if (m->base.host == NULL)
         return;
 
     debugprintf(
@@ -283,9 +267,10 @@ static void release_memblock(ushort pid, ushort memblocknum)
 
     release_mem(m->base);
 
-    m->base = NULL; // free block
-    m->size = 0;
-} // release_memblock
+    m->base.host  = NULL; // free block
+    m->base.guest = 0;
+    m->size       = 0;
+}
 
 /* free process' allocated memory blocks */
 void free_mem(ushort pid)
@@ -295,41 +280,34 @@ void free_mem(ushort pid)
         release_memblock(pid, k);
 }
 
-void *get_mem(ulong memsz)
 /* process independent part of memory allocation */
+addrpair_typ get_mem(uint32_t memsz)
 {
-    void *pp = NULL;
-    int   k;
-
 #define MBlk 64
-    ulong sz;
+    /* round up to next boundary */
+    uint32_t sz = memsz = (memsz + MBlk - 1) & 0xFFFFFFC0;
 
+    addrpair_typ addr;
+    addr.host  = calloc(sz, 1); /* get memory block, cleared to 0 */
+    addr.guest = (os9ptr)addr.host;
 
-    memsz = (memsz + MBlk - 1) & 0xFFFFFFC0; /* round up to next boundary */
-
-
-    sz = memsz;
-    if (pp == NULL) { /* not yet found */
-        pp = (void *)calloc((size_t)sz,
-                            (size_t)1); /* get memory block, cleared to 0 */
-    }
-
-    if (pp != NULL) {
-        for (k = 0; k < MAX_MEMALLOC; k++) {
-            if (memtable[k].base == NULL) { /* search for a free segment */
+    if (addr.host != NULL) {
+        for (int k = 0; k < MAX_MEMALLOC; k++) {
+            if (memtable[k].base.host == NULL) { /* search for a free segment */
                 totalMem += memsz;
 
-                memtable[k].base = pp;
+                memtable[k].base = addr;
                 memtable[k].size = memsz;
 
                 debugprintf(dbgMemory,
                             dbgNorm,
-                            ("# get_mem:    allocate block     at $%08X "
+                            ("# get_mem:    allocate block     at (os9: $%08X "
+                             "host: %p) "
                              "(size=%5u) %8d\n",
-                             (ulong)pp,
+                             addr.guest,
                              memsz,
                              totalMem));
-                return pp;
+                return addr;
             }
         }
     }
@@ -338,49 +316,46 @@ void *get_mem(ulong memsz)
     upe_printf("No more memory !!!\n");
     //#endif
 
-    return NULL;
+    return addr;
 }
 
 /* memory allocation for OS-9 */
-void *os9malloc(ushort pid, ulong memsz)
+addrpair_typ os9malloc(ushort pid, uint32_t memsz)
 {
-    void *pp;
-    int   k;
+    addrpair_typ pp = get_mem(memsz);
+    if (pp.host == NULL)
+        return pp; /* no memory */
 
-    pp = get_mem(memsz);
-    if (pp == NULL)
-        return NULL; /* no memory */
-
-    k = install_memblock(pid, pp, memsz);
+    int k = install_memblock(pid, pp, memsz);
     if (k >= MAXMEMBLOCKS) {
         /* memory block list is full */
         release_mem(pp);
-        pp = NULL;
+        pp.host  = NULL;
+        pp.guest = 0;
 
         //#ifndef PLUGIN_DLL
         upe_printf("No more memory (MAXMEMBLOCKS) !!!\n");
         //#endif
     }
 
-    debugprintf(
-        dbgMemory,
-        dbgNorm,
-        ("# os9malloc:  allocate block #%-2d at $%08X (size=%5u) %8d pid=%d\n",
-         k,
-         (ulong)pp,
-         memsz,
-         totalMem,
-         pid));
+    debugprintf(dbgMemory,
+                dbgNorm,
+                ("# os9malloc:  allocate block #%-2d at (os9: $%08X host: %p) "
+                 "(size=%5u) %8d pid=%d\n",
+                 k,
+                 pp.guest,
+                 pp.host,
+                 memsz,
+                 totalMem,
+                 pid));
     return pp;
 }
 
 /* memory deallocation for OS-9 */
-os9err os9free(ushort pid, void *membase, ulong memsz)
+os9err os9free(ushort pid, void *membase, uint32_t memsz)
 {
-    os9err        err;
-    pmem_typ     *cm = &pmem[pid];
-    memblock_typ *m;
-    int           k;
+    os9err    err;
+    pmem_typ *cm = &pmem[pid];
 
     debugprintf(dbgMemory,
                 dbgDetail,
@@ -388,10 +363,11 @@ os9err os9free(ushort pid, void *membase, ulong memsz)
                  (ulong)membase,
                  memsz,
                  pid));
+
     if (membase != NULL) {
-        for (k = 0; k < MAXMEMBLOCKS; k++) {
-            m = &cm->m[k];
-            if (m->base == membase) {
+        for (int k = 0; k < MAXMEMBLOCKS; k++) {
+            memblock_typ *m = &cm->m[k];
+            if (m->base.host == membase) {
                 if (m->size == memsz) {
                     release_memblock(pid, k);
                     return 0; /* freed ok */
