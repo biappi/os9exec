@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.1...3.29)
 
 project(os9exec VERSION 3.39 LANGUAGES C)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include_directories(
     Source/OS9exec_core
     Source/OS9exec_core/os9defs

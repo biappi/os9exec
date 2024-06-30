@@ -13,6 +13,10 @@ build/os9exec:
 run: build/os9exec
 	$(DOCKER) run --rm -it -v $(WD):/work -v $(OS9_ROOT):/dd -w /work $(BUILD) /work/build/os9exec
 
+.PHONY: run-log
+run-log: build/os9exec
+	$(DOCKER) run --rm -it -v $(WD):/work -v $(OS9_ROOT):/dd -w /work $(BUILD) /work/build/os9exec -d -1
+
 .PHONY: shell
 shell: build/os9exec
 	$(DOCKER) run --rm -it -v $(WD):/work -v $(OS9_ROOT):/dd -w /work $(BUILD) bash
