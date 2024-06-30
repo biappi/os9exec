@@ -259,19 +259,7 @@ void release_mem(void *membase)
                  memsz,
                  totalMem));
 
-#ifdef MACMEM
-    DisposePtr(membase);
-
-    if (MemError() != noErr) {
-        debugprintf(
-            dbgMemory + dbgAnomaly,
-            dbgDeep,
-            ("# release_memblock: DisposePtr returned Mac OS9 MemError=%d\n",
-             MemError()));
-    }
-#else
     free(membase);
-#endif
 }
 
 /* free an allocated memory block */
@@ -322,20 +310,8 @@ void *get_mem(ulong memsz)
 
     sz = memsz;
     if (pp == NULL) { /* not yet found */
-#ifdef MACMEM
-        pp = NewPtrClear(sz);
-
-        if (pp == NULL) {
-            debugprintf(dbgMemory,
-                        dbgNorm,
-                        ("# get_mem: %s returned MacOS MemError=%d\n",
-                         "NewPtrClear",
-                         MemError()));
-        }
-#else
         pp = (void *)calloc((size_t)sz,
                             (size_t)1); /* get memory block, cleared to 0 */
-#endif
     }
 
     if (pp != NULL) {
