@@ -1682,9 +1682,6 @@ cmdtable_typ commandtable[] = {
     {"imem", int_mem, "shows OS9exec's memory block list"},
     {"ihit", int_hit, "shows OS9exec's directory hash hit rate"},
 
-#ifdef REUSE_MEM
-    {"iunused", int_unused, "shows OS9exec's unused block list"},
-#endif
 
     {"idevs", int_devs, "shows OS9exec's devices"},
     {"idbg/debughalt",

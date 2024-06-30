@@ -74,16 +74,6 @@ extern memblock_typ memtable[MAX_MEMALLOC];
 // memory blocks for all processes
 extern pmem_typ pmem[MAXPROCESSES];
 
-#ifdef REUSE_MEM
-typedef struct {
-    memblock_typ f[MAX_MEMALLOC];
-    int          freeN;   // number of free segments
-    ulong        freeMem; // total free memory
-} free_typ;
-
-// the free info
-extern free_typ freeinfo;
-#endif
 
 #if defined __cplusplus
 extern "C" {

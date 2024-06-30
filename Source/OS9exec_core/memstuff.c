@@ -123,10 +123,6 @@
 memblock_typ memtable[MAX_MEMALLOC];
 pmem_typ     pmem[MAXPROCESSES];
 
-#ifdef REUSE_MEM
-// the free info
-free_typ freeinfo;
-#endif
 
 /* prepare the memory handling for use */
 void init_all_mem(void)
@@ -135,47 +131,14 @@ void init_all_mem(void)
 
     totalMem = 0; /* initialize startup memory */
 
-#ifdef REUSE_MEM
-    freeinfo.freeN   = 0;
-    freeinfo.freeMem = 0;
-#endif
 
     for (k = 0; k < MAX_MEMALLOC; k++) {
         memtable[k].base = NULL;
         memtable[k].size = 0;
 
-#ifdef REUSE_MEM
-        freeinfo.f[k].base = NULL;
-        freeinfo.f[k].size = 0;
-#endif
     }
 }
 
-#ifdef REUSE_MEM
-static void MemLine(int *k, ulong value, const char *s)
-{
-    ulong         tot = 0;
-    int           n   = 0;
-    memblock_typ *f;
-
-    while (*k > 0) {
-        f = &freeinfo.f[(*k) - 1];
-        if (f->base != NULL) {
-            if (f->size > value)
-                break;
-            tot += f->size;
-            n++;
-        }
-
-        (*k)--;
-    }
-
-    if (n > 0)
-        upo_printf("%s  %4d  %9d\n", s, n, tot);
-    else
-        upo_printf("%s  %4s  %9s\n", s, "-", "-");
-}
-#endif
 
 /* show memory blocks */
 void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
@@ -183,56 +146,12 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
     memblock_typ *m;
     int           k, pid;
 
-#ifdef REUSE_MEM
-#define UpL 0xffffffff
-    void         *nx, *nxMin;
-    ulong         nxSiz, svSiz;
-    memblock_typ *f;
-    int           diff, i;
-#endif
 
     if (mem_unused) {
         if (mem_fulldisp) {
             upo_printf("  #     start       end      size   to next\n");
             upo_printf("---  --------  --------  --------  --------\n");
 
-#ifdef REUSE_MEM
-            nxMin = 0;
-            nx    = 0;
-            i     = 0;
-
-            while (true) {
-                if (nx > (char *)0) { /* not for the first time */
-                    diff = (int)((char *)nxMin - (char *)nx) - svSiz;
-                    upe_printf("%3d  %08X  %08X  %8d",
-                               i - 1,
-                               nx,
-                               (char *)nx + svSiz,
-                               svSiz);
-                    if (nxMin == (char *)UpL) {
-                        upe_printf("\n");
-                        break;
-                    }
-                    upe_printf("%8d  %08X\n", diff, nxMin);
-                }
-
-                nx    = nxMin;
-                svSiz = nxSiz;
-                nxMin = (char *)UpL;
-
-                for (k = 0; k < MAX_MEMALLOC; k++) {
-                    f = &freeinfo.f[k];
-                    if (f->base == NULL)
-                        break;
-                    if (f->base > nx && f->base < nxMin) {
-                        nxMin = f->base;
-                        nxSiz = f->size;
-                    }
-                }
-
-                i++;
-            }
-#endif
 
             return;
         }
@@ -240,27 +159,6 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
         upo_printf("   size     #      total\n");
         upo_printf("-------  ----  ---------\n");
 
-#ifdef REUSE_MEM
-        k = MAX_MEMALLOC;
-        MemLine(&k, 128, "<=  128");
-        MemLine(&k, 256, "<=  256");
-        MemLine(&k, 512, "<=  512");
-        MemLine(&k, 1024, "<=  1kB");
-        MemLine(&k, 2048, "<=  2kB");
-        MemLine(&k, 5120, "<=  5kB");
-        MemLine(&k, 10240, "<= 10kB");
-        MemLine(&k, 20480, "<= 20kB");
-        MemLine(&k, 51200, "<= 50kB");
-        MemLine(&k, 102400, "<=100kB");
-        MemLine(&k, 204800, "<=200kB");
-        MemLine(&k, 512000, "<=500kB");
-        MemLine(&k, 1048576, "<=  1MB");
-        MemLine(&k, 0xffffffff, ">   1MB");
-        upo_printf("\n");
-
-        k = MAX_MEMALLOC;
-        MemLine(&k, 0xffffffff, "  total");
-#endif
 
         return;
     }
@@ -291,32 +189,6 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
 
 void show_unused(void)
 {
-#ifdef REUSE_MEM
-    int           k, n = 0;
-    memblock_typ *f;
-    char          s[10];
-
-    upo_printf("Block   Start      Size          Size\n");
-    upo_printf("-----  ---------  --------- ---------\n");
-
-    for (k = 0; k < MAX_MEMALLOC; k++) {
-        f = &freeinfo.f[k];
-        if (f->base != NULL) {
-            upo_printf("%5d  $%08lX  $%08lX  %8d\n",
-                       k,
-                       f->base,
-                       f->size,
-                       f->size);
-            n++;
-        }
-    }
-
-    sprintf(s, "(%d)", freeinfo.freeN);
-    upo_printf("\nTOTAL %6s      $%08lX  %8d\n",
-               s,
-               freeinfo.freeMem,
-               freeinfo.freeMem);
-#endif
 } // show_unused
 
 /* initialize process' memory block list */
@@ -327,80 +199,6 @@ void init_mem(ushort pid)
         pmem[pid].m[k].base = NULL; // no memory yet
 }
 
-#ifdef REUSE_MEM
-static Boolean release_ok(void *membase, ulong memsz)
-{
-    int           k;
-    memblock_typ *f;
-
-    //#ifndef MEM_SHIELD
-    void *qq;
-    ulong svsize;
-
-    /* check if piece appended at the end available */
-    qq = (char *)membase + memsz;
-    for (k = 0; k < MAX_MEMALLOC; k++) {
-        f = &freeinfo.f[k];
-        if (f->base == NULL)
-            break;
-        if (f->base == qq) {
-            memsz += f->size; /* glue it together */
-            svsize = f->size;
-            MoveBlk(f,
-                    &freeinfo.f[k + 1],
-                    (freeinfo.freeN - k) * sizeof(memblock_typ));
-
-            totalMem -= svsize; /* free memory is not really released */
-
-            freeinfo.freeN--;
-            freeinfo.freeMem -= svsize;
-            break;
-        }
-    }
-
-    /* check if piece appended at the beginning available */
-    for (k = 0; k < MAX_MEMALLOC; k++) {
-        f = &freeinfo.f[k];
-        if (f->base == NULL)
-            break;
-        if ((char *)f->base + f->size == membase) {
-            membase = f->base; /* the new starting point */
-            memsz += f->size;  /* glue it together */
-            svsize = f->size;
-            MoveBlk(f,
-                    &freeinfo.f[k + 1],
-                    (freeinfo.freeN - k) * sizeof(memblock_typ));
-
-            totalMem -= svsize; /* free memory is not really released */
-
-            freeinfo.freeN--;
-            freeinfo.freeMem -= svsize;
-            break;
-        }
-    }
-    //#endif
-
-    for (k = 0; k < MAX_MEMALLOC; k++) { /* do not really release the memory */
-        f = &freeinfo.f[k];
-        if (f->base == NULL || f->size < memsz) {
-            MoveBlk(&freeinfo.f[k + 1],
-                    f,
-                    (freeinfo.freeN - k) * sizeof(memblock_typ));
-
-            f->base = membase;
-            f->size = memsz;
-
-            totalMem += memsz; /* free memory is not really released */
-
-            freeinfo.freeN++;
-            freeinfo.freeMem += memsz;
-            return true;
-        }
-    }
-
-    return false;
-}
-#endif
 
 ulong max_mem()
 /* the currently max available memory */
@@ -409,9 +207,6 @@ ulong max_mem()
 
     memsz = 0;
 
-#ifdef REUSE_MEM
-    memsz += freeinfo.freeMem;
-#endif
 
     return memsz;
 }
@@ -456,27 +251,6 @@ void release_mem(void *membase)
         }
     }
 
-#ifdef REUSE_MEM
-    if (memsz == 0) {
-        printf("STRANGE BLOCK at %08X\n", membase);
-        return;
-    }
-    if (memsz == 1) {
-        printf("UNUSED  BLOCK at %08X\n", membase);
-        return;
-    }
-
-    if (release_ok(membase, memsz)) {
-        debugprintf(
-            dbgMemory,
-            dbgNorm,
-            ("# release_mem: release block     at $%08lX (size=%5u) %8d\n",
-             membase,
-             memsz,
-             totalMem));
-        return;
-    }
-#endif
 
     debugprintf(dbgMemory,
                 dbgNorm,
@@ -542,68 +316,14 @@ void *get_mem(ulong memsz)
 #define MBlk 64
     ulong sz;
 
-#ifdef REUSE_MEM
-#define FullBlk 524288
-    memblock_typ *f;
-    void         *qq;
-    ulong         sv_size;
-    Boolean       cond;
-#endif
 
     memsz = (memsz + MBlk - 1) & 0xFFFFFFC0; /* round up to next boundary */
 
-#ifdef REUSE_MEM
-    for (k = MAX_MEMALLOC - 1; k >= 0;
-         k--) { /* try to get it from the free list */
-        f = &freeinfo.f[k];
-        if (f->base != NULL) {
-            cond = f->size == memsz || f->size >= 2 * memsz ||
-                   f->size >= memsz + 8 * MBlk;
-            if (cond) {
-                pp = f->base;
-                memset(pp, 0, memsz); /* some programs need a clean block !!! */
-
-                //          printf( "- %d %d %d %d\n", freeinfo.freeN, k,
-                //          (freeinfo.freeN-k)*sizeof(memblock_typ), memsz );
-                //          show_unused();
-
-                sv_size = f->size; /* save it before overwritten */
-                MoveBlk(f,
-                        &freeinfo.f[k + 1],
-                        (freeinfo.freeN - k) * sizeof(memblock_typ));
-                if (sv_size > memsz) {
-                    qq = (char *)pp + memsz;
-                    release_ok(qq, sv_size - memsz);
-                }
-
-                totalMem -= sv_size; /* memory was not really free */
-
-                freeinfo.freeN--;
-                freeinfo.freeMem -= sv_size;
-
-                //          printf( "+ %d %d %d %d\n", freeinfo.freeN, k,
-                //          (freeinfo.freeN-k)*sizeof(memblock_typ), memsz );
-                //          show_unused();
-                break;
-            }
-        }
-    }
-#endif
 
     sz = memsz;
     if (pp == NULL) { /* not yet found */
 #ifdef MACMEM
-#ifdef REUSE_MEM
-        if (sz > FullBlk)
-            pp = NewPtrClear(sz);
-        else {
-            pp = NewPtrClear(FullBlk);
-            qq = (char *)pp + sz;
-            release_ok(qq, FullBlk - sz);
-        }
-#else
         pp = NewPtrClear(sz);
-#endif
 
         if (pp == NULL) {
             debugprintf(dbgMemory,
