@@ -362,6 +362,8 @@ void debug_procdump(process_typ *cp, int cpid)
 
     upo_printf("\n"); /* End of the module identity line */
 
+    upo_printf("  module addr: %08x\n", me);
+
     /* Output the exit code */
     get_error_strings(cp->exiterr, &code, &desc);
     upo_printf("    Exit code: %s(%d) %s\n", code, cp->exiterr, desc);

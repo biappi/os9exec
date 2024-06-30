@@ -1507,7 +1507,7 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
             cp->exiterr = vect - FIRSTEXCEPTION + E_BUSERR; /* set exit code */
             //            if (!debugcheck(dbgAnomaly,dbgNorm)) /* dump proc if
             //            not debugging */
-            //    debug_procdump(cp, cpid);
+            debug_procdump(cp, cpid);
             kill_process(cpid); /* kill the process, change currentpid */
             /* show exception */
             debugprintf(dbgTrapHandler,
