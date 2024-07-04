@@ -454,7 +454,7 @@ void debug_procdump(process_typ *cp, int cpid)
             upo_printf("\n");
         }
 
-        upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
+        upo_printf("               PC=%08X SR=%04X       USP=%08X\n", rp->pc, rp->sr, rp->usp);
 
 /* Show the failing instruction. */
         upo_printf(" Executing: -->");
