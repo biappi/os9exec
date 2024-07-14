@@ -23,5 +23,5 @@ docker run -it -v $OS9_ROOT:/dd --entrypoint /bin/bash -t os9exec:latest
 ```
 Before running os9exec from that shell, copy the root filesystem with:
 ```
-cp /dd dd
+cp -a /dd dd
 ```
