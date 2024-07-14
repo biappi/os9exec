@@ -23,7 +23,12 @@ static uae_u32 get_word(uaecptr addr)
 static uae_u32 get_byte(uaecptr addr)
 {
     uae_u8 *a = (uae_u8 *)addr;
-    return *a;
+    if (addr >= 0x04fc0000 && addr < 0x04fd0000) {
+        // printf("get_byte: faking read %p\n", a);
+        return 0;
+    } else {
+        return *a;
+    }
 }
 static void put_long(uaecptr addr, uae_u32 v)
 {
@@ -46,5 +51,9 @@ static void put_word(uaecptr addr, uae_u32 v)
 static void put_byte(uaecptr addr, uae_u32 v)
 {
     uae_u8 *a = (uae_u8 *)addr;
-    *a = v;
+    if (addr >= 0x04fc0000 && addr < 0x04fd0000) {
+        // printf("put_byte: skipping %p <= %02x\n", a, v);
+    } else {
+        *a = v;
+    }
 }
