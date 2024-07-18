@@ -2043,6 +2043,7 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
     const int L_Plen = strlen(L_P);
 
     strncpy(name, dEnt->d_name, DIRNAMSZ);
+    name[DIRNAMSZ - 1] = 0;
 
     if (ustrncmp(name, L_P, L_Plen) == 0 && do_2e_conv) {
         name[0] = '.'; /* convert ".xx" string */
@@ -2051,7 +2052,7 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
     }
 
     while (true) {
-        q = strstr(name, " ");
+        q = strnstr(name, " ", DIRNAMSZ);
         if (q == NULL)
             break; /* replace " " by "_" */
         *q = '_';
