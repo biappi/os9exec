@@ -36,10 +36,6 @@
 
 extern int withTitle;
 
-/* debug_out handling (Bfo) */
-typedef void (*dbg_func)(void);
-
-
 /* Opcode of faulting instruction */
 uae_u16 last_op_for_exception_3;
 /* PC at fault time */
@@ -274,7 +270,7 @@ uae_u32 get_ilong_1(uaecptr o) {
     get_long(regs.pc + (regs.pc_p - regs.pc_oldp) + (o));
 }
 
-uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_out)() )
+uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf)
 {
     uae_u16 dp;
     uae_s8 disp8;
@@ -442,7 +438,7 @@ uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_ou
 	break;
     }
     if (buf == 0)
-	(*debug_out) ("%s", buffer);
+	printf("%s", buffer);
     else
 	strcat (buf, buffer);
     return offset;
@@ -1206,7 +1202,7 @@ static void m68k_verify (uaecptr addr, uaecptr *nextpc)
     }
 }
 
-void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt, void (*debug_out)())
+void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt)
 {
     uaecptr newpc = 0;
     m68kpc_offset = addr - m68k_getpc ();
@@ -1216,9 +1212,10 @@ void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt, void (*debug_out)())
 	uae_u32 opcode;
 	struct mnemolookup *lookup;
 	struct instr *dp;
-	(*debug_out) ("%08lx: ", m68k_getpc () + m68kpc_offset);
+
+	printf("%08lx: ", m68k_getpc () + m68kpc_offset);
 	for (opwords = 0; opwords < 5; opwords++){
-	    (*debug_out) ("%04x ", get_iword_1 (m68kpc_offset + opwords*2));
+	    printf("%04x ", get_iword_1 (m68kpc_offset + opwords*2));
 	}
 	opcode = get_iword_1 (m68kpc_offset);
 	m68kpc_offset += 2;
@@ -1234,32 +1231,32 @@ void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt, void (*debug_out)())
 	if (ccpt != 0) {
 	    strncpy (ccpt, ccnames[dp->cc], 2);
 	}
-	(*debug_out) ("%s", instrname);
+	printf("%s", instrname);
 	switch (dp->size){
-	 case sz_byte: (*debug_out) (".B "); break;
-	 case sz_word: (*debug_out) (".W "); break;
-	 case sz_long: (*debug_out) (".L "); break;
-	 default: (*debug_out) ("   "); break;
+	 case sz_byte: printf(".B "); break;
+	 case sz_word: printf(".W "); break;
+	 case sz_long: printf(".L "); break;
+	 default: printf("   "); break;
 	}
 
 	if (dp->suse) {
 	    newpc = m68k_getpc () + m68kpc_offset;
-	    newpc += ShowEA (dp->sreg, dp->smode, dp->size, 0, debug_out);
+	    newpc += ShowEA (dp->sreg, dp->smode, dp->size, 0);
 	}
 	if (dp->suse && dp->duse)
-	    (*debug_out) (",");
+	    printf(",");
 	if (dp->duse) {
 	    newpc = m68k_getpc () + m68kpc_offset;
-	    newpc += ShowEA (dp->dreg, dp->dmode, dp->size, 0, debug_out);
+	    newpc += ShowEA (dp->dreg, dp->dmode, dp->size, 0);
 	}
 	if (ccpt != 0) {
 	    if (cctrue(dp->cc))
-		(*debug_out) (" == %08lx (TRUE)", newpc);
+		printf(" == %08lx (TRUE)", newpc);
 	    else
-		(*debug_out) (" == %08lx (FALSE)", newpc);
+		printf(" == %08lx (FALSE)", newpc);
 	} else if ((opcode & 0xff00) == 0x6100) /* BSR */
-	    (*debug_out) (" == %08lx", newpc);
-	(*debug_out) ("\n");
+	    printf(" == %08lx", newpc);
+	printf("\n");
     }
     if (nextpc)
 	*nextpc = m68k_getpc () + m68kpc_offset;
@@ -1268,40 +1265,37 @@ void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt, void (*debug_out)())
 void m68k_dumpstate (uaecptr *nextpc, int to_logfile)
 {
     int i;
-    void (*debug_out)() = NULL;
-    if( to_logfile ) debug_out= (dbg_func)write_log;
-    else             debug_out= (dbg_func)console_out;
-
     
     for (i = 0; i < 8; i++){
-	(*debug_out) ("D%d: %08lx ", i, m68k_dreg(regs, i));
-	if ((i & 3) == 3) (*debug_out) ("\n");
+	printf("D%d: %08lx ", i, m68k_dreg(regs, i));
+	if ((i & 3) == 3) printf("\n");
     }
     for (i = 0; i < 8; i++){
-	(*debug_out) ("A%d: %08lx ", i, m68k_areg(regs, i));
-	if ((i & 3) == 3) (*debug_out) ("\n");
+	printf("A%d: %08lx ", i, m68k_areg(regs, i));
+	if ((i & 3) == 3) printf("\n");
     }
     if (regs.s == 0) regs.usp = m68k_areg(regs, 7);
     if (regs.s && regs.m) regs.msp = m68k_areg(regs, 7);
     if (regs.s && regs.m == 0) regs.isp = m68k_areg(regs, 7);
-    (*debug_out) ("USP=%08lx ISP=%08lx MSP=%08lx VBR=%08lx\n",
+    printf("USP=%08lx ISP=%08lx MSP=%08lx VBR=%08lx\n",
 	    regs.usp,regs.isp,regs.msp,regs.vbr);
-    (*debug_out) ("T=%d%d S=%d M=%d X=%d N=%d Z=%d V=%d C=%d IMASK=%d\n",
+    printf("T=%d%d S=%d M=%d X=%d N=%d Z=%d V=%d C=%d IMASK=%d\n",
 	    regs.t1, regs.t0, regs.s, regs.m,
 	    GET_XFLG, GET_NFLG, GET_ZFLG, GET_VFLG, GET_CFLG, regs.intmask);
     for (i = 0; i < 8; i++){
-	(*debug_out) ("FP%d: %g ", i, regs.fp[i]);
-	if ((i & 3) == 3) (*debug_out) ("\n");
+	printf("FP%d: %g ", i, regs.fp[i]);
+	if ((i & 3) == 3) printf("\n");
     }
-    (*debug_out) ("N=%d Z=%d I=%d NAN=%d\n",
+    printf("N=%d Z=%d I=%d NAN=%d\n",
 		(regs.fpsr & 0x8000000) != 0,
 		(regs.fpsr & 0x4000000) != 0,
 		(regs.fpsr & 0x2000000) != 0,
 		(regs.fpsr & 0x1000000) != 0);
 
-    m68k_disasm(m68k_getpc (), nextpc, 1, debug_out);
+    m68k_disasm(m68k_getpc (), nextpc, 1);
+    m68k_disasm(m68k_getpc (), nextpc, 1);
     if (nextpc)
-	(*debug_out) ("next PC: %08lx\n", *nextpc);
+	printf("next PC: %08lx\n", *nextpc);
 }
 
 #ifdef NEVER_DEFINED // %%% LuZ no save/restore of CPU

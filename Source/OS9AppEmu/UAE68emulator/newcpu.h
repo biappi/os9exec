@@ -152,7 +152,7 @@ static __inline__ void m68k_setstopped (int stop)
 extern uae_u32 get_disp_ea_020 (uae_u32 base, uae_u32 dp);
 extern uae_u32 get_disp_ea_000 (uae_u32 base, uae_u32 dp);
 
-extern uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf, void (*debug_out)());
+extern uae_s32 ShowEA (int reg, amodes mode, wordsizes size, char *buf);
 
 extern void MakeSR (void);
 extern void MakeFromSR (void);
@@ -166,7 +166,7 @@ extern void init_m68k (void);
 extern unsigned long m68k_os9go (void); // special emulator call for os9exec
 extern void m68k_go (int);
 extern void m68k_dumpstate (uaecptr *, int);
-extern void m68k_disasm (uaecptr, uaecptr *, int, void (*debug_out)());
+extern void m68k_disasm (uaecptr, uaecptr *, int);
 extern void m68k_reset (void);
 
 extern void mmu_op (uae_u32, uae_u16);

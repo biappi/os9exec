@@ -458,9 +458,9 @@ void debug_procdump(process_typ *cp, int cpid)
 
 /* Show the failing instruction. */
         upo_printf(" Executing: -->");
-        m68k_disasm(rp->pc, &aa, 1, (dbg_func)upo_printf);
+        m68k_disasm(rp->pc, &aa, 1);
         upo_printf("               ");
-        m68k_disasm(aa, &aa, 1, (dbg_func)upo_printf);
+        m68k_disasm(aa, &aa, 1);
     }
 
     /* Static memory */
@@ -587,7 +587,7 @@ void dumpregs(ushort pid)
     uphe_printf(" PC=%08X SR=%04X\n", rp->pc, rp->sr);
 
     if (pid < MAXPROCESSES)
-        m68k_disasm(rp->pc, &aa, 2, (dbg_func)console_out);
+        m68k_disasm(rp->pc, &aa, 2);
 }
 
 /* show memory */
@@ -757,8 +757,7 @@ ushort debugwait(void)
 
             m68k_disasm(listbase,
                         (uaecptr *)&listbase,
-                        10,
-                        (dbg_func)console_out);
+                        10);
             disasm = 1;
             break;
 
@@ -766,8 +765,7 @@ ushort debugwait(void)
             if (disasm)
                 m68k_disasm(listbase,
                             (uaecptr *)&listbase,
-                            10,
-                            (dbg_func)console_out);
+                            10);
             else
                 dumpmem(&listbase, 10);
             break;

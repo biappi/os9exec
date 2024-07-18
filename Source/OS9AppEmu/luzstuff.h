@@ -24,8 +24,8 @@ extern int savestate_wanted;
 extern int quit_program;
 
 void upe_printf(const char *format, ...);
-#define console_out upe_printf
-#define write_log upe_printf
+#define console_out printf
+#define write_log   printf
 
 extern struct uae_prefs currprefs;
 extern void             customreset(void); // WIL
