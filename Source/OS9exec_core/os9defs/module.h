@@ -134,22 +134,22 @@ typedef unsigned short ushort;
 #define MODSIZE(mod) ((u_int32)((Mh_com)mod)->_msize)
 
 struct modhcom {
-    int16_t _msync,    /* sync bytes ($4afc) */
-        _msysrev;      /* system revision check value */
-    int32_t _msize,    /* module size */
-        _mowner,       /* owner id */
-        _mname;        /* offset to module name */
-    int16_t _maccess,  /* access permission */
-        _mtylan,       /* type/lang */
-        _mattrev,      /* rev/attr */
-        _medit;        /* edition */
-    int32_t _musage,   /* comment string offset */
-        _msymbol;      /* symbol table offset */
-    int16_t _mident;   /* ident code */
-    char  _mspare[6];  /* reserved bytes */
-    int32_t  _mhdext;  /* module header extension offset */
-    int16_t _mhdextsz; /* module header extension size */
-    int16_t _mparity;  /* header parity */
+    int16_t _msync;     /* sync bytes ($4afc) */
+    int16_t _msysrev;   /* system revision check value */
+    int32_t _msize;     /* module size */
+    int32_t _mowner;    /* owner id */
+    int32_t _mname;     /* offset to module name */
+    int16_t _maccess;   /* access permission */
+    int16_t _mtylan;    /* type/lang */
+    int16_t _mattrev;   /* rev/attr */
+    int16_t _medit;     /* edition */
+    int32_t _musage;    /* comment string offset */
+    int32_t _msymbol;   /* symbol table offset */
+    int16_t _mident;    /* ident code */
+    uint8_t _mspare[6]; /* reserved bytes */
+    int32_t _mhdext;    /* module header extension offset */
+    int16_t _mhdextsz;  /* module header extension size */
+    int16_t _mparity;   /* header parity */
 };
 
 /* OS-9000 compatible type definition */
@@ -157,13 +157,13 @@ typedef struct modhcom mh_com, *Mh_com;
 
 /* Executable memory module */
 typedef struct {
-    struct modhcom _mh;    /* common header info */
-    int32_t        _mexec, /* offset to execution entry point */
-        _mexcpt,           /* offset to exception entry point */
-        _mdata,            /* data storage requirement */
-        _mstack,           /* stack size */
-        _midata,           /* offset to initialized data */
-        _midref;           /* offset to data reference lists */
+    struct modhcom _mh;     /* common header info */
+    int32_t        _mexec;  /* offset to execution entry point */
+    int32_t        _mexcpt; /* offset to exception entry point */
+    int32_t        _mdata;  /* data storage requirement */
+    int32_t        _mstack; /* stack size */
+    int32_t        _midata; /* offset to initialized data */
+    int32_t        _midref; /* offset to data reference lists */
 } mod_exec;
 
 /* OS-9000 compatible type definition */
@@ -171,17 +171,17 @@ typedef mod_exec mh_exec, *Mh_exec;
 
 /* device driver module */
 typedef struct {
-    struct modhcom _mh;    /* common header info */
-    long           _mexec, /* offset to execution entry point */
-        _mexcpt,           /* offset to exception entry point */
-        _mdata;            /* data storage requirement */
-    short _mdinit,         /* offset to init routine */
-        _mdread,           /* offset to read routine */
-        _mdwrite,          /* offset to write routine */
-        _mdgetstat,        /* offset to getstat routine */
-        _mdsetstt,         /* offset to setstat routine */
-        _mdterm,           /* offset to terminate routine */
-        _mderror;          /* offset to exception error routine */
+    struct modhcom _mh; /* common header info */
+    int32_t _mexec;     /* offset to execution entry point */
+    int32_t _mexcpt;    /* offset to exception entry point */
+    int32_t _mdata;     /* data storage requirement */
+    int16_t _mdinit;    /* offset to init routine */
+    int16_t _mdread;    /* offset to read routine */
+    int16_t _mdwrite;   /* offset to write routine */
+    int16_t _mdgetstat; /* offset to getstat routine */
+    int16_t _mdsetstt;  /* offset to setstat routine */
+    int16_t _mdterm;    /* offset to terminate routine */
+    int16_t _mderror;   /* offset to exception error routine */
 } mod_driver;
 
 /* OS-9000 compatible type definition */
@@ -191,18 +191,18 @@ typedef mod_driver mh_drvr, *Mh_drvr;
 typedef struct {
     struct modhcom _mh;          /* common header info */
     char          *_mport;       /* device port address */
-    unsigned char  _mvector;     /* trap vector number */
-    unsigned char  _mirqlvl;     /* irq interrupt level */
-    unsigned char  _mpriority;   /* irq polling priority */
-    unsigned char  _mmode;       /* device mode capabilities */
-    short          _mfmgr;       /* file manager name offset */
-    short          _mpdev;       /* device driver name offset */
-    short          _mdevcon;     /* device configuration offset */
-    unsigned short _mdscres[1];  /* (reserved) */
-    unsigned long  _mdevflags;   /* reserved for future usage */
-    unsigned short _mdscres2[1]; /* reserved */
-    unsigned short _mopt;        /* option table size */
-    unsigned char  _mdtype;      /* device type code */
+    uint8_t        _mvector;     /* trap vector number */
+    uint8_t        _mirqlvl;     /* irq interrupt level */
+    uint8_t        _mpriority;   /* irq polling priority */
+    uint8_t        _mmode;       /* device mode capabilities */
+    int16_t        _mfmgr;       /* file manager name offset */
+    int16_t        _mpdev;       /* device driver name offset */
+    int16_t        _mdevcon;     /* device configuration offset */
+    uint16_t       _mdscres[1];  /* (reserved) */
+    uint32_t       _mdevflags;   /* reserved for future usage */
+    uint16_t       _mdscres2[1]; /* reserved */
+    uint16_t       _mopt;        /* option table size */
+    uint8_t        _mdtype;      /* device type code */
 } mod_dev;
 
 /* OS-9000 compatible type definition */
@@ -210,53 +210,53 @@ typedef mod_dev mh_dev, *Mh_dev;
 
 /* Configuration module */
 typedef struct mod_config {
-    struct modhcom _mh;         /* common header info */
-    long           _mmaxmem;    /* top limit of free ram (unused) */
-    unsigned short _mpollsz,    /* number of IRQ polling tbl entries */
-        _mdevcnt,               /* number of device table entries */
-        _mprocs,                /* number of process table entries */
-        _mpaths,                /* number of path table entries */
-        _msysparam,             /* offset to parameter string for _msysgo */
-        _msysgo,                /* offset to initial module name */
-        _msysdrive,             /* offset to system device name */
-        _mconsol,               /* offset to system consol terminal name */
-        _mextens,               /* offset to customization module name list */
-        _mclock,                /* offset to clock module name */
-        _mslice,                /* number of clock ticks per time slice */
-        _mip_id;                /* interprocessor identification */
-    long           _msite;      /* installation site code */
-    unsigned short _minstal;    /* installation name offset */
-    long           _mcputyp;    /* cpu class (68000/010/020/030/3XX/040/070) */
-    char           _mos9lvl[4]; /* operating system level/version/edition */
-    unsigned short _mos9rev,    /* offset to OS-9 level/revision string */
-        _msyspri,               /* initial system priority */
-        _mminpty,               /* initial minimum executable priority */
-        _maxage,                /* initial maximum natural process age */
-        _mmdirsz,               /* initial maximum module count */
-        _mreserv3;              /* reserved */
-    unsigned short _mevents;    /* number of system event table entries */
-    char           _mcompat,    /* version change smooth byte #1 */
-        _mcompat2;              /* version change smoothing byte #2*/
-    unsigned short _mmemlist,   /* offset to (colored) memory list */
-        _mstacksz,              /* IRQ stack size (in longwords) */
-        _mcoldretrys,           /* coldstart's "chd" retry counter */
-        _mreserv2[2],           /* reserved */
-        _mcachelist,            /* offset to SSM(MMU) cache modes list */
-        _mioman,                /* offset to IOMan module name */
-        _mpreio,                /* offset to "pre-IO" P2 extension module list*/
-        _msysconf,              /* system configuration control flags */
-                                /* NOTE: _mnumsigs is currently unimplemented */
-        _mnumsigs,              /* max number of queued signals per process */
-        _mprcdescstack,         /* process descriptor stack size */
-        _mreserved[32];         /* reserved space */
+    struct modhcom _mh;            /* common header info */
+    int32_t        _mmaxmem;       /* top limit of free ram (unused) */
+    uint16_t       _mpollsz;       /* number of IRQ polling tbl entries */
+    uint16_t       _mdevcnt;       /* number of device table entries */
+    uint16_t       _mprocs;        /* number of process table entries */
+    uint16_t       _mpaths;        /* number of path table entries */
+    uint16_t       _msysparam;     /* offset to parameter string for _msysgo */
+    uint16_t       _msysgo;        /* offset to initial module name */
+    uint16_t       _msysdrive;     /* offset to system device name */
+    uint16_t       _mconsol;       /* offset to system consol terminal name */
+    uint16_t       _mextens;       /* offset to customization module name list */
+    uint16_t       _mclock;        /* offset to clock module name */
+    uint16_t       _mslice;        /* number of clock ticks per time slice */
+    uint16_t       _mip_id;        /* interprocessor identification */
+    int32_t        _msite;         /* installation site code */
+    uint16_t       _minstal;       /* installation name offset */
+    int32_t        _mcputyp;       /* cpu class (68000/010/020/030/3XX/040/070) */
+    uint8_t        _mos9lvl[4];    /* operating system level/version/edition */
+    uint16_t       _mos9rev;       /* offset to OS-9 level/revision string */
+    uint16_t       _msyspri;       /* initial system priority */
+    uint16_t       _mminpty;       /* initial minimum executable priority */
+    uint16_t       _maxage;        /* initial maximum natural process age */
+    uint16_t       _mmdirsz;       /* initial maximum module count */
+    uint16_t       _mreserv3;      /* reserved */
+    uint16_t       _mevents;       /* number of system event table entries */
+    uint8_t        _mcompat;       /* version change smooth byte #1 */
+    uint8_t        _mcompat2;      /* version change smoothing byte #2*/
+    uint16_t       _mmemlist;      /* offset to (colored) memory list */
+    uint16_t       _mstacksz;      /* IRQ stack size (in longwords) */
+    uint16_t       _mcoldretrys;   /* coldstart's "chd" retry counter */
+    uint16_t       _mreserv2[2];   /* reserved */
+    uint16_t       _mcachelist;    /* offset to SSM(MMU) cache modes list */
+    uint16_t       _mioman;        /* offset to IOMan module name */
+    uint16_t       _mpreio;        /* offset to "pre-IO" P2 extension module list*/
+    uint16_t       _msysconf;      /* system configuration control flags */
+                                   /* NOTE: _mnumsigs is currently unimplemented */
+    uint16_t       _mnumsigs;      /* max number of queued signals per process */
+    uint16_t       _mprcdescstack; /* process descriptor stack size */
+    uint16_t       _mreserved[32]; /* reserved space */
 } mod_config;
 
 typedef struct mod_dir {
     struct modhcom *md_mptr;   /* module ptr */
     struct modhcom *md_group;  /* module group ptr */
-    unsigned long   md_static; /* module group memory size */
-    unsigned short  md_link;   /* module link count */
-    unsigned short  md_mchk;   /* module header checksum */
+    uint32_t        md_static; /* module group memory size */
+    uint16_t        md_link;   /* module link count */
+    uint16_t        md_mchk;   /* module header checksum */
 } mod_dir, *Mod_dir;
 
 /* OS-9000 compatible type definition */
@@ -270,9 +270,9 @@ typedef mod_exec mh_data, *Mh_data;
 
 /* File manager memory module */
 typedef struct {
-    struct modhcom _mh;    /* common header info */
-    long           _mexec, /* offset to execution entry point */
-        _mexcpt;           /* offset to exception entry point */
+    struct modhcom _mh;     /* common header info */
+    int32_t        _mexec;  /* offset to execution entry point */
+    int32_t        _mexcpt; /* offset to exception entry point */
 } mh_fman, *Mh_fman;
 
 /* Trap handler module */
