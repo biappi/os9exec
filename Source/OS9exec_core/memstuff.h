@@ -83,6 +83,7 @@ void  show_unused(void);
 
 addrpair_typ allocation_add(void *host, uint32_t size);
 void *allocation_find(os9ptr addr);
+void allocation_debug(regs_type *rp, uint32_t regmask);
 
 addrpair_typ get_mem(uint32_t memsz);
 void         release_mem(addrpair_typ membase);

@@ -176,6 +176,7 @@
 #include "os9exec_incl.h"
 
 #include <time.h>
+#include "memstuff.h"
 
 #ifdef MACOSX
 #include <unistd.h>
@@ -834,6 +835,7 @@ void debug_comein(regs_type *rp, ushort pid)
     uphe_printf(">>>%cPid=%02d: OS9 %s : ", msk ? '*' : ' ', pid, fdeP->name);
     show_maskedregs(rp, fdeP->inregs);
     upe_printf("\n");
+    allocation_debug(rp, fdeP->inregs);
 }
 
 void debug_return(regs_type *crp, ushort pid, Boolean cwti)
@@ -911,6 +913,8 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
                 show_maskedregs(&cp->os9regs, fdeP->outregs);
                 upe_printf("\n");
             }
+
+            allocation_debug(&cp->os9regs, fdeP->outregs);
         }
     }
 }

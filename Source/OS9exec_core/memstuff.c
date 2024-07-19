@@ -330,6 +330,35 @@ void* allocation_find(os9ptr addr)
     return NULL;
 }
 
+void allocation_debug(regs_type *rp, uint32_t regmask)
+{
+    regmask &= REGMASK_REGBITS;
+    for (int k = 0; k < 8; k++) {
+        uint32_t a = rp->regs[REGS_A + k];
+        uint32_t d = rp->regs[REGS_D + k];
+
+        for (int i = 0; i < allocation_data_count; i++) {
+            uint32_t truncated = allocation_data[i].addr.host;
+
+            if ((truncated <= a) &&
+                (a < truncated + allocation_data[i].size))
+            {
+                printf("warning!! register A%d (%08x) seems to contain a truncated host pointer (%p) instead of guest (%08x)\n", i, a, allocation_data[i].addr.host, allocation_data[i].addr.guest);
+            }
+
+            if ((truncated <= d) &&
+                (d < truncated + allocation_data[i].size))
+            {
+                printf("warning!! register D%d (%08x) seems to contain a truncated host pointer (%p) instead of guest (%08x)\n", i, d, allocation_data[i].addr.host, allocation_data[i].addr.guest);
+            }
+
+        }
+
+        regmask >>= 2;
+    }
+}
+
+
 /* process independent part of memory allocation */
 addrpair_typ get_mem(uint32_t memsz)
 {
