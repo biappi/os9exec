@@ -11,22 +11,15 @@
 
 #include "config.h"
 #include "options.h"
-//#include "events.h"
-//#include "uae.h"
 #include "memory.h"
-//#include "custom.h"
 #include "readcpu.h"
 #include "newcpu.h"
-//#include "autoconf.h"
-//#include "ersatz.h"
-//#include "debug.h"
 #include "compiler.h"
-//#include "gui.h"
-//#include "savestate.h"
 
 #include "luzstuff.h"
 
 #include <sys/types.h>
+#include <inttypes.h>
 
 #ifdef __GNUC__
   typedef short Boolean;
@@ -1050,7 +1043,7 @@ unsigned long REGPARAM2 op_illg (uae_u32 opcode)
 		Exception(0xA,0);
 		return 4;
     }
-    write_log ("Illegal instruction: %04x at %08lx\n", opcode, pc);
+    write_log ("Illegal instruction: %04x at %0" PRIx32 "\n", opcode, pc);
     Exception (4,0);
     return 4;
 }
@@ -1213,7 +1206,7 @@ void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt)
 	struct mnemolookup *lookup;
 	struct instr *dp;
 
-	printf("%08lx: ", m68k_getpc () + m68kpc_offset);
+	printf("%0" PRIx32 ": ", m68k_getpc () + m68kpc_offset);
 	for (opwords = 0; opwords < 5; opwords++){
 	    printf("%04x ", get_iword_1 (m68kpc_offset + opwords*2));
 	}
@@ -1251,11 +1244,11 @@ void m68k_disasm (uaecptr addr, uaecptr *nextpc, int cnt)
 	}
 	if (ccpt != 0) {
 	    if (cctrue(dp->cc))
-		printf(" == %08lx (TRUE)", newpc);
+		printf(" == %0" PRIx32 " (TRUE)", newpc);
 	    else
-		printf(" == %08lx (FALSE)", newpc);
+		printf(" == %0" PRIx32 " (FALSE)", newpc);
 	} else if ((opcode & 0xff00) == 0x6100) /* BSR */
-	    printf(" == %08lx", newpc);
+	    printf(" == %0" PRIx32 , newpc);
 	printf("\n");
     }
     if (nextpc)
@@ -1267,17 +1260,17 @@ void m68k_dumpstate (uaecptr *nextpc, int to_logfile)
     int i;
     
     for (i = 0; i < 8; i++){
-	printf("D%d: %08lx ", i, m68k_dreg(regs, i));
+	printf("D%d: %0" PRIx32 " ", i, m68k_dreg(regs, i));
 	if ((i & 3) == 3) printf("\n");
     }
     for (i = 0; i < 8; i++){
-	printf("A%d: %08lx ", i, m68k_areg(regs, i));
+	printf("A%d: %0" PRIx32 " ", i, m68k_areg(regs, i));
 	if ((i & 3) == 3) printf("\n");
     }
     if (regs.s == 0) regs.usp = m68k_areg(regs, 7);
     if (regs.s && regs.m) regs.msp = m68k_areg(regs, 7);
     if (regs.s && regs.m == 0) regs.isp = m68k_areg(regs, 7);
-    printf("USP=%08lx ISP=%08lx MSP=%08lx VBR=%08lx\n",
+    printf("USP=%0" PRIx32 " ISP=%0" PRIx32 " MSP=%0" PRIx32 " VBR=%0" PRIx32 "\n",
 	    regs.usp,regs.isp,regs.msp,regs.vbr);
     printf("T=%d%d S=%d M=%d X=%d N=%d Z=%d V=%d C=%d IMASK=%d\n",
 	    regs.t1, regs.t0, regs.s, regs.m,
@@ -1295,7 +1288,7 @@ void m68k_dumpstate (uaecptr *nextpc, int to_logfile)
     m68k_disasm(m68k_getpc (), nextpc, 1);
     m68k_disasm(m68k_getpc (), nextpc, 1);
     if (nextpc)
-	printf("next PC: %08lx\n", *nextpc);
+	printf("next PC: %0" PRIx32 "\n", *nextpc);
 }
 
 #ifdef NEVER_DEFINED // %%% LuZ no save/restore of CPU
