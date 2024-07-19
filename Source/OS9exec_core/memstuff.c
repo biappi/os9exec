@@ -125,6 +125,8 @@ pmem_typ     pmem[MAXPROCESSES];
 
 const os9ptr memory_top = 0x00010000;
 
+addrpair_typ allocation_add_absolute(void *host, os9ptr guest, uint32_t size);
+
 /* prepare the memory handling for use */
 void init_all_mem(void)
 {
@@ -135,6 +137,11 @@ void init_all_mem(void)
         memtable[k].base.guest = 0;
         memtable[k].size       = 0;
     }
+
+    // stupid hack to make fcontrol run somehow
+    // since it writes on absolute $4afc0000
+    void *buffer  = calloc(0x10000, 1); /* get memory block, cleared to 0 */
+    allocation_add_absolute(buffer, 0x04fc0000, 0x10000);
 }
 
 /* show memory blocks */
