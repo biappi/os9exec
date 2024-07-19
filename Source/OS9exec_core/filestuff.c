@@ -1814,13 +1814,13 @@ os9err syspath_setstat(ushort pid,
         err = (s->_SS_Size)(pid, spP, d2);
         break;
     case SS_Opt:
-        err = (s->_SS_Opt)(pid, spP, *a);
+        err = (s->_SS_Opt)(pid, spP, get_pointer(*a));
         break;
     case SS_Attr:
         err = (s->_SS_Attr)(pid, spP, d2);
         break;
     case SS_FD:
-        err = (s->_SS_FD)(pid, spP, *a);
+        err = (s->_SS_FD)(pid, spP, get_pointer(*a));
         break;
     case SS_Lock:
         err = (s->_SS_Lock)(pid, spP, d0, d1);
@@ -1852,7 +1852,7 @@ os9err syspath_setstat(ushort pid,
         err = 0; /* do nothing */
         break;
     case SS_WTrk:
-        err = (s->_SS_WTrk)(pid, spP, d2 /*, *a */);
+        err = (s->_SS_WTrk)(pid, spP, d2 /*, get_pointer(*a) */);
         break;
 
     case SS_LBlink:
@@ -1861,37 +1861,37 @@ os9err syspath_setstat(ushort pid,
 
     /* socket connections */
     case SS_Bind:
-        err = (s->_SS_Bind)(pid, spP, d2, *a);
+        err = (s->_SS_Bind)(pid, spP, d2, get_pointer(*a));
         break; /* $6C */
     case SS_Listen:
-        err = (s->_SS_Listen)(pid, spP /*, d2, *a*/);
+        err = (s->_SS_Listen)(pid, spP /*, d2, get_pointer(*a)*/);
         break; /* $6D */
     case SS_Connect:
-        err = (s->_SS_Connect)(pid, spP, d2, *a);
+        err = (s->_SS_Connect)(pid, spP, d2, get_pointer(*a));
         break; /* $6E */
     case SS_Resv:
         err = 0; /* do nothing at the moment */
         break;   /* $6F */
     case SS_Accept:
-        err = (s->_SS_Accept)(pid, spP, d1 /*, *a*/);
+        err = (s->_SS_Accept)(pid, spP, d1 /*, get_pointer(*a)*/);
         break; /* $70 */
     case SS_Recv:
-        err = (s->_SS_Recv)(pid, spP, d1, d2, *a);
+        err = (s->_SS_Recv)(pid, spP, d1, d2, get_pointer(*a));
         break; /* $71 */
     case SS_Send:
-        err = (s->_SS_Send)(pid, spP, d1, d2, *a);
+        err = (s->_SS_Send)(pid, spP, d1, d2, get_pointer(*a));
         break; /* $72 */
     case SS_GNam:
-        err = (s->_SS_GNam)(pid, spP, d1, d2, *a);
+        err = (s->_SS_GNam)(pid, spP, d1, d2, get_pointer(*a));
         break; /* $73 */
     case SS_SOpt:
         err = (s->_SS_SOpt)(pid, spP, d1 /*, d2*/);
         break; /* $74 set socket option   */
     case SS_SendTo:
-        err = (s->_SS_SendTo)(pid, spP, d1, d2, *a);
+        err = (s->_SS_SendTo)(pid, spP, d1, d2, get_pointer(*a));
         break; /* $77 */
     case SS_PCmd:
-        err = (s->_SS_PCmd)(pid, spP, *a);
+        err = (s->_SS_PCmd)(pid, spP, get_pointer(*a));
         break; /* $7A protocol direct cmd */
 
     /* general block read */

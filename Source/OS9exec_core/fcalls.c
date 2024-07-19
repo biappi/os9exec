@@ -917,7 +917,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
 
     memcpy(&pd, &cp->pd, sizeof(procid));
 
-    pd._usp = get_pointer(os9_long(rp->regs[REGS_A + 7]));
+    pd._usp = get_pointer(rp->regs[REGS_A + 7]);
 
     // <_state> and <queueid> will be assigned directly
     if (id == cpid)
@@ -960,7 +960,9 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     }
     pd._blksiz[0] = os9_long(memsz);
 
-    memcpy((byte *)rp->regs[REGS_A + 0], &pd, loword(rp->regs[REGS_D + 1]));
+    uint32_t a0 = rp->regs[REGS_A + 0];
+    uint16_t d1w = loword(rp->regs[REGS_D + 1]);
+    memcpy(get_pointer(a0), &pd, d1w);
     // upe_printf( "pmodul2=%08X\n", os9_long( (ulong)pd._pmodul ) );
     return 0;
 } // OS9_F_GPrDsc
@@ -2079,8 +2081,8 @@ os9err OS9_F_CmpNam(regs_type *rp, _pid_)
     Boolean match;
 
     /* get pointers */
-    pat    = (char *)rp->regs[REGS_A + 0];
-    targ   = (char *)rp->regs[REGS_A + 1];
+    pat    = (char *)get_pointer(rp->regs[REGS_A + 0]);
+    targ   = (char *)get_pointer(rp->regs[REGS_A + 1]);
     patend = pat + loword(rp->regs[REGS_D + 1]); /* attention, high word can be <> 0 */
     spat   = NULL;
 

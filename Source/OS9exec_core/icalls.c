@@ -264,7 +264,7 @@ os9err OS9_I_ChgDir(regs_type *rp, ushort cpid)
  */
 {
     ushort    mode     = (loword(rp->regs[REGS_D + 0]) & 0x07) | 0x80; /* ignore some flags */
-    char     *os9_name = (char *)rp->regs[REGS_A + 0];
+    char     *os9_name = (char *)get_pointer(rp->regs[REGS_A + 0]);
     char      os9_path[OS9PATHLEN];
     char     *pastpath;
     ptype_typ type;
@@ -390,7 +390,7 @@ os9err OS9_I_Write(regs_type *rp, ushort cpid)
 
     path = loword(rp->regs[REGS_D + 0]);
     cnt  = rp->regs[REGS_D + 1];
-    buff = (char *)rp->regs[REGS_A + 0];
+    buff = (char *)get_pointer(rp->regs[REGS_A + 0]);
 
     /* now write */
     err      = usrpath_write(cpid, path, &cnt, buff, false);
