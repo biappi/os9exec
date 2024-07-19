@@ -1656,8 +1656,8 @@ os9err syspath_getstat(ushort pid,
     os9err       err;
     fmgr_typ    *f;
     gs_typ      *g;
-    byte       **a;
     syspath_typ *spP = get_syspathd(pid, sp);
+
     if (spP == NULL)
         return os9error(E_BPNUM);
 
@@ -1670,8 +1670,6 @@ os9err syspath_getstat(ushort pid,
                  spP_TypeStr(spP)));
     f = fmgr_op[spP->type];
     g = &f->gs;
-    a = (byte **)
-        a0; /* *a0 access is not allowed, if not correctly defined !! */
 
     /* call appropriate service */
     switch (func) {
@@ -1679,10 +1677,10 @@ os9err syspath_getstat(ushort pid,
         err = (g->_SS_Size)(pid, spP, d2);
         break;
     case SS_Opt:
-        err = (g->_SS_Opt)(pid, spP, *a);
+        err = (g->_SS_Opt)(pid, spP, get_pointer(*a0));
         break;
     case SS_DevNm:
-        err = (g->_SS_DevNm)(pid, spP, (char *)*a0);
+        err = (g->_SS_DevNm)(pid, spP, get_pointer(*a0));
         break;
     case SS_Pos:
         err = (g->_SS_Pos)(pid, spP, d2);
@@ -1696,10 +1694,10 @@ os9err syspath_getstat(ushort pid,
         arbitrate = true;
         break;
     case SS_FD:
-        err = (g->_SS_FD)(pid, spP, d2, *a);
+        err = (g->_SS_FD)(pid, spP, d2, get_pointer(*a0));
         break;
     case SS_FDInf:
-        err = (g->_SS_FDInf)(pid, spP, d2, d3, *a);
+        err = (g->_SS_FDInf)(pid, spP, d2, d3, get_pointer(*a0));
         break;
     case SS_DSize:
         err = (g->_SS_DSize)(pid, spP, d2, d3);
@@ -1707,7 +1705,7 @@ os9err syspath_getstat(ushort pid,
 
     /* $7A protocol direct command */
     case SS_PCmd:
-        err = (g->_SS_PCmd)(pid, spP, (ulong *)*a);
+        err = (g->_SS_PCmd)(pid, spP, get_pointer(*a0));
         break;
 
     /* $80 + 32: "/L2" specific */
@@ -1717,7 +1715,7 @@ os9err syspath_getstat(ushort pid,
 
     /* get ETC path name and more */
     case SS_Etc:
-        err = etc_path(pid, spP, d2, *a);
+        err = etc_path(pid, spP, d2, get_pointer(*a0));
         break;
 
     /* don't know yet what is it good for, used by mgratrap */
