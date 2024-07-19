@@ -118,24 +118,24 @@
 void   init_Cons(fmgr_typ *f);
 os9err pCopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pCclose(ushort pid, syspath_typ *);
-os9err pConsIn(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
-os9err pConsInLn(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
-os9err pConsOut(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
-os9err pConsOutLn(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
+os9err pConsIn(ushort pid, syspath_typ *, uint32_t *maxlenP, char *buffer);
+os9err pConsInLn(ushort pid, syspath_typ *, uint32_t *maxlenP, char *buffer);
+os9err pConsOut(ushort pid, syspath_typ *, uint32_t *maxlenP, char *buffer);
+os9err pConsOutLn(ushort pid, syspath_typ *, uint32_t *maxlenP, char *buffer);
 
 os9err pCopt(ushort pid, syspath_typ *, byte *buffer);
-os9err pCpos(ushort pid, syspath_typ *, ulong *posP);
-os9err pCready(ushort pid, syspath_typ *, ulong *n);
+os9err pCpos(ushort pid, syspath_typ *, uint32_t *posP);
+os9err pCready(ushort pid, syspath_typ *, uint32_t *n);
 os9err pCsetopt(ushort pid, syspath_typ *, byte *buffer);
 
 void   init_NIL(fmgr_typ *f);
-os9err pEOF(ushort pid, syspath_typ *, ulong *maxlenP, char *buffer);
+os9err pEOF(ushort pid, syspath_typ *, uint32_t *maxlenP, char *buffer);
 
 void   init_SCF(fmgr_typ *f);
 os9err pSopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pSclose(ushort pid, syspath_typ *);
-os9err pSBlink(ushort pid, syspath_typ *, ulong *d2);
-os9err pGBlink(ushort pid, syspath_typ *, ulong *d2);
+os9err pSBlink(ushort pid, syspath_typ *, uint32_t *d2);
+os9err pGBlink(ushort pid, syspath_typ *, uint32_t *d2);
 /* ------------------------------------------------------------------------- */
 
 /* -----------------------  /term pause control  --------------------------- */
@@ -363,7 +363,7 @@ Boolean ConsGetc(char *c)
 
 static os9err ConsRead(ushort       pid,
                        syspath_typ *spP,
-                       ulong       *maxlenP,
+                       uint32_t    *maxlenP,
                        char        *buffer,
                        Boolean      edit,
                        char         endchar)
@@ -615,7 +615,7 @@ os9err pSopen(_pid_, syspath_typ *spP, _modeP_, const char *name)
     return reply;
 }
 
-os9err pSBlink(_pid_, _spP_, ulong *d2)
+os9err pSBlink(_pid_, _spP_, uint32_t *d2)
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
     byte   *bb = (byte *)*d2;
@@ -628,7 +628,7 @@ os9err pSBlink(_pid_, _spP_, ulong *d2)
     return 0;
 }
 
-os9err pGBlink(_pid_, _spP_, ulong *d2)
+os9err pGBlink(_pid_, _spP_, uint32_t *d2)
 /* specific "/L2" blink command, as defined in "led_Drv" */
 {
     byte   *bb = (byte *)*d2;
@@ -696,7 +696,7 @@ os9err pCclose(ushort pid, syspath_typ *spP)
 os9err pSclose(_pid_, _spP_) { return 0; }
 
 /* input character wise from console */
-os9err pConsIn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
+os9err pConsIn(ushort pid, syspath_typ *spP, uint32_t *maxlenP, char *buffer)
 {
 #ifdef TERMINAL_CONSOLE
     gConsoleID = spP->term_id;
@@ -708,7 +708,7 @@ os9err pConsIn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 #endif
 }
 
-os9err pConsInLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
+os9err pConsInLn(ushort pid, syspath_typ *spP, uint32_t *maxlenP, char *buffer)
 /* input line from console */
 {
     os9err err = 0;
@@ -768,12 +768,13 @@ os9err pConsInLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
     return err;
 }
 
-os9err pEOF(_pid_, _spP_, _maxlenP_, _buffer_)
-/* read operation for the nil device is alway EOF */ { return E_EOF; }
+/* read operation for the nil device is alway EOF */
+os9err pEOF(_pid_, _spP_, uint32_t *maxlenP, char *buffer)
+{ return E_EOF; }
 
 static os9err ConsoleOut(ushort       pid,
                          syspath_typ *spP,
-                         ulong       *maxlenP,
+                         uint32_t    *maxlenP,
                          char        *buffer,
                          Boolean      wrln)
 /* output to console */
@@ -854,40 +855,41 @@ static os9err ConsoleOut(ushort       pid,
     return 0;
 }
 
-os9err pConsOut(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
-/* output to console */ { return ConsoleOut(pid, spP, maxlenP, buffer, false); }
+/* output to console */
+os9err pConsOut(ushort pid, syspath_typ *spP, uint32_t *maxlenP, char *buffer)
+{ return ConsoleOut(pid, spP, maxlenP, buffer, false); }
 
-os9err pConsOutLn(ushort pid, syspath_typ *spP, ulong *maxlenP, char *buffer)
 /* output line to console */
+os9err pConsOutLn(ushort pid, syspath_typ *spP, uint32_t *maxlenP, char *buffer)
 {
     os9err err = ConsoleOut(pid, spP, maxlenP, buffer, true);
     arbitrate  = true; /* create smoother output */
     return err;
 }
 
-os9err pCopt(_pid_, syspath_typ *spP, byte *buffer)
 /* get options from console */
+os9err pCopt(_pid_, syspath_typ *spP, byte *buffer)
 {
     memcpy(buffer, &spP->opt, OPTSECTSIZE);
     return 0;
 }
 
-os9err pCsetopt(_pid_, syspath_typ *spP, byte *buffer)
 /* set console options */
+os9err pCsetopt(_pid_, syspath_typ *spP, byte *buffer)
 {
     memcpy(&spP->opt, buffer, OPTSECTSIZE);
     return 0;
 }
 
-os9err pCpos(_pid_, _spP_, ulong *posP)
+os9err pCpos(_pid_, _spP_, uint32_t *posP)
 {
     *posP = 0;
     return 0;
 }
 
-os9err pCready(_pid_, syspath_typ *spP, ulong *n)
 /* check ready */
 /* NOTE: is valid for outputs also, when using "dup" */
+os9err pCready(_pid_, syspath_typ *spP, uint32_t *n)
 {
     gConsoleID = spP->term_id;
     g_spP      = spP;

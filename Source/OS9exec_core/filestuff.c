@@ -1370,7 +1370,7 @@ syspath_write(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean wrln)
     os9err         err;
     procid        *pd = &procs[pid].pd;
     fmgr_typ      *f;
-    os9err (*wproc)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
+    os9err (*wproc)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
     syspath_typ   *spP = get_syspathd(pid, spnum);
 
     if (spP == NULL) {
@@ -1555,13 +1555,13 @@ void copyright(void)
 
 /* read from a syspath */
 os9err
-syspath_read(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean rdln)
+syspath_read(ushort pid, ushort spnum, uint32_t *len, void *buffer, Boolean rdln)
 {
     os9err         err, cer;
     procid        *pd = &procs[pid].pd;
     int            prev;
     fmgr_typ      *f;
-    os9err (*rproc)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
+    os9err (*rproc)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
     syspath_typ   *spP = get_syspathd(pid, spnum);
 
     if (spP == NULL)
@@ -1592,7 +1592,7 @@ syspath_read(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean rdln)
 
 /* read from a usrpath */
 os9err
-usrpath_read(ushort pid, ushort up, ulong *len, void *buffer, Boolean rdln)
+usrpath_read(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean rdln)
 {
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);
@@ -1646,11 +1646,11 @@ static os9err etc_path(_pid_, _spP_, _d2_, byte *a0)
 os9err syspath_getstat(ushort pid,
                        ushort sp,
                        ushort func,
-                       ulong *a0,
-                       _d0_,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3)
+                       uint32_t *a0,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3)
 /* GetStat from syspath */
 {
     os9err       err;
@@ -1759,11 +1759,11 @@ os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt)
 os9err usrpath_getstat(ushort pid,
                        ushort up,
                        ushort func,
-                       ulong *a0,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3)
+                       uint32_t *a0,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3)
 /* GetStat from usrpath */
 {
     if (up >= MAXUSRPATHS)
@@ -1782,12 +1782,12 @@ os9err usrpath_getstat(ushort pid,
 os9err syspath_setstat(ushort pid,
                        ushort path,
                        ushort func,
-                       ulong *a0,
-                       _a1_,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       _d3_)
+                       uint32_t *a0,
+                       uint32_t *a1,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3)
 {
     os9err    err;
     fmgr_typ *f;
@@ -1898,13 +1898,13 @@ os9err syspath_setstat(ushort pid,
 
     /* general block read */
     case SS_BlkRd: /* normal sw goes automatically to read/write if error */
-        err = syspath_read(pid, path, d2, (char *)*a0, false);
+        err = syspath_read(pid, path, d2, get_pointer(*a0), false);
         *d1 = *d2; /* return param must be here */
         break;
 
     /* general block write */
     case SS_BlkWr:
-        err = syspath_write(pid, path, d2, (char *)*a0, false);
+        err = syspath_write(pid, path, d2, get_pointer(*a0), false);
         *d1 = *d2; /* return param must be here */
         break;
 
@@ -1934,12 +1934,12 @@ os9err syspath_setstat(ushort pid,
 os9err usrpath_setstat(ushort pid,
                        ushort up,
                        ushort func,
-                       ulong *a0,
-                       ulong *a1,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3)
+                       uint32_t *a0,
+                       uint32_t *a1,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3)
 {
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);

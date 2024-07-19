@@ -186,7 +186,7 @@ void   Flush_FDCache(const char *pathname);
 os9err DirNthEntry(syspath_typ *, int n, dirent_typ **dEnt);
 os9err RemoveAppledouble(syspath_typ *);
 void   seekD0(syspath_typ *);
-ulong  DirSize(syspath_typ *);
+uint32_t DirSize(syspath_typ *);
 
 int stat_(const char *pathname, struct stat *buf);
 Boolean

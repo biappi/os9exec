@@ -131,20 +131,20 @@ void main_printf(const char *format, ...);
 void copyright();
 
 os9err
-syspath_read(ushort pid, ushort sp, ulong *len, void *buffer, Boolean rdln);
+syspath_read(ushort pid, ushort sp, uint32_t *len, void *buffer, Boolean rdln);
 os9err
-usrpath_read(ushort pid, ushort up, ulong *len, void *buffer, Boolean rdln);
+usrpath_read(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean rdln);
 os9err syspath_seek(ushort pid, ushort sp, ulong pos);
 os9err usrpath_seek(ushort pid, ushort up, ulong pos);
 
 os9err syspath_getstat(ushort pid,
                        ushort sp,
                        ushort func,
-                       ulong *a0,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3);
+                       uint32_t *a0,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3);
 os9err syspath_gs_size(ushort pid, ushort sp, ulong *size);
 os9err syspath_gs_devnm(ushort pid, ushort sp, char *name);
 os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt);
@@ -152,30 +152,31 @@ os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt);
 os9err usrpath_getstat(ushort pid,
                        ushort up,
                        ushort func,
-                       ulong *a0,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3);
+                       uint32_t *a0,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3);
 
 os9err syspath_setstat(ushort pid,
                        ushort sp,
                        ushort func,
-                       ulong *a0,
-                       ulong *a1,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3);
+                       uint32_t *a0,
+                       uint32_t *a1,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3);
+
 os9err usrpath_setstat(ushort pid,
                        ushort up,
                        ushort func,
-                       ulong *a0,
-                       ulong *a1,
-                       ulong *d0,
-                       ulong *d1,
-                       ulong *d2,
-                       ulong *d3);
+                       uint32_t *a0,
+                       uint32_t *a1,
+                       uint32_t *d0,
+                       uint32_t *d1,
+                       uint32_t *d2,
+                       uint32_t *d3);
 
 os9err get_locations(ushort      pid,
                      ptype_typ   type,

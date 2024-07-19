@@ -509,7 +509,7 @@ typedef struct {
 #define _spP_ syspath_typ *spP
 #define _rbf_ rbfdev_typ *rbf
 #define _fmgr_ fmgr_typ *f
-#define _maxlenP_ ulong *maxlenP
+
 #define _buffer_ char *buffer
 #define _bufferV_ void *buffer
 #define _size_ ulong size
@@ -519,9 +519,9 @@ typedef struct {
 #define _argv_ char **argv
 #define _memPP_ void **memoryPP
 #define _a1_ ulong *a1
-#define _d0_ ulong *d0
-#define _d2_ ulong *d2
-#define _d3_ ulong *d3
+#define _d0_ uint32_t *d0
+#define _d2_ uint32_t *d2
+#define _d3_ uint32_t *d3
 #else
 #define _modeP_ ushort *
 #define _rp_ regs_type *
@@ -734,9 +734,8 @@ typedef struct {
 
 /* sub-variant for disk directories */
 typedef struct {
-    ulong pos; /* the emulated directory "file"'s position for fDir */
-
-    ulong fdcur;
+    uint32_t pos; /* the emulated directory "file"'s position for fDir */
+    uint32_t fdcur;
 } dir_typ;
 
 /* variant for disk objects */
@@ -885,72 +884,72 @@ typedef void (*dbg_func)(void);
 
 /* the file manager system */
 typedef struct {
-    os9err (*_SS_Size)(ushort pid, syspath_typ *spP, ulong *sizeP);
+    os9err (*_SS_Size)(ushort pid, syspath_typ *spP, uint32_t *sizeP);
     os9err (*_SS_Opt)(ushort pid, syspath_typ *spP, byte *buffer);
     os9err (*_SS_DevNm)(ushort pid, syspath_typ *spP, char *volname);
-    os9err (*_SS_Pos)(ushort pid, syspath_typ *spP, ulong *posP);
+    os9err (*_SS_Pos)(ushort pid, syspath_typ *spP, uint32_t *posP);
     os9err (*_SS_EOF)(ushort pid, syspath_typ *spP);
-    os9err (*_SS_Ready)(ushort pid, syspath_typ *spP, ulong *n);
-    os9err (*_SS_FD)(ushort pid, syspath_typ *spP, ulong *maxbytP, byte *buffer);
+    os9err (*_SS_Ready)(ushort pid, syspath_typ *spP, uint32_t *n);
+    os9err (*_SS_FD)(ushort pid, syspath_typ *spP, uint32_t *maxbytP, byte *buffer);
     os9err (*_SS_FDInf)(ushort pid, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer);
-    os9err (*_SS_DSize)(ushort pid, syspath_typ *spP, ulong *size, ulong *dtype);
+    os9err (*_SS_DSize)(ushort pid, syspath_typ *spP, ulong *size, uint32_t *dtype);
 
     /* network specific function */
     os9err (*_SS_PCmd)(ushort pid, syspath_typ *spP, ulong *a0);
 
     /* L2 support */
-    os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, ulong *d2);
+    os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, uint32_t *d2);
 
-    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2);
+    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2);
 } gs_typ;
 
 typedef struct {
-    os9err (*_SS_Size)(ushort pid, syspath_typ *spP, ulong *size);
+    os9err (*_SS_Size)(ushort pid, syspath_typ *spP, uint32_t *size);
     os9err (*_SS_Opt)(ushort pid, syspath_typ *spP, byte *buffer);
-    os9err (*_SS_Attr)(ushort pid, syspath_typ *spP, ulong *attr);
+    os9err (*_SS_Attr)(ushort pid, syspath_typ *spP, uint32_t *attr);
     os9err (*_SS_FD)(ushort pid, syspath_typ *spP, byte *buffer);
-    os9err (*_SS_Lock)(ushort pid, syspath_typ *spP, ulong *d0, ulong *d1);
-    os9err (*_SS_WTrk)(ushort pid, syspath_typ *spP, ulong *trackNr);
+    os9err (*_SS_Lock)(ushort pid, syspath_typ *spP, uint32_t *d0, uint32_t *d1);
+    os9err (*_SS_WTrk)(ushort pid, syspath_typ *spP, uint32_t *trackNr);
 
     /* network spefic functions */
-    os9err (*_SS_Bind)(ushort pid, syspath_typ *spP, ulong *d1, byte *ispP);
+    os9err (*_SS_Bind)(ushort pid, syspath_typ *spP, uint32_t *d1, byte *ispP);
     os9err (*_SS_Listen)(ushort pid, syspath_typ *spP);
-    os9err (*_SS_Connect)(ushort pid, syspath_typ *spP, ulong *d1, byte *ispP);
-    os9err (*_SS_Accept)(ushort pid, syspath_typ *spP, ulong *d1);
+    os9err (*_SS_Connect)(ushort pid, syspath_typ *spP, uint32_t *d1, byte *ispP);
+    os9err (*_SS_Accept)(ushort pid, syspath_typ *spP, uint32_t *d1);
     os9err (*_SS_Recv)(ushort       pid,
                        syspath_typ *spP,
-                       ulong       *d1,
-                       ulong       *d2,
+                       uint32_t    *d1,
+                       uint32_t    *d2,
                        uint8_t     *a0);
     os9err (*_SS_Send)(ushort       pid,
                        syspath_typ *spP,
-                       ulong       *d1,
-                       ulong       *d2,
+                       uint32_t       *d1,
+                       uint32_t       *d2,
                        uint8_t     *a0);
-    os9err (*_SS_GNam)(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP);
-    os9err (*_SS_SOpt)(ushort pid, syspath_typ *spP, ulong *buffer);
+    os9err (*_SS_GNam)(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, byte *ispP);
+    os9err (*_SS_SOpt)(ushort pid, syspath_typ *spP, uint32_t *buffer);
     os9err (*_SS_SendTo)(ushort       pid,
                          syspath_typ *spP,
-                         ulong       *d1,
-                         ulong       *d2,
+                         uint32_t       *d1,
+                         uint32_t       *d2,
                          uint8_t     *a0);
     os9err (*_SS_PCmd)(ushort pid, syspath_typ *spP, uint8_t *a0);
 
     /* L2 support */
-    os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, ulong *d2);
+    os9err (*_SS_LBlink)(ushort pid, syspath_typ *spP, uint32_t *d2);
 
     /* any other setstat function */
-    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, ulong *d2, uint8_t *a);
+    os9err (*_SS_Undef)(ushort pid, syspath_typ *spP, uint32_t *d2, uint8_t *a);
 } ss_typ;
 
 typedef struct {
     os9err (*open)(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname);
     os9err (*close)(ushort pid, syspath_typ *spP);
-    os9err (*write)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
-    os9err (*writeln)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
-    os9err (*read)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
-    os9err (*readln)(ushort pid, syspath_typ *spP, ulong *n, char *buffer);
-    os9err (*seek)(ushort pid, syspath_typ *spP, ulong *posP);
+    os9err (*write)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
+    os9err (*writeln)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
+    os9err (*read)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
+    os9err (*readln)(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer);
+    os9err (*seek)(ushort pid, syspath_typ *spP, uint32_t *posP);
     os9err (*chd)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname);
     os9err (*del)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname);
     os9err (*makdir)(ushort pid, syspath_typ *spP, ushort *modeP, char *pathname);

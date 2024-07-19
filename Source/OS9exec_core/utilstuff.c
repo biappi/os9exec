@@ -1654,7 +1654,7 @@ void seekD0(syspath_typ *spP)
         rewinddir(spP->dDsc); /* start at the beginning */
 }
 
-ulong DirSize(syspath_typ *spP)
+uint32_t DirSize(syspath_typ *spP)
 /* get the virtual OS-9 dir size in bytes */
 {
     int         cnt = 0;

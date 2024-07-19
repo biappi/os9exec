@@ -98,33 +98,33 @@
 void   init_Pipe(fmgr_typ *f);
 os9err pPopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pPclose(ushort pid, syspath_typ *);
-os9err pPreadln(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pPread(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pPwriteln(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pPwrite(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pPreadln(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pPread(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pPwriteln(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pPwrite(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
 os9err pPdelete(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 
-os9err pPsize(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pPsize(ushort pid, syspath_typ *, uint32_t *sizeP);
 os9err pPopt(ushort pid, syspath_typ *, byte *buffer);
 os9err pPeof(ushort pid, syspath_typ *);
-os9err pPready(ushort pid, syspath_typ *, ulong *n);
+os9err pPready(ushort pid, syspath_typ *, uint32_t *n);
 os9err
 pPFDInf(ushort pid, syspath_typ *, ulong *maxbytP, ulong *fdinf, byte *buffer);
-os9err pPsetsz(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pPsetsz(ushort pid, syspath_typ *, uint32_t *sizeP);
 
 /* --- ptys */
 void   init_PTY(fmgr_typ *f);
 os9err pKopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pKclose(ushort pid, syspath_typ *);
-os9err pKread(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pKreadln(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pKwrite(ushort pid, syspath_typ *, ulong *n, char *buffer);
-os9err pKwriteln(ushort pid, syspath_typ *, ulong *n, char *buffer);
+os9err pKread(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pKreadln(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pKwrite(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
+os9err pKwriteln(ushort pid, syspath_typ *, uint32_t *n, char *buffer);
 
 os9err pKopt(ushort pid, syspath_typ *, byte *buffer);
-os9err pKpos(ushort pid, syspath_typ *, ulong *posP);
-os9err pKready(ushort pid, syspath_typ *, ulong *n);
-os9err pKlock(ushort pid, syspath_typ *, ulong *d0, ulong *d1);
+os9err pKpos(ushort pid, syspath_typ *, uint32_t *posP);
+os9err pKready(ushort pid, syspath_typ *, uint32_t *n);
+os9err pKlock(ushort pid, syspath_typ *, uint32_t *d0, uint32_t *d1);
 /* ------------------------------------------------------------------------- */
 
 void init_Pipe(fmgr_typ *f)
@@ -453,7 +453,7 @@ static void Reactivate(ushort pid, process_typ *cp, const char *callingProc)
 
 static os9err pWriteSysTaskExe(ushort          pid,
                                syspath_typ    *spP,
-                               ulong          *lenP,
+                               uint32_t       *lenP,
                                char           *buffer,
                                Boolean         wrln,
                                systaskfunc_typ wr_func)
@@ -657,7 +657,7 @@ static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 }
 
 /* write to pipe buffer */
-os9err pPwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pPwrite(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     debugprintf(dbgFiles, dbgDetail, ("# pPwrite: requests %ld bytes\n", *n));
     spP->u.pipe.pchP->bwritten = 0; /* start of new write request */
@@ -672,7 +672,7 @@ os9err pPwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
 }
 
 /* writeln to pipe buffer */
-os9err pPwriteln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pPwriteln(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     debugprintf(dbgFiles, dbgDetail, ("# pPwriteln: requests %ld bytes\n", *n));
     spP->u.pipe.pchP->bwritten = 0; /* start of new write request */
@@ -891,7 +891,7 @@ static os9err ShowPipeDir(syspath_typ *spP, char *buffer)
 } // ShowPipeDir
 
 /* read from pipe buffer */
-os9err pPread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pPread(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     Boolean       syW;
     process_typ  *cp = &procs[pid];
@@ -923,7 +923,7 @@ os9err pPread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
 }
 
 /* readln from pipe buffer */
-os9err pPreadln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pPreadln(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     Boolean       syW;
     process_typ  *cp = &procs[pid];
@@ -990,7 +990,7 @@ os9err pPeof(_pid_, syspath_typ *spP)
 }
 
 /* check ready */
-os9err pPready(ushort pid, syspath_typ *spP, ulong *n)
+os9err pPready(ushort pid, syspath_typ *spP, uint32_t *n)
 {
     pipe_typ     *pp = &spP->u.pipe;
     pipechan_typ *p  = pp->pchP;
@@ -1057,7 +1057,7 @@ os9err pPFDInf(_pid_, _spP_, ulong *maxbytP, ulong *fdinf, byte *buffer)
 }
 
 /* get pipe size */
-os9err pPsize(_pid_, syspath_typ *spP, ulong *sizeP)
+os9err pPsize(_pid_, syspath_typ *spP, uint32_t *sizeP)
 {
     *sizeP = spP->u.pipe.pchP->size -
              1; /* return max available size of pipe buffer */
@@ -1065,7 +1065,7 @@ os9err pPsize(_pid_, syspath_typ *spP, ulong *sizeP)
 }
 
 /* set pipe size */
-os9err pPsetsz(_pid_, syspath_typ *spP, ulong *sizeP)
+os9err pPsetsz(_pid_, syspath_typ *spP, uint32_t *sizeP)
 {
     pipechan_typ *p = spP->u.pipe.pchP;
 
@@ -1176,24 +1176,24 @@ os9err pKclose(ushort pid, syspath_typ *spP)
 }
 
 /* read/readln will be done directly */
-os9err pKread(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pKread(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     return pPread(pid, spP, n, buffer);
 }
 
-os9err pKreadln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pKreadln(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     return pPreadln(pid, spP, n, buffer);
 }
 
 /* write/writeln will be done with cross-over */
-os9err pKwrite(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pKwrite(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     syspath_typ *spC = crossedPath(pid, spP);
     return pPwrite(pid, spC, n, buffer);
 }
 
-os9err pKwriteln(ushort pid, syspath_typ *spP, ulong *n, char *buffer)
+os9err pKwriteln(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     syspath_typ *spC = crossedPath(pid, spP);
     return pPwriteln(pid, spC, n, buffer);
@@ -1217,17 +1217,18 @@ os9err pKopt(_pid_, _spP_, byte *buffer)
     return 0;
 }
 
-os9err pKpos(_pid_, _spP_, ulong *posP)
 /* get current file position */
+os9err pKpos(_pid_, _spP_, uint32_t *posP)
 {
     *posP = 0;
     return 0;
 }
 
-os9err pKready(ushort pid, syspath_typ *spP, ulong *n)
-/* gs_ready will be done directly */ { return pPready(pid, spP, n); }
+/* gs_ready will be done directly */
+os9err pKready(ushort pid, syspath_typ *spP, uint32_t *n)
+{ return pPready(pid, spP, n); }
 
-os9err pKlock(ushort pid, _spP_, ulong *d0, ulong *d1)
+os9err pKlock(ushort pid, _spP_, uint32_t *d0, uint32_t *d1)
 /* creates tty/pty system paths and locks them together */
 /* they are named tty0,tty1,... and pty0,pty1,... */
 /* the lowest free name will be taken */

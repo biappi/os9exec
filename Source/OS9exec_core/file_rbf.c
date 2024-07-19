@@ -172,20 +172,20 @@ typedef struct {
     char alias[OS9PATHLEN]; /* device's alias name */
 
     int    nr;          /* own reference number (array index) */
-    ulong  sctSize;     /* sector size for this device */
-    ushort mapSize;     /* size of allocation map */
-    byte   pdtyp;       /* device type: hard disk, floppy */
-    ushort sas;         /* sector allocation size */
-    ulong  root_fd_nr;  /* sector nr of root fd */
-    ulong  clusterSize; /* cluster size (allocation) */
-    ulong  totScts;     /* total   number of sectors */
-    ulong  imgScts;     /* current number of sectors at this image */
-    ushort last_diskID; /* last disk ID, inherited by new paths */
-    ulong  last_alloc;  /* the last allocation was here */
-    ulong  currPos;     /* current position at image */
-    ulong  rMiss, rTot, /* device statistics */
+    uint32_t sctSize;     /* sector size for this device */
+    uint16_t mapSize;     /* size of allocation map */
+    byte     pdtyp;       /* device type: hard disk, floppy */
+    uint16_t sas;         /* sector allocation size */
+    uint32_t root_fd_nr;  /* sector nr of root fd */
+    uint32_t clusterSize; /* cluster size (allocation) */
+    uint32_t totScts;     /* total   number of sectors */
+    uint32_t imgScts;     /* current number of sectors at this image */
+    uint16_t last_diskID; /* last disk ID, inherited by new paths */
+    uint32_t last_alloc;  /* the last allocation was here */
+    uint32_t currPos;     /* current position at image */
+    uint32_t rMiss, rTot, /* device statistics */
         wMiss, wTot;
-    ushort sp_img;               /* syspath number of image file */
+    uint16_t sp_img;               /* syspath number of image file */
     char   img_name[OS9PATHLEN]; /* full path name of image file */
 
     addrpair_typ tmp_sct;    /* temporary buffer sector */
@@ -245,33 +245,33 @@ void init_RBF(fmgr_typ *f);
 
 os9err pRopen(ushort pid, syspath_typ *, ushort *modeP, const char *pathname);
 os9err pRclose(ushort pid, syspath_typ *);
-os9err pRread(ushort pid, syspath_typ *, ulong *lenP, char *buffer);
-os9err pRreadln(ushort pid, syspath_typ *, ulong *lenP, char *buffer);
-os9err pRwrite(ushort pid, syspath_typ *, ulong *lenP, char *buffer);
-os9err pRwriteln(ushort pid, syspath_typ *, ulong *lenP, char *buffer);
-os9err pRseek(ushort pid, syspath_typ *, ulong *posP);
+os9err pRread(ushort pid, syspath_typ *, uint32_t *lenP, char *buffer);
+os9err pRreadln(ushort pid, syspath_typ *, uint32_t *lenP, char *buffer);
+os9err pRwrite(ushort pid, syspath_typ *, uint32_t *lenP, char *buffer);
+os9err pRwriteln(ushort pid, syspath_typ *, uint32_t *lenP, char *buffer);
+os9err pRseek(ushort pid, syspath_typ *, uint32_t *posP);
 os9err pRchd(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 os9err pRdelete(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 os9err pRmakdir(ushort pid, syspath_typ *, ushort *modeP, char *pathname);
 
-os9err pRsize(ushort pid, syspath_typ *, ulong *sizeP);
+os9err pRsize(ushort pid, syspath_typ *, uint32_t *sizeP);
 os9err pRopt(ushort pid, syspath_typ *, byte *buffer);
 os9err pRnam(ushort pid, syspath_typ *, char *volname);
-os9err pRpos(ushort pid, syspath_typ *, ulong *posP);
+os9err pRpos(ushort pid, syspath_typ *, uint32_t *posP);
 os9err pReof(ushort pid, syspath_typ *);
-os9err pRready(ushort pid, syspath_typ *, ulong *n);
-os9err pRgetFD(ushort pid, syspath_typ *, ulong *maxbytP, byte *buffer);
+os9err pRready(ushort pid, syspath_typ *, uint32_t *n);
+os9err pRgetFD(ushort pid, syspath_typ *, uint32_t *maxbytP, byte *buffer);
 os9err pRgetFDInf(ushort pid,
                   syspath_typ *,
                   ulong *maxbytP,
                   ulong *fdinf,
                   byte  *buffer);
-os9err pRdsize(ushort pid, syspath_typ *, ulong *size, ulong *dtype);
+os9err pRdsize(ushort pid, syspath_typ *, ulong *size, uint32_t *dtype);
 
-os9err pRsetsz(ushort pid, syspath_typ *, ulong *size);
-os9err pRsetatt(ushort pid, syspath_typ *, ulong *attr);
+os9err pRsetsz(ushort pid, syspath_typ *, uint32_t *size);
+os9err pRsetatt(ushort pid, syspath_typ *, uint32_t *attr);
 os9err pRsetFD(ushort pid, syspath_typ *, byte *buffer);
-os9err pRWTrk(ushort pid, syspath_typ *, ulong *trackNr);
+os9err pRWTrk(ushort pid, syspath_typ *, uint32_t *trackNr);
 
 void init_RBF_devs();
 /* ------------------------------------------------------------------------- */
@@ -2765,7 +2765,7 @@ static os9err AdaptAlloc_FD(syspath_typ *spP, ulong pos, ulong scs)
 }
 
 static os9err DoAccess(syspath_typ *spP,
-                       ulong       *lenP,
+                       uint32_t    *lenP,
                        char        *buffer,
                        Boolean      lnmode,
                        Boolean      wMode)
@@ -3657,27 +3657,27 @@ os9err pRclose(ushort pid, syspath_typ *spP)
     return err;
 }
 
-os9err pRread(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pRread(_pid_, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, false, false);
 }
 
-os9err pRreadln(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pRreadln(_pid_, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, true, false);
 }
 
-os9err pRwrite(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pRwrite(_pid_, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, false, true);
 }
 
-os9err pRwriteln(_pid_, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pRwriteln(_pid_, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return DoAccess(spP, lenP, buffer, true, true);
 }
 
-os9err pRseek(_pid_, syspath_typ *spP, ulong *posP)
+os9err pRseek(_pid_, syspath_typ *spP, uint32_t *posP)
 /* seek to new file position <posP> */
 {
     rbfdev_typ *dev = &rbfdev[spP->u.rbf.devnr];
@@ -3841,7 +3841,7 @@ os9err pRmakdir(ushort pid, syspath_typ *spP, _modeP_, char *pathname)
     return err;
 }
 
-os9err pRpos(_pid_, syspath_typ *spP, ulong *posP)
+os9err pRpos(_pid_, syspath_typ *spP, uint32_t *posP)
 /* get current file position <posP> */
 {
     rbf_typ    *rbf = &spP->u.rbf;
@@ -3912,15 +3912,15 @@ os9err pRopt(ushort pid, syspath_typ *spP, byte *buffer)
     return err;
 }
 
-os9err pRready(_pid_, _spP_, ulong *n)
+os9err pRready(_pid_, _spP_, uint32_t *n)
 /* check ready */
 {
     *n = 1;
     return 0;
 }
 
-os9err pRgetFD(_pid_, syspath_typ *spP, ulong *maxbytP, byte *buffer)
 /* get the current FD sector of the opened path */
+os9err pRgetFD(_pid_, syspath_typ *spP, uint32_t *maxbytP, byte *buffer)
 {
     debugprintf(
         dbgFiles,
@@ -3961,14 +3961,14 @@ os9err pRsetFD(_pid_, syspath_typ *spP, byte *buffer)
     return WriteFD(spP);
 }
 
-os9err pRsize(ushort pid, syspath_typ *spP, ulong *sizeP)
+os9err pRsize(ushort pid, syspath_typ *spP, uint32_t *sizeP)
 /* get the size of a file */
 {
     os9err      err;
     rbf_typ    *rbf = &spP->u.rbf;
     rbfdev_typ *dev = &rbfdev[rbf->devnr];
     byte        attr;
-    ulong       sect, slim, totsize, sv, pref;
+    uint32_t       sect, slim, totsize, sv, pref;
 
     if (spP->rawMode) {
         *sizeP = dev->totScts * dev->sctSize;
@@ -3988,7 +3988,7 @@ os9err pRsize(ushort pid, syspath_typ *spP, ulong *sizeP)
     return err;
 }
 
-os9err pRdsize(ushort pid, syspath_typ *spP, ulong *size, ulong *dtype)
+os9err pRdsize(ushort pid, syspath_typ *spP, ulong *size, uint32_t *dtype)
 /* get the size of the device as numbers of sectors */
 /* the <dtype> field will be returned as 0, to avoid problems with "castype" */
 {
@@ -4005,8 +4005,8 @@ os9err pRdsize(ushort pid, syspath_typ *spP, ulong *size, ulong *dtype)
     return 0;
 }
 
-os9err pRsetsz(_pid_, syspath_typ *spP, ulong *size)
 /* set the size of a file */
+os9err pRsetsz(_pid_, syspath_typ *spP, uint32_t *size)
 {
     rbf_typ *rbf = &spP->u.rbf;
 
@@ -4018,8 +4018,8 @@ os9err pRsetsz(_pid_, syspath_typ *spP, ulong *size)
     return WriteFD(spP);
 }
 
-os9err pRsetatt(_pid_, syspath_typ *spP, ulong *attr)
 /* set the attributes of a file */
+os9err pRsetatt(_pid_, syspath_typ *spP, uint32_t *attr)
 {
     Set_FDAtt(spP, (byte)*attr); /* byte ordering is already correct */
     return WriteFD(spP);
@@ -4041,8 +4041,8 @@ os9err pRnam(ushort pid, syspath_typ *spP, char *volname)
     return 0;
 }
 
-os9err pRWTrk(ushort pid, syspath_typ *spP, ulong *trackNr)
 /* get device name of RBF device */
+os9err pRWTrk(ushort pid, syspath_typ *spP, uint32_t *trackNr)
 {
     os9err      err;
     rbfdev_typ *dev = &rbfdev[spP->u.rbf.devnr];

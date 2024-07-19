@@ -177,24 +177,24 @@ void init_Net(fmgr_typ *f);
 
 os9err pNopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname);
 os9err pNclose(ushort pid, syspath_typ *spP);
-os9err pNread(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
-os9err pNreadln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
-os9err pNwrite(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
-os9err pNwriteln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer);
+os9err pNread(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer);
+os9err pNreadln(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer);
+os9err pNwrite(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer);
+os9err pNwriteln(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer);
 
 os9err pNopt(ushort pid, syspath_typ *spP, byte *buffer);
-os9err pNpos(ushort pid, syspath_typ *spP, ulong *posP);
-os9err pNready(ushort pid, syspath_typ *spP, ulong *n);
+os9err pNpos(ushort pid, syspath_typ *spP, uint32_t *posP);
+os9err pNready(ushort pid, syspath_typ *spP, uint32_t *n);
 
 /* network specific functions */
-os9err pNbind(ushort pid, syspath_typ *spP, ulong *n, byte *ispP);
+os9err pNbind(ushort pid, syspath_typ *spP, uint32_t *n, byte *ispP);
 os9err pNlisten(ushort pid, syspath_typ *spP);
-os9err pNconnect(ushort pid, syspath_typ *spP, ulong *n, byte *ispP);
-os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1);
-os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0);
-os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0);
-os9err pNGNam(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP);
-os9err pNSOpt(ushort pid, syspath_typ *spP, ulong *buffer);
+os9err pNconnect(ushort pid, syspath_typ *spP, uint32_t *n, byte *ispP);
+os9err pNaccept(ushort pid, syspath_typ *spP, uint32_t *d1);
+os9err pNrecv(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0);
+os9err pNsend(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0);
+os9err pNGNam(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, byte *ispP);
+os9err pNSOpt(ushort pid, syspath_typ *spP, uint32_t *buffer);
 
 os9err pNgPCmd(ushort pid, syspath_typ *spP, ulong *a0);
 os9err pNsPCmd(ushort pid, syspath_typ *spP, uint8_t *a0);
@@ -457,19 +457,19 @@ static os9err netRead(ushort       pid,
     return 0;
 }
 
-os9err pNread(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pNread(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return netRead(pid, spP, lenP, buffer, false);
 }
 
-os9err pNreadln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pNreadln(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return netRead(pid, spP, lenP, buffer, true);
 }
 
 static os9err netWrite(ushort       pid,
                        syspath_typ *spP,
-                       ulong       *lenP,
+                       uint32_t    *lenP,
                        void        *buffer_,
                        Boolean      lnmode)
 {
@@ -515,12 +515,12 @@ static os9err netWrite(ushort       pid,
     return 0;
 }
 
-os9err pNwrite(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pNwrite(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return netWrite(pid, spP, lenP, buffer, false);
 }
 
-os9err pNwriteln(ushort pid, syspath_typ *spP, ulong *lenP, char *buffer)
+os9err pNwriteln(ushort pid, syspath_typ *spP, uint32_t *lenP, char *buffer)
 {
     return netWrite(pid, spP, lenP, buffer, true);
 }
@@ -735,7 +735,7 @@ os9err pNconnect(ushort pid, syspath_typ *spP, _d2_, byte *ispP)
     return 0;
 }
 
-os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
+os9err pNaccept(ushort pid, syspath_typ *spP, uint32_t *d1)
 {
     OSStatus     err = 0;
     net_typ     *net = &spP->u.net;
@@ -798,7 +798,7 @@ os9err pNaccept(ushort pid, syspath_typ *spP, ulong *d1)
     return err;
 }
 
-os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
+os9err pNrecv(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info will be received */
 {
     os9err err;
@@ -814,7 +814,7 @@ os9err pNrecv(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
     return err;
 }
 
-os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
+os9err pNsend(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info must be sent */
 {
     os9err err;
@@ -830,7 +830,7 @@ os9err pNsend(ushort pid, syspath_typ *spP, ulong *d1, ulong *d2, uint8_t *a0)
     return err;
 }
 
-os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
+os9err pNGNam(_pid_, syspath_typ *spP, uint32_t *d1, uint32_t *d2, byte *ispP)
 /* Still some hardcoded things here */
 /* mode will be:    accepted / connected */
 /* ftpd/telnetd:      yes         no     */
@@ -859,14 +859,14 @@ os9err pNGNam(_pid_, syspath_typ *spP, ulong *d1, ulong *d2, byte *ispP)
 }
 
 ;
-/* os9err pNSOpt(_pid_, syspath_typ *spP, ulong *d1, ulong *d2) */
-os9err pNSOpt(_pid_, syspath_typ *spP, ulong *buffer)
+/* os9err pNSOpt(_pid_, syspath_typ *spP, uint32_t *d1, uint32_t *d2) */
+os9err pNSOpt(_pid_, syspath_typ *spP, uint32_t *buffer)
 {
     /* wil: this function doesn't match the call site, commenting */
 
 #if 0
     /* don't know what this is really good for (bfo) */
-    ulong *d2 = (ulong*)buffer;
+    uint32_t *d2 = (ulong*)buffer;
     net_typ *net = &spP->u.net;
 
     if (*d2 == 4) {
@@ -1059,14 +1059,14 @@ os9err pNopt(_pid_, _spP_, byte *buffer)
     return 0;
 }
 
-os9err pNpos(_pid_, _spP_, ulong *posP)
+os9err pNpos(_pid_, _spP_, uint32_t *posP)
 /* get current file position */
 {
     *posP = 0;
     return 0;
 }
 
-os9err pNready(_pid_, syspath_typ *spP, ulong *n)
+os9err pNready(_pid_, syspath_typ *spP, uint32_t *n)
 {
     OSStatus err = 0;
     net_typ *net = &spP->u.net;
