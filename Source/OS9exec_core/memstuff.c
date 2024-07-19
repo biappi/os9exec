@@ -413,7 +413,7 @@ addrpair_typ os9malloc(ushort pid, uint32_t memsz)
 }
 
 /* memory deallocation for OS-9 */
-os9err os9free(ushort pid, void *membase, uint32_t memsz)
+os9err os9free(ushort pid, os9ptr membase, uint32_t memsz)
 {
     os9err    err;
     pmem_typ *cm = &pmem[pid];
@@ -425,10 +425,10 @@ os9err os9free(ushort pid, void *membase, uint32_t memsz)
                  memsz,
                  pid));
 
-    if (membase != NULL) {
+    if (membase != 0) {
         for (int k = 0; k < MAXMEMBLOCKS; k++) {
             memblock_typ *m = &cm->m[k];
-            if (m->base.host == membase) {
+            if (m->base.guest == membase) {
                 if (m->size == memsz) {
                     release_memblock(pid, k);
                     return 0; /* freed ok */

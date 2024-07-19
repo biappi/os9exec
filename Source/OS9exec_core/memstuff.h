@@ -89,6 +89,6 @@ void         release_mem(addrpair_typ membase);
 void         free_mem(ushort pid); // release all memory of process
 
 addrpair_typ os9malloc(ushort pid, uint32_t memsz);
-os9err       os9free(ushort pid, void *membase, uint32_t memsz);
+os9err       os9free(ushort pid, os9ptr membase, uint32_t memsz);
 
 /* eof */
