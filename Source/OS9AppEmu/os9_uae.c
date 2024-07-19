@@ -93,7 +93,7 @@ void handle_os9exec_exception(int nr, uaecptr oldpc)
         if (th->trapentry != 0) {
             // there is an installed trap handler, just call it
             m68k_setpc(th->trapentry);
-            m68k_areg(regs, 6) = th->trapmem + 0x8000;
+            m68k_areg(regs, 6) = th->trapmem.guest + 0x8000;
             // ...and keep emulator running
         }
         else {

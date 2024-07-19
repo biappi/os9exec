@@ -541,7 +541,7 @@ void release_module(ushort mid, Boolean modOK)
 
                 for (t = 0; t < NUMTRAPHANDLERS; t++) {
                     tp   = &cp->TrapHandlers[t];
-                    tMod = tp->trapmodule;
+                    tMod = tp->trapmodule.host;
 
                     if (tMod != NULL) {
                         if (mid == tp->mid)
@@ -565,20 +565,22 @@ void release_module(ushort mid, Boolean modOK)
     os9modules[mid].linkcount = 0;
 }
 
-mod_exec *get_module_ptr(int mid)
 /* get pointer to module by mid */
+addrpair_typ get_module_ptr(int mid)
 {
-    if (mid >= MAXMODULES)
-        return NULL;
-    return os9mod(mid).host;
+    if (mid >= MAXMODULES) {
+        addrpair_typ zero = { 0 };
+        return zero;
+    }
+    return os9mod(mid);
 }
 
-int get_mid(void *modptr)
 /* find mid of module given by ID */
+int get_mid(void *modptr)
 {
     int k;
     for (k = 0; k < MAXMODULES; k++) {
-        if ((void *)get_module_ptr(k) == modptr)
+        if (get_module_ptr(k).host == modptr)
             return k;
     }
 
@@ -594,7 +596,7 @@ int find_mod_id(const char *name)
     int k;
     for (k = 0; k < MAXMODULES; k++) {
         /* compare name */
-        mod = get_module_ptr(k);
+        mod = get_module_ptr(k).host;
         if (mod == NULL)
             continue; /* no module here, check next */
 
@@ -963,8 +965,7 @@ static os9err load_module_local(ushort  pid,
                 OS9exec_ptr = (mod_exec *)OS9exec_mod;
                 dsize       = sizeof_OS9exec_mod;
                 theModuleP  = OS9exec_ptr;
-                theModulePP.host  = OS9exec_ptr;
-                theModulePP.guest = (os9ptr)OS9exec_ptr;
+                theModulePP = allocation_add(OS9exec_ptr, sizeof_OS9exec_mod);
                 isBuiltIn         = true;
                 break; /* found */
             }          /* if built-in OS9exec module */
@@ -992,8 +993,7 @@ static os9err load_module_local(ushort  pid,
                 Socket_ptr = (mod_exec *)Socket_mod;
                 dsize      = sizeof_Socket_mod;
                 theModuleP = Socket_ptr;
-                theModulePP.host  = Socket_ptr;
-                theModulePP.guest = (os9ptr)Socket_ptr;
+                theModulePP = allocation_add(Socket_ptr, sizeof_Socket_mod);
                 isBuiltIn         = true;
                 break; /* found */
             }          /* if built-in socket module */
@@ -1040,7 +1040,7 @@ static os9err load_module_local(ushort  pid,
 
         if (linkstyle && modBase != NULL) {
             if (modBase == No_Module)
-                modBase = OS9exec_ptr;
+                modBase = 0x2badf00d;
 
             theModuleP = modBase;
             theModulePP.host  = modBase;
@@ -1508,10 +1508,12 @@ void init_traphandlers(ushort pid)
 {
     int k;
     for (k = 0; k < NUMTRAPHANDLERS; k++) {
-        procs[pid].TrapHandlers[k].trapmodule =
-            NULL; /* no traphandler module installed */
-        procs[pid].TrapHandlers[k].trapentry =
-            0; /*IMPORTANT for new os9_llm implementation!! */
+        /* no traphandler module installed */
+        procs[pid].TrapHandlers[k].trapmodule.host = NULL;
+        procs[pid].TrapHandlers[k].trapmodule.guest = 0;
+
+        /*IMPORTANT for new os9_llm implementation!! */
+        procs[pid].TrapHandlers[k].trapentry = 0;
     }
 }
 
@@ -1576,18 +1578,10 @@ void mod_crc(mod_exec *m)
                  crc));
 }
 
-/* prepare data for execution of OS9 executable module/trap handler
- * returns msiz(actual size) and mp(actual base pointer, unbiased)
- */
-os9err
-prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
+uint32_t calc_memsize(mod_exec *theModule, uint32_t memplus)
 {
-    ulong memsz, offs;
-    byte *p, *p2, *bp;
-    ulong cnt;
-    int   k;
+    uint32_t memsz;
 
-    /* -- allocate memory for data */
     memsz = os9_long(theModule->_mdata); /* basic data size */
     debugprintf(dbgModules + dbgProcess,
                 dbgDetail,
@@ -1610,51 +1604,92 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
                 dbgNorm,
                 ("# prepData: Adjusted total data size = %ld\n", memsz));
 
-    addrpair_typ bpp = os9malloc(pid, memsz); /* allocate OS-9 memory block */
-    bp               = bpp.host;
+    return memsz;
+}
 
-    if (bp == NULL)
-        return os9error(E_NORAM); /* not enough RAM */
+void prepare_initialized_data(addrpair_typ module, addrpair_typ base_pointer)
+{
+    mod_exec *theModule = (mod_exec *)module.host;
 
-    /* -- prepare initialized data */
-    p2 = (byte *)theModule + os9_long(theModule->_midata); /* idata */
-    p  = bp + os9_long(*((ulong *)p2)); /* offset into data space */
-    p2 += 4;
-    cnt = os9_long(*((ulong *)p2)); /* number of bytes to copy */
-    p2 += 4;
+    /* idata */
+    uint8_t *src = (uint8_t *)theModule + os9_long(theModule->_midata);
+
+    /* offset into data space */
+    uint8_t *dst = base_pointer.host + os9_long(*((ulong *)src));
+    src += 4;
+
+    /* number of bytes to copy */
+    uint32_t data_count = os9_long(*((ulong *)src));
+    src += 4;
 
     debugprintf(dbgModules + dbgProcess,
                 dbgDetail,
                 ("# prepData: idata at $%08lX, data offset start=$%08lX, "
                  "bytecount=$%lX\n",
-                 p2,
-                 p,
-                 cnt));
-    while (cnt-- > 0)
-        *p++ = *p2++; /* copy initialized data */
-    /* -- adjust initialized data and object pointers */
-    p2 = (byte *)theModule +
-         os9_long(theModule->_midref); /* initalized data references */
-    offs = (ulong)
-        theModule; /* for first table, use code start address as offset */
+                 src,
+                 dst,
+                 data_count));
 
-    for (k = 0; k < 2; k++) {
+    for (int i = 0; i < data_count; i++) {
+        *dst++ = *src++;
+    }
+}
+
+/* prepare data for execution of OS9 executable module/trap handler
+ * returns msiz(actual size) and mp(actual base pointer, unbiased)
+ */
+os9err
+prepData(ushort pid, ushort mid, uint32_t memplus, uint32_t *msiz, addrpair_typ *base_pointer)
+{
+    uint8_t *p, *p2;
+    addrpair_typ module_pointer = os9mod(mid);
+    mod_exec *theModule = (mod_exec *)module_pointer.host;
+
+    /* -- allocate memory for data */
+    uint32_t memsz = calc_memsize(theModule, memplus);
+
+    /* allocate OS-9 memory block */
+    *base_pointer = os9malloc(pid, memsz);
+
+    /* not enough RAM */
+    if (base_pointer->host == NULL)
+        return os9error(E_NORAM);
+
+    /* -- prepare initialized data */
+    prepare_initialized_data(module_pointer, *base_pointer);
+
+    /* -- adjust initialized data and object pointers */
+
+    /* initalized data references */
+    p2 = (uint8_t *)theModule + os9_long(theModule->_midref);
+
+    /* for first table, use code start address as offset */
+    os9ptr offs = module_pointer.guest;
+
+    for (int k = 0; k < 2; k++) {
         debugprintf(
             dbgModules + dbgProcess,
             dbgDetail,
             ("# prepData: irefs correction to base address $%08lX\n", offs));
-        while (*((ulong *)p2) != 0) {
-            p = (byte *)((ulong)os9_word(*((ushort *)p2)) << 16) +
-                (ulong)bp; /* calc group's base address */
-            p2 += 2;       /* step over base address word */
+
+        while (*((uint32_t *)p2) != 0) {
+            /* calc group's base address */
+            uint16_t group_base = os9_word(*((uint16_t *)p2));
+            p2 += 2;
+
+            uint16_t count = os9_word(*((uint16_t *)p2));
+            p2 += 2;
+
+            uint8_t *p = (uint8_t *)base_pointer->host + group_base;
+
             debugprintf(dbgModules + dbgProcess,
                         dbgDetail,
                         ("# prepData: irefs group at $%08lX, count=%d\n",
                          (ulong)p,
                          os9_word(*((ushort *)p2))));
 
-            for (cnt = os9_word(*((ushort *)p2)); cnt > 0; cnt--) {
-                p2 += 2; /* step to next offset word */
+
+            for (int i = 0; i < count; i++) {
                 debugprintf(
                     dbgModules + dbgProcess,
                     dbgDetail,
@@ -1663,38 +1698,44 @@ prepData(ushort pid, mod_exec *theModule, ulong memplus, ulong *msiz, byte **mp)
                      (ulong)(p + os9_word(*((ushort *)p2))),
                      os9_long(*((ulong *)(p + os9_word(*((ushort *)p2))))),
                      offs));
+
                 /* now correct */
-                *((ulong *)(p + os9_word(*((ushort *)p2)))) = os9_long(
-                    os9_long(*((ulong *)(p + os9_word(*((ushort *)p2))))) +
-                    offs);
+                *((uint32_t *)(p + os9_word(*((uint16_t *)p2)))) =
+
+                    os9_long(os9_long(*((uint32_t *)(p + os9_word(*((uint16_t *)p2))))) + offs);
+
+                p2 += 2; /* step to next offset word */
             }
-            p2 += 2;
         }
-        p2 += 4; /* skip 0 terminator */
-        offs =
-            (ulong)bp; /* for second table, use data base pointer as offset */
+
+        /* skip 0 terminator */
+        p2 += 4;
+
+        /* for second table, use data base pointer as offset */
+        offs = base_pointer->guest;
     }
 
     debugprintf(dbgModules + dbgProcess,
                 dbgNorm,
                 ("# prepData: Finally allocated static for pid=%d:  %ld Bytes "
-                 "at $%lX\n",
+                 "at (host: %p guest: $%lX)\n",
                  pid,
                  memsz,
-                 bp));
-    *mp   = bp;
+                 base_pointer->host,
+                 base_pointer->guest));
+
     *msiz = memsz;
+
     return 0;
 }
 
+/* install a traphandler */
 os9err install_traphandler(ushort            pid,
                            ushort            trapidx,
                            char             *mpath,
-                           ulong             addmem,
+                           uint32_t          addmem,
                            traphandler_typ **traphandler)
-/* install a traphandler */
 {
-    mod_exec        *theModule; /* OS-9 trap handler module header */
     traphandler_typ *tp;
     os9err           err;
     ushort           mid;
@@ -1706,7 +1747,7 @@ os9err install_traphandler(ushort            pid,
     if (trapidx >= NUMTRAPHANDLERS)
         return os9error(E_ITRAP); /* invalid trap code */
     tp = &(procs[pid].TrapHandlers[trapidx]);
-    if (tp->trapmodule != NULL)
+    if (tp->trapmodule.host != NULL)
         return os9error(
             E_ITRAP); /* a handler is already installed for this trap */
 
@@ -1716,14 +1757,17 @@ os9err install_traphandler(ushort            pid,
         return err;
 
     /* now prepare the trap handler data */
-    theModule      = (mod_exec *)get_module_ptr(mid);
-    tp->mid        = mid; /* save mid */
-    tp->trapmodule = (mod_trap *)(ulong)theModule;
-    tp->trapentry  = (ulong)theModule + os9_long(theModule->_mexec);
+    addrpair_typ module = get_module_ptr(mid);
+    mod_exec *module_host = module.host;
+
+    /* save mid */
+    tp->mid        = mid;
+    tp->trapmodule = module;
+    tp->trapentry  = module.guest + os9_long(module_host->_mexec);
 
     /* --- module found, prepare as trap handler */
     err =
-        prepData(pid, theModule, addmem, &tp->trapmemsz, (byte **)&tp->trapmem);
+        prepData(pid, mid, addmem, &tp->trapmemsz, &tp->trapmem);
     if (err)
         return err;
 
@@ -1740,15 +1784,19 @@ os9err release_traphandler(ushort pid, ushort trapidx)
         return os9error(E_ITRAP); /* invalid trap code */
 
     tp = &procs[pid].TrapHandlers[trapidx];
-    if (tp->trapmodule != NULL) {
+    if (tp->trapmodule.host != NULL) {
         /* release trap handler's static storage */
-        os9free(pid, (void *)tp->trapmem, tp->trapmemsz);
+        os9free(pid, tp->trapmem.host, tp->trapmemsz);
 
         /* unlink trap handler's module */
         unlink_module(tp->mid);
 
-        tp->trapmodule = NULL; /* no traphandler installed any more */
-        tp->trapentry  = 0;    /* no traphandler entry available any more */
+        /* no traphandler installed any more */
+        tp->trapmodule.host = NULL;
+        tp->trapmodule.guest = 0;
+
+        /* no traphandler entry available any more */
+        tp->trapentry  = 0;
     }
 
     return 0;

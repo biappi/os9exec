@@ -69,7 +69,7 @@ void show_modules(char *cmp);
 void init_modules(void);
 void release_module(ushort mid, Boolean modOK);
 
-mod_exec *get_module_ptr(int mid);
+addrpair_typ get_module_ptr(int mid);
 int       get_mid(void *modptr);
 
 int    find_mod_id(const char *name);
@@ -88,16 +88,16 @@ ushort calc_parity(ushort *p, ushort numwords);
 uint32_t  calc_crc(byte *p, uint32_t size, uint32_t accum);
 void   mod_crc(mod_exec *m);
 
-os9err prepData(ushort    pid,
-                mod_exec *theModule,
-                ulong     memplus,
-                ulong    *msiz,
-                byte    **mp);
+os9err prepData(ushort   pid,
+                ushort   mid,
+                uint32_t memplus,
+                uint32_t *msiz,
+                addrpair_typ *base_pointer);
 
 os9err install_traphandler(ushort            pid,
                            ushort            trapidx,
                            char             *mpath,
-                           ulong             addmem,
+                           uint32_t          addmem,
                            traphandler_typ **traphandler);
 os9err release_traphandler(ushort pid, ushort trapidx);
 void   unlink_traphandlers(ushort pid);

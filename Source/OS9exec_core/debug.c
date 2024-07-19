@@ -305,7 +305,7 @@ void debug_procdump(process_typ *cp, int cpid)
 {
     char      *code    = NULL;
     char      *desc    = NULL;
-    mod_exec  *me      = get_module_ptr(cp->mid);
+    mod_exec  *me      = get_module_ptr(cp->mid).host;
     ushort     sync_id = os9_word(0x4afc);
     ushort     modsync = 0;
     Boolean    sync_ok = false;
@@ -505,7 +505,7 @@ void debug_procdump(process_typ *cp, int cpid)
     prefix = "Trap handler:";
     for (i = 0; i < NUMTRAPHANDLERS; i++) {
         th  = &cp->TrapHandlers[i];
-        tme = &th->trapmodule->progmod;
+        tme = &((mod_trap *)th->trapmodule.host)->progmod;
         if (tme != 0) {
             upo_printf(" %13s %02d #%02d %s, edition %d\n",
                        prefix,
@@ -829,12 +829,11 @@ goon:
 }
 
 /* show one reg in specified length */
-void showonereg(ulong value, Boolean isa, ushort regnum, ushort lenspec)
+void showonereg(uint32_t value, Boolean isa, ushort regnum, ushort lenspec)
 {
     char       *format;
     static char tmp[OS9PATHLEN]; /* static buffer to allow path display in error
                                     tracebacks */
-
     lenspec &= 0x03;
     if (lenspec) {
         if (!isa) {
@@ -859,7 +858,7 @@ void showonereg(ulong value, Boolean isa, ushort regnum, ushort lenspec)
             upe_printf("A%d=$%lX ", regnum, value);
             if (lenspec ==
                 2) { /* not all incoming strings are null terminated */
-                nullterm((char *)&tmp, (char *)value, OS9PATHLEN);
+                nullterm(tmp, get_pointer(value), OS9PATHLEN);
                 upe_printf("\"%s\" ", tmp);
             }
         }

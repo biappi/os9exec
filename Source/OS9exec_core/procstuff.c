@@ -247,7 +247,7 @@ void show_processes(void)
     for (k = 0; k < MAXPROCESSES; k++) {
         cp = &procs[k];
         if (cp->state != pUnused) {
-            mod = get_module_ptr(cp->mid);
+            mod = get_module_ptr(cp->mid).host;
             switch (cp->state) {
             case pActive:
                 sta = 'A';
@@ -1495,11 +1495,13 @@ os9err prepFork(ushort   newpid,
                 ushort   usr,
                 ushort   prior)
 {
-    byte        *mp, *p, *p2;
+    byte        *p, *p2;
     ulong       *a;
-    ulong        memsiz, cnt;
+    uint32_t      memsiz, cnt;
     ushort       err, mty, svid;
-    mod_exec    *theModule;
+    addrpair_typ module;
+    mod_exec    *module_host;
+    addrpair_typ base_pointer;
     process_typ *cp = &procs[newpid];
     process_typ *pp = &procs[os9_word(cp->pd._pid)];
     regs_type   *rp = &cp->os9regs;
@@ -1521,7 +1523,8 @@ os9err prepFork(ushort   newpid,
     cp->pd._user  = os9_word(usr);
 
     /* -- get pointer to main module */
-    theModule = os9mod(mid).host;
+    module = os9mod(mid);
+    module_host = module.host;
 
     /* -- prepare data area, for internal commands as well */
     debugprintf(
@@ -1531,14 +1534,14 @@ os9err prepFork(ushort   newpid,
          memplus + paramsiz,
          paramsiz,
          memplus));
-    err = prepData(newpid, theModule, memplus + paramsiz, &memsiz, &mp);
+    err = prepData(newpid, mid, memplus + paramsiz, &memsiz, &base_pointer);
     if (err)
         return err; /* no room for data */
 
     /* -- copy parameter area, for internal commands as well */
     p           = get_pointer(paramptr);
-    p2          = mp + memsiz - paramsiz;
-    cp->my_args = (ulong)p2; /* parameter area start */
+    p2          = (uint8_t *)base_pointer.host + memsiz - paramsiz;
+    cp->my_args = base_pointer.guest + memsiz - paramsiz; /* parameter area start */
 
     regcheck(newpid, "Param writing start", (ulong)p2, RCHK_MEM);
     regcheck(newpid, "Param writing end", (ulong)p2 + paramsiz - 1, RCHK_MEM);
@@ -1592,11 +1595,11 @@ os9err prepFork(ushort   newpid,
 
     /* check if module is executeable and */
     /* check if this module is not in the "black list" of OS9exec */
-    mty = os9_word(theModule->_mh._mtylan) >> BpB;
+    mty = os9_word(module_host->_mh._mtylan) >> BpB;
     if (mty != MT_PROGRAM)
         err = E_NEMOD;
     else
-        err = os9exec_compatible(theModule);
+        err = os9exec_compatible(module_host);
 
     if (err) {
         unlink_module(mid);
@@ -1606,26 +1609,26 @@ os9err prepFork(ushort   newpid,
     debugprintf(
         dbgProcess,
         dbgNorm,
-        ("# prepFork: Module mid=%d, address=$%08lX\n", mid, (ulong)theModule));
+        ("# prepFork: Module mid=%d, address=(host %p guest $%08lX)\n", mid, module.host, module.guest));
 
     /* -- prepare registers */
     rp->sr   = 0; /* everything cleared, USER state */
-    rp->pc   = os9_long(theModule->_mexec) + (ulong)theModule; /* entry point */
-    rp->regs[REGS_A + 3] = (ulong)theModule; /* primary module pointer */
+    rp->pc   = os9_long(module_host->_mexec) + module.guest; /* entry point */
+    rp->regs[REGS_A + 3] = module.guest; /* primary module pointer */
     rp->regs[REGS_D + 0] = newpid;           /* assign process ID */
     rp->regs[REGS_D + 1] = os9_word(cp->pd._group) << (2 * BpB) |
                os9_word(cp->pd._user); /* inherited group/user */
     rp->regs[REGS_D + 2] = prior;                  /* priority */
     rp->regs[REGS_D + 3] = numpaths;               /* number of paths inherited */
 
-    cp->memstart = (ulong)mp;          /* save static storage start address */
-    rp->regs[REGS_A + 6]     = (ulong)mp + 0x8000; /* biased A6 */
-    rp->membase  = mp;                 /* unbiased static storage pointer */
+    cp->memstart         = base_pointer.guest;          /* save static storage start address */
+    rp->regs[REGS_A + 6] = base_pointer.guest + 0x8000; /* biased A6 */
+    rp->membase          = base_pointer.guest;                 /* unbiased static storage pointer */
 
     /* set up parameter area regs */
     rp->regs[REGS_A + 5] = cp->my_args;
-    rp->regs[REGS_A + 7] = rp->regs[REGS_A + 5];                          /* top of stack */
-    rp->regs[REGS_A + 1] = cp->memtop = (ulong)(mp + memsiz); /* memory end */
+    rp->regs[REGS_A + 7] = rp->regs[REGS_A + 5];                     /* top of stack */
+    rp->regs[REGS_A + 1] = cp->memtop = base_pointer.guest + memsiz; /* memory end */
     rp->regs[REGS_D + 5]              = paramsiz;             /* parameter size */
     rp->regs[REGS_D + 6]              = memsiz; /* total initial memory allocation */
 

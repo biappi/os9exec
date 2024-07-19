@@ -77,7 +77,7 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
     os9err err;
     ushort mode =
         loword(rp->regs[REGS_D + 0]) & 0x00ff; /* consider only byte => bugfix for the */
-    char *os9_name = (char *)rp->regs[REGS_A + 0]; /* poCreateMask problem */
+    char *os9_name = get_pointer(rp->regs[REGS_A + 0]); /* poCreateMask problem */
     char  os9_path[OS9PATHLEN];
     char *pastpath;
 
@@ -334,7 +334,7 @@ os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
 
     path = loword(rp->regs[REGS_D + 0]);
     cnt  = rp->regs[REGS_D + 1];
-    buff = (char *)rp->regs[REGS_A + 0];
+    buff = get_pointer(rp->regs[REGS_A + 0]);
 
     path = path & 0x7f; /* mask the specific OS9exec non-debug flag */
 
@@ -415,11 +415,6 @@ os9err OS9_I_ReadLn(regs_type *rp, ushort cpid)
  *              - NULL chars cannot be read from stdin using I$ReadLn
  */
 {
-    char  *p;
-    ulong  cnt;
-    ushort path;
-    os9err err;
-
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
                  "I$ReadLn buffer start",
@@ -431,14 +426,15 @@ os9err OS9_I_ReadLn(regs_type *rp, ushort cpid)
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
     }
 
-    p    = (char *)rp->regs[REGS_A + 0];
-    path = loword(rp->regs[REGS_D + 0]);
-    cnt  = rp->regs[REGS_D + 1];
+    os9ptr p = rp->regs[REGS_A + 0];
+    uint16_t path = loword(rp->regs[REGS_D + 0]);
+    uint32_t cnt  = rp->regs[REGS_D + 1];
 
-    err = usrpath_read(cpid, path, &cnt, p, true);
+    os9err err = usrpath_read(cpid, path, &cnt, get_pointer(p), true);
     if (err)
         return err;
     rp->regs[REGS_D + 1] = cnt; /* return # of chars actually read */
+
     return 0;
 }
 

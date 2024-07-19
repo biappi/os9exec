@@ -879,7 +879,9 @@ void debug_return(regs_type *crp, ushort pid, Boolean cwti)
                     p = (char *)&cp->intProcName;
                 }
                 else {
-                    mod = (mod_exec *)cp->os9regs.regs[REGS_A + 3];
+                    os9ptr mod_ptr = cp->os9regs.regs[REGS_A + 3];
+
+                    mod = (mod_exec *)get_pointer(mod_ptr);
                     p   = Mod_Name(mod);
                 }
 

@@ -568,8 +568,8 @@ typedef struct {
 
 /* a error trap handler */
 typedef struct {
-    ulong handleraddr;
-    ulong handlerstack;
+    os9ptr handleraddr;
+    os9ptr handlerstack;
 } errortrap_typ;
 
 /* OS9 simulated directory file constants */
@@ -1097,8 +1097,8 @@ typedef struct {
     ulong iticks; /* number of ticks at icalls */
 
     /* memory */
-    ulong memstart; /* the process' static storage start addr (unbiased) */
-    ulong memtop;   /* the process' static storage top pointer (unbiased) */
+    os9ptr memstart; /* the process' static storage start addr (unbiased) */
+    os9ptr memtop;   /* the process' static storage top pointer (unbiased) */
     // memblock_typ    os9memblocks[MAXMEMBLOCKS]; /* the process' allocated
     // memory blocks */
     byte sigdat[SIG_SCRATCH];
@@ -1150,7 +1150,7 @@ typedef struct {
     ulong      saved_cnt;
     pstate_typ saved_state; /* saved process' state */
 
-    ulong my_args; /* arguments pointer */
+    os9ptr my_args; /* arguments pointer */
     int   tid;     /* thread ID */
 } process_typ;
 

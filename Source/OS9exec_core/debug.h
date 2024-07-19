@@ -141,7 +141,7 @@ os9err debug_help(ushort pid, int argc, char **argv);
 void   dumpregs(ushort pid);
 ushort debugwait(void);
 
-void showonereg(ulong value, Boolean isa, ushort regnum, ushort lenspec);
+void showonereg(uint32_t value, Boolean isa, ushort regnum, ushort lenspec);
 void show_maskedregs(regs_type *rp, ulong regmask);
 
 char *get_stat_name(ushort stat);

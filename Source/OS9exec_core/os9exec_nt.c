@@ -1439,7 +1439,6 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
 #define ZERO_DIVISION_TRAP 5
     ushort           vect;
     traphandler_typ *tp;
-    mod_exec        *mp; /* module pointer */
     short            parentid;
 
     if (cp->vector == 0xFAFA) { /* error exception */
@@ -1457,9 +1456,12 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
             (vect < FIRSTEXCEPTION + NUMEXCEPTIONS)) {
             if (cp->ErrorTraps[vect - 2].handleraddr != 0) {
                 /* there is an installed handler */
-                crp->pc = cp->ErrorTraps[vect - FIRSTEXCEPTION]
-                              .handleraddr; /* set handler routine address */
-                crp->regs[REGS_A + 6] = cp->memstart + 0x8000; /* set A6 base */
+
+                /* set handler routine address */
+                crp->pc = cp->ErrorTraps[vect - FIRSTEXCEPTION].handleraddr;
+
+                /* set A6 base */
+                crp->regs[REGS_A + 6] = cp->memstart + 0x8000;
 
                 if (cp->ErrorTraps[vect - FIRSTEXCEPTION].handlerstack != 0) {
                     crp->regs[REGS_A + 7] =
@@ -1530,14 +1532,18 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
                      cp->func));
 
         tp = &cp->TrapHandlers[cp->vector - FIRSTTRAP];
-        if (tp->trapmodule == NULL) {
+        if (tp->trapmodule.host == NULL) {
             /* --- called uninitialized TRAP, check for TrapInit entry */
-            mp = get_module_ptr(cp->mid); /* get module pointer */
-            if (mp->_mexcpt != 0) {
+
+            /* get module pointer */
+            addrpair_typ module = get_module_ptr(cp->mid);
+            mod_exec *module_host = module.host;
+
+            if (module_host->_mexcpt != 0) {
                 /* there is an exception entry point, call it */
-                crp->pc = (ulong)mp +
-                          os9_long(mp->_mexcpt); /* set new PC into exception
-                                                    handling routine */
+                /* set new PC into exception handling routine */
+                crp->pc = module.guest + os9_long(module_host->_mexcpt);
+
                 debugprintf(dbgTrapHandler,
                             dbgNorm,
                             ("# main loop: Calling exception entry point of "
@@ -1560,15 +1566,22 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
         }
         else {
             /* --- trap handler is installed for this vector, call it */
-            crp->pc   = tp->trapentry; /* continue in trap handler */
-            crp->regs[REGS_A + 6] = tp->trapmem +
-                        0x8000; /* pass trap handler data pointer with offset */
+
+            /* continue in trap handler */
+            crp->pc   = tp->trapentry;
+
+            /* pass trap handler data pointer with offset */
+            crp->regs[REGS_A + 6] = tp->trapmem.guest + 0x8000;
+
             debugprintf(dbgTrapHandler,
                         dbgDeep,
                         ("# main loop: calling Trap function now"));
+
             /* execution continues in trap handler and will return to program
              * within OS-9 context */
-            return false; /* avoid any calls to arbitrate etc. */
+
+            /* avoid any calls to arbitrate etc. */
+            return false;
         }
     }
 

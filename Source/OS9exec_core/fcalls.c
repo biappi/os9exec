@@ -254,7 +254,6 @@ os9err OS9_F_Load(regs_type *rp, ushort cpid)
      *             E$DIRFUL: module list full
      */
     os9err    err;
-    mod_exec *theModule; /* OS-9 module header */
     char      mpath[OS9PATHLEN], *p;
     ushort    mid;
     ushort    mode   = loword(rp->regs[REGS_D + 0]); /* attributes */
@@ -263,7 +262,10 @@ os9err OS9_F_Load(regs_type *rp, ushort cpid)
     /* but seems to be correct as default for exedir in 'load' */
     /* Attention !!! Colored memory (bit 7) is %%% ignored. */
 
-    p = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *ptr = get_pointer(PTR);
+    char *ret = p = nullterm(mpath, ptr, OS9PATHLEN);
+
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$Load: requested %sload of '%s', mode=$%04X\n",
@@ -276,13 +278,15 @@ os9err OS9_F_Load(regs_type *rp, ushort cpid)
     if (err)
         return err;
 
-    theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
-    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
+    addrpair_typ module = get_module_ptr(mid);
+    mod_exec *module_host = module.host;
 
-    rp->regs[REGS_A + 0] = (ulong)p;
-    rp->regs[REGS_A + 2] = (ulong)theModule;
-    rp->regs[REGS_A + 1] = (ulong)theModule + os9_long(theModule->_mexec);
+    retword(rp->regs[REGS_D + 0]) = os9_word(module_host->_mh._mtylan);
+    retword(rp->regs[REGS_D + 1]) = os9_word(module_host->_mh._mattrev);
+
+    rp->regs[REGS_A + 0] = PTR + (uint32_t)(ret - ptr);
+    rp->regs[REGS_A + 2] = module.guest;
+    rp->regs[REGS_A + 1] = module.guest + os9_long(module_host->_mexec);
     return 0;
 }
 
@@ -303,12 +307,13 @@ os9err OS9_F_Link(regs_type *rp, ushort cpid)
  */
 {
     os9err    err;
-    mod_exec *theModule; /* OS-9 module header */
     char      mname[OS9NAMELEN], *p;
     ushort    mid;
     ushort    tylan = loword(rp->regs[REGS_D + 0]); /* wanted attrs */
 
-    p = nullterm(mname, (char *)rp->regs[REGS_A + 0], OS9NAMELEN);
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *ptr = get_pointer(PTR);
+    char *ret = p = nullterm(mname, ptr, OS9NAMELEN);
     debugprintf(
         dbgModules,
         dbgNorm,
@@ -319,20 +324,22 @@ os9err OS9_F_Link(regs_type *rp, ushort cpid)
     if (err)
         return err; /* link-style errors */
 
-    theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
+    addrpair_typ module = get_module_ptr(mid);
+    mod_exec *module_host = module.host;
+
+    retword(rp->regs[REGS_D + 0]) = os9_word(module_host->_mh._mtylan);
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$Link: actual type/lang=$%04X\n", loword(rp->regs[REGS_D + 0])));
 
     /* module does not match request, forget it */
-    if (tylan != 0 && tylan != os9_word(theModule->_mh._mtylan))
+    if (tylan != 0 && tylan != os9_word(module_host->_mh._mtylan))
         return os9error(E_MNF); /* no such module found */
 
-    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
-    rp->regs[REGS_A + 0]          = (ulong)p;
-    rp->regs[REGS_A + 2]          = (ulong)theModule;
-    rp->regs[REGS_A + 1]          = (ulong)theModule + os9_long(theModule->_mexec);
+    retword(rp->regs[REGS_D + 1]) = os9_word(module_host->_mh._mattrev);
+    rp->regs[REGS_A + 0]          = PTR + (uint32_t)(ret - ptr);
+    rp->regs[REGS_A + 2]          = module.guest;
+    rp->regs[REGS_A + 1]          = module.guest + os9_long(module_host->_mexec);
 
     return 0;
 }
@@ -908,7 +915,7 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
 
     memcpy(&pd, &cp->pd, sizeof(procid));
 
-    pd._usp = (byte *)os9_long(rp->regs[REGS_A + 7]);
+    pd._usp = get_pointer(os9_long(rp->regs[REGS_A + 7]));
 
     // <_state> and <queueid> will be assigned directly
     if (id == cpid)
@@ -921,8 +928,8 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     // get the list of the currently connected trap handlers (bfo)
     for (k = 0; k < NUMTRAPHANDLERS; k++) {
         tp            = &cp->TrapHandlers[k];
-        pd._traps[k]  = (byte *)os9_long((ulong)tp->trapmodule);
-        pd._trpmem[k] = (byte *)os9_long((ulong)tp->trapmem);
+        pd._traps[k]  = os9_long(tp->trapmodule.guest);
+        pd._trpmem[k] = os9_long(tp->trapmem.guest);
         pd._trpsiz[k] = 0;
     }
 
@@ -1288,45 +1295,50 @@ os9err OS9_F_TLink(regs_type *rp, ushort cpid)
     ushort           trapidx;
     char             mpath[OS9PATHLEN], *p;
     traphandler_typ *tp;
-    mod_trap        *trapmodP;
-    ulong           *sp;
     process_typ     *cp = &procs[cpid];
 
     trapidx = rp->regs[REGS_D + 0] - 1;
     if (trapidx >= NUMTRAPHANDLERS)
         return os9error(E_ITRAP); /* invalid trap code */
 
-    if ((rp->regs[REGS_A + 0] != 0) && (*((char *)rp->regs[REGS_A + 0]) != 0)) {
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *ptr = get_pointer(PTR);
+
+    if ((rp->regs[REGS_A + 0] != 0) && (*ptr != 0)) {
         /* install trap handler */
-        p = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+        char *res = p = nullterm(mpath, ptr, OS9PATHLEN);
 
         err = install_traphandler(cpid, trapidx, mpath, rp->regs[REGS_D + 1], &tp);
         if (!err) {
-            trapmodP = tp->trapmodule;
+            mod_trap *trapmodule_host = tp->trapmodule.host;
 
             /* --- D0.W is still the trap no, D1.L is the additional memory */
-            rp->regs[REGS_A + 0] = (ulong)p;
-            rp->regs[REGS_A + 2] = (ulong)trapmodP; /* pointer to the trap module */
-            rp->regs[REGS_A + 1] = (ulong)trapmodP + os9_long(trapmodP->progmod._mexec);
+            rp->regs[REGS_A + 0] = PTR + (uint32_t)(res - ptr);
+            rp->regs[REGS_A + 2] = tp->trapmodule.guest; /* pointer to the trap module */
+            rp->regs[REGS_A + 1] = tp->trapmodule.guest + os9_long(trapmodule_host->progmod._mexec);
 
             /* --- now modify stack and PC to return through trapinit routine to
              * program */
-            sp = (ulong *)rp->regs[REGS_A + 7]; // get current stack pointer as *ulong
-            if (!cp->isIntUtil) {   // workaround for built-in utilities: not
-                                    // really used
-                *(--sp) = os9_long(
-                    rp->pc);  // save PC pointing to instruction after F$TLink
+
+            os9ptr SP = rp->regs[REGS_A + 7]; // get current stack pointer
+            uint32_t *sp = get_pointer(SP);
+
+            // workaround for built-in utilities: not really used
+            if (!cp->isIntUtil) {
+                // save PC pointing to instruction after F$TLink
+                *(--sp) = os9_long(rp->pc);
                 *(--sp)  = 0; // save two dummy null words
                 *(--sp)  = os9_long(rp->regs[REGS_A + 6]); // save "caller's A6"
-                rp->regs[REGS_A + 7] = (ulong)sp;          // update stack pointer
+                rp->regs[REGS_A + 7] = SP - (3 * sizeof(uint32_t));          // update stack pointer
             }
 
             /* --- modify registers to continue execution in traphandler's init
              * routine */
-            rp->pc = (ulong)trapmodP + os9_long(trapmodP->_mtrapinit);
-            rp->regs[REGS_A + 6] =
-                tp->trapmem +
-                0x8000; /* set pointer to traphandler's data with offset */
+            rp->pc = tp->trapmodule.guest + os9_long(trapmodule_host->_mtrapinit);
+
+            /* set pointer to traphandler's data with offset */
+            rp->regs[REGS_A + 6] = tp->trapmem.guest + 0x8000;
+
             debugprintf(dbgTrapHandler,
                         dbgNorm,
                         ("# F$TLink: About to launch trapinit of vector #%d "
@@ -1365,8 +1377,6 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
  *          d1.w = error
  */
 {
-    mod_exec *theModule; /* OS-9 module header */
-
     char   mpath[OS9PATHLEN], *p;
     ushort mid;
     ulong  size, namsize, msz, xpos, npos, usz;
@@ -1375,7 +1385,11 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     short  access, tylan, attrev;
 
     size = rp->regs[REGS_D + 0];
-    p    = nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *ptr = get_pointer(PTR);
+    char *ret = p = nullterm(mpath, ptr, OS9PATHLEN);
+
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$DatMod: for '%s', size=%d, mode=$%04X\n",
@@ -1399,7 +1413,8 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     if (pp.host == NULL)
         return os9error(E_NORAM); /* not enough memory */
 
-    theModule                  = pp.host;
+    addrpair_typ module = get_module_ptr(mid);
+    mod_exec *module_host = module.host;
     os9modules[mid].modulebase = pp; /* enter pointer in free table entry */
     os9modules[mid].isBuiltIn  = false;
 
@@ -1407,35 +1422,34 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     tylan  = 0x0400; /*this is the data module type */
     attrev = loword(rp->regs[REGS_D + 1]);
 
-    FillTemplate(theModule, access, tylan, attrev); /* fill module body */
-    xpos = (ulong)&theModule->_mexcpt;
-    usz  = (ulong)theModule + msz;
+    FillTemplate(module_host, access, tylan, attrev); /* fill module body */
+    xpos = (ulong)&module_host->_mexcpt;
+    usz  = (ulong)module_host + msz;
 
     for (k = (ulong *)xpos; k < (ulong *)usz; k++)
         *k = 0; /* clear data area */
 
     xpos = (ulong)((char *)xpos -
-                   (char *)theModule); /* now calculated as offset */
+                   (char *)module_host); /* now calculated as offset */
     npos = (ulong)((char *)msz - sizeof(ulong) - (char *)namsize);
 
-    theModule->_mexec     = os9_long(xpos); /* right behind the header */
-    theModule->_mh._msize = os9_long(msz);  /* data area size */
-    theModule->_mh._mname = os9_long(npos); /* name offset */
-    strcpy(Mod_Name(theModule), mpath);     /* name */
+    module_host->_mexec     = os9_long(xpos); /* right behind the header */
+    module_host->_mh._msize = os9_long(msz);  /* data area size */
+    module_host->_mh._mname = os9_long(npos); /* name offset */
+    strcpy(Mod_Name(module_host), mpath);     /* name */
 
-    hpar = calc_parity((ushort *)theModule, 23); /* byte-order insensitive */
-    theModule->_mh._mparity = hpar;              /* byte-order insensitive */
+    hpar = calc_parity((ushort *)module_host, 23); /* byte-order insensitive */
+    module_host->_mh._mparity = hpar;              /* byte-order insensitive */
 
-    mod_crc(theModule);
+    mod_crc(module_host);
     os9modules[mid].linkcount = 1; /* module is created and linked */
 
-    theModule         = (mod_exec *)get_module_ptr(mid);
-    retword(rp->regs[REGS_D + 0]) = os9_word(theModule->_mh._mtylan);
-    retword(rp->regs[REGS_D + 1]) = os9_word(theModule->_mh._mattrev);
+    retword(rp->regs[REGS_D + 0]) = os9_word(module_host->_mh._mtylan);
+    retword(rp->regs[REGS_D + 1]) = os9_word(module_host->_mh._mattrev);
 
-    rp->regs[REGS_A + 0] = (ulong)p;
-    rp->regs[REGS_A + 2] = (ulong)theModule;
-    rp->regs[REGS_A + 1] = (ulong)theModule + os9_long(theModule->_mexec);
+    rp->regs[REGS_A + 0] = PTR + (uint32_t)(ret - ptr);
+    rp->regs[REGS_A + 2] = module.guest;
+    rp->regs[REGS_A + 1] = module.guest + os9_long(module_host->_mexec);
 
     return 0;
 }
@@ -1468,7 +1482,13 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
     process_typ *np;
 
     /* get module name */
-    rp->regs[REGS_A + 0] = (ulong)nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+    {
+        os9ptr p = rp->regs[REGS_A + 0];
+        char *ptr = get_pointer(p);
+        char *res = nullterm(mpath, ptr, OS9PATHLEN);
+
+        rp->regs[REGS_A + 0] = p + (uint32_t)(res - ptr);
+    }
 
     /* now fork */
     if (dummyfork) {
@@ -1481,7 +1501,7 @@ os9err OS9_F_Fork(regs_type *rp, ushort cpid)
         printf("%s ", mpath); /* show program name */
 
         /* --- scan and display parameters */
-        p = (char *)rp->regs[REGS_A + 1];
+        p = get_pointer(rp->regs[REGS_A + 1]);
         n = rp->regs[REGS_D + 2];
 
         while (n-- > 0) {
@@ -2000,16 +2020,24 @@ os9err OS9_F_PrsNam(regs_type *rp, _pid_)
  * variable substitution.
  */
 {
-    char  *p;
     ushort n;
 
-    p = (char *)rp->regs[REGS_A + 0];
+    os9ptr P = rp->regs[REGS_A + 0];
+    char  *p = get_pointer(P);
+
     debugprintf(dbgFiles, dbgDeep, ("# F$PrsNam: input string='%s'\n", p));
-    if (*p == '/')
-        rp->regs[REGS_A + 0] = (ulong)(++p); /* assign updated ptr to path element */
+
+    if (*p == '/') {
+        /* assign updated ptr to path element */
+        ++p;
+        ++P;
+        rp->regs[REGS_A + 0] = P;
+    }
+
     n = 0;                       /* pathlist size=0 */
     while (isalnum(*p) || *p == '.' || *p == '_' || *p == '$' || *p == '{' ||
            *p == '}') {
+        P++;
         p++;
         n++;
     }
@@ -2018,12 +2046,19 @@ os9err OS9_F_PrsNam(regs_type *rp, _pid_)
     debugprintf(dbgFiles,
                 dbgDeep,
                 ("# F$PrsNam: a0='%s', a1='%s', terminator='%c'\n",
-                 (char *)rp->regs[REGS_A + 0],
+                 get_pointer(rp->regs[REGS_A + 0]),
                  p,
                  *p));
-    rp->regs[REGS_A + 1]          = (ulong)p;          /* pointer to terminator */
-    retbyte(rp->regs[REGS_D + 0]) = (unsigned char)*p; /* terminator */
-    retword(rp->regs[REGS_D + 1]) = n;                 /* size of path element */
+
+    /* pointer to terminator */
+    rp->regs[REGS_A + 1] = P;
+
+    /* terminator */
+    retbyte(rp->regs[REGS_D + 0]) = (unsigned char)*p;
+
+    /* size of path element */
+    retword(rp->regs[REGS_D + 1]) = n;
+
     return 0;
 }
 

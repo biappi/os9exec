@@ -352,7 +352,7 @@ static void disp_line(ushort       pid,
     else {
         sprintf(idstr, "%c%d", pid == currentpid ? '*' : ' ', pid);
         sprintf(pidstr, "%d", os9_word(cp->pd._pid));
-        mod = get_module_ptr(cp->mid);
+        mod = get_module_ptr(cp->mid).host;
     }
 
     if (spP->lastwritten_pid == 0)

@@ -47,6 +47,8 @@
 #ifndef _os9_ll_h
 #define _os9_ll_h
 
+#include "memory.h"
+
 /* this is required to allow the use of original */
 /* "module.h" with its ulong definition on Linux */
 #undef __USE_MISC
@@ -155,12 +157,12 @@ typedef struct {
 /* traphandler description */
 typedef struct traphandler_typ_s {
     /* don't move these 2, they are used by low-level code */
-    ulong trapentry;
-    ulong trapmem;
+    os9ptr trapentry;
+    addrpair_typ trapmem;
 
     /* other entries are used by high-level code only */
-    ulong     trapmemsz;
-    mod_trap *trapmodule;
+    uint32_t     trapmemsz;
+    addrpair_typ trapmodule;
     ushort    mid;
     ushort    dummy;
 } traphandler_typ;
