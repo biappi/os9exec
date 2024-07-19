@@ -81,6 +81,9 @@ uint32_t max_mem(void);
 void  show_mem(ushort pid, Boolean mem_unused, Boolean mem_fulldisp);
 void  show_unused(void);
 
+addrpair_typ allocation_add(void *host, uint32_t size);
+void *allocation_find(os9ptr addr);
+
 addrpair_typ get_mem(uint32_t memsz);
 void         release_mem(addrpair_typ membase);
 void         free_mem(ushort pid); // release all memory of process

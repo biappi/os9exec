@@ -280,6 +280,56 @@ void free_mem(ushort pid)
         release_memblock(pid, k);
 }
 
+os9ptr TOP_OF_RAM = 0xface0000;
+
+#define allocation_data_capacity 0xff
+
+struct {
+    addrpair_typ addr;
+    uint32_t size;
+} allocation_data[allocation_data_capacity];
+
+int allocation_data_count;
+
+addrpair_typ allocation_add(void *host, uint32_t size)
+{
+    addrpair_typ addr;
+
+    addr.guest = TOP_OF_RAM;
+    addr.host = host;
+    TOP_OF_RAM += size;
+
+    allocation_data[allocation_data_count].addr = addr;
+    allocation_data[allocation_data_count].size = size;
+    allocation_data_count++;
+
+    return addr;
+}
+
+void* allocation_find(os9ptr addr)
+{
+    for (int i = 0; i < allocation_data_count; i++) {
+        if ((allocation_data[i].addr.guest <= addr) &&
+            (addr < (allocation_data[i].addr.guest + allocation_data[i].size)))
+        {
+            return allocation_data[i].addr.host + (addr - allocation_data[i].addr.guest);
+        }
+    }
+
+    printf("AIEE -- can't find allocation for guest ptr %08x\n", addr);
+
+    printf("\nallocations data (%d)\n\n", allocation_data_count);
+    printf("guest       host                size\n");
+    printf("-------------------------------------\n");
+    for (int i = 0; i < allocation_data_count; i++) {
+        printf("%08x    %p    %8x\n", allocation_data[i].addr.guest, allocation_data[i].addr.host, allocation_data[i].size);
+    }
+
+
+    _Exit(-1);
+    return NULL;
+}
+
 /* process independent part of memory allocation */
 addrpair_typ get_mem(uint32_t memsz)
 {
@@ -289,8 +339,18 @@ addrpair_typ get_mem(uint32_t memsz)
 
     addrpair_typ addr;
     addr.host  = calloc(sz, 1); /* get memory block, cleared to 0 */
-    addr.guest = (os9ptr)addr.host;
+    addr.guest = TOP_OF_RAM;
+    TOP_OF_RAM += sz;
 
+    if (allocation_data_count == allocation_data_capacity) {
+        printf("AIEE -- ran out of allocation data entries\n");
+        exit(-1);
+    }
+
+    allocation_data[allocation_data_count].addr = addr;
+    allocation_data[allocation_data_count].size = sz;
+    allocation_data_count++;
+    
     if (addr.host != NULL) {
         for (int k = 0; k < MAX_MEMALLOC; k++) {
             if (memtable[k].base.host == NULL) { /* search for a free segment */
@@ -305,6 +365,7 @@ addrpair_typ get_mem(uint32_t memsz)
                              "host: %p) "
                              "(size=%5u) %8d\n",
                              addr.guest,
+                             addr.host,
                              memsz,
                              totalMem));
                 return addr;
