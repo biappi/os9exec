@@ -291,18 +291,23 @@ struct {
 
 int allocation_data_count;
 
-addrpair_typ allocation_add(void *host, uint32_t size)
+addrpair_typ allocation_add_absolute(void *host, os9ptr guest, uint32_t size)
 {
     addrpair_typ addr;
-
-    addr.guest = TOP_OF_RAM;
     addr.host = host;
-    TOP_OF_RAM += size;
+    addr.guest = guest;
 
     allocation_data[allocation_data_count].addr = addr;
     allocation_data[allocation_data_count].size = size;
     allocation_data_count++;
 
+    return addr;
+}
+
+addrpair_typ allocation_add(void *host, uint32_t size)
+{
+    addrpair_typ addr = allocation_add_absolute(host, TOP_OF_RAM, size);
+    TOP_OF_RAM += size;
     return addr;
 }
 
