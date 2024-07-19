@@ -1112,6 +1112,39 @@ int m68k_disp= 0;
 
 ushort debugwait( void ); // WIL
 
+enum {
+    M68K_CPU_TYPE_INVALID,
+    M68K_CPU_TYPE_68000,
+    M68K_CPU_TYPE_68010,
+    M68K_CPU_TYPE_68EC020,
+    M68K_CPU_TYPE_68020,
+    M68K_CPU_TYPE_68EC030,
+    M68K_CPU_TYPE_68030,
+    M68K_CPU_TYPE_68EC040,
+    M68K_CPU_TYPE_68LC040,
+    M68K_CPU_TYPE_68040,
+    M68K_CPU_TYPE_SCC68070
+};
+
+unsigned int m68k_disassemble(char* str_buff, unsigned int pc, unsigned int cpu_type);
+
+static void musashi_disassemble() {
+    char disass[0x100];
+    m68k_disassemble(disass, regs.pc_p, M68K_CPU_TYPE_68020);
+
+    printf("%08x    %-40s", regs.pc_p, disass);
+
+    printf("D: ");
+    for (int i = 0; i < 8; i++)
+        printf("%08x ", regs.regs[REGS_D + i]);
+
+    printf("A: ");
+    for (int i = 0; i < 8; i++)
+        printf("%08x ", regs.regs[REGS_A + i]);
+
+    printf("\n");
+}
+
 // special emulator call, runs up to next os9_running=0 assignment
 unsigned long m68k_os9go(void)
 {

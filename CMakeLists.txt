@@ -47,6 +47,7 @@ add_executable(os9exec
     Source/OS9exec_core/vmod.c
     Source/OS9AppEmu/os9_uae.c
     Source/OS9AppEmu/luzstuff.c
+    Source/OS9AppEmu/m68kdasm.c
     Source/OS9AppEmu/UAE68emulator/cpudefs.c
     Source/OS9AppEmu/UAE68emulator/cpustbl.c
     Source/OS9AppEmu/UAE68emulator/newcpu.c
