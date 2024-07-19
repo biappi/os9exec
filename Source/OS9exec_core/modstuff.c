@@ -340,16 +340,20 @@ void Update_MDir(void)
     for (k = 0; k < MAXMODULES; k++) {
         en = &mdirField[k];
 
-        mod = os9mod(k).host;
-        ok  = (mod != NULL);
+        addrpair_typ module = os9mod(k);
+        ok  = (module.host != NULL);
         if (ok) {
             modK      = &os9modules[k];
             hiword(b) = (ushort)modK->linkcount;
 
-            en->m1 = os9_long((ulong)mod);
-            en->m2 = en->m1; /* %%% module groups not yet supported */
-            en->size =
-                mod->_mh._msize; /* big/little endian is already correct !!! */
+            en->m1 = os9_long(module.guest);
+
+            /* %%% module groups not yet supported */
+            en->m2 = en->m1;
+
+            /* big/little endian is already correct !!! */
+            en->size = mod->_mh._msize;
+
             en->lnk = os9_long(b);
         }
         else {

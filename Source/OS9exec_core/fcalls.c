@@ -353,7 +353,9 @@ os9err OS9_F_UnLink(regs_type *rp, _pid_)
  *             none possible
  */
 {
-    ushort mid = get_mid((void *)rp->regs[REGS_A + 2]);
+    void *ptr = get_pointer(rp->regs[REGS_A + 2]);
+    ushort mid = get_mid(ptr);
+    
     debugprintf(dbgModules,
                 dbgNorm,
                 ("# F$Unlink: Module at $%08lX has mid=%d%s\n",
@@ -1243,14 +1245,14 @@ os9err OS9_F_GModDr(regs_type *rp, _pid_)
  *
  */
 {
-    byte *b   = (byte *)rp->regs[REGS_A + 0];
-    ulong cnt = rp->regs[REGS_D + 1];
-    ulong mx  = sizeof(mdirField);
+    uint32_t b   = rp->regs[REGS_A + 0];
+    uint32_t cnt = rp->regs[REGS_D + 1];
+    uint32_t mx  = (uint32_t)sizeof(mdirField);
     if (cnt > mx)
         cnt = mx;
 
     Update_MDir();
-    MoveBlk(b, (byte *)&mdirField, cnt);
+    MoveBlk(get_pointer(b), (byte *)&mdirField, cnt);
 
     debugprintf(dbgProcess, dbgNorm, ("# F$GModDr: get module directory\n"));
 
@@ -1268,11 +1270,11 @@ os9err OS9_F_CpyMem(regs_type *rp, _pid_)
  *
  */
 {
-    byte *src = (byte *)rp->regs[REGS_A + 0];
-    byte *dst = (byte *)rp->regs[REGS_A + 1];
-    ulong cnt = (ulong)rp->regs[REGS_D + 1];
+    os9ptr   src = rp->regs[REGS_A + 0];
+    os9ptr   dst = rp->regs[REGS_A + 1];
+    uint32_t cnt = rp->regs[REGS_D + 1];
 
-    MoveBlk(dst, src, cnt);
+    MoveBlk(get_pointer(dst), get_pointer(src), cnt);
     debugprintf(
         dbgMemory,
         dbgDeep,

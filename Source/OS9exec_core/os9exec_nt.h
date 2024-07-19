@@ -560,10 +560,10 @@ typedef struct {
 
 /* a standard module directory entry */
 typedef struct {
-    ulong m1;
-    ulong m2;
-    ulong size;
-    ulong lnk;
+    uint32_t m1;
+    uint32_t m2;
+    uint32_t size;
+    uint32_t lnk;
 } mdir_entry;
 
 /* a error trap handler */

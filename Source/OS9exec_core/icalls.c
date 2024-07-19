@@ -450,10 +450,9 @@ os9err OS9_I_Read(regs_type *rp, ushort cpid)
  *             E$READ: attempt to read from path 0..2
  */
 {
-    char  *p;
     ushort path;
-    ulong  cnt;
-    os9err err;
+    uint32_t cnt;
+    os9err  err;
 
     if (debugcheck(dbgWarnings, dbgDetail)) {
         regcheck(cpid,
@@ -466,11 +465,11 @@ os9err OS9_I_Read(regs_type *rp, ushort cpid)
                  RCHK_DRU + RCHK_ARU + RCHK_MEM);
     }
 
-    p    = (char *)rp->regs[REGS_A + 0];
+    os9ptr buffer = rp->regs[REGS_A + 0];
     path = loword(rp->regs[REGS_D + 0]);
     cnt  = rp->regs[REGS_D + 1];
 
-    err = usrpath_read(cpid, path, &cnt, p, false);
+    err = usrpath_read(cpid, path, &cnt, get_pointer(buffer), false);
     if (err)
         return err;
     rp->regs[REGS_D + 1] = cnt; /* return # of chars actually read */
