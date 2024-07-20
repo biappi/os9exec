@@ -205,7 +205,7 @@ typedef struct {
 rbfdev_typ rbfdev[MAXRBFDEV];
 
 /* OS9exec builtin module, defined as constant array */
-const byte RAM_zero[] = {
+const byte RBF_RAM_zero[STD_SECTSIZE] = {
     0x00, 0x20, 0x00, 0x00, 0x04, 0x00, 0x00, 0x01,
     0x00, 0x00, 0x05, 0x00, 0x00, 0xbf, 0x00, 0x00, // . ...........?..
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1286,7 +1286,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
     if (dev->ramBase.host == NULL)
         return E_NORAM;
     memset(dev->ramBase.host, 0, dev->sctSize * dev->totScts); // clear all
-    memcpy(dev->ramBase.host, RAM_zero, dev->sctSize);
+    memcpy(dev->ramBase.host, RBF_RAM_zero, dev->sctSize);
 
     // f= allocClu*clu;
 

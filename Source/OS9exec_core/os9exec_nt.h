@@ -1259,6 +1259,9 @@ extern Boolean devIsReady; /* it is true by default or if char has been read */
 /* break the recursion loops variable */
 extern Boolean in_recursion;
 
+/* when fake-reading a device in raw mode, feed this as first sector */
+const byte RBF_RAM_zero[STD_SECTSIZE];
+
 /* global settings */
 extern int     dbgOut;
 extern ushort  dbgPath;

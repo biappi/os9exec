@@ -586,9 +586,8 @@ os9err pFopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *pathname)
     if (spP->rawMode) { /* rawmode allows only reading of 1st sector */
         spP->rw_sct = get_mem(STD_SECTSIZE); /* for some info procs */
         spP->rawPos = 0;
-        char *rwsect = (char *)&spP->rw_sct.host;
-        vn           = &rwsect[31];
-        VolInfo(pp, vn); /* this is the correct position */
+
+        memcpy(spP->rw_sct.host, RBF_RAM_zero, STD_SECTSIZE);
 
         return 0;
     }
