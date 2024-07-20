@@ -1109,7 +1109,7 @@ int m68k_os9trace=0;
 int m68k_disp= 1;
 
 static int instrcount = 0;
-const int dumpStateFromInstrCount = 860000;
+const int dumpStateFromInstrCount = 870000;
 
 
 #undef PROBLEM
@@ -1166,17 +1166,10 @@ unsigned long m68k_os9go(void)
     while (os9_running) {
 		uae_u32 opcode = GET_OPCODE;
 		(*cpufunctbl[opcode])(opcode);
-#if 0
 		if (m68k_disp) {
-//			int ghidra_offset = regs.pc_p - (uint32_t)regs.membase;
-//			printf("instrcount=%d ghidra=%08x membase=%08x\n", instrcount, ghidra_offset, regs.membase);
-			if (instrcount >= dumpStateFromInstrCount
-			|| ghidra_offset == 0xbe13c /* dump regs on MMALLOC entry */
-			) {
-				uaecptr n;
-				printf("\n");
-				m68k_dumpstate(&n,0);
-				printf("\n\n");
+			if (instrcount >= dumpStateFromInstrCount) {
+				int ghidra_offset = get_pointer(regs.pc_p) - get_pointer(regs.membase);
+				printf("instrcount=%d ghidra=%08x ", instrcount, ghidra_offset); musashi_disassemble();
 			}	
 		}
 		instrcount++;
@@ -1187,7 +1180,6 @@ unsigned long m68k_os9go(void)
 				printf("ExtraHalt:\n");
 			}
 		}
-#endif
     }
     in_m68k_go--;
     // make sure PC is updated
