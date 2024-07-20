@@ -2052,7 +2052,7 @@ void GetEntry(dirent_typ *dEnt, char *name, Boolean do_2e_conv)
     }
 
     while (true) {
-        q = strnstr(name, " ", DIRNAMSZ);
+        q = strstr(name, " ");
         if (q == NULL)
             break; /* replace " " by "_" */
         *q = '_';
