@@ -566,7 +566,7 @@ os9err OS9_F_STime(regs_type *rp, ushort cpid)
 os9err OS9_F_Event(regs_type *rp, ushort cpid)
 {
     os9err       err    = 0;
-    char        *p      = (char *)rp->regs[REGS_A + 0];
+    char        *p      = (char *)get_pointer(rp->regs[REGS_A + 0]);
     short        evCode = loword(rp->regs[REGS_D + 1]);
     process_typ *cp     = &procs[cpid];
 
