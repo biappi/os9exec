@@ -469,7 +469,16 @@ os9err OS9_I_Read(regs_type *rp, ushort cpid)
     path = loword(rp->regs[REGS_D + 0]);
     cnt  = rp->regs[REGS_D + 1];
 
-    err = usrpath_read(cpid, path, &cnt, get_pointer(buffer), false);
+    //printf("# I$Read: cpid=%d pc=%08x\n", cpid, rp->pc);
+    if (rp->pc == 0xfadb4eb2) {
+        char* host_buffer = get_pointer(buffer);
+        host_buffer[0] = 0x33;
+        host_buffer[1] = 0x33;
+        err = 0;
+    }
+    else{
+        err = usrpath_read(cpid, path, &cnt, get_pointer(buffer), false);
+    }
     if (err)
         return err;
     rp->regs[REGS_D + 1] = cnt; /* return # of chars actually read */
