@@ -83,6 +83,6 @@ add_executable(os9exec
 )
 
 target_compile_definitions(os9exec PUBLIC linux)
-target_link_libraries(os9exec m dl bsd)
+target_link_libraries(os9exec m dl)
 
 set_target_properties(os9exec PROPERTIES XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
