@@ -1417,8 +1417,7 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     if (pp.host == NULL)
         return os9error(E_NORAM); /* not enough memory */
 
-    addrpair_typ module = get_module_ptr(mid);
-    mod_exec *module_host = module.host;
+    mod_exec *module_host = pp.host;
     os9modules[mid].modulebase = pp; /* enter pointer in free table entry */
     os9modules[mid].isBuiltIn  = false;
 
@@ -1452,8 +1451,8 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     retword(rp->regs[REGS_D + 1]) = os9_word(module_host->_mh._mattrev);
 
     rp->regs[REGS_A + 0] = PTR + (uint32_t)(ret - ptr);
-    rp->regs[REGS_A + 2] = module.guest;
-    rp->regs[REGS_A + 1] = module.guest + os9_long(module_host->_mexec);
+    rp->regs[REGS_A + 2] = pp.guest;
+    rp->regs[REGS_A + 1] = pp.guest + os9_long(module_host->_mexec);
 
     return 0;
 }
