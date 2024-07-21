@@ -133,6 +133,7 @@
 #include "compiler.h"
 
 #include <ctype.h>
+#include <inttypes.h>
 
 /* debugging support */
 /* ================= */
@@ -191,7 +192,7 @@ Boolean out_of_mods(ulong addr)
 
 /* check for passing of bad register arguments */
 #ifndef NODEBUG
-void regcheck(ushort pid, char *nam, ulong reg, ushort mode)
+void regcheck(ushort pid, char *nam, uint32_t reg, ushort mode)
 {
     Boolean problem = false;
 
@@ -591,19 +592,20 @@ void dumpregs(ushort pid)
 }
 
 /* show memory */
-static void dumpmem(ulong *memptrP, int numlines)
+static void dumpmem(os9ptr *memptrP, int numlines)
 {
     int k, i;
 
     for (k = 0; k < numlines; k++) {
         uphe_printf("%08lX: ", *memptrP);
         for (i = 0; i < 16; i++) {
-            upe_printf("%02X ", *((byte *)(*memptrP + i)));
+            char *b = get_pointer(*memptrP + i);
+            upe_printf("%02X ", *b);
         }
         upe_printf(" ");
         for (i = 0; i < 16; i++) {
-            char c = *((byte *)(*memptrP + i));
-            upe_printf("%c", isprint(c) ? c : '.');
+            char *b = get_pointer(*memptrP + i);
+            upe_printf("%c", isprint(*b) ? *b : '.');
         }
         upe_printf("\n");
         (*memptrP) += 16;
@@ -619,8 +621,8 @@ static void regs_in_debugger(regs_type *rp)
 
 extern int m68k_os9trace;
 
-static ulong listbase = 0;
-static int   disasm   = 0;
+static os9ptr listbase = 0;
+static int    disasm   = 0;
 
 /* wait for debug confirmation */
 ushort debugwait(void)
@@ -751,7 +753,7 @@ ushort debugwait(void)
 
         /* %%% hacky */
         case 'i':
-            if (sscanf(&inp[1], "%lx", &listbase) < 1) {
+            if (sscanf(&inp[1], "%" SCNx32, &listbase) < 1) {
                 listbase = m68k_getpc();
             }
 
@@ -779,7 +781,7 @@ ushort debugwait(void)
 
 
         case 'l':
-            if (sscanf(&inp[1], "%lx", &listbase) < 1) {
+            if (sscanf(&inp[1], "%" SCNx32, &listbase) < 1) {
                 listbase = m68k_areg(regs, 7);
             }
             disasm = 0;

@@ -130,7 +130,7 @@ Boolean debugprintf(ushort mask, ushort level, char *format, ...);
         _debugprintf c;
 
 ushort debug_halt(ushort haltmask);
-void   regcheck(ushort pid, char *nam, ulong reg, ushort mode);
+void   regcheck(ushort pid, char *nam, uint32_t reg, ushort mode);
 void   trigcheck(char *msg, char *name);
 #endif
 
