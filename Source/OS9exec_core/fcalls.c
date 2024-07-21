@@ -649,7 +649,6 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
     return err;
 }
 
-os9err OS9_F_Julian(regs_type *rp, _pid_)
 /* F$Julian:
  * Input:   d0.l=current time (00hhmmss)
  *          d1.l=current date (yyyymmdd)
@@ -658,15 +657,18 @@ os9err OS9_F_Julian(regs_type *rp, _pid_)
  * Error:   Carry set
  *          d1.w = error
  */
+os9err OS9_F_Julian(regs_type *rp, _pid_)
 {
-    byte   tc[4];
-    ulong *tcp = (ulong *)&tc[0];
+    union {
+        uint8_t tc[4];
+        uint32_t tcp;
+    } t;
 
-    *tcp     = os9_long(rp->regs[REGS_D + 0]);                /* get time */
-    rp->regs[REGS_D + 0] = tc[1] * 3600 + tc[2] * 60 + tc[3]; /* seconds since midnight */
+    t.tcp = os9_long(rp->regs[REGS_D + 0]);                /* get time */
+    rp->regs[REGS_D + 0] = t.tc[1] * 3600 + t.tc[2] * 60 + t.tc[3]; /* seconds since midnight */
 
-    *tcp     = os9_long(rp->regs[REGS_D + 1]); /* get date */
-    rp->regs[REGS_D + 1] = j_date(tc[3], tc[2], hiword(rp->regs[REGS_D + 1]));
+    t.tcp     = os9_long(rp->regs[REGS_D + 1]); /* get date */
+    rp->regs[REGS_D + 1] = j_date(t.tc[3], t.tc[2], hiword(rp->regs[REGS_D + 1]));
 
     return 0;
 }
