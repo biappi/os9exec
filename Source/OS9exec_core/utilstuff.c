@@ -235,10 +235,10 @@
 
 #include <ctype.h>
 
-char *nullterm(char *s1, const char *s2, ushort max)
 /* create null terminated version of s2. All chars<=SPACE will terminate s2
  * returns updated pointer (first char after end of string)
  */
+char *nullterm(char *s1, const char *s2, ushort max)
 {
     char  *res = s1;
     ushort n   = 0;

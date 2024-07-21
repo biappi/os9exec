@@ -1680,13 +1680,17 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
     os9err       err;
     ushort       numpaths, k, grp, usr, prior, sp, sib;
     addrpair_typ paramptr;
-    ulong        paramsiz;
+    uint32_t     paramsiz;
 
     /* no error so far */
     err = 0;
 
     /* get module name */
-    rp->regs[REGS_A + 0] = (ulong)nullterm(mpath, (char *)rp->regs[REGS_A + 0], OS9PATHLEN);
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *src = get_pointer(PTR);
+    char *dst = nullterm(mpath, src, OS9PATHLEN);
+
+    rp->regs[REGS_A + 0] = PTR + (uint32_t)(dst - src);
     numpaths = loword(rp->regs[REGS_D + 3]);
 
     paramsiz = rp->regs[REGS_D + 2];
@@ -1696,7 +1700,7 @@ os9err OS9_F_Chain(regs_type *rp, ushort cpid)
         err = os9error(E_NORAM);
     if (!err) {
         /* save a copy of the parameter area */
-        MoveBlk(paramptr.host, (char *)rp->regs[REGS_A + 1], paramsiz);
+        MoveBlk(paramptr.host, get_pointer(rp->regs[REGS_A + 1]), paramsiz);
 
         /* user paths higher than numpaths must be closed */
         for (k = numpaths; k < MAXUSRPATHS; k++) {
