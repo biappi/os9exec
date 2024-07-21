@@ -1044,12 +1044,12 @@ static os9err load_module_local(ushort  pid,
 
         if (linkstyle && modBase != NULL) {
             if (modBase == No_Module)
-                modBase = 0x2badf00d;
+                modBase = OS9exec_ptr;
 
             theModuleP = modBase;
-            theModulePP.host  = modBase;
-            theModulePP.guest = (os9ptr)modBase;
-            dsize             = os9_long(theModuleP->_mh._msize);
+            dsize      = os9_long(theModuleP->_mh._msize);
+
+            theModulePP = allocation_add(modBase, dsize);
             isBuiltIn  = true;
             break; /* found */
         }
@@ -1135,7 +1135,7 @@ static os9err load_module_local(ushort  pid,
 
         streamload:
             fseek(stream, 0, SEEK_END);   /* go to EOF */
-            dsize = (ulong)ftell(stream); /* get position now = file size */
+            dsize = (uint32_t)ftell(stream); /* get position now = file size */
             fseek(stream, 0, SEEK_SET);   /* back to beginning */
 
             /* allocate memory for the module */
@@ -1395,12 +1395,12 @@ os9err load_OS9Boot(ushort pid)
     char   name[OS9PATHLEN];
 
     byte    sect0[256];
-    ulong   size = sizeof(sect0);
-    ulong  *lp;
-    ushort *sp;
-    ushort *sc;
-    ulong   pos, siz, scs;
-    ushort  mid;
+    uint32_t  size = sizeof(sect0);
+    uint32_t *lp;
+    uint16_t *sp;
+    uint16_t *sc;
+    uint32_t  pos, siz, scs;
+    uint16_t  mid;
 
     process_typ *cp = &procs[pid];
     syspath_typ *spP;
@@ -1418,9 +1418,9 @@ os9err load_OS9Boot(ushort pid)
         if (err)
             break;
 
-        lp  = (ulong *)&sect0[0x15];
+        lp  = (void *)&sect0[0x15];
         pos = os9_long(*lp) >> BpB;
-        sp  = (ushort *)&sect0[0x18];
+        sp  = (void *)&sect0[0x18];
         siz = os9_word(*sp);
         sc  = (ushort *)&sect0[0x68];
         scs = os9_word(*sc);
