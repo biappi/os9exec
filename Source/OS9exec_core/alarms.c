@@ -60,6 +60,35 @@
 /* ======== */
 #include "os9exec_incl.h"
 
+#define alarms_capacity 0xff
+
+struct {
+    alarm_typ *aa;
+} alarms_all[alarms_capacity];
+
+int alarms_curr = 0;
+
+alarm_typ *alarm_from_id(uint32_t id)
+{
+    if (id > alarms_curr)
+        return NULL;
+    return alarms_all[id].aa;
+}
+
+void alarm_clear(uint32_t id)
+{
+    if (id > alarms_curr)
+        return;
+    alarms_all[id].aa = NULL;
+}
+
+void alarm_clear_from_ptr(alarm_typ *ptr)
+{
+    for (int i = 0; i < alarms_curr; i++)
+        if (alarms_all[i].aa == ptr)
+            alarms_all[i].aa = NULL;
+}
+
 /* OS-9 alarm routines */
 /* =================== */
 
@@ -106,6 +135,7 @@ void A_Remove(alarm_typ *aa)
         if (q != NULL && q == aa) {
             q->pid = 0;
             fnd    = true;
+            alarm_clear_from_ptr(q);
         }
 
         if (fnd)
@@ -140,16 +170,21 @@ A_Make(ushort pid, uint32_t *aId, uint16_t aCode, uint32_t aTicks, Boolean cycli
     alarm_typ *aa;
     if (*aId != 0)
         return E_BPADDR;
+    if (alarms_curr == alarms_capacity)
+        return E_NORAM;
     aa = A_GetNew(pid);
     if (aa == NULL)
         return E_NORAM;
+
     aa->signal = aCode;
     aa->ticks  = aTicks;
     aa->due    = aTicks + GetSystemTick();
     aa->cyclic = cyclic;
 
     A_Insert(aa);
-    *aId = aa;
+    alarms_all[alarms_curr].aa = aa;
+    *aId                       = alarms_curr;
+    alarms_curr++;
     return 0;
 }
 
@@ -170,16 +205,18 @@ void A_Kill(ushort pid)
 
 /* ------------------------------------------------------------------ */
 
-static os9err Alarm_Delete(_pid_, ulong aId)
 /* A$Delete call: 0 */
+static os9err Alarm_Delete(_pid_, uint32_t aId)
 {
+    alarm_typ *ptr = alarm_from_id(aId);
     alarm_typ *aa;
     int        k;
 
     for (k = 0; k < MAXALARMS; k++) {
         aa = &alarms[k];
-        if (aa != NULL && aa == (alarm_typ *)aId) {
+        if (aa != NULL && aa == ptr) {
             A_Remove(aa);
+            alarm_clear(aId);
             return 0;
         }
     }
