@@ -141,8 +141,8 @@ void Get_Time(uint32_t *cTime,
 
 ulong GetScreen(char mode);
 
-ulong Min(ulong a, ulong b);
-ulong Max(ulong a, ulong b);
+uint32_t Min(uint32_t a, uint32_t b);
+uint32_t Max(uint32_t a, uint32_t b);
 
 char *StrBlk_Pt(char *s, int n);
 

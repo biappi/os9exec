@@ -212,8 +212,8 @@ os9err pFready(ushort pid, syspath_typ *, uint32_t *n);
 os9err pHgetFD(ushort pid, syspath_typ *, uint32_t *maxbytP, byte *buffer);
 os9err pHgetFDInf(ushort pid,
                   syspath_typ *,
-                  ulong *maxbytP,
-                  ulong *fdinf,
+                  uint32_t *maxbytP,
+                  uint32_t *fdinf,
                   byte  *buffer);
 
 os9err pFsetsz(ushort pid, syspath_typ *, uint32_t *sizeP);
@@ -1171,7 +1171,7 @@ os9err pHsetFD(_pid_, syspath_typ *spP, byte *buffer)
 
 /* get file descriptor for file specified by "sector" */
 os9err
-pHgetFDInf(_pid_, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer)
+pHgetFDInf(_pid_, syspath_typ *spP, uint32_t *maxbytP, uint32_t *fdinf, byte *buffer)
 {
     void  *fdl;
     os9err err = 0;

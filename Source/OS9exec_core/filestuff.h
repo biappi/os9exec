@@ -134,8 +134,8 @@ os9err
 syspath_read(ushort pid, ushort sp, uint32_t *len, void *buffer, Boolean rdln);
 os9err
 usrpath_read(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean rdln);
-os9err syspath_seek(ushort pid, ushort sp, ulong pos);
-os9err usrpath_seek(ushort pid, ushort up, ulong pos);
+os9err syspath_seek(ushort pid, ushort sp, uint32_t pos);
+os9err usrpath_seek(ushort pid, ushort up, uint32_t pos);
 
 os9err syspath_getstat(ushort pid,
                        ushort sp,

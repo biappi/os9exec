@@ -109,7 +109,7 @@ os9err pPopt(ushort pid, syspath_typ *, byte *buffer);
 os9err pPeof(ushort pid, syspath_typ *);
 os9err pPready(ushort pid, syspath_typ *, uint32_t *n);
 os9err
-pPFDInf(ushort pid, syspath_typ *, ulong *maxbytP, ulong *fdinf, byte *buffer);
+pPFDInf(ushort pid, syspath_typ *, uint32_t *maxbytP, uint32_t *fdinf, byte *buffer);
 os9err pPsetsz(ushort pid, syspath_typ *, uint32_t *sizeP);
 
 /* --- ptys */
@@ -1016,7 +1016,7 @@ os9err pPready(ushort pid, syspath_typ *spP, uint32_t *n)
     return os9error(E_NOTRDY);
 }
 
-os9err pPFDInf(_pid_, _spP_, ulong *maxbytP, ulong *fdinf, byte *buffer)
+os9err pPFDInf(_pid_, _spP_, uint32_t *maxbytP, uint32_t *fdinf, byte *buffer)
 {
 #define FDS 16
     byte          fdbeg[FDS]; /* buffer for preparing FD */

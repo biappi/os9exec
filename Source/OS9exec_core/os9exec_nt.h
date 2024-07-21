@@ -749,16 +749,16 @@ typedef struct {
 
 /* variant for RBF objects */
 typedef struct {
-    ulong   devnr;        // current device number
+    uint32_t devnr;        // current device number
     byte    att;          // file's atttributes
-    ulong   currPos;      // current file position
-    ulong   lastPos;      // current file last position (seek<end)
+    uint32_t currPos;      // current file position
+    uint32_t lastPos;      // current file last position (seek<end)
     Boolean wMode;        // opened in write mode
     Boolean flushFDCache; // flush FD cache
-    ushort  diskID;       // disk ID for comparison reasons
-    ulong   fd_nr;        // current FD logical sector number
-    ulong   fddir;        // current FD logical sector of the dir
-    ulong   deptr;        // dir entry ptr
+    uint16_t diskID;       // disk ID for comparison reasons
+    uint32_t fd_nr;        // current FD logical sector number
+    uint32_t fddir;        // current FD logical sector of the dir
+    uint32_t deptr;        // dir entry ptr
 } rbf_typ;
 
 /* variant for SCF objects */
@@ -842,8 +842,8 @@ typedef struct {
 
     addrpair_typ fd_sct;     /* FD  sector buffer */
     addrpair_typ rw_sct;     /* R/W sector buffer */
-    ulong        rw_nr;      /* current R/W sector nr */
-    ulong        mustW;      /* current sector to be written */
+    uint32_t     rw_nr;      /* current R/W sector nr */
+    uint32_t     mustW;      /* current sector to be written */
     Boolean      fullsearch; /* recursive mode for "babushka" */
 
     // %%%luz: many of these should be in the union below...
@@ -891,8 +891,8 @@ typedef struct {
     os9err (*_SS_EOF)(ushort pid, syspath_typ *spP);
     os9err (*_SS_Ready)(ushort pid, syspath_typ *spP, uint32_t *n);
     os9err (*_SS_FD)(ushort pid, syspath_typ *spP, uint32_t *maxbytP, byte *buffer);
-    os9err (*_SS_FDInf)(ushort pid, syspath_typ *spP, ulong *maxbytP, ulong *fdinf, byte *buffer);
-    os9err (*_SS_DSize)(ushort pid, syspath_typ *spP, ulong *size, uint32_t *dtype);
+    os9err (*_SS_FDInf)(ushort pid, syspath_typ *spP, uint32_t *maxbytP, uint32_t *fdinf, byte *buffer);
+    os9err (*_SS_DSize)(ushort pid, syspath_typ *spP, uint32_t *size, uint32_t *dtype);
 
     /* network specific function */
     os9err (*_SS_PCmd)(ushort pid, syspath_typ *spP, ulong *a0);
@@ -991,8 +991,8 @@ typedef struct {      /* saved structure during read */
 
 typedef struct {
     ptype_typ type;             /* current dir's device type */
-    ushort    dev;              /* RBF: device */
-    ulong     lsn;              /* RBF: current lsn */
+    uint16_t  dev;              /* RBF: device */
+    uint32_t  lsn;              /* RBF: current lsn */
     char      path[OS9PATHLEN]; /* current dir path */
 
 } dir_type;
@@ -1112,8 +1112,8 @@ typedef struct {
     ushort usrpaths[MAXUSRPATHS]; /* system path number of user paths */
 
     /* create init size */
-    ushort fileAtt;      /* here because I$Create is not able */
-    ulong  cre_initsize; /* to call with these params */
+    uint16_t fileAtt;      /* here because I$Create is not able */
+    uint32_t cre_initsize; /* to call with these params */
 
     dir_type d; /* current      directory */
     dir_type x; /* current exec directory */

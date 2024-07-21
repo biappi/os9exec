@@ -685,8 +685,8 @@ ulong GetScreen(char mode)
 
 /* ------------------------------------------------------------------------ */
 
-ulong Min(ulong a, ulong b)
 /* returns the smaller of two ulongs */
+uint32_t Min(uint32_t a, uint32_t b)
 {
     if (a < b)
         return a;
@@ -694,8 +694,8 @@ ulong Min(ulong a, ulong b)
         return b;
 }
 
-ulong Max(ulong a, ulong b)
 /* returns the larger of two ulongs */
+uint32_t Max(uint32_t a, uint32_t b)
 {
     if (a > b)
         return a;

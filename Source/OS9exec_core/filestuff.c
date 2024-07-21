@@ -1427,7 +1427,7 @@ usrpath_write(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean wrln)
 /* print to user path */
 static void usrpath_puts(ushort pid, ushort up, char *s, Boolean direct)
 {
-    ulong        n, c, base;
+    uint32_t     n, c, base;
     ushort       sp;
     int          ii;
     char        *b;
@@ -1443,7 +1443,7 @@ static void usrpath_puts(ushort pid, ushort up, char *s, Boolean direct)
         ii++;
     }
 
-    n = strlen(s);
+    n = (uint32_t)strlen(s);
 
     in_recursion = true; /* break recursion loop */
     base         = 0;
@@ -1599,8 +1599,8 @@ usrpath_read(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean rdln)
     return syspath_read(pid, procs[pid].usrpaths[up], len, buffer, rdln);
 }
 
-os9err syspath_seek(ushort pid, ushort spnum, ulong pos)
 /* seek from a syspath */
+os9err syspath_seek(ushort pid, ushort spnum, uint32_t pos)
 {
     syspath_typ *spP = get_syspathd(pid, spnum);
     if (spP == NULL)
@@ -1609,7 +1609,7 @@ os9err syspath_seek(ushort pid, ushort spnum, ulong pos)
     return (fmgr_op[spP->type]->seek)(pid, spP, &pos);
 }
 
-os9err usrpath_seek(ushort pid, ushort up, ulong pos)
+os9err usrpath_seek(ushort pid, ushort up, uint32_t pos)
 /* read from a usrpath */
 {
     if (up >= MAXUSRPATHS)
@@ -1791,7 +1791,7 @@ os9err syspath_setstat(ushort pid,
     fmgr_typ *f;
     ss_typ   *s;
     byte    **a;
-    ulong     n;
+    uint32_t  n;
 
     syspath_typ *spP = get_syspathd(pid, path);
     if (spP == NULL)
@@ -1986,8 +1986,7 @@ os9err get_locations(ushort      pid,
         return err;
 
     /* do it the same way as the OS-9 rename */
-    a0  = (ulong)opt_buff;
-    err = usrpath_getstat(pid, path, SS_Opt, &a0, NULL, NULL, NULL, NULL);
+    err = usrpath_getstat(pid, path, SS_Opt, (void *)&opt_buff, NULL, NULL, NULL, NULL);
     if (err)
         return err;
 
