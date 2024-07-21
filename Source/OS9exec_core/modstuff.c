@@ -324,27 +324,30 @@ addrpair_typ os9mod(int k)
     return os9modules[k].modulebase;
 }
 
+/* get the module's name */
 char *Mod_Name(mod_exec *mod)
-/* get the module's name */ { return (char *)mod + os9_long(mod->_mh._mname); }
-
-void Update_MDir(void)
-/* Update the image of the module directory structure */
 {
-    ulong       b;
-    int         k;
-    mod_exec   *mod;
+    return (char *)mod + os9_long(mod->_mh._mname);
+}
+
+/* Update the image of the module directory structure */
+void Update_MDir(void)
+{
+    uint32_t    b;
     module_typ *modK;
     Boolean     ok;
     mdir_entry *en;
 
-    for (k = 0; k < MAXMODULES; k++) {
+    for (int k = 0; k < MAXMODULES; k++) {
         en = &mdirField[k];
 
         addrpair_typ module = os9mod(k);
+        mod_exec    *module_host = module.host;
+
         ok  = (module.host != NULL);
         if (ok) {
             modK      = &os9modules[k];
-            hiword(b) = (ushort)modK->linkcount;
+            hiword(b) = (uint16_t)modK->linkcount;
 
             en->m1 = os9_long(module.guest);
 
@@ -352,7 +355,7 @@ void Update_MDir(void)
             en->m2 = en->m1;
 
             /* big/little endian is already correct !!! */
-            en->size = mod->_mh._msize;
+            en->size = module_host->_mh._msize;
 
             en->lnk = os9_long(b);
         }
