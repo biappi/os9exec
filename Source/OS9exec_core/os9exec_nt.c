@@ -421,7 +421,7 @@
 
 /* the "module directory" */
 module_typ os9modules[MAXMODULES];
-mod_exec  *init_module;
+addrpair_typ init_module;
 uint32_t   totalMem;
 mdir_entry mdirField[MAXMODULES];
 

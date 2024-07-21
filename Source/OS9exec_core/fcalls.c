@@ -1070,7 +1070,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     ulong        b    = (ulong)&mdirField;
     process_typ *cp   = &procs[cpid];
 
-    ulong  v;
+    uint32_t  v;
     ulong *ptr;
     int    k;
 
@@ -1079,36 +1079,32 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         v = MODSYNC;
         break;
     case D_Init:
-        v = (ulong)init_module;
+        v = init_module.guest;
         break;
     case D_TckSec:
         v = TICKS_PER_SEC;
         break;
 
     case D_68881:
-#if defined powerc && !defined MACOSX
-        /* Gestalt( gestaltFPUType,         &v ); not all defs visible for MPW
-         * ... */
-        Gestalt(FOUR_CHAR_CODE('fpu '), &v);
-        if (v == 3)
-            v = 1; /* this value is handled differently on Mac */
-#else
-        v = 0; /* FPU not yet supported */
-#endif
-
         v = 1;   /* still some problems ? */
         break;
 
     case D_ModDir:
-        v = b;
+        // WIL: shared buffers between host and guest?!
+        // v = b;
+        v = 0x3deadbeef;
         Update_MDir();
         break;
     case D_ModDir_L:
-        v = b + sizeof(mdirField);
+        // WIL: shared buffers between host and guest?!
+        // v = b + sizeof(mdirField);
+        v = 0x2deadbeef;
         Update_MDir();
         break;
     case D_PrcDBT:
-        v = (ulong)prDBT;
+        // WIL: shared buffers between host and guest?!
+        // v = (ulong)prDBT;
+        v = 0x1deadbeef;
 
         ptr = &prDBT[1]; /* start with process nr 1 */
         for (k = 1; k < MAXPROCESSES; k++) {
@@ -1123,7 +1119,9 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         break; /* prc table image  */
 
     case D_PthDBT:
-        v = (ulong)syspth;
+        // WIL: shared buffers between host and guest?!
+        //v = (ulong)syspth;
+        v = 0x0deadbeef;
         break; /* pth table image  */
     case D_Ticks:
         v = GetSystemTick();
@@ -1144,7 +1142,9 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         v = OS9MINSYSALLOC;
         break; /* as on real OS-9 systems */
     case D_DevTbl:
-        v = (ulong)&devs;
+        // WIL: shared buffers between host and guest?!
+        // v = (ulong)&devs;
+        v = 0x4deadbeef;
         break; /* I/O device table ptr */
 
     case D_MPUTyp:
@@ -1230,7 +1230,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         v = userOpt;
         break; // -u option of OS9exec
     case D_IPAddr:
-        v = (ulong)g_ipAddr;
+        v = g_ipAddr;
         break; // -g option of OS9exec, no os9_long needed here
 
     default:

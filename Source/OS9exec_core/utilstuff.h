@@ -139,7 +139,7 @@ void Get_Time(uint32_t *cTime,
               Boolean asGregorian,
               Boolean withTicks);
 
-ulong GetScreen(char mode);
+uint32_t GetScreen(char mode);
 
 uint32_t Min(uint32_t a, uint32_t b);
 uint32_t Max(uint32_t a, uint32_t b);

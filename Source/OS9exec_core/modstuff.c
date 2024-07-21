@@ -515,7 +515,8 @@ void init_modules()
     }
 
     /* special treatement for init module */
-    init_module = NULL;
+    init_module.host = NULL;
+    init_module.guest = 0;
 }
 
 /* release a module by ID */
@@ -556,8 +557,10 @@ void release_module(ushort mid, Boolean modOK)
         }
 
         /* special treatment for 'init' module: disconnect at the globals */
-        if (ustrcmp(pNam, "init") == 0)
-            init_module = NULL;
+        if (ustrcmp(pNam, "init") == 0) {
+            init_module.host = NULL;
+            init_module.guest = 0;
+        }
     }
 
     if (!os9modules[mid].isBuiltIn)
@@ -644,10 +647,11 @@ int NextFreeModuleId(char *name)
     return k;
 }
 
-static void adapt_init(mod_exec *mh)
 /* special treatment for the "init" module: set version+revision */
 /* and connect it to the globals */
+static void adapt_init(addrpair_typ module)
 {
+    mod_exec *mh = module.host;
     byte   *bp;
     char   *nm;
     ushort *sp;
@@ -669,7 +673,7 @@ static void adapt_init(mod_exec *mh)
     sp = (ushort *)bp;
     nm = (char *)mh + os9_word(*sp);
     strcpy(nm, sw_name);
-    init_module = mh;
+    init_module = module;
     mod_crc(mh);
 }
 
@@ -1283,7 +1287,7 @@ static os9err load_module_local(ushort  pid,
         }
 
         if (ustrcmp(realmodname, "init") == 0)
-            adapt_init(theModuleP);
+            adapt_init(theModulePP);
         if (ustrcmp(realmodname, "le0") == 0)
             adapt_le0(theModuleP, my_inetaddr);
         if (ustrcmp(realmodname, "inetdb") == 0)

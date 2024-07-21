@@ -1167,7 +1167,7 @@ extern ushort currentpid;
 
 /* the "module directory" */
 extern module_typ os9modules[MAXMODULES];
-extern mod_exec  *init_module;
+extern addrpair_typ  init_module;
 extern uint32_t   totalMem;
 extern mdir_entry mdirField[MAXMODULES];
 

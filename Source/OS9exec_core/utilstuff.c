@@ -666,8 +666,8 @@ tc[3]= tim.tm_sec;
     *dayOfWk = tim.tm_wday; /* day of week, 0=sunday, 1=monday... */
 }
 
-ulong GetScreen(char mode)
 /* Get screen dimensions: 'w'=width, 'h'=height */
+uint32_t GetScreen(char mode)
 {
     int r = 0; // no information, return zero (full screen)
 
@@ -680,7 +680,7 @@ ulong GetScreen(char mode)
         break; /* return height */
     }
 
-    return (ulong)r;
+    return r;
 }
 
 /* ------------------------------------------------------------------------ */
