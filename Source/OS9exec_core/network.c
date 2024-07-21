@@ -396,7 +396,7 @@ os9err pNclose(_pid_, syspath_typ *spP)
 
 static os9err netRead(ushort       pid,
                       syspath_typ *spP,
-                      ulong       *lenP,
+                      uint32_t    *lenP,
                       void     *buffer,
                       Boolean      lnmode)
 {
@@ -798,12 +798,12 @@ os9err pNaccept(ushort pid, syspath_typ *spP, uint32_t *d1)
     return err;
 }
 
-os9err pNrecv(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info will be received */
+os9err pNrecv(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 {
     os9err err;
-    ulong  lenB = 2;
-    ulong  len  = *d2;
+    uint32_t lenB = 2;
+    uint32_t len  = *d2;
     ushort n; /* the length fill be filled in here */
 
     err = netRead(pid, spP, &lenB, (uint8_t *)&n, false);
@@ -814,12 +814,12 @@ os9err pNrecv(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t 
     return err;
 }
 
-os9err pNsend(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 /* for TCP protocol, 2 additional bytes with length info must be sent */
+os9err pNsend(ushort pid, syspath_typ *spP, uint32_t *d1, uint32_t *d2, uint8_t *a0)
 {
     os9err err;
-    ulong  lenB = 2;
-    ulong  len  = *d2;
+    uint32_t lenB = 2;
+    uint32_t len  = *d2;
     ushort n    = os9_word((ushort)len);
 
     err = netWrite(pid, spP, &lenB, &n, false);
@@ -1098,7 +1098,7 @@ os9err pNask(ushort pid, syspath_typ *spP)
 {
     net_typ *net = &spP->u.net;
     os9err   sig, err;
-    ulong    n;
+    uint32_t n;
     Boolean  ok;
 
 #ifndef NET_SUPPORT
