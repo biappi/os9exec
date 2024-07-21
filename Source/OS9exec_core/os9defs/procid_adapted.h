@@ -80,8 +80,8 @@ typedef struct pdsc {
 #define ES_FPUCALM040 0x04      /* 68040 fpu exception calmed */
     unsigned short _deadlk,     /* dominant process id if I/O locked */
         _signal;                /* signal code */
-    unsigned char *_sigvec,     /* signal intercept vector */
-        *_sigdat;               /* signal intercept data address */
+    uint32_t _sigvec,     /* signal intercept vector */
+        _sigdat;               /* signal intercept data address */
     struct pdsc *_queueN,       /* queue next ptr */
         *_queueP;               /* queue prev ptr */
     mod_exec      *_pmodul;     /* primary module */

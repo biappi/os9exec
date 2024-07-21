@@ -768,9 +768,12 @@ os9err OS9_F_Icpt(regs_type *rp, ushort cpid)
 {
     process_typ *cp = &procs[cpid];
 
-    cp->pd._sigvec =
-        (byte *)os9_long(rp->regs[REGS_A + 0]); /* set address of intercept routine */
-    cp->icpta6 = rp->regs[REGS_A + 6];          /* set data pointer for intercept routine */
+    /* set address of intercept routine */
+    cp->pd._sigvec = os9_long(rp->regs[REGS_A + 0]);
+
+    /* set data pointer for intercept routine */
+    cp->icpta6 = rp->regs[REGS_A + 6];
+
     debugprintf(dbgProcess,
                 dbgNorm,
                 ("# F$Icpt: set intercept of pid=%d to pc=$%08lx, a6=$%08lx\n",
@@ -794,7 +797,7 @@ os9err OS9_F_RTE(_rp_, ushort cpid)
     process_typ *cp  = &procs[cpid];
     save_type   *svd;
     short        pds;
-    ulong        syt;
+    uint32_t     syt;
 
     if (cp->pd._signal == 0) {
         /* fatal: kill process */
@@ -996,7 +999,7 @@ os9err OS9_F_GBlkMp(regs_type *rp, _pid_)
  *          d1.w = error
  */
 {
-    ulong **b, memsz;
+    uint32_t *b, memsz;
 
     //  #ifdef powerc
     //  Gestalt( gestaltPhysicalRAMSize, &totalMem ); /* not all defs visible
@@ -1010,11 +1013,12 @@ os9err OS9_F_GBlkMp(regs_type *rp, _pid_)
     memsz = max_mem();
     if (memsz > totalMem)
         totalMem = memsz;
+
     rp->regs[REGS_D + 2] = totalMem;
     rp->regs[REGS_D + 3] = memsz;
 
-    b  = (ulong **)rp->regs[REGS_A + 0];
-    *b = NULL; /* no segments available */
+    b  = get_pointer(rp->regs[REGS_A + 0]);
+    *b = 0; /* no segments available */
     return 0;
 }
 
@@ -1398,8 +1402,8 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
 {
     char   mpath[OS9PATHLEN], *p;
     ushort mid;
-    ulong  size, namsize, msz, xpos, npos, usz;
-    ulong *k;
+    uint32_t size, namsize, msz, xpos, npos;
+    uint32_t *k;
     ushort hpar;
     short  access, tylan, attrev;
 
@@ -1423,7 +1427,7 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     if (mid >= MAXMODULES)
         return os9error(E_DIRFUL); /* module directory is full */
 
-    namsize = strlen(mpath) + 1;
+    namsize = (uint32_t)strlen(mpath) + 1;
     if (namsize & 1)
         namsize++; /* align needed */
     msz = DatMod_Size(namsize, size);
@@ -1441,15 +1445,24 @@ os9err OS9_F_DatMod(regs_type *rp, _pid_)
     attrev = loword(rp->regs[REGS_D + 1]);
 
     FillTemplate(module_host, access, tylan, attrev); /* fill module body */
-    xpos = (ulong)&module_host->_mexcpt;
-    usz  = (ulong)module_host + msz;
 
-    for (k = (ulong *)xpos; k < (ulong *)usz; k++)
-        *k = 0; /* clear data area */
+    {
+        int32_t *start = &module_host->_mexcpt;
+        int32_t *end  = (int32_t *)((uint8_t *)module_host + msz);
 
-    xpos = (ulong)((char *)xpos -
-                   (char *)module_host); /* now calculated as offset */
-    npos = (ulong)((char *)msz - sizeof(ulong) - (char *)namsize);
+        /* clear data area */
+        for (int32_t *k = start; k < end; k++)
+            *k = 0;
+    }
+
+
+    /* now calculated as offset */
+
+    uint8_t *mod_host = (uint8_t *)mod_host;
+    uint8_t *mod_host_mexcpt = (uint8_t *)&module_host->_mexcpt;
+
+    xpos = (uint32_t)(mod_host_mexcpt - mod_host);
+    npos = msz - sizeof(uint32_t) - namsize;
 
     module_host->_mexec     = os9_long(xpos); /* right behind the header */
     module_host->_mh._msize = os9_long(msz);  /* data area size */

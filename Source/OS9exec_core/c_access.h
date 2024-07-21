@@ -122,7 +122,7 @@ extern callback_typ *cbP;
 typedef struct {
     ushort       *pid;
     addrpair_typ  modBase;
-    void         *os9_args;
+    os9ptr        os9_args;
     callback_typ *cbP;
 } nativeinfo_typ;
 

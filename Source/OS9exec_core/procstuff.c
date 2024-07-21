@@ -375,7 +375,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
     ushort       npid, k;
     process_typ *cp, *pap;
     int          dayOfWk, currentTick;
-    ulong        timbeg, datbeg;
+    uint32_t     timbeg, datbeg;
 
     /* --- find empty process descriptor */
     debugprintf(dbgProcess,
@@ -403,7 +403,7 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                 cp->os9regs.pc   = 0xCCCCCCCC;
             }
             /* make sure that ISP ist ready for exception stack frames */
-            cp->os9regs.isp = (ulong)&trapframebuf[TRAPFRAMEBUFLEN];
+            cp->os9regs.isp = &trapframebuf[TRAPFRAMEBUFLEN];
 
             /* there was no last systemcall */
             cp->func        = STARTCALL;
@@ -907,7 +907,7 @@ os9err send_signal(ushort spid, ushort signal)
                 currentpid      = spid;
                 sigp->masklevel = 1;
                 debug_return(&sigp->os9regs, spid, true);
-                err = sigp->plugElem->call_Intercept((void *)sigp->os9regs.pc,
+                err = sigp->plugElem->call_Intercept(sigp->os9regs.pc,
                                                      signal,
                                                      sigp->icpta6);
 
@@ -1543,8 +1543,8 @@ os9err prepFork(ushort   newpid,
     p2          = (uint8_t *)base_pointer.host + memsiz - paramsiz;
     cp->my_args = base_pointer.guest + memsiz - paramsiz; /* parameter area start */
 
-    regcheck(newpid, "Param writing start", (ulong)p2, RCHK_MEM);
-    regcheck(newpid, "Param writing end", (ulong)p2 + paramsiz - 1, RCHK_MEM);
+    regcheck(newpid, "Param writing start", cp->my_args, RCHK_MEM);
+    regcheck(newpid, "Param writing end", cp->my_args + paramsiz - 1, RCHK_MEM);
     for (cnt = 0; cnt < paramsiz; cnt++)
         *(p2++) = *(p++);
 

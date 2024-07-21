@@ -1047,7 +1047,7 @@ typedef struct {
 typedef int (*Next_NativeProg_Typ)(int *i, char *progName, char *callMode);
 typedef int (*Is_NativeProg_Typ)(const char *progName, void **modBase);
 typedef os9err (*Start_NativeProg_Typ)(const char *progName, void *nativeinfo);
-typedef os9err (*Call_Intercept_Typ)(void *routine, short code, ulong ptr);
+typedef os9err (*Call_Intercept_Typ)(uint32_t routine, short code, uint32_t ptr);
 
 // The plugin element
 typedef struct {
@@ -1131,13 +1131,13 @@ typedef struct {
 
     int     masklevel;
     Boolean pwr_brk; /* pWaitRead break for signals <= 32 */
-    ulong   icpta6;  /* value to pass in A6 to intercept routine */
+    uint32_t icpta6;  /* value to pass in A6 to intercept routine */
 
     Boolean way_to_icpt; /* is true on the way to icpt */
     ushort  icpt_pid,    /* keep pid and signal save */
         icpt_signal;
 
-    ulong wakeUpTick;
+    uint32_t wakeUpTick;
     int   pW_age; /* aging for pWaitRead */
 
     ttydev_typ *last_mco;

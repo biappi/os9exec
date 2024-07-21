@@ -161,7 +161,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     char      nmS[OS9PATHLEN];
     char      nmD[OS9PATHLEN];
     char      newName[OS9PATHLEN];
-    ulong     fd, dfd, dcp, dcpD, sSct, len;
+    uint32_t  fd, dfd, dcp, dcpD, sSct, len;
     Boolean   asDir;
     char      oldPath[OS9PATHLEN];
 
@@ -223,7 +223,7 @@ os9err int_rename(ushort cpid, int argc, char **argv)
     if (qq != NULL)
         return _errmsg(E_BPNAM, "can't rename to \"%s\"", newName);
 
-    len = strlen(newName);
+    len = (uint32_t)strlen(newName);
     if (len > DIRNAMSZ)
         return _errmsg(E_BPNAM, "name too long \"%s\"", newName);
 

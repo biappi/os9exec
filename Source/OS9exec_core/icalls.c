@@ -84,7 +84,7 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
 
     ushort    xmode = mode | (cre ? poCreateMask : 0); /* add the create flag */
     ushort    path;
-    ulong     size = 0; /* the default value, if size bit is not set */
+    uint32_t  size = 0; /* the default value, if size bit is not set */
     ptype_typ type;
     char      pipename[OS9NAMELEN];
     char     *co = cre ? "I$Create" : "I$Open";
@@ -502,7 +502,7 @@ os9err OS9_I_Seek(regs_type *rp, ushort cpid)
 {
     os9err err;
     ushort path = loword(rp->regs[REGS_D + 0]);
-    ulong  pos  = rp->regs[REGS_D + 1];
+    uint32_t  pos  = rp->regs[REGS_D + 1];
 
     err = usrpath_seek(cpid, path, pos);
     debugprintf(

@@ -208,6 +208,8 @@
 #include "native_interface.h"
 #endif
 
+#include <inttypes.h>
+
 /* global vars */
 ushort icmpid;  /* current internal command's PID */
 char  *icmname; /* current internal command's name = argv[0] */
@@ -259,7 +261,7 @@ void Change_DbgPath(int argc, char **argv, char **pp, ushort *kp)
 {
     os9err    err;
     ptype_typ type;
-    ulong     size;
+    uint32_t  size;
     char     *v;
 
     // switch off a potentialy open dbgPath
@@ -464,7 +466,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                     p = argv[k];
                 }
 
-                if (sscanf(p, "%ld", &screenW) < 1)
+                if (sscanf(p, "%" SCNd32, &screenW) < 1)
                     screenW = 0;
                 break;
 
@@ -478,7 +480,7 @@ static os9err int_debughalt(ushort pid, int argc, char **argv)
                     p = argv[k];
                 }
 
-                if (sscanf(p, "%ld", &screenH) < 1)
+                if (sscanf(p, "%" SCNd32, &screenH) < 1)
                     screenH = 0;
                 break;
 
@@ -1565,7 +1567,7 @@ static os9err native_calls(ushort pid, _argc_, char **argv)
     if (cp->plugElem->name.host) {
         ni.pid      = &currentpid;
         ni.modBase  = os9modules[cp->mid].modulebase;
-        ni.os9_args = (void *)cp->my_args;
+        ni.os9_args = cp->my_args;
         ni.cbP      = &g_cb;
 
         err = cp->plugElem->start_NativeProg(name, &ni);

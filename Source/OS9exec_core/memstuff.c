@@ -183,7 +183,7 @@ void show_mem(ushort npid, Boolean mem_unused, Boolean mem_fulldisp)
                                    k,
                                    m->base.guest,
                                    m->size,
-                                   (char *)m->base.guest + m->size,
+                                   m->base.guest + m->size,
                                    m->base.host);
                     }
                 }
@@ -210,7 +210,7 @@ uint32_t max_mem() { return 0; }
 
 // --------------------------------------------------------------------------------------
 // install a memory area as memory block
-static ushort install_memblock(ushort pid, addrpair_typ base, ulong size)
+static ushort install_memblock(ushort pid, addrpair_typ base, uint32_t size)
 {
     for (int k = 0; k < MAXMEMBLOCKS; k++) {
         memblock_typ *m = &pmem[pid].m[k];

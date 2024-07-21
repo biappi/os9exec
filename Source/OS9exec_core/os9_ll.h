@@ -140,7 +140,7 @@ typedef double fp_typ;
 
 /* buffer for interupt stack */
 #define TRAPFRAMEBUFLEN 128 /* should be fairly enough for all stack frames */
-extern ulong trapframebuf[TRAPFRAMEBUFLEN];
+extern uint32_t trapframebuf[TRAPFRAMEBUFLEN];
 
 /* definitions for user traphandlers */
 #define NUMTRAPHANDLERS 15

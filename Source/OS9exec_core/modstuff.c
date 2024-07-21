@@ -423,13 +423,13 @@ Boolean SameBlk(byte *a, byte *b, ulong size)
 }
 
 /* get the required size of a data module */
-ulong DatMod_Size(ulong namsize, ulong datsize)
+uint32_t DatMod_Size(uint32_t namsize, uint32_t datsize)
 {
-    ulong dsize = sizeof(struct modhcom) /* module header */
-                  + sizeof(ulong)        /* data offset */
-                  + datsize              /* the data segment */
-                  + namsize              /* module name */
-                  + sizeof(ulong);       /* CRC */
+    uint32_t dsize = sizeof(struct modhcom) /* module header */
+                   + sizeof(uint32_t)        /* data offset */
+                   + datsize              /* the data segment */
+                   + namsize              /* module name */
+                   + sizeof(uint32_t);       /* CRC */
 
     dsize = (dsize + 15) -
             ((dsize + 15) % 16); // OS-9 data module sizes are divisible by 16
