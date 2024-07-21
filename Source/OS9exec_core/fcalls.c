@@ -405,7 +405,6 @@ os9err OS9_F_UnLoad(regs_type *rp, _pid_)
     return 0;
 }
 
-os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
 /* F$SRqMem:
  * Input:   d0.l=block size requested
  * Output:  d0.l=actual block size
@@ -414,8 +413,9 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
  *          d1.w = error
  *             E$NORAM: no memory free
  */
+os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
 {
-    ulong memsz = rp->regs[REGS_D + 0];
+    uint32_t memsz = rp->regs[REGS_D + 0];
 
     if (memsz == 0xFFFFFFFF) { /* get max mem */
         memsz = 0x00800000;    /* %%% a large portion */
@@ -433,7 +433,6 @@ os9err OS9_F_SRqMem(regs_type *rp, ushort cpid)
     return 0;
 }
 
-os9err OS9_F_SRtMem(regs_type *rp, ushort cpid)
 /* F$SRtMem:
  * Input:   d0.l=block size
  *          (a2)=pointer to block
@@ -443,17 +442,17 @@ os9err OS9_F_SRtMem(regs_type *rp, ushort cpid)
  * Restrictions:  memory will not actually be returned if block size does not
  * match the size of the block previously allocated
  */
+os9err OS9_F_SRtMem(regs_type *rp, ushort cpid)
 {
-    void *bp;
-    ulong memsz;
+    os9ptr bp;
+    uint32_t memsz;
 
     memsz = rp->regs[REGS_D + 0];
-    bp    = (void *)rp->regs[REGS_A + 2];
+    bp    = rp->regs[REGS_A + 2];
     memsz = (memsz + 15) & 0xFFFFFFF0; /* round up to next 16-byte boundary */
     return os9free(cpid, bp, memsz);
 }
 
-os9err OS9_F_STrap(regs_type *rp, ushort cpid)
 /* F$STrap:
  * Input:   (A0)=stack to use for exception handler (or 0 to use current)
  *          (A1)=Pointer to initialisation table
@@ -463,29 +462,38 @@ os9err OS9_F_STrap(regs_type *rp, ushort cpid)
  * Restrictions:  only BusErr..Privilege exceptions can be handled, Line A and F
  * will be ignored, as well as all FPU exceptions.
  */
+os9err OS9_F_STrap(regs_type *rp, ushort cpid)
 {
-    ushort      *itab = (ushort *)rp->regs[REGS_A + 1];
-    ushort       vect;
+    os9ptr    itab_guest = rp->regs[REGS_A + 1];
+    uint16_t *itab_host  = get_pointer(itab_guest);
+    uint16_t  vect;
+
     process_typ *cp = &procs[cpid];
 
-    while (*itab != 0xFFFF) {
-        vect = *itab >> 2; /* get vector number */
+    while (*itab_host != 0xFFFF) {
+        /* get vector number */
+        vect = *itab_host >> 2;
+
         if ((vect >= FIRSTEXCEPTION) &&
             (vect < FIRSTEXCEPTION + NUMEXCEPTIONS)) {
+
             /* installable vector routine */
-            if (*(itab + 1) == 0) {
-                cp->ErrorTraps[vect - FIRSTEXCEPTION].handleraddr =
-                    0; /* deinstall handler */
+            if (*(itab_host + 1) == 0) {
+                /* deinstall handler */
+                cp->ErrorTraps[vect - FIRSTEXCEPTION].handleraddr = 0;
+
                 debugprintf(
-                    dbgTrapHandler,
-                    dbgNorm,
-                    ("De-Installed handler for vector number $%02X\n", vect));
+                            dbgTrapHandler,
+                            dbgNorm,
+                            ("De-Installed handler for vector number $%02X\n", vect));
             }
             else {
+                /* install routine pointer */
                 cp->ErrorTraps[vect - FIRSTEXCEPTION].handleraddr =
-                    *(itab + 1) + (ulong)itab; /* install routine pointer */
+                *(itab_host + 1) + itab_guest;
+                /* stack */
                 cp->ErrorTraps[vect - FIRSTEXCEPTION].handlerstack =
-                    rp->regs[REGS_A + 0]; /* stack */
+                rp->regs[REGS_A + 0];
                 debugprintf(
                     dbgTrapHandler,
                     dbgNorm,
@@ -500,8 +508,11 @@ os9err OS9_F_STrap(regs_type *rp, ushort cpid)
                 dbgNorm,
                 ("Cannot install handler for vector number $%02X\n", vect));
 
-        itab += 2; /* advance two words, next table entry */
-    }              /* end of table */
+        /* advance two words, next table entry */
+        itab_host  += 2;
+        itab_guest += 2;
+    }
+        /* end of table */
 
     return 0;
 }
