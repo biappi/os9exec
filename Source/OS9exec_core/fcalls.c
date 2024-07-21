@@ -377,7 +377,6 @@ os9err OS9_F_UnLink(regs_type *rp, _pid_)
     return 0; /* returns ok, as long as module found */
 }
 
-os9err OS9_F_UnLoad(regs_type *rp, _pid_)
 /* F$UnLoad:
  * Input:   d0.w=type/language
  *              (a0)=module name pointer
@@ -386,15 +385,19 @@ os9err OS9_F_UnLoad(regs_type *rp, _pid_)
  *          d1.w = error
  *             none possible
  */
+os9err OS9_F_UnLoad(regs_type *rp, _pid_)
 {
     char mname[OS9NAMELEN];
 
-    char *p   = nullterm(mname, (char *)rp->regs[REGS_A + 0], OS9NAMELEN);
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    char *src = get_pointer(PTR);
+    char *p   = nullterm(mname, src, OS9NAMELEN);
     int   mid = find_mod_id(mname);
+
     if (mid >= MAXMODULES)
         return os9error(E_MNF); /* module not found */
 
-    rp->regs[REGS_A + 0] = (ulong)p;
+    rp->regs[REGS_A + 0] = PTR + (uint32_t)(p - src);
     unlink_module(mid);
     debugprintf(dbgModules,
                 dbgNorm,

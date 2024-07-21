@@ -243,7 +243,10 @@ char *nullterm(char *s1, const char *s2, ushort max)
     char  *res = s1;
     ushort n   = 0;
 
-    regcheck(currentpid, "nullterm inptr", (ulong)s2, RCHK_ARU + RCHK_MEM);
+    // WIL: at this point we are already dealing with host pointers,
+    //      so checking validity now is a bit pointless.
+    //regcheck(currentpid, "nullterm inptr", (ulong)s2, RCHK_ARU + RCHK_MEM);
+
     while (*s2 > ' ') {
         if (n++ < max)
             *s1++ = *s2++; /* don't use max-- structure any more */
