@@ -625,10 +625,12 @@ static os9err pWriteSysTaskExe(ushort          pid,
 static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    ulong  dd = procs[pid].systask_offs;
-    char  *a0 = (char *)(rp->regs[REGS_A + 0] + dd);
-    ulong  d1 = rp->regs[REGS_D + 1] - dd;
+    uint32_t  dd = procs[pid].systask_offs;
 
+    char  *a0 = get_pointer(rp->regs[REGS_A + 0]);
+    *a0 += dd;
+
+    uint32_t  d1 = rp->regs[REGS_D + 1] - dd;
     err      = pWriteSysTaskExe(pid,
                            spP,
                            &d1,
@@ -642,9 +644,10 @@ static os9err pWriteSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 static os9err pWriteSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    ulong  dd = procs[pid].systask_offs;
-    char  *a0 = (char *)(rp->regs[REGS_A + 0] + dd);
-    ulong  d1 = rp->regs[REGS_D + 1] - dd;
+    uint32_t  dd = procs[pid].systask_offs;
+    char  *a0 = get_pointer(rp->regs[REGS_A + 0]);
+    *a0 += dd;
+    uint32_t d1 = rp->regs[REGS_D + 1] - dd;
 
     err      = pWriteSysTaskExe(pid,
                            spP,
@@ -826,8 +829,8 @@ static os9err pReadSysTaskExe(ushort          pid,
 static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    char  *a0 = (char *)(rp->regs[REGS_A + 0]);
-    ulong  d1 = rp->regs[REGS_D + 1];
+    char  *a0 = get_pointer(rp->regs[REGS_A + 0]);
+    uint32_t  d1 = rp->regs[REGS_D + 1];
 
     err      = pReadSysTaskExe(pid,
                           spP,
@@ -843,8 +846,8 @@ static os9err pReadSysTask(ushort pid, syspath_typ *spP, regs_type *rp)
 static os9err pReadSysTaskLn(ushort pid, syspath_typ *spP, regs_type *rp)
 {
     os9err err;
-    char  *a0 = (char *)(rp->regs[REGS_A + 0]);
-    ulong  d1 = rp->regs[REGS_D + 1];
+    char  *a0 = get_pointer(rp->regs[REGS_A + 0]);
+    uint32_t d1 = rp->regs[REGS_D + 1];
 
     err      = pReadSysTaskExe(pid,
                           spP,

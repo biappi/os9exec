@@ -706,7 +706,7 @@ typedef struct {
     byte     *buf;       /* pointer to pipe buffer */
     byte     *prp;       /* pipe read pointer */
     byte     *pwp;       /* pipe write pointer */
-    ulong     bread;     /* number of bytes read so far */
+    uint32_t  bread;     /* number of bytes read so far */
     uint32_t  bwritten;  /* number of bytes read so far */
     ushort    consumers; /* number of waiting consumers for this pipe */
     ushort    sp_lock;   /* if <> 0, tty/pty to this system path nr */
@@ -1087,7 +1087,7 @@ typedef struct {
     os9err          exiterr; /* process' exit OS9 error */
     systaskfunc_typ systask; /* the system task function if state=pSysTask */
     void           *systaskdataP; /* system task data pointer */
-    ulong           systask_offs; /* offset for rewrite call (from tty/pty) */
+    uint32_t        systask_offs; /* offset for rewrite call (from tty/pty) */
     ushort          lastsyscall;  /* last system call issued by this process */
     int             wTimeOut;     /* timeout counter for pWaitRead */
 
