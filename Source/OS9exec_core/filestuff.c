@@ -1365,7 +1365,7 @@ os9err usrpath_open(ushort      pid,
 
 /* write to a syspath */
 os9err
-syspath_write(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean wrln)
+syspath_write(ushort pid, ushort spnum, uint32_t *len, void *buffer, Boolean wrln)
 {
     os9err         err;
     procid        *pd = &procs[pid].pd;

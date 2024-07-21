@@ -493,18 +493,18 @@ ReadSector(rbfdev_typ *dev, uint32_t sectorNr, uint32_t nSectors, byte *buffer)
 }
 
 static os9err
-WriteSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
+WriteSector(rbfdev_typ *dev, uint32_t sectorNr, uint32_t nSectors, byte *buffer)
 /* Write sectors, either to SCSI or on an RBF image file */
 {
     os9err  err = 0;
     Boolean pos_already, extendIt = false;
-    ulong   sect      = dev->sctSize;
-    ulong   pos       = sectorNr * sect; // get position and length to write
-    ulong   len       = nSectors * sect;
-    ulong   img       = dev->imgScts * sect;
-    ulong   sectorLim = sectorNr + nSectors; // upper limit
-    ulong   blindNr;                         // not accessible sectors
-    ulong   cnt;
+    uint32_t sect      = dev->sctSize;
+    uint32_t pos       = sectorNr * sect; // get position and length to write
+    uint32_t len       = nSectors * sect;
+    uint32_t img       = dev->imgScts * sect;
+    uint32_t sectorLim = sectorNr + nSectors; // upper limit
+    uint32_t blindNr;                         // not accessible sectors
+    uint32_t cnt;
     byte    ee;
 
     /* take care of write and format protection */
@@ -742,7 +742,7 @@ static os9err DevSize(rbfdev_typ *dev)
    copy device's current sector size to dev->sctSize */
 {
     os9err err;
-    ulong  size, ssize;
+    uint32_t size, ssize;
 
     /* should be defined already for the RAM disk */
     // #ifdef RAM_SUPPORT

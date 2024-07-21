@@ -835,7 +835,7 @@ typedef struct {
     byte      opt[OPTSECTSIZE]; /* path's option section */
     ushort    signal_to_send;   /* send signal on data ready */
     ushort    signal_pid;       /* signal has to be sent to this process */
-    ulong     set_evId;         /* set  event  on data ready */
+    uint32_t  set_evId;         /* set  event  on data ready */
     int       lastwritten_pid;  /* connection for signal handler */
     Boolean   rawMode;          /* raw mode /xx@ */
     uint32_t  rawPos;           /* the (emulated) sector 0 position */

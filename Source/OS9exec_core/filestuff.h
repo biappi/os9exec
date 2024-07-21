@@ -118,7 +118,7 @@ os9err syspath_close(ushort pid, ushort sp);
 os9err usrpath_close(ushort pid, ushort up);
 os9err usrpath_link(ushort pid, ushort sp, const char *ident);
 os9err
-syspath_write(ushort pid, ushort sp, ulong *len, void *buffer, Boolean wrln);
+syspath_write(ushort pid, ushort sp, uint32_t *len, void *buffer, Boolean wrln);
 os9err
 usrpath_write(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean wrln);
 

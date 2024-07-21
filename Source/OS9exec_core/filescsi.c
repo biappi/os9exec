@@ -131,8 +131,8 @@ static os9err SCSIcall(short   scsiAdapt,
     return err;
 }
 
-os9err Set_SSize(scsi_dev *scsi, ulong sctSize)
 /* Set the SCSI sector size */
+os9err Set_SSize(scsi_dev *scsi, uint32_t sctSize)
 {
     byte  cb[CB_Size];
     ulong dat_buf[3];
@@ -159,8 +159,8 @@ os9err Set_SSize(scsi_dev *scsi, ulong sctSize)
                     true);
 }
 
-os9err Get_SSize(scsi_dev *scsi, ulong *sctSize)
 /* Get the SCSI sector size */
+os9err Get_SSize(scsi_dev *scsi, uint32_t *sctSize)
 {
     os9err err;
     byte   cb[CB_Size];
@@ -186,8 +186,8 @@ os9err Get_SSize(scsi_dev *scsi, ulong *sctSize)
     return err;
 }
 
-os9err ReadCapacity(scsi_dev *scsi, ulong *totScts, ulong *sctSize)
 /* Get the SCSI device size */
+os9err ReadCapacity(scsi_dev *scsi, uint32_t *totScts, uint32_t *sctSize)
 {
     os9err err;
     byte   cb[CB_SizeExt];
@@ -225,13 +225,13 @@ os9err ReadCapacity(scsi_dev *scsi, ulong *totScts, ulong *sctSize)
     return err;
 }
 
-os9err Get_DSize(scsi_dev *scsi, ulong *totScts)
+os9err Get_DSize(scsi_dev *scsi, uint32_t *totScts)
 /* Get the SCSI device size */
 {
     os9err err;
     byte   cb[CB_Size];
-    ulong  dat_buf[3];
-    ulong  sctSize;
+    uint32_t dat_buf[3];
+    uint32_t sctSize;
 
     cb[0] = CmdSense;
     cb[1] = (scsi->LUN & 0x07) << 5;

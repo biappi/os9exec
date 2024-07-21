@@ -55,10 +55,10 @@
 
 /* Low level SCSI interface */
 
-os9err Set_SSize(scsi_dev *scsi, ulong sctSize);
-os9err Get_SSize(scsi_dev *scsi, ulong *sctSize);
-os9err ReadCapacity(scsi_dev *scsi, ulong *totScts, ulong *sctSize);
-os9err Get_DSize(scsi_dev *scsi, ulong *totScts);
+os9err Set_SSize(scsi_dev *scsi, uint32_t sctSize);
+os9err Get_SSize(scsi_dev *scsi, uint32_t *sctSize);
+os9err ReadCapacity(scsi_dev *scsi, uint32_t *totScts, uint32_t *sctSize);
+os9err Get_DSize(scsi_dev *scsi, uint32_t *totScts);
 
 os9err ReadFromSCSI(scsi_dev *scsi,
                     ulong     sectorNr,
