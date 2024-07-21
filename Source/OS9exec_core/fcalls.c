@@ -1975,35 +1975,37 @@ os9err OS9_F_Sigmask(regs_type *rp, ushort cpid)
     return 0;
 }
 
-os9err OS9_F_CRC(regs_type *rp, _pid_)
 /* F$CRC
  * Input:   d0.l=Data byte count
  *          d1.l=CRC accumulator
  *          (a0)=Pointer to data (if 0, data of one single nullbyte is assumed)
  * Output:  d1.l=updated CRC accumulator
  */
+os9err OS9_F_CRC(regs_type *rp, _pid_)
 {
     if (rp->regs[REGS_A + 0] == 0) {
         /* add single 0 byte to CRC */
-        rp->regs[REGS_D + 1] = calc_crc((byte *)"\0",
-                            1,
-                            rp->regs[REGS_D + 1]); /* update with one additional 0 byte */
+        void *buff = "\0";
+
+        /* update with one additional 0 byte */
+        rp->regs[REGS_D + 1] = calc_crc(buff, 1, rp->regs[REGS_D + 1]);
     }
     else {
         /* update CRC over given area */
-        rp->regs[REGS_D + 1] = calc_crc((byte *)rp->regs[REGS_A + 0], rp->regs[REGS_D + 0], rp->regs[REGS_D + 1]);
+        void *buff = get_pointer(rp->regs[REGS_A + 0]);
+        rp->regs[REGS_D + 1] = calc_crc(buff, rp->regs[REGS_D + 0], rp->regs[REGS_D + 1]);
     }
 
     return 0;
 }
 
-os9err OS9_F_SetCRC(regs_type *rp, _pid_)
 /* F$SetCRC
  * Input:   (a0)=Pointer to module image
  * Output:  module image with updated CRC
  */
+os9err OS9_F_SetCRC(regs_type *rp, _pid_)
 {
-    mod_exec *m = (mod_exec *)rp->regs[REGS_A + 0];
+    mod_exec *m = get_pointer(rp->regs[REGS_A + 0]);
     ulong     modsize;
     ushort    hpar;
 

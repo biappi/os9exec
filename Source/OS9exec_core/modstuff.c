@@ -1572,7 +1572,9 @@ void mod_crc(mod_exec *m)
         calc_crc((byte *)"\0", 1, crc); /* update with one additional 0 byte */
     crc = ~crc;                         /* 1's complement */
 
-    *((ulong *)((ulong)m + modsize - 4)) = os9_long(crc); /* assign now */
+    uint32_t *crc_dst = (uint32_t *)((uint8_t *)m + modsize - 4);
+
+    *crc_dst = os9_long(crc); /* assign now */
 
     debugprintf(dbgModules,
                 dbgNorm,
