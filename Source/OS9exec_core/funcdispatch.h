@@ -110,7 +110,7 @@ extern ulong glob_callticks;
 #define STIM_ORDERED 0x0020
 #define STARTCALL 0xffff
 
-ulong GetSystemTick(void);
+uint32_t GetSystemTick(void);
 
 const funcdispatch_entry *getfuncentry(ushort func);
 

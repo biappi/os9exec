@@ -532,11 +532,11 @@ ulong   my_inetaddr = 0x7F000001; /* loopback by default: 127.0.0.1 */
 jmp_buf main_env;
 
 /* tickCount at start of the program */
-ulong startTick = 0;
-ulong lastTick  = 0;
-ulong syCorr    = 0;
+uint32_t startTick = 0;
+uint32_t lastTick  = 0;
+uint32_t syCorr    = 0;
 
-ulong sec0;
+uint32_t sec0;
 
 /* error traceback */
 ushort errpid; /* PID of process that generated that error */

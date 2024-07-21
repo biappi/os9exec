@@ -1287,11 +1287,11 @@ extern ulong   my_inetaddr;
 extern jmp_buf main_env;
 
 /* tickCount at start of the program */
-extern ulong startTick;
-extern ulong lastTick;
-extern ulong syCorr;
+extern uint32_t startTick;
+extern uint32_t lastTick;
+extern uint32_t syCorr;
 
-extern ulong sec0;
+extern uint32_t sec0;
 
 /* error traceback */
 extern ushort errpid; /* PID of process that generated that error */

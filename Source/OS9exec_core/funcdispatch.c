@@ -1070,7 +1070,7 @@ void init_L2(void)
     l2.phase  = 1; /* blink phases: either 1 or 2 */
 }
 
-static void update_L2(ulong t)
+static void update_L2(uint32_t t)
 {
     byte   ll;
     ushort v;
@@ -1100,17 +1100,17 @@ static void update_L2(ulong t)
 }
 
 /* get system tick count and subtract the start tick */
-ulong GetSystemTick(void)
+uint32_t GetSystemTick(void)
 {
-    ulong t;
+    uint32_t t;
 
     struct timeval tv;
     // struct timezone tz;
 
     gettimeofday(&tv, NULL);
     if (sec0 == 0)
-        sec0 = tv.tv_sec;
-    t = tv.tv_sec - sec0;
+        sec0 = (uint32_t)tv.tv_sec;
+    t = (uint32_t)tv.tv_sec - sec0;
     t = 100 * t + tv.tv_usec / 10000;
 
     /* make the /L2 interrupt handling */

@@ -569,8 +569,8 @@ void GetTim(struct tm *tim)
            sizeof(struct tm)); /* copy it, as it might be overwritten    */
 }
 
-void Get_Time(ulong  *cTime,
-              ulong  *cDate,
+void Get_Time(uint32_t *cTime,
+              uint32_t *cDate,
               int    *dayOfWk,
               int    *currentTick,
               Boolean asGregorian,
@@ -579,9 +579,9 @@ void Get_Time(ulong  *cTime,
     struct tm tim; /* Important Note: internal use of <tm> as done in OS-9 */
                    // byte   tc[4];
     // ulong* tcp= (ulong*)&tc[0];
-    ulong ct0;
+    uint32_t ct0;
     int y, m, d;
-    ulong tsm, ssm, syTick;
+    uint32_t tsm, ssm, syTick;
 
     // process_typ* cp= &procs[ currentpid ];
 

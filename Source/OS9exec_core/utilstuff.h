@@ -132,8 +132,8 @@ void   TConv(time_t u, struct tm *tim);
 time_t UConv(struct tm *tim);
 void   GetTim(struct tm *tim);
 
-void Get_Time(ulong  *cTime,
-              ulong  *cDate,
+void Get_Time(uint32_t *cTime,
+              uint32_t *cDate,
               int    *dayOfWk,
               int    *currentTick,
               Boolean asGregorian,
