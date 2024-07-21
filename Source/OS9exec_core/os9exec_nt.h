@@ -960,7 +960,7 @@ typedef struct {
 
 /* an "event" */
 typedef struct {
-    ulong  id;
+    uint32_t id;
     char   name[OS9EVNAMELEN];
     int    value;
     short  wInc;
@@ -1225,7 +1225,7 @@ extern fmgr_typ fmgr_none, fmgr_cons, fmgr_nil, fmgr_scf, fmgr_file, fmgr_dir,
 
 /* the events */
 extern event_typ events[MAXEVENTS];
-extern ulong     newEventId;
+extern uint32_t  newEventId;
 #define EvOffs 0x00010001
 
 /* the currently executing process, MAXPROCESSES if none */

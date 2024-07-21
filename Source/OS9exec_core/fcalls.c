@@ -587,7 +587,7 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
     int   evValue;
     short wIncr, sIncr;
     int   minV, maxV;
-    ulong evId;
+    uint32_t evId;
 
     switch (evCode) {
     case Ev_Link:

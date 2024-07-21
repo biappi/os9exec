@@ -471,7 +471,7 @@ fmgr_typ fmgr_none, fmgr_cons, fmgr_nil, fmgr_scf, fmgr_file, fmgr_dir,
 
 /* the events */
 event_typ events[MAXEVENTS];
-ulong     newEventId = 0xffffffff; /* initial value */
+uint32_t  newEventId = 0xffffffff; /* initial value */
 
 short arbitrate;       // set if arbitrate() should switch away from one running
                        // process to next
