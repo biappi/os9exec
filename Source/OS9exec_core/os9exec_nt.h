@@ -1309,8 +1309,8 @@ extern char  *sw_name;
 extern char  *platform;
 
 /* screen size */
-extern ulong screenW;
-extern ulong screenH;
+extern uint32_t screenW;
+extern uint32_t screenH;
 extern char *g_ipAddr;
 
 /* external definitions */
@@ -1332,7 +1332,7 @@ extern Boolean with_intcmds; // if set, int commands will be used
 extern Boolean with_dbgDLLs; // if set, '*_dbg' DLLs will be preferred
 
 /* Cursor spinning interval */
-extern ulong spininterval;
+extern uint32_t spininterval;
 
 /* mount device name and write protection */
 extern char *mnt_name;
@@ -1351,7 +1351,7 @@ extern Boolean mnt_wProtect;
 extern Boolean mnt_imgMode;
 
 /* additional memory for all processes */
-extern ulong memplusall;
+extern uint32_t memplusall;
 
 #ifdef THREAD_SUPPORT
 extern pthread_mutex_t sysCallMutex;

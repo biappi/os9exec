@@ -128,7 +128,7 @@
 #endif
 
 /* additional memory for all processes */
-ulong memplusall;
+uint32_t memplusall;
 
 /* Memory modules */
 /* ============== */

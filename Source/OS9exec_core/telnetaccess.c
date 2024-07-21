@@ -238,9 +238,9 @@ void CheckInputBuffers(void)
     HandleEvent();          /* and check also the Mac events      */
 }
 
-Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
 /* true, if next character(s) can be read */
 /* used by "ReadCharsFromConsole" and "GetStat.SS_Ready" */
+Boolean DevReadyTerminal(uint32_t *count, ttydev_typ *mco)
 {
     Boolean ok = mco->inBufUsed;
     if (ok)

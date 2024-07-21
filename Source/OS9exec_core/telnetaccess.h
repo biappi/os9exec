@@ -70,6 +70,6 @@ void    HandleEvent(void);
 void    CheckInputBuffers(void);
 void    WindowTitle(char *title, Boolean vmod);
 long    ReadCharsFromTerminal(char *buffer, long n, ttydev_typ *mco);
-Boolean DevReadyTerminal(long *count, ttydev_typ *mco);
+Boolean DevReadyTerminal(uint32_t *count, ttydev_typ *mco);
 
 /* eof */

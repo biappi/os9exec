@@ -129,14 +129,15 @@
 #include "os9exec_incl.h"
 
 #include <termios.h>
+#include <inttypes.h>
 
 /* statics */
 /* ======= */
 
 int   commentoutput;  /* commenting stdout */
 int   disablefilters; /* filtering stdout */
-ulong memplus;        /* additional memory for first process */
-ulong iniprior;       /* priority for first process */
+uint32_t memplus;        /* additional memory for first process */
+uint32_t iniprior;       /* priority for first process */
 
 struct termios savedmodes; /* saved terminal attributes     */
 
@@ -473,7 +474,7 @@ void os9_main(int argc, char **argv, char **envp)
 {
     int     k, kX;
     char   *p;
-    ulong  *ulp;
+    uint32_t *ulp;
     ushort *usp;
     char    modifier;
     char   *toolname;
@@ -661,13 +662,13 @@ void os9_main(int argc, char **argv, char **envp)
                 p        = argv[k];
                 modifier = 0;
                 if (*p == '$') {
-                    if (sscanf(++p, "%lx%c", ulp, &modifier) < 1) {
+                    if (sscanf(++p, "%" SCNx32 "%c", ulp, &modifier) < 1) {
                         printf("# Error in hex number '$%s'\n", p);
                         exit(1);
                     }
                 }
                 else {
-                    if (sscanf(p, "%ld%c", ulp, &modifier) < 1) {
+                    if (sscanf(p, "%" SCNd32 "%c", ulp, &modifier) < 1) {
                         printf("# Error in decimal number '%s'\n", p);
                         exit(1);
                     }

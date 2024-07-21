@@ -555,8 +555,8 @@ char *sw_name;
 char *platform;
 
 /* screen size */
-ulong screenW  = -1; /* undefined */
-ulong screenH  = -1;
+uint32_t screenW  = -1; /* undefined */
+uint32_t screenH  = -1;
 char *g_ipAddr = NULL;
 
 /* global options */
@@ -575,7 +575,7 @@ Boolean with_intcmds = true;  // by default, internal commands will be used
 Boolean with_dbgDLLs = false; // by default, '*_dbg' DLLs are not preferred
 
 /* cursor spinning interval in 1/60 seconds */
-ulong spininterval = DEFAULTSPININTERVAL;
+uint32_t spininterval = DEFAULTSPININTERVAL;
 
 /* mount device name and write protection   */
 char   *mnt_name      = "";
