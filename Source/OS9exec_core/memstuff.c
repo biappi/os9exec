@@ -318,6 +318,20 @@ addrpair_typ allocation_add(void *host, uint32_t size)
     return addr;
 }
 
+void allocation_print()
+{
+    printf("\nallocations data (%d)\n\n", allocation_data_count);
+    printf("guest       host                size\n");
+    printf("-------------------------------------\n");
+
+    for (int i = 0; i < allocation_data_count; i++) {
+        printf("%08x    %p    %8x\n",
+               allocation_data[i].addr.guest,
+               allocation_data[i].addr.host,
+               allocation_data[i].size);
+    }
+}
+
 void* allocation_find(os9ptr addr)
 {
     for (int i = 0; i < allocation_data_count; i++) {
@@ -329,14 +343,7 @@ void* allocation_find(os9ptr addr)
     }
 
     printf("AIEE -- can't find allocation for guest ptr %08x\n", addr);
-
-    printf("\nallocations data (%d)\n\n", allocation_data_count);
-    printf("guest       host                size\n");
-    printf("-------------------------------------\n");
-    for (int i = 0; i < allocation_data_count; i++) {
-        printf("%08x    %p    %8x\n", allocation_data[i].addr.guest, allocation_data[i].addr.host, allocation_data[i].size);
-    }
-
+    allocation_print();
 
     _Exit(-1);
     return NULL;
