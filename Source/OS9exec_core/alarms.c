@@ -133,9 +133,9 @@ static alarm_typ *A_GetNew(ushort pid)
     return NULL;
 }
 
-os9err
-A_Make(ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic)
 /* General routine to make alarms */
+os9err
+A_Make(ushort pid, uint32_t *aId, uint16_t aCode, uint32_t aTicks, Boolean cyclic)
 {
     alarm_typ *aa;
     if (*aId != 0)
@@ -149,7 +149,7 @@ A_Make(ushort pid, ulong *aId, ushort aCode, ulong aTicks, Boolean cyclic)
     aa->cyclic = cyclic;
 
     A_Insert(aa);
-    *aId = (ulong)aa;
+    *aId = aa;
     return 0;
 }
 
@@ -188,19 +188,21 @@ static os9err Alarm_Delete(_pid_, ulong aId)
     return E_BPADDR;
 }
 
-static os9err Alarm_Set(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
-/* A$Set call: 1 */ { return A_Make(pid, aId, aCode, aTicks, false); }
+/* A$Set call: 1 */
+static os9err Alarm_Set(ushort pid, uint32_t *aId, uint16_t aCode, uint32_t aTicks)
+{ return A_Make(pid, aId, aCode, aTicks, false); }
 
-static os9err Alarm_Cycle(ushort pid, ulong *aId, ushort aCode, ulong aTicks)
-/* A$Cycle call: 2 */ { return A_Make(pid, aId, aCode, aTicks, true); }
+/* A$Cycle call: 2 */
+static os9err Alarm_Cycle(ushort pid, uint32_t *aId, uint16_t aCode, uint32_t aTicks)
+{ return A_Make(pid, aId, aCode, aTicks, true); }
 
-static os9err
-Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 /* A$AtDate call: 3 */
+static os9err
+Alarm_AtDate(ushort pid, uint32_t *aId, uint16_t aCode, uint32_t aTime, uint32_t aDate)
 {
-    ulong  iTime, iDate, aTicks;
+    uint32_t  iTime, iDate, aTicks;
     int    dayOfWk, currentTick;
-    ulong  mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
+    uint32_t  mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
     byte   tc[4];
     ulong *tcp = (ulong *)&tc[0];
 
@@ -224,13 +226,13 @@ Alarm_AtDate(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
     return A_Make(pid, aId, aCode, aTicks, false);
 }
 
-static os9err
-Alarm_AtJul(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 /* A$AtJul call: 4 */
+static os9err
+Alarm_AtJul(ushort pid, uint32_t *aId, ushort aCode, uint32_t aTime, uint32_t aDate)
 {
-    ulong iTime, iDate, aTicks;
+    uint32_t iTime, iDate, aTicks;
     int   dayOfWk, currentTick;
-    ulong mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
+    uint32_t mx = (0xffffffff - GetSystemTick()) / SecsPerDay / TICKS_PER_SEC;
 
     Get_Time(&iTime, &iDate, &dayOfWk, &currentTick, false, false);
 
@@ -247,7 +249,7 @@ Alarm_AtJul(ushort pid, ulong *aId, ushort aCode, ulong aTime, ulong aDate)
 }
 
 os9err
-Alarm(ushort pid, ulong *aId, short aFunc, ushort sig, ulong aTime, ulong aDate)
+Alarm(ushort pid, uint32_t *aId, short aFunc, ushort sig, uint32_t aTime, uint32_t aDate)
 {
 #define A_Delete 0x00
 #define A_Set 0x01

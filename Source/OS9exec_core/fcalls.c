@@ -1930,7 +1930,6 @@ os9err OS9_F_Sleep(regs_type *rp, ushort cpid)
     return 0;
 }
 
-os9err OS9_F_Alarm(regs_type *rp, ushort cpid)
 /* F$Alarm
  * Input:   d0.l=Alarm ID (or zero)
  *          d1.w=Alarm function code
@@ -1939,13 +1938,14 @@ os9err OS9_F_Alarm(regs_type *rp, ushort cpid)
  *          d4.l=date (when using absolute time)
  * Output:  d0.l=Alarm ID
  */
+os9err OS9_F_Alarm(regs_type *rp, ushort cpid)
 {
     os9err err;
-    ulong  aId   = rp->regs[REGS_D + 0];
-    short  aFunc = loword(rp->regs[REGS_D + 1]);
+    uint32_t aId   = rp->regs[REGS_D + 0];
+    int16_t  aFunc = loword(rp->regs[REGS_D + 1]);
     ushort sig   = rp->regs[REGS_D + 2];
-    ulong  aTime = rp->regs[REGS_D + 3];
-    ulong  aDate = rp->regs[REGS_D + 4];
+    uint32_t aTime = rp->regs[REGS_D + 3];
+    uint32_t aDate = rp->regs[REGS_D + 4];
 
     err = Alarm(cpid, &aId, aFunc, sig, aTime, aDate);
     debugprintf(

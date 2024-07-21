@@ -1006,10 +1006,10 @@ typedef struct {
 
 /* alarm type */
 typedef struct {
-    ushort  pid;
-    ushort  signal;
-    ulong   ticks;
-    ulong   due;
+    uint16_t pid;
+    uint16_t signal;
+    uint32_t ticks;
+    uint32_t due;
     Boolean cyclic;
 } alarm_typ;
 
