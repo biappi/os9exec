@@ -183,10 +183,10 @@ os9err get_locations(ushort      pid,
                      const char *pathname,
                      Boolean     doCreate,
                      Boolean    *asDir,
-                     ulong      *fdP,
-                     ulong      *dfdP,
-                     ulong      *dcpP,
-                     ulong      *sSct);
+                     uint32_t   *fdP,
+                     uint32_t   *dfdP,
+                     uint32_t   *dcpP,
+                     uint32_t   *sSct);
 
 os9err change_dir(ushort pid, ptype_typ type, char *pathname, ushort mode);
 os9err delete_file(ushort pid, ptype_typ type, char *pathname, ushort mode);

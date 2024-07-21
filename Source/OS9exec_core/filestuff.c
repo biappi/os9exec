@@ -1957,10 +1957,10 @@ os9err get_locations(ushort      pid,
                      const char *pathname,
                      Boolean     doCreate,
                      Boolean    *asDir,
-                     ulong      *fdP,
-                     ulong      *dfdP,
-                     ulong      *dcpP,
-                     ulong      *sSct)
+                     uint32_t   *fdP,
+                     uint32_t   *dfdP,
+                     uint32_t   *dcpP,
+                     uint32_t   *sSct)
 { /* try as file first, then as dir */
     os9err err;
     ulong  a0, *l;

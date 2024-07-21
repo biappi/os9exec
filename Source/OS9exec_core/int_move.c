@@ -203,13 +203,13 @@ static os9err separate(char **dnp, char **fnp)
     return 0;
 }
 
-static os9err
-move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
 /**** move file
  Input  : fromdir,fromname = source directory and filename
           todir, toname = destination directory and filename
  Note   : if toname is empty, it will be copied from the source name
 */
+static os9err
+move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
 {
     os9err err, cer;
     char   nmS[OS9PATHLEN];
@@ -227,7 +227,7 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
     ushort    pathS, pathD, pathX;
     ptype_typ typeS, typeD;
     char     *nameS, *nameD;
-    ulong     fdS, dfdS, dcpS, sctS, len, fdD, dfdD, dcpD, sctD, l, a0;
+    uint32_t     fdS, dfdS, dcpS, sctS, len, fdD, dfdD, dcpD, sctD, l, a0;
     Boolean   isRBF, asDirS, asDirD;
 
     strcpy(nmS, fromdir);
@@ -255,7 +255,7 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         parsepath(cpid, &nameD, pD, exe_dir);
     nameD = pD;
 
-    len = strlen(destname);
+    len = (uint32_t)strlen(destname);
     if (len > DIRNAMSZ)
         return _errmsg(E_BPNAM, "name too long \"%s\"\n", destname);
 
@@ -346,7 +346,7 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         err = usrpath_open(cpid, &pathS, typeS, fromdir, 0x83);
         if (err)
             return err;
-        a0 = (ulong)dvS;
+        a0 = (void *)&dvS;
         err =
             usrpath_getstat(cpid, pathS, SS_DevNm, &a0, NULL, NULL, NULL, NULL);
         if (err)
@@ -356,7 +356,7 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         err = usrpath_open(cpid, &pathD, typeD, todir, 0x83);
         if (err)
             return err;
-        a0 = (ulong)dvD;
+        a0 = (void *)&dvD;
         err =
             usrpath_getstat(cpid, pathD, SS_DevNm, &a0, NULL, NULL, NULL, NULL);
         if (err)
