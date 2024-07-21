@@ -71,13 +71,14 @@
 /* I$xxxx calls */
 /* ============ */
 
-static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
 /* common routine for both I$Open and I$Create, for internal use only */
+static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
 {
     os9err err;
     ushort mode =
         loword(rp->regs[REGS_D + 0]) & 0x00ff; /* consider only byte => bugfix for the */
-    char *os9_name = get_pointer(rp->regs[REGS_A + 0]); /* poCreateMask problem */
+    os9ptr nameptr = rp->regs[REGS_A + 0];
+    char *os9_name = get_pointer(nameptr); /* poCreateMask problem */
     char  os9_path[OS9PATHLEN];
     char *pastpath;
 
@@ -130,8 +131,11 @@ static os9err OS9_I_OpenCreate(regs_type *rp, ushort cpid, Boolean cre)
     if (err)
         return err;
 
-    retword(rp->regs[REGS_D + 0]) = path;            /* return path number */
-    rp->regs[REGS_A + 0]          = (ulong)pastpath; /* return updated pathname pointer */
+    /* return path number */
+    retword(rp->regs[REGS_D + 0]) = path;
+
+    /* return updated pathname pointer */
+    rp->regs[REGS_A + 0]          = nameptr + (uint32_t)(pastpath - os9_name);
     debugprintf(dbgFiles,
                 dbgNorm,
                 ("# %s successful, path number= %d\n", co, path));
@@ -184,7 +188,6 @@ os9err OS9_I_Create(regs_type *rp, ushort cpid)
     return OS9_I_OpenCreate(rp, cpid, true);
 }
 
-os9err OS9_I_Delete(regs_type *rp, ushort cpid)
 /* I$Delete:
  * Input:   d0.b=access mode (E W R)
  *          (a0)=pathname pointer
@@ -199,9 +202,10 @@ os9err OS9_I_Delete(regs_type *rp, ushort cpid)
  *                part of names used by OS9exec, they are treated as path
  *                termination characters.
  */
+os9err OS9_I_Delete(regs_type *rp, ushort cpid)
 {
     ushort mode = lobyte(rp->regs[REGS_D + 0]); /* take do.b, avoid poCreate bug problem */
-    char  *os9_name = (char *)rp->regs[REGS_A + 0];
+    char  *os9_name = get_pointer(rp->regs[REGS_A + 0]);
     char   os9_path[OS9PATHLEN];
     char  *pastpath;
     ptype_typ type;
@@ -215,7 +219,6 @@ os9err OS9_I_Delete(regs_type *rp, ushort cpid)
     return delete_file(cpid, type, os9_path, mode);
 }
 
-os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
 /* I$MakDir:
  * Input:   d0.b=access mode (D - I - - E W R)
  *          d1.b=file attributes
@@ -233,9 +236,11 @@ os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
  *              - Access mode is not used
  *              - File attributes are not used
  */
+os9err OS9_I_MakDir(regs_type *rp, ushort cpid)
 {
-    ushort    mode = loword(rp->regs[REGS_D + 0]) | poCreateMask; /* internal open used */
-    char     *os9_name = (char *)rp->regs[REGS_A + 0];
+    /* internal open used */
+    ushort    mode = loword(rp->regs[REGS_D + 0]) | poCreateMask;
+    char     *os9_name = get_pointer(rp->regs[REGS_A + 0]);
     char      os9_path[OS9PATHLEN];
     char     *pastpath;
     ptype_typ type;
@@ -634,7 +639,7 @@ os9err OS9_I_Attach(regs_type *rp, _pid_)
  * table entry
  */
 {
-    char *name = (char *)rp->regs[REGS_A + 0];
+    char *name = get_pointer(rp->regs[REGS_A + 0]);
 
     if (ustrcmp(name, "/L2") == 0) {
         rp->regs[REGS_A + 2] = 0x22002200; /* %%% /L2 identifier */
