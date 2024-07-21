@@ -875,25 +875,30 @@ os9err OS9_F_GPrDBT(regs_type *rp, _pid_)
  */
 {
     int    k;
-    ulong *ptr, *lim;
-    short *s, *sl;
+    uint32_t *ptr, *lim;
+    int16_t *s, *sl;
 
-    ptr = (ulong *)rp->regs[REGS_A + 0];
-    lim = (ulong *)(rp->regs[REGS_D + 1] + (long)ptr);
+    os9ptr PTR = rp->regs[REGS_A + 0];
+    ptr = get_pointer(PTR);
+    os9err LIM = rp->regs[REGS_D + 1] + PTR;
+    lim = get_pointer(LIM);
 
-    s  = (short *)ptr;
-    sl = (short *)lim;
+    s  = (void *)ptr;
+    sl = (void *)lim;
 
     if (s < sl) {
         *s = os9_word(MAXPROCESSES - 1);
         s++;
-    }; /* no process 0 */
+        PTR++;
+    } /* no process 0 */
+
     if (s < sl) {
         *s = os9_word(2048);
         s++;
-    }; /* the size of the real descriptor */
+        PTR++;
+    } /* the size of the real descriptor */
 
-    ptr = (ulong *)s; /* start with process nr 1 */
+    ptr = (uint32_t *)s; /* start with process nr 1 */
     for (k = 1; (k < MAXPROCESSES) && (ptr < lim); k++) {
         if (procs[k].state == pUnused) {
             *ptr = 0;
@@ -903,9 +908,10 @@ os9err OS9_F_GPrDBT(regs_type *rp, _pid_)
         }
 
         ptr++;
+        PTR++;
     }
 
-    rp->regs[REGS_D + 1] = (long)ptr - rp->regs[REGS_A + 0];
+    rp->regs[REGS_D + 1] = PTR - rp->regs[REGS_A + 0];
     return 0;
 }
 
