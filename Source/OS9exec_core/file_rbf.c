@@ -357,19 +357,19 @@ static inline uint8_t *rw_sect(syspath_typ *sp)
     return (uint8_t *)sp->rw_sct.host;
 }
 
-static os9err
-ReadSector(rbfdev_typ *dev, ulong sectorNr, ulong nSectors, byte *buffer)
 /* Read sectors, either from SCSI or from an RBF image file */
+static os9err
+ReadSector(rbfdev_typ *dev, uint32_t sectorNr, uint32_t nSectors, byte *buffer)
 {
     os9err  err = 0;
     Boolean pos_already;
-    ulong   sect      = dev->sctSize;
-    ulong   pos       = sectorNr * sect; // get position and length to read
-    ulong   len       = nSectors * sect;
-    ulong   img       = dev->imgScts * sect;
-    ulong   sectorLim = sectorNr + nSectors; // upper limit
-    ulong   blindNr, nBlinds;                // not accessible sectors
-    ulong   cnt;
+    uint32_t sect      = dev->sctSize;
+    uint32_t pos       = sectorNr * sect; // get position and length to read
+    uint32_t len       = nSectors * sect;
+    uint32_t img       = dev->imgScts * sect;
+    uint32_t sectorLim = sectorNr + nSectors; // upper limit
+    uint32_t blindNr, nBlinds;                // not accessible sectors
+    uint32_t cnt;
 
     //  if (sectorNr==0) {
     //      debugprintf(dbgFiles,dbgDetail,("# RBF read  sector0\n"));

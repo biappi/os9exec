@@ -701,13 +701,13 @@ typedef struct {
 /* a cross connected pipe (writing will be done into (each other's) sp_lock
  * pipe) */
 typedef struct {
-    ulong     size;      /* size of pipe buffer */
+    uint32_t size;      /* size of pipe buffer */
     addrpair_typ bufp;      /* pointer to pipe buffer */
     byte     *buf;       /* pointer to pipe buffer */
     byte     *prp;       /* pipe read pointer */
     byte     *pwp;       /* pipe write pointer */
     ulong     bread;     /* number of bytes read so far */
-    ulong     bwritten;  /* number of bytes read so far */
+    uint32_t  bwritten;  /* number of bytes read so far */
     ushort    consumers; /* number of waiting consumers for this pipe */
     ushort    sp_lock;   /* if <> 0, tty/pty to this system path nr */
     Boolean   do_lf;
@@ -838,7 +838,7 @@ typedef struct {
     ulong     set_evId;         /* set  event  on data ready */
     int       lastwritten_pid;  /* connection for signal handler */
     Boolean   rawMode;          /* raw mode /xx@ */
-    ulong     rawPos;           /* the (emulated) sector 0 position */
+    uint32_t  rawPos;           /* the (emulated) sector 0 position */
 
     addrpair_typ fd_sct;     /* FD  sector buffer */
     addrpair_typ rw_sct;     /* R/W sector buffer */
@@ -1146,7 +1146,7 @@ typedef struct {
     void      *filtermem;    /* the process' filter function's static storage */
 
     /* Stdin saved buffer */
-    ulong      saved_cnt;
+    uint32_t   saved_cnt;
     pstate_typ saved_state; /* saved process' state */
 
     os9ptr my_args; /* arguments pointer */
@@ -1406,7 +1406,7 @@ ushort os9exec_nt(const char *toolname,
                   int         argc,
                   char      **argv,
                   char      **envp,
-                  ulong       memplus,
+                  uint32_t    memplus,
                   ushort      prior);
 
 #endif

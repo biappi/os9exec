@@ -369,7 +369,7 @@ static os9err ConsRead(ushort       pid,
                        char         endchar)
 {
     os9err        err = 0; /* no err so far */
-    long          cnt = 0;
+    uint32_t      cnt = 0;
     char          c;
     ulong         inputticks = GetSystemTick();
     process_typ  *cp         = &procs[pid];
@@ -779,7 +779,7 @@ static os9err ConsoleOut(ushort       pid,
                          Boolean      wrln)
 /* output to console */
 {
-    ulong        cnt;
+    uint32_t     cnt;
     char         c;
     ulong        outputticks = GetSystemTick();
     syspath_typ *spC         = spP; /* default: no crossed path */
@@ -895,12 +895,12 @@ os9err pCready(_pid_, syspath_typ *spP, uint32_t *n)
     g_spP      = spP;
 
     if (gConsoleID >= TTY_Base) {
-        if (DevReadyTTY((long *)n, gConsoleID))
+        if (DevReadyTTY(n, gConsoleID))
             return 0;
     }
     else {
 #ifdef TERMINAL_CONSOLE
-        if (DevReady((long *)n))
+        if (DevReady(n))
             return 0;
 #endif
     }

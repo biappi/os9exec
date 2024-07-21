@@ -944,9 +944,9 @@ char *OS9exec_Name(void)
     return theName;
 }
 
-ulong Pipe_NReady(pipechan_typ *p)
+uint32_t Pipe_NReady(pipechan_typ *p)
 {
-    ulong n = p->pwp - p->prp;
+    uint32_t n = (uint32_t)(p->pwp - p->prp);
     if (p->pwp < p->prp)
         n += p->size; /* wrapper */
     return n;
@@ -1392,7 +1392,7 @@ os9err Flush_Dir(ushort cpid, ushort *pathP, const char *nmS)
 {
     os9err          err;
     os9direntry_typ d;
-    ulong           dir_size;
+    uint32_t        dir_size;
     syspath_typ    *spP;
     char            fullName[OS9PATHLEN];
     size_t          oLen;

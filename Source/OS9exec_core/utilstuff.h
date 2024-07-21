@@ -159,7 +159,7 @@ os9err pRBFopt(ushort pid, syspath_typ *, byte *buffer);
 void   LastCh_Bit7(char *name, Boolean setIt);
 void   Console_Name(int term_id, char *consname);
 char  *OS9exec_Name(void);
-ulong  Pipe_NReady(pipechan_typ *p);
+uint32_t Pipe_NReady(pipechan_typ *p);
 
 Boolean     AbsPath(const char *pathname);
 void        GetOS9Dev(const char *pathname, char *cmp_entry);

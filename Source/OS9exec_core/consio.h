@@ -95,7 +95,7 @@ extern short TermWinScrolls;
 extern ttydev_typ main_mco;
 
 extern Boolean KeyToBuffer(ttydev_typ *mco, char key);
-extern Boolean DevReady(long *count);
+extern Boolean DevReady(uint32_t *count);
 #endif
 
 /* eof */

@@ -300,7 +300,7 @@ os9err pPopen(ushort pid, syspath_typ *spP, ushort *modeP, const char *name)
 /* open pipe, make it anonymous if name==NULL, named otherwise */
 {
     os9err  err;
-    ulong   pipesz;
+    uint32_t pipesz;
     ushort  k;
     Boolean cre = IsCrea(*modeP);
 
@@ -689,7 +689,7 @@ os9err pPwriteln(ushort pid, syspath_typ *spP, uint32_t *n, char *buffer)
 /* <syW>: if true, it is already in SysTask write mode */
 static os9err pReadSysTaskExe(ushort          pid,
                               syspath_typ    *spP,
-                              ulong          *lenP,
+                              uint32_t       *lenP,
                               char           *buffer,
                               Boolean         rdln,
                               Boolean         syW,
@@ -1059,8 +1059,8 @@ os9err pPFDInf(_pid_, _spP_, ulong *maxbytP, ulong *fdinf, byte *buffer)
 /* get pipe size */
 os9err pPsize(_pid_, syspath_typ *spP, uint32_t *sizeP)
 {
-    *sizeP = spP->u.pipe.pchP->size -
-             1; /* return max available size of pipe buffer */
+    /* return max available size of pipe buffer */
+    *sizeP = spP->u.pipe.pchP->size - 1;
     return 0;
 }
 
@@ -1393,12 +1393,12 @@ os9err ConnectPTY_TTY(ushort pid, syspath_typ *spP)
     return 0;
 }
 
+/* write characters to TTY buffer */
 void PutCharsToTTY(ushort       pid,
                    syspath_typ *spP,
-                   ulong       *lenP,
+                   uint32_t    *lenP,
                    char        *buffer,
                    Boolean      wrln)
-/* write characters to TTY buffer */
 {
     os9err err;
     if (wrln)
@@ -1411,18 +1411,18 @@ void CheckInBufferTTY(ttydev_typ *mco)
 /* check if there is something at the input and put it into buffer <mco> */
 {
     os9err err;
-    long   cnt, k, cmax;
+    uint32_t cnt, k, cmax;
     char   buffer[INBUFSIZE];
 
     if (mco->installed && mco->pid != 0 && mco->spP->type == fTTY) {
-        err = pPready(mco->pid, mco->spP, (ulong *)&cnt);
+        err = pPready(mco->pid, mco->spP, &cnt);
         if (cnt == 0)
             return;
 
         cmax = INBUFSIZE - mco->inBufUsed - 1;
         if (cnt > cmax)
             cnt = cmax;
-        err = pPread(mco->pid, mco->spP, (ulong *)&cnt, buffer);
+        err = pPread(mco->pid, mco->spP, &cnt, buffer);
         if (err)
             return;
 

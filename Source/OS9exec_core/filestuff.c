@@ -1417,7 +1417,7 @@ syspath_write(ushort pid, ushort spnum, ulong *len, void *buffer, Boolean wrln)
 
 /* write to a usrpath */
 os9err
-usrpath_write(ushort pid, ushort up, ulong *len, void *buffer, Boolean wrln)
+usrpath_write(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean wrln)
 {
     if (up >= MAXUSRPATHS)
         return os9error(E_BPNUM);

@@ -606,7 +606,7 @@ static os9err prepParams(mod_exec     *theModule,
                          char        **argv,
                          int           argc,
                          char        **envp,
-                         ulong        *psiz,
+                         uint32_t     *psiz,
                          addrpair_typ *param_ptr)
 {
     uint32_t  paramsiz, argsiz, envsiz;
@@ -785,10 +785,10 @@ static os9err prepLaunch(char  *toolname,
                          char **argv,
                          int    argc,
                          char **envp,
-                         ulong  memplus,
+                         uint32_t memplus,
                          ushort prior)
 {
-    ulong  psiz;
+    uint32_t psiz;
     addrpair_typ pap;
     os9err err;
     ushort newpid;
@@ -1054,7 +1054,7 @@ static os9err SearchDLLs(ushort      pid,
 {
     os9err          err, cErr;
     ushort          path;
-    ulong           size;
+    uint32_t        size;
     process_typ    *cp = &procs[pid];
     char            pathName[OS9PATHLEN];
     os9direntry_typ dEnt;
@@ -2154,7 +2154,7 @@ ushort os9exec_nt(const char *toolname,
                   int         argc,
                   char      **argv,
                   char      **envp,
-                  ulong       memplus,
+                  uint32_t    memplus,
                   ushort      prior)
 {
     ushort       cpid;

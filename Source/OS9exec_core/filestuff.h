@@ -120,7 +120,7 @@ os9err usrpath_link(ushort pid, ushort sp, const char *ident);
 os9err
 syspath_write(ushort pid, ushort sp, ulong *len, void *buffer, Boolean wrln);
 os9err
-usrpath_write(ushort pid, ushort up, ulong *len, void *buffer, Boolean wrln);
+usrpath_write(ushort pid, ushort up, uint32_t *len, void *buffer, Boolean wrln);
 
 void usrpath_printf(ushort pid, ushort up, const char *format, ...);
 void upo_printf(const char *format, ...);
@@ -232,7 +232,7 @@ syspath_typ *crossedPath(ushort pid, syspath_typ *);
 os9err       ConnectPTY_TTY(ushort pid, syspath_typ *);
 void         PutCharsToTTY(ushort pid,
                            syspath_typ *,
-                           ulong  *lenP,
+                           uint32_t *lenP,
                            char   *buffer,
                            Boolean wrln);
 void         CheckInBufferTTY(ttydev_typ *mco);

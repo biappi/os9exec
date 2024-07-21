@@ -316,8 +316,8 @@ os9err OS9_I_WritLn(regs_type *rp, ushort cpid)
  */
 {
     ushort path;
-    ulong  cnt;
-    ulong  ii;
+    uint32_t cnt;
+    uint32_t ii;
     char  *buff;
     os9err err;
 
@@ -373,7 +373,7 @@ os9err OS9_I_Write(regs_type *rp, ushort cpid)
  */
 {
     ushort path;
-    ulong  cnt;
+    uint32_t cnt;
     char  *buff;
     os9err err;
 

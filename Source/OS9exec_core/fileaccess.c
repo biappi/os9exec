@@ -310,7 +310,7 @@ void init_Dir(fmgr_typ *f)
 /* input from file */
 os9err pFread(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 {
-    long      cnt, k;
+    uint32_t  cnt, k;
     file_typ *f = &spP->u.disk.u.file;
 
     assert(buffer != NULL);
@@ -330,7 +330,7 @@ os9err pFread(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
     if (cnt == 0)
         return 0; /* null read returns w/o error */
 
-    cnt         = fread((void *)buffer, 1, cnt, spP->stream);
+    cnt         = (uint32_t)fread((void *)buffer, 1, cnt, spP->stream);
     f->readFlag = true;
 
     if (cnt == 0 && feof(spP->stream))
@@ -355,7 +355,7 @@ os9err pFread(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 /* input line from file */
 os9err pFreadln(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 {
-    long      cnt;
+    uint32_t  cnt;
     file_typ *f = &spP->u.disk.u.file;
 
     char *p;
@@ -398,7 +398,7 @@ os9err pFwrite(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     file_typ *f = &spP->u.disk.u.file;
 
-    long   cnt;
+    uint32_t cnt;
     fpos_t tmp_pos;
 
     assert(buffer != NULL);
@@ -410,7 +410,7 @@ os9err pFwrite(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
     }
 
     /* output to a FILE */
-    cnt = fwrite((void *)buffer, 1, *n, spP->stream);
+    cnt = (uint32_t)fwrite((void *)buffer, 1, *n, spP->stream);
     fflush(spP->stream); /* don't forget this */
 
     debugprintf(dbgFiles,
@@ -432,7 +432,7 @@ os9err pFwriteln(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     file_typ *f = &spP->u.disk.u.file;
 
-    long   cnt, ii;
+    uint32_t cnt, ii;
     fpos_t tmp_pos;
 
     assert(buffer != NULL);
@@ -449,7 +449,7 @@ os9err pFwriteln(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
             ++ii;
             break;
         }
-    cnt = fwrite((void *)buffer, 1, ii, spP->stream);
+    cnt = (uint32_t)fwrite((void *)buffer, 1, ii, spP->stream);
     fflush(spP->stream); /* don't forget this */
 
     if (cnt < 0)
@@ -782,7 +782,7 @@ os9err pFsize(_pid_, syspath_typ *spP, uint32_t *sizeP)
     err = fstat(fd, &info);
     if (err)
         return E_SEEK;
-    *sizeP = info.st_size; // for MACOSX <st_size> is unfortunately 0
+    *sizeP = (uint32_t)info.st_size; // for MACOSX <st_size> is unfortunately 0
 
     return err;
 }
@@ -792,11 +792,10 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, uint32_t *sizeP)
 {
     os9err err = 0;
     char   b   = 0;
-    ulong  n;
-    ulong  p;
-    ulong  tmp_pos = 0;
-
-    long curSize;
+    uint32_t n;
+    uint32_t p;
+    uint32_t tmp_pos = 0;
+    uint32_t curSize;
 
     int   fd;
     size_t i, j, cnt;
@@ -806,12 +805,12 @@ os9err pFsetsz(ushort pid, syspath_typ *spP, uint32_t *sizeP)
 #define BUFFSIZE 1024
     byte buffer[BUFFSIZE];
 
-    tmp_pos = ftell(spP->stream); /* make it compatible for gcc >= 3.2 */
+    tmp_pos = (uint32_t)ftell(spP->stream); /* make it compatible for gcc >= 3.2 */
     err     = fseek(spP->stream, 0, SEEK_END);
     if (err)
         return err; /* go to EOF */
 
-    curSize = (ulong)ftell(spP->stream); /* get position now = file size */
+    curSize = (uint32_t)ftell(spP->stream); /* get position now = file size */
     // upo_printf( "curSize=%d\n", curSize );
     // upe_printf( "pos=%d size=%d newSize=%d\n", tmp_pos, curSize, *sizeP );
 
@@ -1275,8 +1274,8 @@ os9err pDread(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
 {
     os9err err;
 
-    ulong *pos   = &spP->u.disk.u.dir.pos; /* current file position */
-    ulong  offs  = *pos & 0x1F;            /* offset    to start */
+    uint32_t *pos   = &spP->u.disk.u.dir.pos; /* current file position */
+    uint32_t  offs  = *pos & 0x1F;            /* offset    to start */
     ushort index = *pos >> 5;              /* dir index to start */
     char  *myb   = buffer;
 
@@ -1572,7 +1571,7 @@ os9err pDsetatt(ushort pid, syspath_typ *spP, uint32_t *attr)
 /* check for EOF */
 os9err pDeof(ushort pid, syspath_typ *spP)
 {
-    ulong  n;
+    uint32_t n;
     os9err err = pDsize(pid, spP, &n);
     if (err)
         return err;

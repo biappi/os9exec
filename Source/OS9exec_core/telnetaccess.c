@@ -114,8 +114,8 @@ void RemoveTTY(int consoleID)
     mco->installed  = false;
 }
 
-ulong WriteCharsToPTY(char *buffer, ulong n, int consoleID, Boolean do_lf)
 /* write characters to TTY */
+uint32_t WriteCharsToPTY(char *buffer, uint32_t n, int consoleID, Boolean do_lf)
 {
 #ifdef PIP_SUPPORT
     ushort       pid = currentpid;
@@ -156,8 +156,8 @@ void CheckInputBuffersTTY(void)
 #endif
 }
 
-Boolean DevReadyTTY(long *cnt, int consoleID)
 /* how many characters are ready at the TTY ? */
+Boolean DevReadyTTY(uint32_t *cnt, int consoleID)
 {
     Boolean     ok;
     ttydev_typ *mco = &ttydev[consoleID - TTY_Base];
@@ -173,10 +173,10 @@ Boolean DevReadyTTY(long *cnt, int consoleID)
     return ok;
 }
 
-long ReadCharsFromPTY(char *buffer, long n, int consoleID)
 /* read characters from TTY */
+uint32_t ReadCharsFromPTY(char *buffer, uint32_t n, int consoleID)
 {
-    long        cnt; /* this is the data base */
+    uint32_t    cnt; /* this is the data base */
     ttydev_typ *mco = &ttydev[consoleID - TTY_Base];
 
     /* if not yet ready handle other events */
@@ -248,7 +248,7 @@ Boolean DevReadyTerminal(long *count, ttydev_typ *mco)
     return ok;
 }
 
-Boolean DevReady(long *count)
+Boolean DevReady(uint32_t *count)
 {
     HandleEvent();
 
