@@ -1209,7 +1209,7 @@ void ChangeNativeElement(const char *s, Boolean addIt)
     for (i = 0; i < MAXLIST - 1; i++) { // last element will not be used
         addrpair_typ *q = MyElem(i, addIt);
         if (q->host == NULL) {
-            *q = get_mem(strlen(s));
+            *q = get_mem((uint32_t)strlen(s));
             strcpy(q->host, s);
             return;
         }
@@ -1913,7 +1913,8 @@ os9err prepArgs(char *arglist, ushort *argcP, addrpair_typ *arguments_ptr)
     /* p now points behind last arg char */
     localargv[argc] = p; /* save as end pointer */
 
-    *arguments_ptr = get_mem(p - arglist + (argc + 1) * sizeof(char **) + 1);
+    uint32_t delta = (uint32_t)(p - arglist);
+    *arguments_ptr = get_mem(delta + (argc + 1) * sizeof(char **) + 1);
     pp             = arguments_ptr->host;
     if (pp == NULL)
         return os9error(E_NORAM);

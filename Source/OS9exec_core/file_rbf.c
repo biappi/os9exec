@@ -1178,7 +1178,7 @@ static os9err PrepareRAM(ushort pid, rbfdev_typ *dev, char *cmp)
 #define SectsPerTrack 0x20
 
     os9err err, cErr;
-    ulong  allocSize, allocN, allocClu, mapSize, f, r, fN, rN, totBits, tracks,
+    uint32_t allocSize, allocN, allocClu, mapSize, f, r, fN, rN, totBits, tracks,
         cluRest, iSize;
     ulong    *u;
     ushort   *w;

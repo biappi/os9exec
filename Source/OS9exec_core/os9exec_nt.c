@@ -609,7 +609,7 @@ static os9err prepParams(mod_exec     *theModule,
                          ulong        *psiz,
                          addrpair_typ *param_ptr)
 {
-    ulong  paramsiz, argsiz, envsiz;
+    uint32_t  paramsiz, argsiz, envsiz;
     int    os9envc;
     byte  *p, *pp, *hp;
     ulong *alp, *elp;
@@ -1095,7 +1095,7 @@ static os9err SearchDLLs(ushort      pid,
 
             // upe_printf( "hello='%s'\n", dEnt.name );
             m  = &pluginList[*i].name;
-            *m = get_mem(strlen(dEnt.name) + 1);
+            *m = get_mem((uint32_t)strlen(dEnt.name) + 1);
             strcpy(m->host, dEnt.name);
             (*i)++;
         }

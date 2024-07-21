@@ -192,7 +192,7 @@ void init_PTY(fmgr_typ *f)
 
 /* -------------------------------------------------------- */
 
-os9err getPipe(_pid_, syspath_typ *spP, ulong buffsize)
+os9err getPipe(_pid_, syspath_typ *spP, uint32_t buffsize)
 {
     addrpair_typ pipep = get_mem(sizeof(pipechan_typ));
     addrpair_typ buffp = get_mem(buffsize);

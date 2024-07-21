@@ -145,9 +145,9 @@ os9err syspath_getstat(ushort pid,
                        uint32_t *d1,
                        uint32_t *d2,
                        uint32_t *d3);
-os9err syspath_gs_size(ushort pid, ushort sp, ulong *size);
+os9err syspath_gs_size(ushort pid, ushort sp, uint32_t *size);
 os9err syspath_gs_devnm(ushort pid, ushort sp, char *name);
-os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt);
+os9err syspath_gs_ready(ushort pid, ushort sp, uint32_t *cnt);
 
 os9err usrpath_getstat(ushort pid,
                        ushort up,
@@ -226,7 +226,7 @@ void   Disp_RBF_Devs(Boolean statistic);
 os9err ReadFD(syspath_typ *spP);
 
 /* external pipe   support routines */
-os9err       getPipe(ushort pid, syspath_typ *, ulong buffsize);
+os9err       getPipe(ushort pid, syspath_typ *, uint32_t buffsize);
 os9err       releasePipe(ushort pid, syspath_typ *);
 syspath_typ *crossedPath(ushort pid, syspath_typ *);
 os9err       ConnectPTY_TTY(ushort pid, syspath_typ *);

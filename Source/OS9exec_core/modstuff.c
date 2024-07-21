@@ -782,7 +782,7 @@ static void adapt_inetdb(mod_exec *mh,
 {
     short *hp;
     char  *bp, *b0, *bL, *v0;
-    ulong  d, size;
+    uint32_t d, size;
     byte  *h;
     char   sv[OS9NAMELEN];
 
@@ -795,7 +795,7 @@ static void adapt_inetdb(mod_exec *mh,
     bL = (char *)mh +
          os9_long(*(ulong *)bL); /* get end   position of "hosts" field */
 
-    size = bL - b0;
+    size = (uint32_t)(bL - b0);
     addrpair_typ v0p = get_mem(size);
     v0               = v0p.host;
     memcpy(v0, b0, size);
@@ -867,8 +867,8 @@ static os9err load_module_local(ushort  pid,
                                 Boolean linkstyle,
                                 void   *modBase,
                                 ushort  path,
-                                ulong   bootPos,
-                                ulong   bootSiz)
+                                uint32_t bootPos,
+                                uint32_t bootSiz)
 /* load a module by name or path
  * Note: if a null pointer is passed for name, load defaults
  *       to 'OS9C' id 0 (only on Mac)
@@ -892,7 +892,7 @@ static os9err load_module_local(ushort  pid,
 
     FILE *stream;
 
-    ulong  dsize, loadbytes;
+    uint32_t  dsize, loadbytes;
     os9err err;
     ushort par;
     ulong  crc;
@@ -1160,7 +1160,7 @@ static os9err load_module_local(ushort  pid,
                          dsize,
                          theModuleP));
 
-            loadbytes = fread(theModuleP, 1, dsize, stream);
+            loadbytes = (uint32_t)fread(theModuleP, 1, dsize, stream);
             if (loadbytes == 0) {
                 fclose(stream);
                 return c2os9err(errno, E_READ);

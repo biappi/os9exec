@@ -1732,7 +1732,7 @@ os9err syspath_getstat(ushort pid,
     return err;
 }
 
-os9err syspath_gs_size(ushort pid, ushort sp, ulong *size)
+os9err syspath_gs_size(ushort pid, ushort sp, uint32_t *size)
 {
     return syspath_getstat(pid, sp, SS_Size, NULL, NULL, NULL, size, NULL);
 }
@@ -1742,14 +1742,14 @@ os9err syspath_gs_devnm(ushort pid, ushort sp, char *name)
     return syspath_getstat(pid,
                            sp,
                            SS_DevNm,
-                           (ulong *)&name,
+                           (uint32_t *)&name,
                            NULL,
                            NULL,
                            NULL,
                            NULL);
 }
 
-os9err syspath_gs_ready(ushort pid, ushort sp, ulong *cnt)
+os9err syspath_gs_ready(ushort pid, ushort sp, uint32_t *cnt)
 {
     return syspath_getstat(pid, sp, SS_Ready, NULL, NULL, cnt, NULL, NULL);
 }
