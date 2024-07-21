@@ -520,12 +520,12 @@ os9err OS9_I_SetStt(regs_type *rp, ushort cpid)
  * Restrictions:-
  */
 {
-    ulong *a0 = (ulong *)&rp->regs[REGS_A + 0];
-    ulong *a1 = (ulong *)&rp->regs[REGS_A + 1];
-    ulong *d0 = (ulong *)&rp->regs[REGS_D + 0];
-    ulong *d1 = (ulong *)&rp->regs[REGS_D + 1];
-    ulong *d2 = (ulong *)&rp->regs[REGS_D + 2];
-    ulong *d3 = (ulong *)&rp->regs[REGS_D + 3];
+    uint32_t *a0 = &rp->regs[REGS_A + 0];
+    uint32_t *a1 = &rp->regs[REGS_A + 1];
+    uint32_t *d0 = &rp->regs[REGS_D + 0];
+    uint32_t *d1 = &rp->regs[REGS_D + 1];
+    uint32_t *d2 = &rp->regs[REGS_D + 2];
+    uint32_t *d3 = &rp->regs[REGS_D + 3];
 
     ushort path = loword(*d0);
     ushort func = loword(*d1);
@@ -570,11 +570,11 @@ os9err OS9_I_SGetSt(regs_type *rp, ushort cpid)
  *             E$BPNUM: this path is not open
  */
 {
-    ulong *a0 = (ulong *)&rp->regs[REGS_A + 0];
-    ulong *d0 = (ulong *)&rp->regs[REGS_D + 0];
-    ulong *d1 = (ulong *)&rp->regs[REGS_D + 1];
-    ulong *d2 = (ulong *)&rp->regs[REGS_D + 2];
-    ulong *d3 = (ulong *)&rp->regs[REGS_D + 3];
+    uint32_t *a0 = &rp->regs[REGS_A + 0];
+    uint32_t *d0 = &rp->regs[REGS_D + 0];
+    uint32_t *d1 = &rp->regs[REGS_D + 1];
+    uint32_t *d2 = &rp->regs[REGS_D + 2];
+    uint32_t *d3 = &rp->regs[REGS_D + 3];
 
     ushort path = loword(*d0);
     ushort func = loword(*d1);
