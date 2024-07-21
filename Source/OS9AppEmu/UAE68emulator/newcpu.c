@@ -1166,9 +1166,10 @@ unsigned long m68k_os9go(void)
     while (os9_running) {
 		uae_u32 opcode = GET_OPCODE;
 		(*cpufunctbl[opcode])(opcode);
+#if 0
 		if (m68k_disp) {
-			int ghidra_offset = regs.pc_p - (uint32_t)regs.membase;
-			printf("instrcount=%d ghidra=%08x membase=%08x\n", instrcount, ghidra_offset, regs.membase);
+//			int ghidra_offset = regs.pc_p - (uint32_t)regs.membase;
+//			printf("instrcount=%d ghidra=%08x membase=%08x\n", instrcount, ghidra_offset, regs.membase);
 			if (instrcount >= dumpStateFromInstrCount
 			|| ghidra_offset == 0xbe13c /* dump regs on MMALLOC entry */
 			) {
@@ -1186,6 +1187,7 @@ unsigned long m68k_os9go(void)
 				printf("ExtraHalt:\n");
 			}
 		}
+#endif
     }
     in_m68k_go--;
     // make sure PC is updated
