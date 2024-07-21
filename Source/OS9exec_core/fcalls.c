@@ -580,7 +580,8 @@ os9err OS9_F_STime(regs_type *rp, ushort cpid)
 os9err OS9_F_Event(regs_type *rp, ushort cpid)
 {
     os9err       err    = 0;
-    char        *p      = (char *)get_pointer(rp->regs[REGS_A + 0]);
+    os9ptr       p_guest = rp->regs[REGS_A + 0];
+    char        *p_host  = get_pointer(p_guest);
     short        evCode = loword(rp->regs[REGS_D + 1]);
     process_typ *cp     = &procs[cpid];
 
@@ -591,7 +592,7 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
 
     switch (evCode) {
     case Ev_Link:
-        err = evLink(p, &evId);
+        err = evLink(p_host, &evId);
         if (!err)
             rp->regs[REGS_D + 0] = evId;
         break;
@@ -606,17 +607,17 @@ os9err OS9_F_Event(regs_type *rp, ushort cpid)
         wIncr   = loword(rp->regs[REGS_D + 2]);
         sIncr   = loword(rp->regs[REGS_D + 3]);
 
-        err = evCreat(p, evValue, wIncr, sIncr, &evId);
+        err = evCreat(p_host, evValue, wIncr, sIncr, &evId);
         if (err)
             break;
 
-        rp->regs[REGS_A + 0] = (ulong)(p + strlen(p));
+        rp->regs[REGS_A + 0] = p_guest + (uint32_t)strlen(p_host);
         rp->regs[REGS_D + 0] = evId;
         break;
 
     case Ev_Delet:
-        err      = evDelet(p);
-        rp->regs[REGS_A + 0] = (ulong)(p + strlen(p));
+        err      = evDelet(p_host);
+        rp->regs[REGS_A + 0] = p_guest + (uint32_t)strlen(p_host);
         break;
 
     case Ev_Wait:
