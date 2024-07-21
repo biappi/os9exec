@@ -328,7 +328,9 @@ void init_processes()
         // pd->_resvd1= os9_word(0xBD00); /* invisible at DevPak von 68K OS-9
         // V1.2 */
         pd->_deadlk = 0; /* as in real OS-9 */
-        pd->_sigdat = (byte *)os9_long((ulong)&procs[k].sigdat);
+        // WIL: shared buffers between host and guest?!
+        // pd->_sigdat = os9_long(&procs[k].sigdat);
+        pd->_sigdat = 0x6eadbeef;
 
         /* clear all memory segments ... */
         for (j = 0; j < 32; j++) {
@@ -403,7 +405,9 @@ os9err new_process(ushort parentid, ushort *newpid, ushort numpaths)
                 cp->os9regs.pc   = 0xCCCCCCCC;
             }
             /* make sure that ISP ist ready for exception stack frames */
-            cp->os9regs.isp = &trapframebuf[TRAPFRAMEBUFLEN];
+            // WIL: shared buffers between host and guest?!
+            // cp->os9regs.isp = &trapframebuf[TRAPFRAMEBUFLEN];
+            cp->os9regs.isp = 0x7eadbeef;
 
             /* there was no last systemcall */
             cp->func        = STARTCALL;

@@ -963,8 +963,8 @@ os9err OS9_F_GPrDsc(regs_type *rp, ushort cpid)
     for (k = 0; k < NUMEXCEPTIONS; k++) {
         ep = &cp->ErrorTraps[k];
 
-        pd.except[k] = (byte *)os9_long((ulong)ep->handleraddr);
-        pd._exstk[k] = (byte *)os9_long((ulong)ep->handlerstack);
+        pd.except[k] = os9_long(ep->handleraddr);
+        pd._exstk[k] = os9_long(ep->handlerstack);
     }
 
     // get the list of the currently opened paths
@@ -1092,19 +1092,19 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     case D_ModDir:
         // WIL: shared buffers between host and guest?!
         // v = b;
-        v = 0x3deadbeef;
+        v = 0x3eadbeef;
         Update_MDir();
         break;
     case D_ModDir_L:
         // WIL: shared buffers between host and guest?!
         // v = b + sizeof(mdirField);
-        v = 0x2deadbeef;
+        v = 0x2eadbeef;
         Update_MDir();
         break;
     case D_PrcDBT:
         // WIL: shared buffers between host and guest?!
         // v = (ulong)prDBT;
-        v = 0x1deadbeef;
+        v = 0x1eadbeef;
 
         ptr = &prDBT[1]; /* start with process nr 1 */
         for (k = 1; k < MAXPROCESSES; k++) {
@@ -1121,7 +1121,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     case D_PthDBT:
         // WIL: shared buffers between host and guest?!
         //v = (ulong)syspth;
-        v = 0x0deadbeef;
+        v = 0x0eadbeef;
         break; /* pth table image  */
     case D_Ticks:
         v = GetSystemTick();
@@ -1144,7 +1144,7 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
     case D_DevTbl:
         // WIL: shared buffers between host and guest?!
         // v = (ulong)&devs;
-        v = 0x4deadbeef;
+        v = 0x4eadbeef;
         break; /* I/O device table ptr */
 
     case D_MPUTyp:
@@ -1230,7 +1230,9 @@ os9err OS9_F_SetSys(regs_type *rp, ushort cpid)
         v = userOpt;
         break; // -u option of OS9exec
     case D_IPAddr:
-        v = g_ipAddr;
+        // WIL: shared buffers between host and guest?!
+        // v = g_ipAddr;
+        v = 0x5eadbeef;
         break; // -g option of OS9exec, no os9_long needed here
 
     default:

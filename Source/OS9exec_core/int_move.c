@@ -346,9 +346,15 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         err = usrpath_open(cpid, &pathS, typeS, fromdir, 0x83);
         if (err)
             return err;
-        a0 = (void *)&dvS;
-        err =
-            usrpath_getstat(cpid, pathS, SS_DevNm, &a0, NULL, NULL, NULL, NULL);
+
+        err = usrpath_getstat(cpid,
+                              pathS,
+                              SS_DevNm,
+                              (void *)&dvS,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL);
         if (err)
             return err;
 
@@ -356,9 +362,15 @@ move_file(ushort cpid, char *fromdir, char *fromname, char *todir, char *toname)
         err = usrpath_open(cpid, &pathD, typeD, todir, 0x83);
         if (err)
             return err;
-        a0 = (void *)&dvD;
-        err =
-            usrpath_getstat(cpid, pathD, SS_DevNm, &a0, NULL, NULL, NULL, NULL);
+
+        err = usrpath_getstat(cpid,
+                              pathD,
+                              SS_DevNm,
+                              (void *)&dvD,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL);
         if (err)
             return err;
 

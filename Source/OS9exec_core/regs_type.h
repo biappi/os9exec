@@ -46,7 +46,7 @@ typedef struct {
     traphandler_typ *ttP;
 
     /* --- base address of process' static storage */
-    void *membase; /* used to fool StackSniffer via modified ApplLimit */
+    os9ptr membase; /* used to fool StackSniffer via modified ApplLimit */
 } regs_type;
 
 #define REGS_D 0

@@ -80,15 +80,15 @@ typedef struct pdsc {
 #define ES_FPUCALM040 0x04      /* 68040 fpu exception calmed */
     unsigned short _deadlk,     /* dominant process id if I/O locked */
         _signal;                /* signal code */
-    uint32_t _sigvec,     /* signal intercept vector */
-        _sigdat;               /* signal intercept data address */
+    uint32_t     _sigvec;       /* signal intercept vector */
+    uint32_t     _sigdat;       /* signal intercept data address */
     struct pdsc *_queueN,       /* queue next ptr */
         *_queueP;               /* queue prev ptr */
     mod_exec      *_pmodul;     /* primary module */
-    unsigned char *except[10],  /* program error exception vectors */
-        *_exstk[10],            /* program error exception stack frame ptrs */
-        *_traps[15],            /* user's trap vector table */
-        *_trpmem[15];           /* user's trap static memory block ptrs */
+    uint32_t       except[10];  /* program error exception vectors */
+    uint32_t       _exstk[10];  /* program error exception stack frame ptrs */
+    uint32_t       _traps[15];  /* user's trap vector table */
+    uint32_t       _trpmem[15]; /* user's trap static memory block ptrs */
     unsigned int   _trpsiz[15]; /* trap handler static memory sizes */
     unsigned char *_excpsp,     /* system state except. recovery stack */
         *_excppc; /* system state except. recovery program counter */

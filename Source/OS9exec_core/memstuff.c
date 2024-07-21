@@ -350,7 +350,8 @@ void allocation_debug(regs_type *rp, uint32_t regmask)
         uint32_t d = rp->regs[REGS_D + k];
 
         for (int i = 0; i < allocation_data_count; i++) {
-            uint32_t truncated = allocation_data[i].addr.host;
+            uint32_t truncated =
+                (uint32_t)((size_t)allocation_data[i].addr.host & 0xffffffff);
 
             if ((truncated <= a) &&
                 (a < truncated + allocation_data[i].size))
@@ -478,9 +479,7 @@ os9err os9free(ushort pid, os9ptr membase, uint32_t memsz)
                 // try to free it in smaller pieces ...
                 // NOTE: e.g. OS-9 "dir" is doing it this way !
                 if (memsz > m->size) { // recursive call
-                    err = os9free(pid,
-                                  (void *)((ulong)membase + m->size),
-                                  memsz - m->size);
+                    err = os9free(pid, membase + m->size, memsz - m->size);
                     if (!err) {
                         release_memblock(
                             pid,
