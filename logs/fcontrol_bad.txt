@@ -1,0 +1,2078 @@
+# <<< Pid=02: OS9 START "fcontrol"
+# >>> Pid=02: OS9 F$TLink : D0.w=$000D D1.l=$0 A0=$FAD6F8C4 "cio" 
+# <<< Pid=02: OS9 F$TLink returns: A0=$FAD6F8C7 A1=$FADB04C4 A2=$FADB043A 
+# >>> Pid=02: OS9 F$Time : D0.w=$0000 
+# <<< Pid=02: OS9 F$Time returns: D0.l=$172916 D1.l=$7E80714 D2.w=$0006 D3.l=$FADB0436 
+# >>> Pid=02: OS9 F$Link : D0.w=$0000 A0=$FACEABBA "AE_CONFIG" 
+# <<< Pid=02: OS9 F$Link returns: #000:221 - E_MNF
+# >>> Pid=02: OS9 F$Icpt : A0=$FAD70ABE A6=$FAD88FBA 
+# <<< Pid=02: OS9 F$Icpt returns: 
+# >>> Pid=02: OS9 I$Create : D0.b=$02 D1.w=$0003 D2.l=$0 A0=$FACE0C20 "/term" 
+# <<< Pid=02: OS9 I$Create returns: D0.w=$0003 A0=$3FA9B8FB 
+# >>> Pid=02: OS9 I$Open : D0.b=$02 A0=$FAD69ED4 "/term" 
+# <<< Pid=02: OS9 I$Open returns: D0.w=$0004 A0=$3FB24BAF 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FAD69EDA 
+[0m[2J# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FAD69EE3 
+[?25l# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[2;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[3;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[4;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[5;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[6;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[7;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[8;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01FE 
+[9;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[10;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[11;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[12;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[13;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[14;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[15;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[16;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[17;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[18;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[19;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[20;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[21;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[22;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[23;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[24;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[25;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[26;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[27;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[28;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[29;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[30;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[31;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[32;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[33;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[34;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[35;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[36;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[37;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[38;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[39;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[40;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[21;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[22;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[23;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[24;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[25;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[26;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[27;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[28;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[29;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[30;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[31;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[32;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[33;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[34;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[35;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[36;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[37;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[38;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[39;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[40;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[21;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[22;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[23;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[24;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[25;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[26;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[27;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[28;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[29;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[30;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[31;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[32;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[33;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[34;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[35;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[36;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[37;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[38;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[39;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01FE 
+[40;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 F$Sleep : D0.l=$80000040 
+# <<< Pid=02: OS9 F$Sleep returns: D0.l=$0 
+# >>> Pid=02: OS9 F$Sleep : D0.l=$80000040 
+# <<< Pid=02: OS9 F$Sleep returns: D0.l=$0 
+# >>> Pid=02: OS9 F$Sleep : D0.l=$80000040 
+# <<< Pid=02: OS9 F$Sleep returns: D0.l=$0 
+# >>> Pid=02: OS9 F$Sleep : D0.l=$80000040 
+# <<< Pid=02: OS9 F$Sleep returns: D0.l=$0 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB01E6 
+[2;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$3 A0=$FAD69EC0 
+(0# <<< Pid=02: OS9 I$Write returns: D1.l=$3 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+k# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01E6 
+[19;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+j# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[3;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[4;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[5;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[6;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[7;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[8;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[9;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[10;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[11;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[12;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[13;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[14;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[15;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[16;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[17;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[18;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[3;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[4;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[5;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[6;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[7;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[8;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[9;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[10;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[11;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[12;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[13;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[14;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[15;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[16;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[17;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[18;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB01E6 
+[8;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+q# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0225 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E6 
+[19;81H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB021A 
+[9;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[10;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[11;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[12;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[13;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[14;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[15;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[16;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[17;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[18;1H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB021A 
+[9;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[10;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[11;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[12;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[13;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[14;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[15;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[16;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[17;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB021A 
+[18;80H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0259 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 F$SRqMem : D0.l=$40000 
+# <<< Pid=02: OS9 F$SRqMem returns: D0.l=$40000 A2=$FADB74BA 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01E4 
+[18;7H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;12H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;17H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;22H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;27H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;32H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;37H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;42H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;47H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;52H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;57H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;62H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;67H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01E4 
+[18;72H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB01A0 
+[9;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$3 A0=$FAD69EC4 
+(B# <<< Pid=02: OS9 I$Write returns: D1.l=$3 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+(# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+)# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+*# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+C# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+V# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+h# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[10;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+y# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+h# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+A# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+-# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[11;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+U# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+A# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+C# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+M# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01A0 
+[12;79H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[13;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+*# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+,# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+I# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+'# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+h# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+k# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+k# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[14;6H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$8 A0=$FADB01A0 
+[15;79H# <<< Pid=02: OS9 I$Write returns: D1.l=$8 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[16;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+A# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+C# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+C# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+u# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+G# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+h# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+w# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01A0 
+[17;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+(# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+C# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+)# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+,# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+I# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+1# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+9# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+8# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+6# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+,# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+1# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+9# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+8# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB01DF 
+8# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB0200 
+[6;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+A# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+H# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+D# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+-# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+2# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+V# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+I# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+5# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01F4 
+[3;70H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01F4 
+[4;70H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB01F4 
+[5;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+A# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+H# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+D# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+-# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+2# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+V# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+S# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+I# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+5# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB01F4 
+[5;71H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB01F4 
+[6;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB0233 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$6 A0=$FADB0200 
+[6;7H# <<< Pid=02: OS9 I$Write returns: D1.l=$6 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+I# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+g# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+g# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+a# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+p# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+h# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+c# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+y# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 F$Link : D0.w=$0000 A0=$FACE13F0 "CS_GS" 
+# <<< Pid=02: OS9 F$Link returns: #000:221 - E_MNF
+# >>> Pid=02: OS9 F$DatMod : D0.l=$800 D1.w=$8000 D2.w=$0003 D3.w=$0436 A0=$FACE13F0 "CS_GS" 
+# <<< Pid=02: OS9 F$DatMod returns: D0.w=$0400 D1.w=$8000 A0=$FACE13F5 A1=$FADF74EE A2=$FADF74BA 
+# >>> Pid=02: OS9 F$Event : Ev_Link D0.l=$FACE13F6 D1.w=$0000 D2.w=$1060 D3.w=$0436 A0=$FACE13F6 
+# <<< Pid=02: OS9 F$Event returns: #000:168 - E_EVNF
+# >>> Pid=02: OS9 F$Event : Ev_Creat D0.l=$3E7 D1.w=$0002 D2.w=$FFFF D3.w=$0000 A0=$FACE13F6 
+# <<< Pid=02: OS9 F$Event returns: D0.l=$10000 A0=$3FA9C0D1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB0200 
+[6;20H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+f# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+y# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+m# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+.# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB023F 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Open : D0.b=$01 A0=$FAD610D4 "/h0@" 
+# <<< Pid=02: OS9 I$Open returns: D0.w=$0005 A0=$3FB1BDAE 
+# >>> Pid=02: OS9 I$Close : D0.w=$0005 
+# <<< Pid=02: OS9 I$Close returns: 
+# >>> Pid=02: OS9 I$ChgDir : D0.b=$04 A0=$FAD0C83A "/h0/CMDS" 
+# <<< Pid=02: OS9 I$ChgDir returns: #000:216 - E_PNNF
+# >>> Pid=02: OS9 I$ChgDir : D0.b=$04 A0=$FAD0C843 "/h0/cmds" 
+# <<< Pid=02: OS9 I$ChgDir returns: #000:216 - E_PNNF
+# >>> Pid=02: OS9 I$Open : D0.b=$01 A0=$FADB02D8 "/h0@" 
+# <<< Pid=02: OS9 I$Open returns: D0.w=$0005 A0=$3FA9A332 
+# >>> Pid=02: OS9 I$Seek : D0.w=$0005 D1.l=$0 
+# <<< Pid=02: OS9 I$Seek returns: 
+# >>> Pid=02: OS9 I$Read : D0.w=$0005 D1.l=$1 A0=$FADB02D3 
+# <<< Pid=02: OS9 I$Read returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Close : D0.w=$0005 
+# <<< Pid=02: OS9 I$Close returns: 
+# >>> Pid=02: OS9 I$Open : D0.b=$01 A0=$FADB025C "/h0@" 
+# <<< Pid=02: OS9 I$Open returns: D0.w=$0005 A0=$3FA9A2B6 
+# >>> Pid=02: OS9 I$Seek : D0.w=$0005 D1.l=$0 
+# <<< Pid=02: OS9 I$Seek returns: 
+# >>> Pid=02: OS9 I$Read : D0.w=$0005 D1.l=$3 A0=$FADB0259 
+# <<< Pid=02: OS9 I$Read returns: D1.l=$3 
+# >>> Pid=02: OS9 I$Seek : D0.w=$0005 D1.l=$4 
+# <<< Pid=02: OS9 I$Seek returns: 
+# >>> Pid=02: OS9 I$Read : D0.w=$0005 D1.l=$2 A0=$FADB0256 
+# <<< Pid=02: OS9 I$Read returns: D1.l=$2 
+# >>> Pid=02: OS9 I$Seek : D0.w=$0005 D1.l=$6 
+# <<< Pid=02: OS9 I$Seek returns: 
+# >>> Pid=02: OS9 I$Read : D0.w=$0005 D1.l=$2 A0=$FADB0254 
+# <<< Pid=02: OS9 I$Read returns: D1.l=$2 
+# >>> Pid=02: OS9 I$Seek : D0.w=$0005 D1.l=$100 
+# <<< Pid=02: OS9 I$Seek returns: 
+# >>> Pid=02: OS9 I$Read : D0.w=$0005 D1.l=$400 A0=$FADB8296 
+# <<< Pid=02: OS9 I$Read returns: D1.l=$0 
+# >>> Pid=02: OS9 I$Close : D0.w=$0005 
+# <<< Pid=02: OS9 I$Close returns: 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$7 A0=$FADB00A8 
+[15;4H# <<< Pid=02: OS9 I$Write returns: D1.l=$7 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+O# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+:# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+F# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+l# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+d# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+n# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+o# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+x# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+i# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+t# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+(# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+P# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+r# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+e# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+s# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+ # <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+N# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+T# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+E# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+R# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+# >>> Pid=02: OS9 I$Write : D0.w=$0004 D1.l=$1 A0=$FADB00E7 
+)# <<< Pid=02: OS9 I$Write returns: D1.l=$1 
+warning!! register A4 (3fa9b8fb) seems to contain a truncated host pointer (0x7fe23fa9b010) instead of guest (face033a)
+warning!! register A4 (3fb24baf) seems to contain a truncated host pointer (0x7fe23fa9b010) instead of guest (face033a)
+warning!! register A4 (3fa9c0d1) seems to contain a truncated host pointer (0x7fe23fa9b010) instead of guest (face033a)
+warning!! register A4 (3fb1bdae) seems to contain a truncated host pointer (0x7fe23fa9b010) instead of guest (face033a)
+warning!! register A6 (3fa9a332) seems to contain a truncated host pointer (0x7fe23fa6b010) instead of guest (fad80fba)
+warning!! register A6 (3fa9a2b6) seems to contain a truncated host pointer (0x7fe23fa6b010) instead of guest (fad80fba)
+instrcount=870000 ghidra=00046e84 facf71be    moveq   #$0, D0                         D: ffffffff fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f4 
+instrcount=870001 ghidra=00046e86 facf71c0    addq.l  #2, A7                          D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f4 
+instrcount=870002 ghidra=00046e88 facf71c2    bra     $facf7258                       D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f6 
+instrcount=870003 ghidra=00046f1e facf7258    movem.l (-$4,A5), A0                    D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f6 
+instrcount=870004 ghidra=00046f24 facf725e    unlk    A5                              D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f6 
+instrcount=870005 ghidra=00046f26 facf7260    rts                                     D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb0206 
+instrcount=870006 ghidra=00046202 facf653c    addq.l  #8, A7                          D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb020a 
+instrcount=870007 ghidra=00046204 facf653e    tst.l   D0                              D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb0212 
+instrcount=870008 ghidra=00046206 facf6540    beq     $facf6548                       D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb0212 
+instrcount=870009 ghidra=0004620e facf6548    move.l  ($2a,A7), -(A7)                 D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb0212 
+instrcount=870010 ghidra=00046212 facf654c    move.l  ($2a,A7), -(A7)                 D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb020e 
+instrcount=870011 ghidra=00046216 facf6550    move.l  ($1e,A7), D1                    D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb020a 
+instrcount=870012 ghidra=0004621a facf6554    move.l  ($1a,A7), D0                    D: 00000000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb020a 
+instrcount=870013 ghidra=0004621e facf6558    bsr     $facf6ed0; (2+)                 D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb020a 
+instrcount=870014 ghidra=00046b96 facf6ed0    link    A5, #$0                         D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0230 fad88fba fadb0206 
+instrcount=870015 ghidra=00046b9a facf6ed4    dc.w    $f227; opcode 1111              D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb0202 
+instrcount=870016 ghidra=00046b9e facf6ed8    movem.l D0-D1/A0, -(A7)                 D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb0202 
+instrcount=870017 ghidra=00046ba2 facf6edc    lea     (-$14,A7), A7                   D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01f6 
+instrcount=870018 ghidra=00046ba6 facf6ee0    lea     (-$20,A5), A7                   D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01e2 
+instrcount=870019 ghidra=00046baa facf6ee4    move.l  ($2c,A7), -(A7)                 D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01e2 
+instrcount=870020 ghidra=00046bae facf6ee8    move.l  ($2c,A7), D1                    D: 00008000 fadb0248 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01de 
+instrcount=870021 ghidra=00046bb2 facf6eec    lea     ($14,A7), A0                    D: 00008000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0248 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01de 
+instrcount=870022 ghidra=00046bb6 facf6ef0    move.l  A0, D0                          D: 00008000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01de 
+instrcount=870023 ghidra=00046bb8 facf6ef2    bsr     $facf6404; (2+)                 D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01de 
+instrcount=870024 ghidra=000460ca facf6404    link    A5, #$0                         D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb0202 fad88fba fadb01da 
+instrcount=870025 ghidra=000460ce facf6408    dc.w    $f227; opcode 1111              D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01d6 
+instrcount=870026 ghidra=000460d2 facf640c    movem.l D0-D1, -(A7)                    D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01d6 
+instrcount=870027 ghidra=000460d6 facf6410    move.l  ($10,A7), -(A7)                 D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01ce 
+instrcount=870028 ghidra=000460da facf6414    move.l  ($8,A7), D1                     D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01ca 
+instrcount=870029 ghidra=000460de facf6418    move.l  ($4,A7), D0                     D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01ca 
+instrcount=870030 ghidra=000460e2 facf641c    bsr     $fad6a654; (2+)                 D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01ca 
+instrcount=870031 ghidra=000ba31a fad6a654    link    A5, #$0                         D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01d6 fad88fba fadb01c6 
+instrcount=870032 ghidra=000ba31e fad6a658    dc.w    $f227; opcode 1111              D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb01c2 
+instrcount=870033 ghidra=000ba322 fad6a65c    movem.l D0-D1/A0, -(A7)                 D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb01c2 
+instrcount=870034 ghidra=000ba326 fad6a660    lea     (-$26,A7), A7                   D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb01b6 
+instrcount=870035 ghidra=000ba32a fad6a664    tst.l   ($272a,A6)                      D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870036 ghidra=000ba332 fad6a66c    bne     $fad6a682                       D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870037 ghidra=000ba334 fad6a66e    moveq   #$0, D0                         D: fadb01f2 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870038 ghidra=000ba336 fad6a670    movea.l ($3a,A7), A0                    D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870039 ghidra=000ba33a fad6a674    move.l  D0, (A0)                        D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0240 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870040 ghidra=000ba33c fad6a676    movea.l ($2a,A7), A0                    D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0240 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870041 ghidra=000ba340 fad6a67a    move.l  D0, (A0)                        D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0244 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870042 ghidra=000ba342 fad6a67c    movea.l ($26,A7), A0                    D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb0244 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870043 ghidra=000ba346 fad6a680    move.l  D0, (A0)                        D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870044 ghidra=000ba348 fad6a682    tst.l   ($2722,A6)                      D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870045 ghidra=000ba350 fad6a68a    beq     $fad6a758                       D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870046 ghidra=000ba41e fad6a758    clr.l   ($a,A7)                         D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870047 ghidra=000ba422 fad6a75c    clr.l   ($6,A7)                         D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870048 ghidra=000ba426 fad6a760    bra     $fad6a82c                       D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870049 ghidra=000ba4f2 fad6a82c    moveq   #$6, D0                         D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870050 ghidra=000ba4f4 fad6a82e    cmp.l   ($a,A7), D0                     D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870051 ghidra=000ba4f8 fad6a832    bgt     $fad6a764                       D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870052 ghidra=000ba42a fad6a764    move.l  #$7d0, ($22,A7)                 D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870053 ghidra=000ba432 fad6a76c    bra     $fad6a772                       D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870054 ghidra=000ba438 fad6a772    movea.l ($20c30,A6), A0                 D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: fadb01f2 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870055 ghidra=000ba440 fad6a77a    moveq   #$0, D0                         D: 00000006 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: 00000000 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+instrcount=870056 ghidra=000ba442 fad6a77c    move.b  ($5,A0), D0                     D: 00000000 fadb0244 fad81060 fadb0436 ddddddd4 00000022 0002f480 00000000 A: 00000000 fadb04c4 fadb042e face0382 fadb0432 fadb01c2 fad88fba fadb0190 
+AIEE -- can't find allocation for guest ptr 00000005
+
+allocations data (14)
+
+guest       host                size
+-------------------------------------
+04fc0000    0x562f4ba6a2a0       10000
+face0000    0x562f4af1f760          a2
+face00a2    0x562f4ba7bbe0         180
+face0222    0x562f4af1f9a0         118
+face033a    0x7fe2f33d3010       a0c40
+fad80f7a    0x562f4ba7bd70          40
+fad80fba    0x7fe2f33a3010       2f480
+fadb043a    0x562f4ba7bdc0        4f00
+fadb533a    0x562f4ba80cd0        2180
+fadb74ba    0x7fe2f3362010       40000
+fadf74ba    0x562f4ba83270         880
+fadf7d3a    0x562f4ba83b00         100
+fadf7e3a    0x562f4ba83c70         100
+fadf7f3a    0x562f4ba83d80         100
