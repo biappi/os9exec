@@ -371,6 +371,9 @@ void debug_procdump(process_typ *cp, int cpid)
     upo_printf("  Directories: Current   - %s\n", cp->d.path);
     upo_printf("               Execution - %s\n", cp->x.path);
 
+    // this is broken in 64-bit, crashes in syspath_gs_devnm
+    // because it tries to pass a pointer not in emu address space
+#if 0
     /* List open files */
     prefix = "Files:";
     for (i = 0; i < MAXUSRPATHS; i++) {
@@ -378,7 +381,7 @@ void debug_procdump(process_typ *cp, int cpid)
         if (up) {
             spP      = &syspaths[up];
             typename = spP_TypeStr(spP);
-            syspath_gs_devnm(cpid, spP->nr, devname);
+            syspath_gs_devnm(cpid, spP->nr, devname); // this crashes
             strcpy(filename, spP->name);
             if (ustrcmp(filename, devname) != 0) {
                 if (*filename == NUL)
@@ -420,6 +423,7 @@ void debug_procdump(process_typ *cp, int cpid)
 
         prefix = "";
     }
+#endif
 
     /* Report the last system call */
     upo_printf(" Last syscall: %s (0x%04x)\n", fdeP->name, cp->lastsyscall);
