@@ -361,7 +361,7 @@ void debug_procdump(process_typ *cp, int cpid)
 
     upo_printf("\n"); /* End of the module identity line */
 
-    upo_printf("  module addr: %08x\n", me);
+    upo_printf("  module addr: %08x\n", me_ptr.guest);
 
     /* Output the exit code */
     get_error_strings(cp->exiterr, &code, &desc);
@@ -476,12 +476,11 @@ void debug_procdump(process_typ *cp, int cpid)
         // mb= &cp->os9memblocks[i];
         mb = &cm->m[i];
         if (mb->base.host != 0) {
-            upo_printf("              %12s %03d %08X - (os9: %08X host: %p) "
+            upo_printf("              %12s %03d %08X - %08X"
                        "%7ld bytes\n",
                        prefix,
                        i,
                        mb->base.guest,
-                       mb->base.host,
                        mb->base.guest + mb->size,
                        mb->size);
             prefix = "";
@@ -517,6 +516,9 @@ void debug_procdump(process_typ *cp, int cpid)
             prefix = "";
         }
     }
+
+    printf("\nModule directory\n\n");
+    show_modules(NULL);
 
     /* Clear the segfault trap */
     depth = 0;

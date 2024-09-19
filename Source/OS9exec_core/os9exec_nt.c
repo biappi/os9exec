@@ -1448,7 +1448,8 @@ static Boolean TCALL_or_Exception(process_typ *cp, regs_type *crp, ushort cpid)
                 // uphe_printf("main loop: Exception occurred [pid=%d] ! Vector
                 // offset=$%04X (num=%d)\n", cpid,cp->func,vect);
                 //  if (!cp->isIntUtil) dumpregs(cpid);
-                debug_procdump(cp, cpid);
+
+                // debug_procdump(cp, cpid);
             }
         }
 

@@ -473,7 +473,8 @@ void show_modules(char *cmp)
                "----------------------------\n");
 
     for (k = 0; k < MAXMODULES; k++) {
-        mod = os9mod(k).host;
+        addrpair_typ module = os9mod(k);
+        mod = module.host;
         if (mod != NULL) {
             nam = Mod_Name(mod);
 
@@ -496,7 +497,7 @@ void show_modules(char *cmp)
                            os9modules[k].linkcount,
                            os9modules[k].isBuiltIn ? 'I' : 'M',
 
-                           (ulong)mod,
+                           module.guest,
                            mtyp,
                            exeo,
                            dats,

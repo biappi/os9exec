@@ -115,6 +115,7 @@
  */
 
 #include "os9exec_incl.h"
+#include <inttypes.h>
 
 /* Memory management for OS9 processes */
 /* =================================== */
@@ -325,9 +326,9 @@ void allocation_print()
     printf("-------------------------------------\n");
 
     for (int i = 0; i < allocation_data_count; i++) {
-        printf("%08x    %p    %8x\n",
+        printf("%08x    %0" PRIxPTR "    %8x\n",
                allocation_data[i].addr.guest,
-               allocation_data[i].addr.host,
+               (intptr_t)allocation_data[i].addr.host,
                allocation_data[i].size);
     }
 }
