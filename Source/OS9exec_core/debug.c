@@ -304,13 +304,14 @@ void debug_prep()
 /* Dump the process descriptor */
 void debug_procdump(process_typ *cp, int cpid)
 {
-    char      *code    = NULL;
-    char      *desc    = NULL;
-    mod_exec  *me      = get_module_ptr(cp->mid).host;
-    ushort     sync_id = os9_word(0x4afc);
-    ushort     modsync = 0;
-    Boolean    sync_ok = false;
-    static int depth   = 0;
+    char        *code    = NULL;
+    char        *desc    = NULL;
+    addrpair_typ me_ptr  = get_module_ptr(cp->mid);
+    mod_exec    *me      = me_ptr.host;
+    ushort       sync_id = os9_word(0x4afc);
+    ushort       modsync = 0;
+    Boolean      sync_ok = false;
+    static int   depth   = 0;
 
     int          i;
     int          j;
@@ -361,7 +362,7 @@ void debug_procdump(process_typ *cp, int cpid)
 
     upo_printf("\n"); /* End of the module identity line */
 
-    upo_printf("  module addr: %08x\n", me_ptr.guest);
+    upo_printf("  module addr: %08x (host: %p)\n", me_ptr.guest, me_ptr.host);
 
     /* Output the exit code */
     get_error_strings(cp->exiterr, &code, &desc);
