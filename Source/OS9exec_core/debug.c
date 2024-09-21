@@ -461,8 +461,11 @@ void debug_procdump(process_typ *cp, int cpid)
         }
 
         upo_printf("               PC=%08X SR=%04X\n", rp->pc, rp->sr);
+        upo_printf("               PC=%08x (+ %08x - 0xf000)\n",
+                   rp->pc - me_ptr.guest + 0xf000,
+                   me_ptr.guest);
 
-/* Show the failing instruction. */
+        /* Show the failing instruction. */
         upo_printf(" Executing: -->");
         m68k_disasm(rp->pc, &aa, 1);
         upo_printf("               ");
