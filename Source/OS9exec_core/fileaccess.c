@@ -975,11 +975,13 @@ os9err pFeof(_pid_, syspath_typ *spP)
 static void getFD(void *fdl, ushort maxbyt, byte *buffer)
 {
 #define FDS 16
-    byte      fdbeg[FDS];                 /* buffer for preparing FD */
-    byte     *att   = (byte *)&fdbeg[0];  /* the position of the attr field */
-    ulong    *sizeP = (ulong *)&fdbeg[9]; /* the position of the size field */
+    uint8_t   fdbeg[FDS];            /* buffer for preparing FD */
+    uint8_t  *att       = &fdbeg[0]; /* the position of the attr field */
+    uint8_t  *sizeField = &fdbeg[9]; /* the position of the size field */
+    uint32_t *sizeP     = (uint32_t *)sizeField;
+
     Boolean   isFolder = false;
-    ulong     u        = 0;
+    uint32_t  u        = 0;
     struct tm tim;
 
     char       *pathname;
@@ -1279,13 +1281,13 @@ os9err pDread(_pid_, syspath_typ *spP, uint32_t *n, char *buffer)
     ushort index = *pos >> 5;              /* dir index to start */
     char  *myb   = buffer;
 
-    ulong           cnt, nbytes;
+    uint32_t        cnt, nbytes;
     os9direntry_typ os9dirent;
 
     dirent_typ     *dEnt;
     dirtable_entry *mP = NULL;
     size_t          len;
-    ulong           fdpos;
+    uint32_t        fdpos;
     Boolean         topFlag = false;
 
     // printf( "pos=%8d n=%4d '%s'\n", *pos, *n, spP->name );
