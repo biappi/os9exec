@@ -2091,7 +2091,7 @@ void os9exec_loop(unsigned short xErr, Boolean fromIntUtil)
     } while (currentpid < MAXPROCESSES); /* while active processes */
 } // os9exec_loop
 
-static void segv_handler(int sig)
+void segv_handler(int sig)
 {
     // int          sv= sig;
     process_typ *cp  = &procs[currentpid]; // pointer to procs   descriptor

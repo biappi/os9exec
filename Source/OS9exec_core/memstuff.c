@@ -335,7 +335,9 @@ void allocation_print()
     }
 }
 
-void* allocation_find(os9ptr addr)
+void segv_handler(int);
+
+void *allocation_find(os9ptr addr)
 {
     for (int i = 0; i < allocation_data_count; i++) {
         if ((allocation_data[i].addr.guest <= addr) &&
@@ -348,7 +350,7 @@ void* allocation_find(os9ptr addr)
     printf("AIEE -- can't find allocation for guest ptr %08x\n", addr);
     allocation_print();
 
-    _Exit(-1);
+    segv_handler(10); // SIGBUS
     return NULL;
 }
 
