@@ -124,8 +124,6 @@
 memblock_typ memtable[MAX_MEMALLOC];
 pmem_typ     pmem[MAXPROCESSES];
 
-const os9ptr memory_top = 0x00010000;
-
 addrpair_typ allocation_add_absolute(void *host, os9ptr guest, uint32_t size);
 
 /* prepare the memory handling for use */
@@ -143,6 +141,10 @@ void init_all_mem(void)
     // since it writes on absolute $4afc0000
     void *buffer  = calloc(0x10000, 1); /* get memory block, cleared to 0 */
     allocation_add_absolute(buffer, 0x04fc0000, 0x10000);
+
+    const uint32_t eeprom_size = 0x1fff;
+    void *eeprom = calloc(eeprom_size, 1);
+    allocation_add_absolute(buffer, 0x00040000, eeprom_size);
 }
 
 /* show memory blocks */
