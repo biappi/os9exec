@@ -1,0 +1,1 @@
+14,2t_date,5,4,1Datet_ref,1,23,1Referencet_type,1,1,1Credit/DebituC,Dt_amt,4,4,1Amount#,###,###.##

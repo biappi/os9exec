@@ -1,0 +1,1 @@
+#include <stdio.h>main(){	printf("%d %d %d\n", func1(1), func2(2), func3(4,5));}

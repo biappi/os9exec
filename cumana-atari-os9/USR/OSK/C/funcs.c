@@ -1,0 +1,1 @@
+func1(a){	return a+1;}func2(a){	return a-1;}func3(a, b){	return a+b;}

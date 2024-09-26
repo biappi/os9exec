@@ -1,0 +1,1 @@
+ nam D1 Device Descriptor use defsfile use rbfdesc.aDrvNum   set 1FDCashe  set 0StepRate set STEPRATE DiskD1 ends

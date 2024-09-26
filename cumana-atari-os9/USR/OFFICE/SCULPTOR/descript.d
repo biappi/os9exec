@@ -1,0 +1,1 @@
+110,2de_file,1,39,1Descriptor namede_fnum,2,1,1Field numberde_rectype,1,1,1Key or data indicatork,dde_field,1,20,1Field namede_ftype,1,1,1Field typela,i,r,m,dde_fsize,2,1,1Field sizede_fdim,2,2,1Dimensionde_heading,1,30,1Headingde_format,1,20,1Formatde_valid,1,30,1Validation list

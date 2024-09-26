@@ -1,0 +1,1 @@
+PERSONAL BANK ACCOUNT1,View Balance and Enter Transactions-sage bank2,Maintain Standing Orders-sage stand3,Delete Old Transactions-sage deltr4,Transaction Report to Screen-sagerep trans pvdu5,Transaction Report to pprsagerep trans % | %Please type name of print spooler required

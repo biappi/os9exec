@@ -1,0 +1,1 @@
+18,1so_ref,1,22,1Referenceso_benf,1,23,1Beneficiaryso_amt,4,4,1Amount###,###.##so_fpd,5,4,1First Payment Dateso_npd,5,4,1Next Payment Dateso_lpd,5,4,1Last Payment Dateso_freq,1,1,1D(ays),M(onthly),Y(early)uD,M,Yso_days,2,2,1Interval (days)###

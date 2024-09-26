@@ -1,0 +1,1 @@
+19,2sur,1,18,1Surnamename,1,12,1Nameaddr1,1,30,1Addressaddr2,1,30,1 addr3,1,25,1 addr4,1,25,1 addr5,1,20,1 htel,1,20,1Home Telephoneotel,1,30,1Office Telephone

@@ -1,0 +1,1 @@
+ nam D0 Device Descriptor use defsfile use rbfdesc.aDrvNum   set 0FDCache  set CACHESIZEStepRate set STEPRATE TOSDiskD0 ends

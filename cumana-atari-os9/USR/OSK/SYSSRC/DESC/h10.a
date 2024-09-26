@@ -1,0 +1,1 @@
+ nam H10 Device Descriptor opt f use defsfile use rbfdesc.aDrvNum set 10SegAlloc set 64 DiskHD ends

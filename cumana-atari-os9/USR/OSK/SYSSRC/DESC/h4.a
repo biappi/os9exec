@@ -1,0 +1,1 @@
+ nam H4 Device Descriptor opt f use defsfile use rbfdesc.aDrvNum set 4SegAlloc set 64 DiskHD ends

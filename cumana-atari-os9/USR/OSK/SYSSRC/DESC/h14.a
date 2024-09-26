@@ -1,0 +1,1 @@
+ nam H14 Device Descriptor opt f use defsfile use rbfdesc.aDrvNum set 14SegAlloc set 64 DiskHD ends

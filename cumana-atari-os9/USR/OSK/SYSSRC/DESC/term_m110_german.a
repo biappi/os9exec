@@ -1,0 +1,1 @@
+ nam term ttl 68000 Term device descriptor module use defsfile* The default characteristics in "scfdesc.a" can be overridden* by equating the desired values here. use scfdesc.a TERM.M110 use key_german.a ends

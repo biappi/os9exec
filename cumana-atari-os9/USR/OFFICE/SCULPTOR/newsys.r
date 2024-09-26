@@ -1,0 +1,1 @@
+!init gosub MAIN!temp sys, ,a78!temp err, ,a6MAIN\	scroll 4	sys = "copy -r menu.m *.d *.g -w=" + arg	gosub DOEXEC	sys = "-newkf " + arg / "/descript"	gosub DOEXEC	sys = "-newkf " + arg / "/query"	gosub DOEXEC	exitDOEXEC\	display sys	exec sys	if tstat <> 0 then \		err = tstat: sys = "Error " + err: \		display sys: abort tstat	return

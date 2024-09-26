@@ -1,0 +1,1 @@
+-tmerge stser stpar stmidi stmouse t1 t2 p mouse ram >add.objs

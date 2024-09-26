@@ -1,0 +1,1 @@
+ nam MYTrap Trap code definitions** This psect contains the offsets for the trap* handler's dispatch table.  Each entry here MUST* match the order of the dispatch table entries.* psect ciodefs_a,0,0,0,0,0MY$Trap: equ 4		* user trap vector number for MYTrapMY$func1: do.b 1MY$func2: do.b 1MY$func3: do.b 1 ends

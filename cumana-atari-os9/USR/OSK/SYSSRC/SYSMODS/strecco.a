@@ -1,0 +1,1 @@
+ moveq #1,d0 std output path move #SignOnLen,d1 size lea SignOn(pc),a0 signon message OS9 I$Write output signon message bra Goon jump around textSignOn use stsignon.aSignOnLen equ *-SignOn align* continue hereGoon 
